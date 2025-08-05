@@ -5,7 +5,6 @@ import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { Reciept } from "./Reciept"
 import { TransactionStatement } from "../../components/payment/TransactionStatement"
-import { useReactToPrint } from "react-to-print"
 
 const PaymentSuccess = () => {
     const [params] = useSearchParams();

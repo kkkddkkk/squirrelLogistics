@@ -1,6 +1,5 @@
 import { Box, Button } from "@mui/material"
 import { BGBox } from "./Payment"
-import { useReactToPrint } from "react-to-print"
 import React, { useRef } from "react"
 
 export const Reciept = () => {
