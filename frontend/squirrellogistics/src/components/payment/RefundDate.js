@@ -1,12 +1,8 @@
 import { Box, Divider, FormControl, FormControlLabel, Radio, RadioGroup, Typography } from "@mui/material"
 import { useState } from "react"
 
-export const RefundDate = () => {
-    const [refundDate, setRefundDate] = useState('3');
-    const [selectedValue, setSelectedValue] = useState('3');
-
+export const RefundDate = ({refundDate, setRefundDate}) => {
     function RefundCaution() {
-
         return (
             <Box
                 width={"100%"}
@@ -24,57 +20,44 @@ export const RefundDate = () => {
     }
 
     function RefundRadioForm() {
-        function RefundRadio(props) {
-            return (
-                <Radio
-                    {...props}
-                    sx={{ color: "#113F67" }}
-                    size="small"
-                />
-            )
-        }
-
-        function changeRefundDate(e) {
-            setRefundDate(e.target.value);
-            setSelectedValue(e.target.value);
-        }
+        const refundOption = [
+            { value: "3", label: "3일" },
+            { value: "5", label: "5일" },
+            { value: "7", label: "7일" },
+        ];
 
         return (
             <FormControl>
-                <RadioGroup
-                    row
-                    aria-labelledby="demo-radio-buttons-group-label"
-                    defaultValue="3"
-                    name="radio-buttons-group"
-                    value={selectedValue}
-                    sx={{
-                        color: "#2A2A2A",
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "space-evenly",
-                        fontSize: "20px",
-                        alignItems: "center",
-                        margin: "2%"
-                    }}
-                    onChange={changeRefundDate}
+                <Box
+                //#region [나중에 다시 볼 곳]
+                    width="200%"
+                    fontSize="20px"
+                    color="#2A2A2A"
+                    display='flex'
+                    flexWrap={'wrap'}
+                    justifyContent={'space-evenly'}
+
                 >
-                    {[{ value: "3", label: "3일" }, { value: "5", label: "5일" }, { value: "7", label: "7일" }].map(item => (
-                        <Box key={item.value} sx={{ flex: 1, textAlign: "center" }}>
+                    {refundOption.map((item) => (
                             <FormControlLabel
                                 key={item.value}
                                 value={item.value}
-                                control={<RefundRadio />}
+                                control={
+                                    <Radio
+                                        checked={refundDate === item.value}
+                                        onChange={(e) => setRefundDate(e.target.value)}
+                                        value={item.value}
+                                        name="refund-date"
+                                    />
+                                }
                                 label={item.label}
-                                sx={{
-                                    margin: 0,
-                                    textAlign: "center",
-                                }}
+                                // labelPlacement="end"
+                                sx={{ margin: "2%" }}
                             />
-                        </Box>
                     ))}
-                </RadioGroup>
+                </Box>
             </FormControl>
-        )
+        );
     }
 
     return (
@@ -84,20 +67,17 @@ export const RefundDate = () => {
                 border: 1,
                 borderColor: "#2A2A2A",
                 borderRadius: "5px",
-                display: "flex",
-                justifyContent: "space-between",
                 flexWrap: "wrap",
                 marginBottom: "10%",
             }}
         >
-
             <RefundRadioForm></RefundRadioForm>
             <Divider
                 orientation="horizontal"
                 flexItem
                 sx={{
                     backgroundColor: "#909095",
-                    height: "2px"
+                    height: "0.5px"
                 }}
             />
             <RefundCaution />
