@@ -1,16 +1,15 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import paymentRouter from "./paymentRoutes/paymentRouter"
+import driverRouter from "./driverRoutes/driverRouter";
 
 const Loading = <div>Loding...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
 const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
 const Payment = lazy(() => import("../pages/Payment/PaymentLayout"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
-// const DriverIndex = lazy(() => import("../pages/Driver/DriverIndexPage"));
+const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
 const AdminPage = lazy(() => import("../pages/Support/SupportLayout"));
-const RequestDetailPage = lazy(() => import("../pages/DeliveryRequest/RequestDetailPage"));
-const DriverProfile = lazy(() => import("../pages/Driver/DriverProfile"));
 
 const root = createBrowserRouter([
     {
@@ -52,19 +51,13 @@ const root = createBrowserRouter([
             </Suspense>
         )
     }, {
-        path: "/deliveryRequest",
+        path: "/driver",
         element: (
             <Suspense fallback={Loading}>
-                <RequestDetailPage></RequestDetailPage>
+                <DriverIndex/>
             </Suspense>
-        )
-    }, {
-        path: "/driverProfile",
-        element: (
-            <Suspense fallback={Loading}>
-                <DriverProfile></DriverProfile>
-            </Suspense>
-        )
+        ),
+        children: driverRouter()
     }
 
 
