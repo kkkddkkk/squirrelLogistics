@@ -2,7 +2,7 @@ import { Box, Typography } from "@mui/material";
 import { SubTitleForCharge } from "../../pages/Payment/Payment";
 
 //PayBox=({총금액 파라미터})로 Payment.js에 전달
-const PayBox = () => {
+const PayBox = ({all}) => {
     function ContentBox({ children, width }) {
         return (
             <Box
@@ -123,7 +123,7 @@ const PayBox = () => {
                 </ContentBox>
                 <HowMuch fontSize={20} inBox={true}>00원</HowMuch>
             </ChargeBox>
-            <HowMuch fontSize={25} topLine={true}>총 00원</HowMuch>
+            <HowMuch fontSize={25} topLine={true}>{!all?"총 ":<></>}00원</HowMuch>
 
         </>
 

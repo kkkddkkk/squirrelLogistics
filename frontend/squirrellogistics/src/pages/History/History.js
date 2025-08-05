@@ -12,10 +12,10 @@ const HistoryLayout = () => {
                 alignContent: "center"
             }}
         >
-            <Box sx={{ width: "50%" }}>
+            <Box sx={{ width: "50%"}}>
                 <HistoryCalendar></HistoryCalendar>
             </Box>
-            <Box sx={{ width: "50%" }}>
+            <Box sx={{ width: "50%"}}>
                 <HistoryList></HistoryList>
             </Box>
 

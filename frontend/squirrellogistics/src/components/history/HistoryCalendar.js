@@ -29,7 +29,7 @@ const HistoryCalendar = () => {
                 inline
                 className="historyCalendar"
             />
-            <Box sx={{width:"100%", display:"flex", justifyContent:"space-between"}} >
+            <Box sx={{width:"100%", display:"flex", justifyContent:"space-around", marginTop: "5%"}} >
                 <PsButton>내 신고목록</PsButton>
                 <PsButton>내 리뷰목록</PsButton>
             </Box>

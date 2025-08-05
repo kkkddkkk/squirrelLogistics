@@ -24,14 +24,16 @@ export function SubTitleForCharge({ children }) {
 export function TitleForCharge({ children }) {
     return (
         <Typography
-            variant="subtitle1"
-            display={"block"}
+            variant="h6"
+            component="p"
             sx={{
                 fontSize: '28px',
                 fontWeight: 'bold',
                 color: '#2A2A2A',
                 width: '100%',
-                margin: '3%'
+                margin: '3%',
+                lineHeight: 1.2,
+                alignSelf: "flex-start"
             }}
         >
             {children}

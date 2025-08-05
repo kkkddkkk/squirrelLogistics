@@ -1,25 +1,39 @@
 /* HistoryCalendar.css */
 
+/* 전체 달력 컨테이너 */
 .react-datepicker {
-    width: 100% !important;     /* 원하는 너비 설정 */
+    width: 100% !important;
     max-width: 400px;
-    font-size: 14px;            /* 폰트 크기 조절 */
+    font-size: 16px;
+    border: none;
+    box-shadow: none;
 }
 
-/* 내부 날짜 셀의 크기 조정 */
-.react-datepicker__day {
-    width: 2.2rem;
-    line-height: 2.2rem;
-    margin: 0.15rem;
+.react-datepicker__month-container{
+    width: 100% !important;
+    float: center;
 }
 
-/* 헤더 크기 조정 */
+.react-datepicker__day-names{
+    display: flex;
+    justify-content: space-around;
+}
+
+.react-datepicker__week{
+    display: flex;
+    justify-content: space-around;
+}
+
+/* 달력 헤더 */
 .react-datepicker__header {
-    padding-top: 0.5rem;
+    padding: 0.8rem 0;
+    background-color: transparent;
+    border-bottom: 1px solid #ddd;
+        margin: 10px;
 }
 
-/* 월/연도 선택창 크기 조정 */
-.react-datepicker__current-month,
-.react-datepicker__day-name {
-    font-size: 0.9rem;
+/* 월-연도 텍스트 */
+.react-datepicker__current-month {
+    font-size: 1.2rem;
+    font-weight: bold;
 }
