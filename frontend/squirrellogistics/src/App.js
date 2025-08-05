@@ -1,22 +1,20 @@
 import React from "react";
 import Button from "@mui/material/Button"
-import { RouterProvider } from "react-router-dom";
+import { Route, RouterProvider, Routes } from "react-router-dom";
 import paymentRouter from "./routes/paymentRoutes/paymentRouter";
+import ScrollToTop from "./components/ScrollToTop"
+import Layout from "./pages/Layout/Layout"
+import RegisterPage from "./pages/Layout/RegisterPage";
 function App() {
   return (
-    // <div>
-    //   <header>
-    //     <p>
-    //       main
-    //     </p>
-
-    //       Learn React
-    //       <Button variant="contained"> 버튼 테스트</Button>
-    //   </header>
-    // </div>
-    <RouterProvider router={paymentRouter}>
-    </RouterProvider>
+    <>
+      <ScrollToTop/>
+      <Routes>
+        <Route path="/" element={<Layout />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Routes>
+    </>
   );
-}
+};
 
 export default App;
