@@ -1,0 +1,40 @@
+.footerWrap {
+  background-color: #002244;
+  color: white;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.footerTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.footerSubText {
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.joinButton {
+  background-color: white;
+  color: #002244;
+  font-weight: bold;
+  padding: 10px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.grayBottomBar {
+  background-color: #e0e0e0;
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  row-gap: 12px;
+  font-size: 0.85rem;
+  color: #333;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}

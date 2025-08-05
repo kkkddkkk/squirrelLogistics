@@ -1,0 +1,33 @@
+# compiled class files
+*.class
+
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# IntelliJ IDEA
+*.iml
+.idea/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Application properties/secrets
+application.yml
+application.properties
+application-*.yml
+application-*.properties
+.env

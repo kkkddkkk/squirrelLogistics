@@ -1,0 +1,61 @@
+.infiniteWrap {
+  height: 800px;
+  overflow-y: auto;
+  background-color: #fff;
+  padding: 32px 16px;
+  position: relative;
+}
+
+.section {
+  margin-bottom: 48px;
+}
+
+.promoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.promoText {
+  flex: 1;
+}
+
+.promoBox {
+  width: 150px;
+  height: 100px;
+  background-color: #eee;
+  border-radius: 8px;
+}
+
+.serviceGrid, .noticeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.serviceBox, .noticeBox {
+  background-color: #f2f2f2;
+  height: 100px;
+  border-radius: 8px;
+}
+
+.floatingButtons {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.circleBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}

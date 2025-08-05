@@ -1,0 +1,45 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode, JetBrains, Eclipse 등 IDE 설정
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs and system files
+*.log
+*.tmp
+*.swp
+
+# Environment variables
+.env
+.env.*.local
+.env.local
+
+# node_modules (in case someone installs in root)
+node_modules/
+
+# Mac/Windows junk
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# Java build
+*.class
+
+# IntelliJ & Eclipse
+*.classpath
+*.project
+.settings/
+
+# Others
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
