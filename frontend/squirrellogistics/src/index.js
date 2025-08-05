@@ -7,10 +7,16 @@ import { BrowserRouter } from 'react-router-dom';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
+<<<<<<< Updated upstream
     <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>
+=======
+    <App />
+  </React.StrictMode>
+
+>>>>>>> Stashed changes
 );
 
 // If you want to start measuring performance in your app, pass a function
