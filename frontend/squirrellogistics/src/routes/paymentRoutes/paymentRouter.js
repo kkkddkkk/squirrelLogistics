@@ -1,10 +1,11 @@
-import { lazy, Suspense } from "react"
+import { Children, lazy, Suspense } from "react"
 
 const Loading = <div>로딩중</div>
 
 const Payment =lazy(() => import("../../pages/Payment/Payment"));
 const Success = lazy(() => import("../../pages/Payment/PaymentSuccess"));
 const Reciept = lazy(() => import("../../pages/Payment/Reciept"));
+const History = lazy(() => import("../../pages/History/HistoryLayout"));
 const paymentRouter = () => {
     return [{
         path: ``,

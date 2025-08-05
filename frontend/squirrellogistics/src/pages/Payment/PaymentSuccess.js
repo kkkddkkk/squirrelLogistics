@@ -68,6 +68,10 @@ const PaymentSuccess = () => {
                     setIsOpen(true)
                 }}>임시버튼</PsButton>
 
+                <PsButton func={() => {
+                    moveToHistory();
+                }}>History</PsButton>
+
                 {/* 임시모달 */}
                 <Modal
                     open={isOpen}

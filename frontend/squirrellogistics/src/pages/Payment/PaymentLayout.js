@@ -11,6 +11,7 @@ export function BGBox({ children, title }) {
             width={"100%"}
             marginBottom={"2%"}
             flexWrap={"wrap"}
+            minHeight={"100vh"}
         >
             <TitleForCharge>{title}</TitleForCharge>
             <Box width={"60%"} maxWidth={"700px"}>

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import paymentRouter from "./paymentRoutes/paymentRouter"
 import driverRouter from "./driverRoutes/driverRouter";
+import historyRouter from "./historyRoutes/historyRouter";
 
 const Loading = <div>Loding...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
@@ -10,6 +11,7 @@ const Payment = lazy(() => import("../pages/Payment/PaymentLayout"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
 const AdminPage = lazy(() => import("../pages/Support/SupportLayout"));
+const History = lazy(() => import("../pages/History/HistoryLayout"));
 
 const root = createBrowserRouter([
     {
@@ -37,6 +39,14 @@ const root = createBrowserRouter([
         ),
         children: paymentRouter()
     }, {
+        path: "/history",
+        element: (
+            <Suspense fallback={Loading}>
+                <History></History>
+            </Suspense>
+        ),
+        children: historyRouter()
+    }, {
         path: "/estimate",
         element: (
             <Suspense fallback={Loading}>
@@ -54,7 +64,7 @@ const root = createBrowserRouter([
         path: "/driver",
         element: (
             <Suspense fallback={Loading}>
-                <DriverIndex/>
+                <DriverIndex />
             </Suspense>
         ),
         children: driverRouter()
