@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { SubTitleForCharge } from "../../pages/Payment/Payment";
 
+//PayBox=({총금액 파라미터})로 Payment.js에 전달
 const PayBox = () => {
     function ContentBox({ children, width }) {
         return (

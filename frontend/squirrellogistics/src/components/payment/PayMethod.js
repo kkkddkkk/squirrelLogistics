@@ -1,14 +1,12 @@
-import { FormControl, FormLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { useState } from "react";
+import { FormControl, MenuItem, Select } from "@mui/material";
 
-export const PayMethod = () => {
-    const [paymentMethod, setPaymentMethod] = useState("")
+export const PayMethod = ({paymentMethod, setPaymentMethod}) => {
 
     const paymentOptions = [
         { value: '', label: '결제수단을 선택하세요' },
-        { value: 'card', label: '신용카드' },
-        { value: 'kakaoPay', label: '카카오페이' },
-        { value: 'naverPay', label: '네이버페이' },
+        { value: 'html5_inicis', label: '신용카드' },
+        { value: 'kakaopay', label: '카카오페이' },
+        { value: 'danal', label: '휴대폰 소액결제' },
         { value: 'tossPay', label: '토스페이' }
     ];
 

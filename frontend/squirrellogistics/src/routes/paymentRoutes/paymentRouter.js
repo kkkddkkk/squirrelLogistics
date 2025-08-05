@@ -1,10 +1,25 @@
-import { Suspense } from "react"
+import { lazy, Suspense } from "react"
 
-const paymentRouter = ()=>{
-    return[
-        {
-            path:"list",
-            element: <Suspense></Suspense>
-        }
-    ]
-}
+
+const { createBrowserRouter } = require("react-router-dom");
+const Loading = "<div>로딩중</div>"
+
+const Payment = lazy(() => import("../../pages/Payment/Payment"));
+const Success = lazy(() => import("../../pages/Payment/PaymentSuccess"));
+const Reciept = lazy(() => import("../../pages/Payment/Reciept"));
+const paymentRouter = createBrowserRouter([
+    {
+        path: `/payment`,
+        element: <Suspense fallback={Loading}><Payment></Payment></Suspense>
+    },{
+        path: `/paymentSuccess`,
+        element: <Suspense fallback={Loading}><Success></Success></Suspense>
+    }, {
+        path: `/reciept`,
+        element: <Suspense fallback={Loading}><Reciept></Reciept></Suspense>
+    }
+
+])
+export default paymentRouter;
+
+
