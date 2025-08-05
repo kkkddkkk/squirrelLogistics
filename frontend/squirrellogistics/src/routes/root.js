@@ -31,8 +31,7 @@ const root = createBrowserRouter([
             <Suspense fallback={Loading}>
                 <Payment></Payment>
             </Suspense>
-        ),
-        children: paymentRouter()
+        )
     }
 
 ])
