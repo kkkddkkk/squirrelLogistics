@@ -6,7 +6,7 @@ const Loading = <div>Loding...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
 const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
 const Payment = lazy(() => import("../pages/Payment/Payment"));
-const EstimatePage = lazy(() => import("../pages/estimate/estimateRouter"));
+// const EstimatePage = lazy(() => import("../pages/estimate/estimateRouter"));
 
 const root = createBrowserRouter([
     {
@@ -33,9 +33,6 @@ const root = createBrowserRouter([
             </Suspense>
         ),
         children: paymentRouter()
-    }, {
-        path: "estimate",
-        element: <Suspense fallback={Loading}><EstimatePage /></Suspense>
     }
 
 ])
