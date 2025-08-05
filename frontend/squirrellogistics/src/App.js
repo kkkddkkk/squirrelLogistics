@@ -1,18 +1,19 @@
-import React from "react";
-import Button from "@mui/material/Button"
+// App.js
+import { Routes, Route } from "react-router-dom";
+import Layout from "./pages/Layout/Layout";
+import RegisterPage from "./pages/Layout/RegisterPage";
+import ScrollToTop from "./components/ScrollToTop";
+
 function App() {
   return (
-    <div>
-      <header>
-        <p>
-          main
-        </p>
-
-          Learn React
-          <Button variant="contained"> 버튼 테스트</Button>
-      </header>
-    </div>
+    <>
+      <ScrollToTop/>
+      <Routes>
+        <Route path="/" element={<Layout />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Routes>
+    </>
   );
-}
+};
 
 export default App;
