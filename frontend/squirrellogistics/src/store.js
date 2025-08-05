@@ -1,6 +1,6 @@
 // src/store.js
 import { configureStore } from '@reduxjs/toolkit';
-import estimateReducer from './slices/estimate/estimateSlice';
+import estimateReducer from './slice/estimate/estimateSlice';
 
 const store = configureStore({
   reducer: {
