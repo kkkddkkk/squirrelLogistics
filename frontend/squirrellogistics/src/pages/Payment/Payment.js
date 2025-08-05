@@ -7,23 +7,6 @@ import { useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 
 
-export function BGBox({ children, title }) {
-    return (
-        <Box
-            bgcolor={"#F5F7FA"}
-            display="flex"
-            justifyContent="center"
-            width={"100%"}
-            marginBottom={"2%"}
-            flexWrap={"wrap"}
-        >
-            <TitleForCharge>{title}</TitleForCharge>
-            <Box width={"60%"} maxWidth={"700px"}>
-                {children}
-            </Box>
-        </Box>
-    )
-}
 
 export function SubTitleForCharge({ children }) {
     return (
@@ -159,7 +142,7 @@ export const Payment = () => {
 
 
     return (
-        <BGBox title={"결제"}>
+        <>
             <SubTitleForCharge>결제금액</SubTitleForCharge>
             <PayBox />
 
@@ -183,7 +166,8 @@ export const Payment = () => {
                     결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
                 </Button>
             </Box>
-        </BGBox>
+        </>
+
     );
 }
 

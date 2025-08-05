@@ -1,5 +1,5 @@
 import { Box, Button, Modal, Typography } from "@mui/material"
-import { BGBox } from "./Payment"
+import { BGBox } from "./PaymentLayout"
 import React, { useEffect, useRef, useState } from "react"
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
 import { Link, useParams, useSearchParams } from "react-router-dom"

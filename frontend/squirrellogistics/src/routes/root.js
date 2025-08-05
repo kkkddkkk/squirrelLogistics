@@ -5,7 +5,7 @@ import paymentRouter from "./paymentRoutes/paymentRouter"
 const Loading = <div>Loding...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
 const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
-const Payment = lazy(() => import("../pages/Payment/Payment"));
+const Payment = lazy(() => import("../pages/Payment/PaymentLayout"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
 // const DriverIndex = lazy(() => import("../pages/Driver/DriverIndexPage"));
 const AdminPage = lazy(() => import("../pages/Support/SupportLayout"));
@@ -35,7 +35,8 @@ const root = createBrowserRouter([
             <Suspense fallback={Loading}>
                 <Payment></Payment>
             </Suspense>
-        )
+        ),
+        children: paymentRouter()
     }, {
         path: "/estimate",
         element: (

@@ -9,7 +9,7 @@ const usePaymentMove=()=>{
         navigate({pathname: `../history`});
     }
     const moveToSuccess = (state)=>{
-        navigate({pathname: `/paymentSuccess`, search: `?success=${state}`});
+        navigate({pathname: `/payment/paymentSuccess`, search: `?success=${state}`});
     }
     const moveBack = ()=>{
         navigate(-1);

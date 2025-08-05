@@ -1,5 +1,5 @@
 import { Box, Button } from "@mui/material"
-import { BGBox } from "./Payment"
+import { BGBox } from "./PaymentLayout"
 import React, { useRef } from "react"
 
 export const Reciept = () => {
