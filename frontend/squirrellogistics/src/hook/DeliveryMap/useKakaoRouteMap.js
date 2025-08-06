@@ -1,5 +1,8 @@
 import { useCallback, useEffect } from "react";
 import axios from "axios";
+import markerImg from '../../pages/Driver/images/marker_blue.png';
+import truckImg from '../../pages/Driver/images/truck.png';
+
 
 //카카오 맵 API용 자바스크립트 키 (지도 렌더링용).
 const KAKAO_JAVASCRIPT_KEY = "b6fc5753806ea3c0eb775a731ba0376b";
@@ -9,6 +12,15 @@ const KAKAO_NAVIGATION_REST_KEY = "a9b27d11d11d4f05e7134f9de285845d";
 
 const API_SERVER_HOST = "http://localhost:8080";
 
+const markerImage = new window.kakao.maps.MarkerImage(
+    markerImg, // Webpack이 경로로 변환해줌
+    new window.kakao.maps.Size(32, 46)
+);
+
+const truckImage = new window.kakao.maps.MarkerImage(
+    truckImg, // Webpack이 경로로 변환해줌
+    new window.kakao.maps.Size(45, 25)
+);
 
 export const useStartDummyRoute = () => {
     const startDummyRoute = useCallback(async ({ driverId, startLat, startLng, endLat, endLng }) => {
@@ -33,69 +45,6 @@ export const useStartDummyRoute = () => {
     return startDummyRoute;
 };
 
-// export const useKakaoRouteMap = (mapRef, driverId) => {
-//     useEffect(() => {
-//         const drawRouteFromBackend = async () => {
-//             const container = mapRef.current;
-
-//             const map = new window.kakao.maps.Map(container, {
-//                 center: new window.kakao.maps.LatLng(37.5665, 126.9780),
-//                 level: 5,
-//             });
-
-//             try {
-//                 const res = await axios.get(`${API_SERVER_HOST}/api/route/live?driverId=${driverId}`);
-//                 const { polyline, currentPosition } = res.data;
-
-//                 // 📍출발~도착 경로 표시 (폴리라인)
-//                 const linePath = polyline.map(p => new window.kakao.maps.LatLng(p.lat, p.lng));
-//                 const polylineObj = new window.kakao.maps.Polyline({
-//                     path: linePath,
-//                     strokeWeight: 5,
-//                     strokeColor: "#ff0000ff",
-//                     strokeOpacity: 0.9,
-//                     strokeStyle: "solid",
-//                 });
-//                 polylineObj.setMap(map);
-
-//                 // 📍현재 위치 오버레이 표시
-//                 const overlayDiv = document.createElement("div");
-//                 overlayDiv.className = "live-map-pulse-circle";
-//                 const customOverlay = new window.kakao.maps.CustomOverlay({
-//                     content: overlayDiv,
-//                     position: new window.kakao.maps.LatLng(currentPosition.lat, currentPosition.lng),
-//                     yAnchor: 0.5,
-//                     xAnchor: 0.5,
-//                 });
-//                 customOverlay.setMap(map);
-
-//                 // 📍지도 영역 맞추기
-//                 const bounds = new window.kakao.maps.LatLngBounds();
-//                 linePath.forEach(p => bounds.extend(p));
-//                 bounds.extend(new window.kakao.maps.LatLng(currentPosition.lat, currentPosition.lng));
-//                 map.setBounds(bounds);
-//             } catch (err) {
-//                 console.error("경로 로딩 실패:", err);
-//             }
-//         };
-
-//         const loadKakaoMap = () => {
-//             if (window.kakao && window.kakao.maps) {
-//                 window.kakao.maps.load(drawRouteFromBackend);
-//             } else {
-//                 const script = document.createElement("script");
-//                 script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false`;
-//                 script.async = true;
-//                 script.onload = () => window.kakao.maps.load(drawRouteFromBackend);
-//                 document.head.appendChild(script);
-//                 return () => document.head.removeChild(script);
-//             }
-//         };
-
-//         loadKakaoMap();
-//     }, [mapRef, driverId]);
-// };
-
 export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
     useEffect(() => {
         if (!mapRef.current) return;
@@ -107,7 +56,7 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
         let currentPulse = null;
         let endMarker = null;
         let interval;
-        let isFirstRender = true; // ✅ 최초 렌더링 여부 플래그
+        let isFirstRender = true;
 
         const loadKakaoMapScript = () => {
             return new Promise((resolve) => {
@@ -170,7 +119,7 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
                 expectedPolyline = new window.kakao.maps.Polyline({
                     path: expected.map(p => new window.kakao.maps.LatLng(p.lat, p.lng)),
                     strokeWeight: 4,
-                    strokeColor: "#FF0000",
+                    strokeColor: "#113F67",
                     strokeOpacity: 0.8,
                     strokeStyle: "solid"
                 });
@@ -190,7 +139,8 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
                 if (!endMarker) {
                     endMarker = new window.kakao.maps.Marker({
                         map,
-                        position: endLatLng
+                        position: endLatLng,
+                        image: markerImage?? undefined
                     });
                 }
 
@@ -204,7 +154,7 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
                         map,
                         position: currentLatLng,
                         content: pulseDiv,
-                        yAnchor: 0.5,
+                        yAnchor: 1.0,
                         xAnchor: 0.5
                     });
                 } else {
@@ -215,7 +165,8 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
                 if (!currentMarker) {
                     currentMarker = new window.kakao.maps.Marker({
                         map,
-                        position: currentLatLng
+                        position: currentLatLng,
+                        image: truckImage
                     });
                 } else {
                     currentMarker.setPosition(currentLatLng);
@@ -239,6 +190,10 @@ export const useKakaoRouteMap = (mapRef, driverId, onRouteUpdate) => {
 };
 
 export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, onRouteUpdate) => {
+    console.log("mapRef: " + mapRef);
+    console.log("startAddress: " + startAddress);
+    console.log("waypoints: " + waypoints);
+    console.log("endAddress: " + endAddress);
     useEffect(() => {
         if (!mapRef.current) return;
 
@@ -246,15 +201,11 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
         let geocoder = null;
 
         const loadKakaoMapScript = () => {
-            console.log("loadKakaoMapScript");
 
             return new Promise((resolve) => {
                 if (window.kakao && window.kakao.maps) {
-                    console.log("11111");
-
                     resolve();
                 } else {
-                    console.log("22222");
 
                     const script = document.createElement("script");
                     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=b6fc5753806ea3c0eb775a731ba0376b&autoload=false&libraries=services`;
@@ -266,14 +217,10 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
         };
 
         const getCoords = (address) => {
-            console.log("getCoords");
 
             return new Promise((resolve, reject) => {
-                console.log("주소 변환 시도:", address);
                 geocoder.addressSearch(address, (result, status) => {
-                    console.log("주소 변환 결과:", status, result);
                     if (status === window.kakao.maps.services.Status.OK) {
-                        console.log("hello2");
 
                         resolve({
                             name: address,
@@ -289,7 +236,6 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
         };
 
         const fetchRouteFromKakaoMobility = async (coords) => {
-            console.log("fetchRouteFromKakaoMobility");
 
             const origin = `${coords[0].x},${coords[0].y}`;
             const destination = `${coords[coords.length - 1].x},${coords[coords.length - 1].y}`;
@@ -324,12 +270,15 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
         };
 
         const drawRoute = async () => {
-            console.log("drawRoute");
 
             try {
-                const allAddresses = [startAddress, ...waypoints, endAddress];
+                const allAddresses = [
+                    startAddress,
+                    ...waypoints.map(wp => wp.address),
+                    endAddress
+                ];
                 const coords = await Promise.all(allAddresses.map(getCoords));
-
+                console.log("📍 변환할 전체 주소 목록:", allAddresses);
                 map = new window.kakao.maps.Map(mapRef.current, {
                     center: coords[0].latlng,
                     level: 5
@@ -343,6 +292,7 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
                     new window.kakao.maps.Marker({
                         map,
                         position: coord.latlng,
+                        image: markerImage,
                         title: coord.name
                     });
                 });
@@ -352,8 +302,8 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
                 new window.kakao.maps.Polyline({
                     map,
                     path: polylinePath,
-                    strokeWeight: 4,
-                    strokeColor: "#FF3B30",
+                    strokeWeight: 5,
+                    strokeColor: "#34699A",
                     strokeOpacity: 0.9,
                     strokeStyle: "solid"
                 });
@@ -364,11 +314,7 @@ export const useStaticRouteMap = (mapRef, startAddress, waypoints, endAddress, o
 
         loadKakaoMapScript()
             .then(() => {
-                console.log("loadKakaoMapScript 성공!");
-
                 geocoder = new window.kakao.maps.services.Geocoder();
-                console.log("geocoder: " + geocoder);
-
                 drawRoute();
             })
             .catch((err) => {
