@@ -1,6 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import NavBar from "../../components/NavBar";
+import NavBar from "../../components/driver/NavBar";
+import {
+  Box,
+  Button,
+  Container,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  Modal,
+  Tabs,
+  Tab,
+  Chip,
+  InputLabel,
+  FormControl,
+  Grid,
+  IconButton,
+  Stack,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -16,14 +35,13 @@ const EditProfile = () => {
     deliveryArea: "서울 전체",
     rating: 4.8,
   });
-
   const [emailError, setEmailError] = useState("");
   const [selectedCity, setSelectedCity] = useState("서울");
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedBank, setSelectedBank] = useState("은행 선택");
-  const [activeTab, setActiveTab] = useState("bank");
+  const [activeTab, setActiveTab] = useState(0);
 
   // 은행 데이터
   const banks = [
@@ -40,7 +58,6 @@ const EditProfile = () => {
     { name: "새마을금고", logo: "🏦" },
     { name: "SC제일", logo: "🏦" },
   ];
-
   // 증권사 데이터
   const securities = [
     { name: "NH투자증권", logo: "📈" },
@@ -50,7 +67,6 @@ const EditProfile = () => {
     { name: "하나증권", logo: "📈" },
     { name: "IBK투자증권", logo: "📈" },
   ];
-
   // 도시별 구/군 데이터
   const cityDistricts = {
     서울: [
@@ -383,275 +399,255 @@ const EditProfile = () => {
   };
 
   return (
-    <div>
+    <Box>
       <NavBar />
-      <div className="max-w-2xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center text-[#113F67]">
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
           회원 정보 수정
-        </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField
-            label="이름"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-          />
-          <InputField
-            label="생년월일"
-            name="birth"
-            type="date"
-            value={form.birth}
-            onChange={handleChange}
-          />
-          <InputField
-            label="연락처"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-          />
-          <div>
-            <InputField
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Stack spacing={2}>
+            <TextField
+              label="이름"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              fullWidth
+            />
+            <TextField
+              label="생년월일"
+              name="birth"
+              type="date"
+              value={form.birth}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="연락처"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              fullWidth
+            />
+            <TextField
               label="이메일"
               name="email"
               value={form.email}
               onChange={handleChange}
+              error={!!emailError}
+              helperText={emailError}
+              fullWidth
             />
-            {emailError && (
-              <p className="text-red-500 text-sm mt-1">{emailError}</p>
-            )}
-          </div>
-
-          {/* 계좌번호 입력 필드 */}
-          <div>
-            <label className="block mb-1 text-sm font-medium">계좌번호</label>
-            <div className="flex gap-2">
-              {/* 은행 선택 버튼 */}
-              <button
-                type="button"
-                onClick={() => setShowBankModal(true)}
-                className="flex-1 border border-gray-300 px-3 py-2 rounded text-sm focus:outline-[#113F67] text-left bg-white"
-              >
-                {selectedBank}
-              </button>
-
-              {/* 계좌번호 입력 */}
-              <input
-                type="text"
-                name="bankAccount"
-                value={form.bankAccount}
-                onChange={handleChange}
-                placeholder="계좌번호 입력"
-                className="flex-1 border border-gray-300 px-3 py-2 rounded text-sm focus:outline-[#113F67]"
-              />
-            </div>
-          </div>
-
-          <InputField
-            label="사업자 등록 번호"
-            name="businessId"
-            value={form.businessId}
-            onChange={handleChange}
-          />
-          <InputField
-            label="운행 불가 시작일"
-            name="unavailableStart"
-            type="date"
-            value={form.unavailableStart}
-            onChange={handleChange}
-          />
-          <InputField
-            label="운행 불가 종료일"
-            name="unavailableEnd"
-            type="date"
-            value={form.unavailableEnd}
-            onChange={handleChange}
-          />
-
-          {/* 배송 가능 지역 선택 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">배송 가능 지역</label>
-
-            {/* 도시 선택 */}
-            <div>
-              <select
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={5}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => setShowBankModal(true)}
+                >
+                  {selectedBank}
+                </Button>
+              </Grid>
+              <Grid item xs={7}>
+                <TextField
+                  label="계좌번호"
+                  name="bankAccount"
+                  value={form.bankAccount}
+                  onChange={handleChange}
+                  fullWidth
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              label="사업자 등록 번호"
+              name="businessId"
+              value={form.businessId}
+              onChange={handleChange}
+              fullWidth
+            />
+            <TextField
+              label="운행 불가 시작일"
+              name="unavailableStart"
+              type="date"
+              value={form.unavailableStart}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="운행 불가 종료일"
+              name="unavailableEnd"
+              type="date"
+              value={form.unavailableEnd}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            {/* 배송 가능 지역 선택 */}
+            <FormControl fullWidth>
+              <InputLabel>도시</InputLabel>
+              <Select
                 value={selectedCity}
+                label="도시"
                 onChange={handleCityChange}
-                className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-[#113F67]"
               >
                 {Object.keys(cityDistricts).map((city) => (
-                  <option key={city} value={city}>
+                  <MenuItem key={city} value={city}>
                     {city}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-            </div>
-
-            {/* 구/군 선택 */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
-                className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-[#113F67] text-left bg-white"
+              </Select>
+            </FormControl>
+            <Button
+              variant="outlined"
+              onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
+              fullWidth
+            >
+              구/군을 선택하세요
+            </Button>
+            <Modal
+              open={showDistrictDropdown}
+              onClose={() => setShowDistrictDropdown(false)}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  bgcolor: "background.paper",
+                  boxShadow: 24,
+                  p: 4,
+                  borderRadius: 2,
+                  width: 300,
+                  maxHeight: 400,
+                  overflowY: "auto",
+                }}
               >
-                구/군을 선택하세요
-              </button>
-
-              {showDistrictDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {cityDistricts[selectedCity].map((district, index) => (
-                    <div
-                      key={index}
+                <Typography variant="h6" gutterBottom>
+                  구/군 선택
+                </Typography>
+                <Stack spacing={1}>
+                  {cityDistricts[selectedCity]?.map((district, idx) => (
+                    <Button
+                      key={idx}
                       onClick={() => handleDistrictSelect(district)}
-                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                      variant="text"
+                      sx={{ justifyContent: "flex-start" }}
                     >
                       {district}
-                    </div>
+                    </Button>
                   ))}
-                </div>
-              )}
-            </div>
-
+                </Stack>
+              </Box>
+            </Modal>
             {/* 선택된 지역들 표시 */}
-            {selectedAreas.length > 0 && (
-              <div className="mt-3">
-                <p className="text-sm text-gray-600 mb-2">선택된 지역:</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedAreas.map((area, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      <span>{area}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeArea(area)}
-                        className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-between pt-6">
-            <button
-              type="button"
-              onClick={() => navigate("/driver/profile")}
-              className="px-4 py-2 text-sm border border-gray-400 rounded hover:bg-gray-100"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm bg-[#113F67] text-white rounded hover:opacity-90"
-            >
-              저장하기
-            </button>
-          </div>
-        </form>
-      </div>
-
+            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {selectedAreas.map((area, idx) => (
+                <Chip
+                  key={idx}
+                  label={area}
+                  onDelete={() => removeArea(area)}
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+            <Box display="flex" justifyContent="space-between" pt={3}>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={() => navigate("/driver/profile")}
+              >
+                취소
+              </Button>
+              <Button variant="contained" type="submit">
+                저장하기
+              </Button>
+            </Box>
+          </Stack>
+        </Box>
+      </Container>
       {/* 은행/증권사 선택 모달 */}
-      {showBankModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-11/12 max-w-md max-h-[80vh] overflow-hidden">
-            {/* 모달 헤더 */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">은행·증권사 선택</h2>
-              <button
-                onClick={() => setShowBankModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* 탭 네비게이션 */}
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab("bank")}
-                className={`flex-1 py-3 text-sm font-medium ${
-                  activeTab === "bank"
-                    ? "text-gray-900 border-b-2 border-gray-900"
-                    : "text-gray-500"
-                }`}
-              >
-                은행
-              </button>
-              <button
-                onClick={() => setActiveTab("securities")}
-                className={`flex-1 py-3 text-sm font-medium ${
-                  activeTab === "securities"
-                    ? "text-gray-900 border-b-2 border-gray-900"
-                    : "text-gray-500"
-                }`}
-              >
-                증권사
-              </button>
-            </div>
-
-            {/* 은행/증권사 그리드 */}
-            <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-4 gap-4">
-                {activeTab === "bank"
-                  ? banks.map((bank, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleBankSelect(bank)}
-                        className="flex flex-col items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
-                      >
-                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg mb-2">
-                          {bank.logo}
-                        </div>
-                        <span className="text-xs text-center">{bank.name}</span>
-                      </div>
-                    ))
-                  : securities.map((security, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleBankSelect(security)}
-                        className="flex flex-col items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
-                      >
-                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-lg mb-2">
-                          {security.logo}
-                        </div>
-                        <span className="text-xs text-center">
-                          {security.name}
-                        </span>
-                      </div>
-                    ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <Modal open={showBankModal} onClose={() => setShowBankModal(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            borderRadius: 2,
+            width: 350,
+            maxHeight: 500,
+            overflowY: "auto",
+          }}
+        >
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            p={2}
+            borderBottom={1}
+            borderColor="divider"
+          >
+            <Typography variant="h6">은행·증권사 선택</Typography>
+            <IconButton onClick={() => setShowBankModal(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Tabs
+            value={activeTab}
+            onChange={(_, v) => setActiveTab(v)}
+            variant="fullWidth"
+          >
+            <Tab label="은행" />
+            <Tab label="증권사" />
+          </Tabs>
+          <Box p={2}>
+            <Grid container spacing={2}>
+              {(activeTab === 0 ? banks : securities).map((item, idx) => (
+                <Grid item xs={3} key={idx}>
+                  <Button
+                    onClick={() => handleBankSelect(item)}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        bgcolor:
+                          activeTab === 0 ? "primary.main" : "success.main",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mb: 1,
+                        fontSize: 24,
+                      }}
+                    >
+                      {item.logo}
+                    </Box>
+                    <Typography variant="caption" align="center">
+                      {item.name}
+                    </Typography>
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </Box>
+      </Modal>
+    </Box>
   );
 };
-
-const Header = () => (
-  <header className="bg-[#F5F7FA] p-4 border-b">
-    <h1 className="text-xl font-bold text-[#113F67]">Squirrel Logistics</h1>
-  </header>
-);
-
-const InputField = ({ label, name, value, onChange, type = "text" }) => (
-  <div>
-    <label htmlFor={name} className="block mb-1 text-sm font-medium">
-      {label}
-    </label>
-    <input
-      type={type}
-      id={name}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-[#113F67]"
-    />
-  </div>
-);
 
 export default EditProfile;
