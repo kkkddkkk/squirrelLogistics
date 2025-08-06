@@ -8,6 +8,9 @@ const usePaymentMove=()=>{
     const moveToHistory = ()=>{//임시
         navigate({pathname: `/payment/history`});
     }
+    const moveToPayment=()=>{
+        navigate({pathname: `/payment`});
+    }
     const moveToSuccess = (state)=>{
         navigate({pathname: `/payment/paymentSuccess`, search: `?success=${state}`});
     }
@@ -15,7 +18,7 @@ const usePaymentMove=()=>{
         navigate(-1);
     }
 
-    return {moveToMain, moveToHistory, moveToSuccess, moveBack}
+    return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToPayment}
 }
 export default usePaymentMove;
 

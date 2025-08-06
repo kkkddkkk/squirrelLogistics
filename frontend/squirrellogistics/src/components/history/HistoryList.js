@@ -2,8 +2,24 @@ import { Box, Button, Typography } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
+export const Buttons = ({ children, func }) => {
+    return (
+        <Button
+            variant="contained"
+            sx={{ marginRight: "7px" }}
+            onClick={func}
+        >
+            {children}
+        </Button>
+    );
+}
 
 const HistoryList = () => {
+    const [params] = useSearchParams();
+    const date = params.get("date");
+
     const ListBox = ({ children }) => {
         return (
             <Box
@@ -22,18 +38,6 @@ const HistoryList = () => {
         )
     }
 
-    const Buttons = ({ children, func }) => {
-        return (
-            <Button
-                variant="contained"
-                sx={{ marginRight: "7px" }}
-                onClick={func}
-            >
-                {children}
-            </Button>
-        );
-    }
-
     const [isExpand, setIsExpand] = useState(false);
     const [stopOver1, setStopOver1] = useState('');
     const [stopOver2, setStopOver2] = useState('');
@@ -50,11 +54,18 @@ const HistoryList = () => {
         else setIsExpand(false);
     }
 
+    const showTransactionStatement = () => {
+        window.open(`${window.location.origin}/payment/transactionStatement`, 'name', 'width=1000, height=600');
+    }
 
+    const showReciept = () => {
+        window.open(`${window.location.origin}/payment/reciept`, 'name', 'width=500, height=600');
+    }
 
     return (
         <ListBox>
-            ooo-> 000
+            <input type="hidden" value={"주문ID 들어갈 곳"}></input>
+            ooo- 000
             {!isExpand ?
                 <>
                     <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
@@ -71,33 +82,33 @@ const HistoryList = () => {
                         sx={{
                             width: "100%", borderTop: "1px solid #909095", borderBottom: "1px solid #909095",
                             display: "flex", justifyContent: "space-between", alignItems: "center",
-                            padding: "8px 2px"
+                            padding: "8px 8px"
                         }}
                     >
                         <Box>
-                            <Buttons>명세서</Buttons>
-                            <Buttons>영수증</Buttons>
+                            <Buttons func={showTransactionStatement}>명세서</Buttons>
+                            <Buttons func={showReciept}>영수증</Buttons>
                         </Box>
                         <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 000 원</Typography>
                     </Box>
-                    <Box sx={{ width: "100%" }}>
+                    <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
                         <Box
                             component="img"
                             sx={{
                                 height: "40px",
                                 aspectRatio: "1/1",
+                                borderRadius: "100%",
                                 marginTop: "2%"
                             }}
                             alt="OtterImg"
                             src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
                         />
-                        <Typography sx={{display: "inline-block"}}>운전자명(차종)</Typography>
+                        <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>운전자명(차종)</Typography>
                     </Box>
-                    <Box sx={{ width: "100%", display: "flex", justifyContent: "end", marginBottom: "5px" }}>
+                    <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5px 0" }}>
                         <Buttons>신고</Buttons>
                         <Buttons>리뷰 작성</Buttons>
                     </Box>
-
                 </>
             }
         </ListBox>

@@ -4,7 +4,11 @@ import React, { useEffect, useRef, useState } from "react"
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { Reciept } from "./Reciept"
-import { TransactionStatement } from "../../components/payment/TransactionStatement"
+import TransactionStatement from "../../pages/Payment/TransactionStatement"
+
+export const showReciept = () => {
+    window.open(`${window.location.origin}/reciept`, 'name', 'width=500, height=600');
+}
 
 const PaymentSuccess = () => {
     const [params] = useSearchParams();
@@ -23,94 +27,43 @@ const PaymentSuccess = () => {
         );
     }
 
-    const showReciept = () => {
-        window.open(`${window.location.origin}/reciept`, 'name', 'width=500, height=600');
-    }
-
-
     //모달(임시)
     const [isOpen, setIsOpen] = useState(false);
-    
-    const handlePrint=()=>{
+
+    const handlePrint = () => {
         window.print();
     }
 
     return (
-        <BGBox title={''}>
-            <Box
-                component="img"
-                sx={{
-                    height: 400,
-                    width: "100%",
-                    marginTop: "2%"
-                }}
-                alt="OtterImg"
-                src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
-            >
-            </Box>
-
-            <Box
-                sx={{
-                    width: "90%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    margin: "5%"
-                }}
-            >
-                <PsButton func={() => moveToMain()}>메인화면</PsButton>
-                {success === "true" ? <PsButton func={() => moveToHistory()}>내 이용기록</PsButton>
-                    : <></>}
-                {success === "true" ? <PsButton func={showReciept}>영 수 증 </PsButton>
-                    : <PsButton func={() => moveBack()}>다시 결제하기 </PsButton>}
-
-                <PsButton func={() => {
-                    setIsOpen(true)
-                }}>임시버튼</PsButton>
-
-                <PsButton func={() => {
-                    moveToHistory();
-                }}>History</PsButton>
-
-                {/* 임시모달 */}
-                <Modal
-                    open={isOpen}
-                    onClose={() => setIsOpen(false)}
-                    aria-labelledby="modal-modal-title"
-                    aria-describedby="modal-modal-description"
-
+        <BGBox>
+            <Box width={"60%"} maxWidth={"700px"}>
+                <Box
+                    component="img"
+                    sx={{
+                        height: 400,
+                        width: "100%",
+                        marginTop: "2%"
+                    }}
+                    alt="OtterImg"
+                    src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
                 >
-                    <Box sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 950,
-                        bgcolor: 'background.paper',
-                        border: '2px solid #000',
-                        boxShadow: 24,
-                        p: 4,
+                </Box>
+
+                <Box
+                    sx={{
+                        width: "90%",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        flexWrap: "wrap"
-                    }}>
-                        <Box
-                            sx={{
-                                width: "90%",
-                            }}
-                            visibility={"visible"}
-                        >
-                            <TransactionStatement></TransactionStatement>
-                        </Box>
-                        <Box sx={{ width: "50%", display: "flex", justifyContent: "space-between", marginTop: "5%" }}>
-                            <PsButton func={() => setIsOpen(true)}>내보내기</PsButton>
-                            <PsButton func={handlePrint}>인 쇄</PsButton>
-                        </Box>
-
-                    </Box>
-                </Modal>
-
+                        justifyContent: "space-between",
+                        margin: "5%"
+                    }}
+                >
+                    <PsButton func={() => moveToMain()}>메인화면</PsButton>
+                    {success === "true" ? <PsButton func={() => moveToHistory()}>내 이용기록</PsButton>
+                        : <></>}
+                    {success === "true" ? <PsButton func={showReciept}>영 수 증 </PsButton>
+                        : <PsButton func={() => moveBack()}>다시 결제하기 </PsButton>}
+                </Box>
             </Box>
         </BGBox >
     );

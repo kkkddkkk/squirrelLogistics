@@ -6,16 +6,16 @@ const HistoryLayout = () => {
     return (
         <Box
             sx={{
-                width: "100%",
+                width: "90%",
                 display: "flex",
                 justifyContent: "space-between",
                 alignContent: "center"
             }}
         >
-            <Box sx={{ width: "50%" }}>
+            <Box sx={{ width: "50%"}}>
                 <HistoryCalendar></HistoryCalendar>
             </Box>
-            <Box sx={{ width: "50%" }}>
+            <Box sx={{ width: "50%"}}>
                 <HistoryList></HistoryList>
             </Box>
 
