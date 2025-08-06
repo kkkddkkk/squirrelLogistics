@@ -2,6 +2,7 @@ import { Box, Button, Typography } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export const Buttons = ({ children, func }) => {
     return (
@@ -16,6 +17,9 @@ export const Buttons = ({ children, func }) => {
 }
 
 const HistoryList = () => {
+    const [params] = useSearchParams();
+    const date = params.get("date");
+
     const ListBox = ({ children }) => {
         return (
             <Box
@@ -50,10 +54,18 @@ const HistoryList = () => {
         else setIsExpand(false);
     }
 
+    const showTransactionStatement = () => {
+        window.open(`${window.location.origin}/payment/transactionStatement`, 'name', 'width=1000, height=600');
+    }
+
+    const showReciept = () => {
+        window.open(`${window.location.origin}/payment/reciept`, 'name', 'width=500, height=600');
+    }
+
     return (
         <ListBox>
             <input type="hidden" value={"주문ID 들어갈 곳"}></input>
-            ooo-> 000
+            ooo- 000
             {!isExpand ?
                 <>
                     <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
@@ -74,8 +86,8 @@ const HistoryList = () => {
                         }}
                     >
                         <Box>
-                            <Buttons>명세서</Buttons>
-                            <Buttons>영수증</Buttons>
+                            <Buttons func={showTransactionStatement}>명세서</Buttons>
+                            <Buttons func={showReciept}>영수증</Buttons>
                         </Box>
                         <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 000 원</Typography>
                     </Box>
@@ -97,7 +109,6 @@ const HistoryList = () => {
                         <Buttons>신고</Buttons>
                         <Buttons>리뷰 작성</Buttons>
                     </Box>
-
                 </>
             }
         </ListBox>

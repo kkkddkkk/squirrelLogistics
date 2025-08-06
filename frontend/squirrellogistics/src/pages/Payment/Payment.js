@@ -145,30 +145,34 @@ export const Payment = () => {
 
     return (
         <>
-            <SubTitleForCharge>결제금액</SubTitleForCharge>
-            <PayBox />
+            <TitleForCharge>결제</TitleForCharge>
+            <Box width={"60%"} maxWidth={"700px"}>
+                <SubTitleForCharge>결제금액</SubTitleForCharge>
+                <PayBox />
 
-            <SubTitleForCharge>환불일자</SubTitleForCharge>
-            <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
+                <SubTitleForCharge>환불일자</SubTitleForCharge>
+                <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
 
-            <SubTitleForCharge>결제수단</SubTitleForCharge>
-            <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
+                <SubTitleForCharge>결제수단</SubTitleForCharge>
+                <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
 
-            <SubTitleForCharge><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitleForCharge>
-            <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
-            <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
+                <SubTitleForCharge><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitleForCharge>
+                <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
+                <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
 
-            <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                <Button
-                    variant="contained"
-                    sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
-                    onClick={handleClickPayment}
-                    disabled={!(checkedAll && (paymentMethod !== ''))}
-                >
-                    결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
-                </Button>
+                <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                    <Button
+                        variant="contained"
+                        sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
+                        onClick={handleClickPayment}
+                        disabled={!(checkedAll && (paymentMethod !== ''))}
+                    >
+                        결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
+                    </Button>
+                </Box>
             </Box>
         </>
+
 
     );
 }

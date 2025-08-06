@@ -19,9 +19,7 @@ const HistoryLayout = () => {
             gap={0}
         >
             <TitleForCharge>이용기록</TitleForCharge>
-            <Box width={"90%"} minWidth={"700px"}>
-                <Outlet />
-            </Box>
+            <Outlet />
         </Box>
 
 

@@ -4,6 +4,7 @@
 .react-datepicker {
     width: 100% !important;
     max-width: 400px;
+    height: 400px;
     font-size: 16px;
     border: none;
     box-shadow: none;
@@ -11,6 +12,8 @@
 
 .react-datepicker__month-container{
     width: 100% !important;
+        max-width: 400px;
+    height: 400px;
     float: center;
 }
 
@@ -19,9 +22,8 @@
     justify-content: space-around;
 }
 
-.react-datepicker__week{
-    display: flex;
-    justify-content: space-around;
+.react-datepicker__navigation{/*이동버튼*/
+    top: 5%!important; 
 }
 
 /* 달력 헤더 */
@@ -36,4 +38,34 @@
 .react-datepicker__current-month {
     font-size: 1.2rem;
     font-weight: bold;
+    margin: 3% !important;
+}
+
+.react-datepicker__week{
+    display: flex;
+    justify-content: space-around;
+    margin: 3% 0
+}
+
+.react-datepicker__day--highlighted-custom {
+    position: relative;
+    background-color: transparent !important; /* 배경 제거 */
+    color: inherit !important; /* 텍스트 색 유지 */
+}
+
+.react-datepicker__day--highlighted-custom::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -5px;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background-color: #A20025;
+    border-radius: 50%;
+}
+
+.react-datepicker__day--highlighted-custom.react-datepicker__day--selected {
+    background-color: #216ba5 !important; 
+    color: white !important;
 }

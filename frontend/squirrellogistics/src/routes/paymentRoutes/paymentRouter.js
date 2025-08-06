@@ -5,7 +5,7 @@ const Loading = <div>로딩중</div>
 const Payment =lazy(() => import("../../pages/Payment/Payment"));
 const Success = lazy(() => import("../../pages/Payment/PaymentSuccess"));
 const Reciept = lazy(() => import("../../pages/Payment/Reciept"));
-const History = lazy(() => import("../../pages/History/HistoryLayout"));
+const TransactionStatement = lazy(() => import("../../pages/Payment/TransactionStatement"));
 const paymentRouter = () => {
     return [{
         path: ``,
@@ -16,6 +16,9 @@ const paymentRouter = () => {
     }, {
         path: `reciept`,
         element: <Suspense fallback={Loading}><Reciept></Reciept></Suspense>
+    }, {
+        path: `transactionStatement`,
+        element: <Suspense fallback={Loading}><TransactionStatement></TransactionStatement></Suspense>
     }
     ]
 }

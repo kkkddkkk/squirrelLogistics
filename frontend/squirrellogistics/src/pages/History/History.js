@@ -6,7 +6,7 @@ const HistoryLayout = () => {
     return (
         <Box
             sx={{
-                width: "100%",
+                width: "90%",
                 display: "flex",
                 justifyContent: "space-between",
                 alignContent: "center"
