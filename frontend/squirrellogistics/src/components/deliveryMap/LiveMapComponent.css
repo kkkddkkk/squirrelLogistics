@@ -3,7 +3,7 @@
 .live-map-pulse-circle {
   width: 30px;
   height: 30px;
-  background: rgba(255, 0, 0, 0.4); /* 파란색 */
+  background: #113F67; /* 파란색 */
   border-radius: 50%;
   animation: pulse 1.5s ease-out infinite;
   position: relative;
