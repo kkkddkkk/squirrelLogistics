@@ -1,0 +1,109 @@
+/* 컨테이너 */
+.driversearch-form {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background-color: #F5F7FA;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  font-family: 'sans-serif';
+  color: #2A2A2A;
+}
+
+/* 상단 검색바 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.region-btn {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.keyword-input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.search-btn {
+  background-color: #E8A93F;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #2A2A2A;
+  cursor: pointer;
+}
+
+/* 필터 바 */
+.filter-bar {
+  display: flex;
+  align-items: center; /* 수직 정렬 맞춤 */
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* 드롭다운 */
+.filter-bar select {
+  padding: 0.5rem 2rem 0.5rem 0.8rem;  /* 👉 오른쪽 패딩 추가 */
+  font-size: 0.95rem;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%232A2A2A' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;  /* 👉 좀 더 오른쪽으로 */
+  background-size: 12px;
+  border-radius: 6px;
+}
+
+
+/* 체크박스 정렬 */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  height: 38px; /* 드롭다운 높이에 맞춤 */
+  margin-right: 0.4rem;
+  cursor: pointer;
+}
+
+/* 기사 리스트 */
+.driver-list {
+  margin-top: 1rem;
+}
+
+.no-result {
+  text-align: center;
+  color: gray;
+  margin-top: 2rem;
+  font-size: 1rem;
+}
+
+
+.back-button {
+  padding: 0.8rem 2rem;
+  background: #E8A93F;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
