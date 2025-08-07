@@ -257,7 +257,7 @@ const EstimateForm = () => {
       </div>
 
       <div className="form-row">
-        <button className="driver-button" onClick={() => navigate("/search-drivers")}>기사님 검색</button>
+        <button className="driver-button" onClick={() => navigate("/driversearch")}>기사님 검색</button>
         <button className="submit-button" onClick={handleRequest}>요청완료</button>
       </div>
 
