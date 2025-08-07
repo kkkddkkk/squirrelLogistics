@@ -1,6 +1,6 @@
 package com.gpt.squirrelLogistics.enums.payment;
 
-public enum FailureReasonEnums {
+public enum FailureReasonEnum {
     CARD_DECLINED,         // 카드 거절
     INSUFFICIENT_FUNDS,    // 잔액 부족
     EXPIRED_CARD,          // 카드 만료
