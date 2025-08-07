@@ -6,9 +6,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gpt.squirrelLogistics.dto.admin.AdminUserResponseDTO;
 import com.gpt.squirrelLogistics.enums.policy.PolicyTypeEnum;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PolicyResponseDTO {
 	private Long policyId; //정책 아이디.
 	private AdminUserResponseDTO adminUserDTO; //관리자 정보 객체.
