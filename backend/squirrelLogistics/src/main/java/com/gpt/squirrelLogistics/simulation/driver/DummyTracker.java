@@ -1,15 +1,14 @@
-package com.gpt.squirrelLogistics.domain.route.simulation;
+package com.gpt.squirrelLogistics.simulation.driver;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.annotations.Comment;
 import org.springframework.stereotype.Component;
 
-import com.gpt.squirrelLogistics.common.model.LatLng;
-import com.gpt.squirrelLogistics.domain.driver.api.KakaoClient;
-import com.gpt.squirrelLogistics.domain.driver.dto.RouteInfoDTO;
+import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
+import com.gpt.squirrelLogistics.external.api.kakao.KakaoRouteClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DummyTracker {
 
-	 private final KakaoClient kakaoClient;
+	 private final KakaoRouteClient kakaoClient;
 	 private final Map<String, DummyDriver> driverMap = new ConcurrentHashMap<>();
 
 	    public void startTracking(String driverId, LatLng start, LatLng end) {

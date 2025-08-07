@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.domain.driver.controller;
+package com.gpt.squirrelLogistics.controller.driver;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.common.model.LatLng;
-import com.gpt.squirrelLogistics.domain.driver.dto.RouteInfoDTO;
-import com.gpt.squirrelLogistics.domain.driver.service.RouteService;
+import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
+import com.gpt.squirrelLogistics.service.driver.RouteService;
 
 import lombok.RequiredArgsConstructor;
 

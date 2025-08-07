@@ -1,8 +1,8 @@
-package com.gpt.squirrelLogistics.domain.driver.dto;
+package com.gpt.squirrelLogistics.dto.driver;
 
 import java.util.List;
 
-import com.gpt.squirrelLogistics.common.model.LatLng;
+import com.gpt.squirrelLogistics.common.LatLng;
 
 import lombok.Builder;
 import lombok.Data;

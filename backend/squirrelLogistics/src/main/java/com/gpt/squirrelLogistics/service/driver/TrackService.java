@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.domain.driver.service;
+package com.gpt.squirrelLogistics.service.driver;
 
 import org.springframework.stereotype.Service;
 

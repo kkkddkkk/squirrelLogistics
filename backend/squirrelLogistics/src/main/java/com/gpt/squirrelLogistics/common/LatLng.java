@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.common.model;
+package com.gpt.squirrelLogistics.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

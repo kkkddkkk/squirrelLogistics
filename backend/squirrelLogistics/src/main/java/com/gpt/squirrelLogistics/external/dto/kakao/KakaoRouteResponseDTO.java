@@ -1,11 +1,11 @@
-package com.gpt.squirrelLogistics.domain.driver.api.dto;
+package com.gpt.squirrelLogistics.external.dto.kakao;
 
 import java.util.List;
 
 import lombok.Data;
 
 @Data
-public class KakaoRouteResponse {
+public class KakaoRouteResponseDTO {
 	
 	  private List<Route> routes;
 

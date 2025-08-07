@@ -1,20 +1,19 @@
-package com.gpt.squirrelLogistics.domain.route.simulation;
+package com.gpt.squirrelLogistics.simulation.driver;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-
-import com.gpt.squirrelLogistics.common.model.LatLng;
-import com.gpt.squirrelLogistics.domain.driver.api.KakaoClient;
-import com.gpt.squirrelLogistics.domain.driver.dto.RouteInfoDTO;
+import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
+import com.gpt.squirrelLogistics.external.api.kakao.KakaoRouteClient;
 
 public class DummyDriver {
 	private final String driverId;
 	private final List<LatLng> route;
 	private volatile int index = 0;
-	private KakaoClient kakaoClient;
+	private KakaoRouteClient kakaoClient;
 
-	public DummyDriver(String driverId, List<LatLng> route, KakaoClient kakaoClient) {
+	public DummyDriver(String driverId, List<LatLng> route, KakaoRouteClient kakaoClient) {
 		this.driverId = driverId;
 		this.route = route;
 		this.kakaoClient = kakaoClient;

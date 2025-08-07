@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.domain.driver.api;
+package com.gpt.squirrelLogistics.external.api.kakao;
 
 
 import java.util.ArrayList;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.gpt.squirrelLogistics.common.model.LatLng;
-import com.gpt.squirrelLogistics.domain.driver.api.dto.KakaoRouteResponse;
-import com.gpt.squirrelLogistics.domain.driver.dto.RouteInfoDTO;
+import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
+import com.gpt.squirrelLogistics.external.dto.kakao.KakaoRouteResponseDTO;
 
 @Component
-public class KakaoClient {
+public class KakaoRouteClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -37,11 +37,11 @@ public class KakaoClient {
 
         try {
             // 3. GET 요청 보내기
-            ResponseEntity<KakaoRouteResponse> response = restTemplate.exchange(
+            ResponseEntity<KakaoRouteResponseDTO> response = restTemplate.exchange(
                 builder.toUriString(),
                 HttpMethod.GET,
                 entity,
-                KakaoRouteResponse.class
+                KakaoRouteResponseDTO.class
             );
 
             // 4. 응답에서 vertexes 가공
@@ -58,7 +58,7 @@ public class KakaoClient {
         }
     }
 
-    private List<LatLng> extractPolyline(KakaoRouteResponse response) {
+    private List<LatLng> extractPolyline(KakaoRouteResponseDTO response) {
         List<LatLng> polyline = new ArrayList<>();
 
         List<Double> vertexes = response.getRoutes()
