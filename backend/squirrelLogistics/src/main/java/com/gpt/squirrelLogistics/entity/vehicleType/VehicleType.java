@@ -37,7 +37,6 @@ public class VehicleType {
 	@Column(length = 50)
 	private String name; //차량 이름.
 
-	private int maxWeight; //최대 적재량.
-
+	private int maxWeight; //최대 적재량(kg 단위).
 	private LocalDateTime regDate; //생성일.
 }

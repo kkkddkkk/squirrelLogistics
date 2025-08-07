@@ -3,7 +3,6 @@ package com.gpt.squirrelLogistics.entity.banner;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.admin.AdminUser;
-import com.gpt.squirrelLogistics.entity.notification.Notification;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

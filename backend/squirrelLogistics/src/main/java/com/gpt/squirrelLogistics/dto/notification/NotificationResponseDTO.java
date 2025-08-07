@@ -2,7 +2,7 @@ package com.gpt.squirrelLogistics.dto.notification;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.gpt.squirrelLogistics.dto.admin.AdminUserDTO;
+import com.gpt.squirrelLogistics.dto.admin.AdminUserResponseDTO;
 
 import lombok.*;
 
@@ -12,7 +12,7 @@ import lombok.*;
 @Builder
 public class NotificationResponseDTO {
 	private Long notiId; //공지 아이디.
-    private AdminUserDTO adminUserDTO; //관리자 정보 객체.
+    private AdminUserResponseDTO adminUserDTO; //관리자 정보 객체.
 
     private String title; //제목.
     private String content; //내용.
