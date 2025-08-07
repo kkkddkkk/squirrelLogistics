@@ -1,0 +1,42 @@
+/* src/components/driversearch/DriverCard.css */
+.driver-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.driver-img-placeholder {
+  width: 60px;
+  height: 60px;
+  background: #ccc;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 60px;
+  font-weight: bold;
+}
+
+.driver-info {
+  flex: 1;
+  margin-left: 1rem;
+}
+
+.driver-name {
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+}
+
+.request-button {
+  padding: 0.5rem 1rem;
+  background: #E8A93F;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  color: #2A2A2A;
+  cursor: pointer;
+}

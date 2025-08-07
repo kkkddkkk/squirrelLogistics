@@ -12,6 +12,7 @@ const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
 const AdminPage = lazy(() => import("../pages/Support/SupportLayout"));
 const History = lazy(() => import("../pages/History/HistoryLayout"));
+const DriverSearchPage = lazy(() => import("../pages/driversearch/DriverSearchPage"));
 
 const root = createBrowserRouter([
     {
@@ -68,6 +69,14 @@ const root = createBrowserRouter([
             </Suspense>
         ),
         children: driverRouter()
+    },
+    {
+        path: "/driversearch",
+        element: (
+            <Suspense fallback={Loading}>
+                <DriverSearchPage></DriverSearchPage>
+            </Suspense>
+        )
     }
 
 
