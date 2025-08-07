@@ -1,6 +1,6 @@
 package com.gpt.squirrelLogistics.entity.admin;
 
-import java.time.LocalDateTime;
+import com.gpt.squirrelLogistics.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,9 +31,9 @@ public class AdminUser {
 	private Long adminId; //관리자 아이디.
 
 	@OneToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "admin_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
 	@MapsId
-    private AdminUser adminUser; //회원 아이디
+    private User user; //회원 아이디
 	
 
 }
