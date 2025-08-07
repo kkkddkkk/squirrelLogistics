@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentResponseDTO;
 
 @Data
 @NoArgsConstructor
@@ -18,7 +19,7 @@ public class DeliveryTrackingLogResponseDTO {
 
 	private Long trackingId; //추적 로그 아이디.
 
-//	private DeliveryAssignment deliveryAssignment; //할당 정보 객체.
+	private DeliveryAssignmentResponseDTO deliveryAssignment; //할당 정보 객체.
 
 	private BigDecimal lat; //위도.
 	private BigDecimal lng; //경도.

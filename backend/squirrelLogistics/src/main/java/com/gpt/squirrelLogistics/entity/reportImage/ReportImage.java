@@ -1,9 +1,7 @@
-package com.gpt.squirrelLogistics.entity.deliveryTrackingLog;
+package com.gpt.squirrelLogistics.entity.reportImage;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
+import com.gpt.squirrelLogistics.entity.report.Report;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,23 +19,22 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "delivery_tracking_log")
+@Table(name = "report_image")
 @Getter
 @ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeliveryTrackingLog {
+public class ReportImage {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "tracking_id")
-	private Long trackingId; //추적 로그 아이디.
+	@Column(name = "report_image_id")
+	private Long reportImageId; //신고이미지 아이디.
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "delivery_assignment_id")
-	private DeliveryAssignment deliveryAssignment; //할당 아이디.
+	@JoinColumn(name = "report_id")
+	private Report report; //신고.
+	
+	private String fileName; //파일 이름.
 
-	private BigDecimal lat; //위도.
-	private BigDecimal lng; //경도.
-	private LocalDateTime createdAt; //기록 시간.
 }

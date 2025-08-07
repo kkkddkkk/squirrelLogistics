@@ -2,7 +2,7 @@ package com.gpt.squirrelLogistics.entity.deliverySchedule;
 
 import java.time.LocalDateTime;
 
-//import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
+import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,9 +32,9 @@ public class DeliverySchedule {
 	@Column(name = "schedule_id")
 	private Long scheduleId; //일정 아이디.
 
-//	@OneToOne(fetch = FetchType.LAZY)
-//	@JoinColumn(name = "assigned_id")
-//	private DeliveryAssignment deliveryAssignment; //할당 아이디.
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "delivery_assignment_id")
+	private DeliveryAssignment deliveryAssignment; //할당 아이디.
 
 	private LocalDateTime scheduleDate; //운송 날짜.
 	private LocalDateTime startTime; //시작 시간.

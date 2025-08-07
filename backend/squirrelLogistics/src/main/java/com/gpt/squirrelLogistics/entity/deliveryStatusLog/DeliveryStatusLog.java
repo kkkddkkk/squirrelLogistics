@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.entity.deliveryStatusLog;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 import com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum;
 
 //import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
@@ -37,9 +38,9 @@ public class DeliveryStatusLog {
 	@Column(name = "status_id")
 	private Long statusId; //추적 로그 아이디.
 
-//	@ManyToOne(fetch = FetchType.LAZY)
-//	@JoinColumn(name = "assigned_id")
-//	private DeliveryAssignment deliveryAssignment; //할당 아이디.
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "delivery_assignment_id")
+	private DeliveryAssignment deliveryAssignment; //할당 아이디.
 
 	@Enumerated(EnumType.STRING)
 	private DeliveryStatusEnum status; //배송 상태.
