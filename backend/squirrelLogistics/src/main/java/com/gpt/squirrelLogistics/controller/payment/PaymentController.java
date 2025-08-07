@@ -1,9 +1,9 @@
-package com.gpt.squirrelLogistics.payment.controller;
+package com.gpt.squirrelLogistics.controller.payment;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.payment.dto.PaymentDTO;
-import com.gpt.squirrelLogistics.payment.service.PaymentService;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.service.payment.PaymentService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

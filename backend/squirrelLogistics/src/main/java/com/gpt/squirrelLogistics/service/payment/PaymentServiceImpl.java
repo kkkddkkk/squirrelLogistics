@@ -1,10 +1,10 @@
-package com.gpt.squirrelLogistics.payment.service;
+package com.gpt.squirrelLogistics.service.payment;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import com.gpt.squirrelLogistics.payment.dto.PaymentDTO;
-import com.gpt.squirrelLogistics.payment.repository.PaymentRepository;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

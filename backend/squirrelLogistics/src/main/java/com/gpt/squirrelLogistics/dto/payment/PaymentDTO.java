@@ -1,11 +1,11 @@
-package com.gpt.squirrelLogistics.payment.dto;
+package com.gpt.squirrelLogistics.dto.payment;
 
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
-import com.gpt.squirrelLogistics.payment.enums.FailureReasonEnums;
-import com.gpt.squirrelLogistics.payment.enums.PayStatusEnum;
+import com.gpt.squirrelLogistics.enums.payment.FailureReasonEnums;
+import com.gpt.squirrelLogistics.enums.payment.PayStatusEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

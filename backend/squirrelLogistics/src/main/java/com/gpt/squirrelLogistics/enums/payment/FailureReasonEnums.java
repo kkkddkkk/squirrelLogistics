@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.payment.enums;
+package com.gpt.squirrelLogistics.enums.payment;
 
 public enum FailureReasonEnums {
     CARD_DECLINED,         // 카드 거절

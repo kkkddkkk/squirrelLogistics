@@ -1,8 +1,8 @@
-package com.gpt.squirrelLogistics.payment.service;
+package com.gpt.squirrelLogistics.service.payment;
 
 import org.springframework.stereotype.Service;
 
-import com.gpt.squirrelLogistics.payment.dto.PaymentDTO;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 
 @Service
 public interface PaymentService {

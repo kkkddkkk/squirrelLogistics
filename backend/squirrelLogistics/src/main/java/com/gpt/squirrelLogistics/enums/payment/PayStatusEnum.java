@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.payment.enums;
+package com.gpt.squirrelLogistics.enums.payment;
 
 public enum PayStatusEnum {
     PENDING,      // 결제 대기 중 (사용자가 결제 진행 전 상태)
