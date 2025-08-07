@@ -1,6 +1,4 @@
-package com.gpt.squirrelLogistics.entity.term;
-
-import java.time.LocalDateTime;
+package com.gpt.squirrelLogistics.entity.driver;
 
 import com.gpt.squirrelLogistics.entity.user.User;
 
@@ -11,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,28 +18,24 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "term")
+@Table(name = "driver")
 @Getter
 @ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Term {//약관동의
+public class Driver {//운전자 세부정보
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "term_id")
-	private Long termId;//약관 ID
+	@Column(name = "driver_id")
+	private Long driverId;//운전자 ID
 	
-	private String termName;//약관
-	private String termContent;//약관내용
-	private boolean isRequired;//약관 필수 여부
+	private String mainLoca;//선호지역
+	private String licenseNum;//운전면허번호
+	private boolean drivable;//운전 가능 여부
 	
-	private LocalDateTime createDT;//생성일
-	private LocalDateTime updateDT;//수정일
-	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
-	private User user;//화물종류
-	
+	private User user;//회원
 }

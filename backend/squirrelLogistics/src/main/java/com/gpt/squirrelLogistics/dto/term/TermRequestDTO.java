@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TermDTO {
+public class TermRequestDTO {
 	private Long termId;//약관 ID
 	
 	private String termName;//약관
@@ -26,4 +26,6 @@ public class TermDTO {
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime updateDT;//수정일
+
+	private Long userId;//회원ID
 }
