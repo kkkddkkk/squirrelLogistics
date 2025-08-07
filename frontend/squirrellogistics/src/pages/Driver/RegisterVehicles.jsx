@@ -1,3 +1,5 @@
+// RegisterVehicles.jsx (MUI 기반 스타일 수정: 지정 색상 팔레트 반영)
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/driver/NavBar";
@@ -20,22 +22,19 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 
-// 오늘 날짜를 YYYY-MM-DD 형식으로 반환하는 헬퍼 함수
 const getFormattedDate = () => new Date().toISOString().split("T")[0];
 
-const createEmptyVehicle = () => {
-  return {
-    registrationDate: getFormattedDate(),
-    vehicleNumber: "",
-    vehicleType: "",
-    loadCapacity: "",
-    vehicleStatus: "운행 가능",
-    insuranceStatus: "유",
-    currentDistance: "",
-    lastInspection: "",
-    nextInspection: "",
-  };
-};
+const createEmptyVehicle = () => ({
+  registrationDate: getFormattedDate(),
+  vehicleNumber: "",
+  vehicleType: "",
+  loadCapacity: "",
+  vehicleStatus: "운행 가능",
+  insuranceStatus: "유",
+  currentDistance: "",
+  lastInspection: "",
+  nextInspection: "",
+});
 
 const RegisterVehicles = () => {
   const navigate = useNavigate();
@@ -44,16 +43,12 @@ const RegisterVehicles = () => {
   const handleChange = (index, e) => {
     const { name, value } = e.target;
     setVehicles((prev) =>
-      prev.map((vehicle, i) =>
-        i === index ? { ...vehicle, [name]: value } : vehicle
-      )
+      prev.map((v, i) => (i === index ? { ...v, [name]: value } : v))
     );
   };
 
-  const addVehicle = () => {
+  const addVehicle = () =>
     setVehicles((prev) => [...prev, createEmptyVehicle()]);
-  };
-
   const removeVehicle = (index) => {
     if (vehicles.length === 1) return;
     setVehicles((prev) => prev.filter((_, i) => i !== index));
@@ -61,13 +56,12 @@ const RegisterVehicles = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("등록된 차량:", vehicles);
     alert("차량 등록이 완료되었습니다.");
     navigate("/driver/profile");
   };
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh" }}>
       <NavBar />
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Typography
@@ -75,98 +69,45 @@ const RegisterVehicles = () => {
           align="center"
           fontWeight="bold"
           gutterBottom
-          sx={{
-            mb: 4,
-            background: "linear-gradient(135deg, #113F67 0%, #58A0C8 100%)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
+          sx={{ mb: 4, color: "#113F67" }}
         >
-          차량 최초 등록
+          차량 등록하기
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+
+        <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={4}>
             {vehicles.map((vehicle, index) => (
               <Card
-                key={`vehicle-${index}`} // 고유한 키 사용
-                variant="outlined"
-                sx={{
-                  position: "relative",
-                  bgcolor: "background.paper",
-                  border: "2px solid",
-                  borderColor: "grey.200",
-                  "&:hover": {
-                    borderColor: "primary.light",
-                    boxShadow: "0 4px 12px rgba(17, 63, 103, 0.15)",
-                  },
-                  transition: "all 0.3s ease",
-                }}
+                key={index}
+                sx={{ border: "1px solid #E0E6ED", bgcolor: "#ffffff" }}
               >
                 <CardContent sx={{ p: 4 }}>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={3}
-                  >
+                  <Box display="flex" justifyContent="space-between" mb={3}>
                     <Typography
                       variant="h5"
                       fontWeight="bold"
-                      sx={{
-                        color: "primary.main",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
+                      sx={{ color: "#113F67" }}
                     >
-                      <Box
-                        component="span"
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: "50%",
-                          bgcolor: "secondary.main",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "secondary.contrastText",
-                          fontSize: "0.875rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {index + 1}
-                      </Box>
                       차량 {index + 1}
                     </Typography>
                     {vehicles.length > 1 && (
                       <IconButton
                         onClick={() => removeVehicle(index)}
                         color="error"
-                        size="large"
-                        sx={{
-                          bgcolor: "error.light",
-                          color: "white",
-                          "&:hover": {
-                            bgcolor: "error.main",
-                          },
-                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
                     )}
                   </Box>
-                  <Grid container spacing={4}>
+
+                  <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
                       <TextField
                         label="차량 등록일"
                         name="registrationDate"
                         value={vehicle.registrationDate}
                         fullWidth
-                        InputProps={{
-                          readOnly: true,
-                          sx: { bgcolor: "grey.50" },
-                        }}
+                        InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
@@ -177,7 +118,6 @@ const RegisterVehicles = () => {
                         value={vehicle.vehicleNumber}
                         onChange={(e) => handleChange(index, e)}
                         fullWidth
-                        placeholder="예: 12가 3456"
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -186,8 +126,8 @@ const RegisterVehicles = () => {
                         <Select
                           name="vehicleType"
                           value={vehicle.vehicleType}
-                          label="차량 종류"
                           onChange={(e) => handleChange(index, e)}
+                          label="차량 종류"
                         >
                           <MenuItem value="">
                             <em>선택</em>
@@ -198,9 +138,9 @@ const RegisterVehicles = () => {
                             "냉장/냉동",
                             "탑차",
                             "리프트",
-                          ].map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
+                          ].map((opt) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
                             </MenuItem>
                           ))}
                         </Select>
@@ -212,8 +152,8 @@ const RegisterVehicles = () => {
                         <Select
                           name="loadCapacity"
                           value={vehicle.loadCapacity}
-                          label="최대 적재량"
                           onChange={(e) => handleChange(index, e)}
+                          label="최대 적재량"
                         >
                           <MenuItem value="">
                             <em>선택</em>
@@ -225,9 +165,9 @@ const RegisterVehicles = () => {
                             "5~10톤",
                             "10~15톤",
                             "20~25톤",
-                          ].map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
+                          ].map((opt) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
                             </MenuItem>
                           ))}
                         </Select>
@@ -239,13 +179,7 @@ const RegisterVehicles = () => {
                         name="vehicleStatus"
                         value={vehicle.vehicleStatus}
                         fullWidth
-                        InputProps={{
-                          readOnly: true,
-                          sx: {
-                            bgcolor: "success.light",
-                            color: "success.contrastText",
-                          },
-                        }}
+                        InputProps={{ readOnly: true }}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -254,15 +188,15 @@ const RegisterVehicles = () => {
                         <Select
                           name="insuranceStatus"
                           value={vehicle.insuranceStatus}
-                          label="보험 여부"
                           onChange={(e) => handleChange(index, e)}
+                          label="보험 여부"
                         >
                           <MenuItem value="">
                             <em>선택</em>
                           </MenuItem>
-                          {["유", "무"].map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
+                          {["유", "무"].map((opt) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
                             </MenuItem>
                           ))}
                         </Select>
@@ -275,9 +209,7 @@ const RegisterVehicles = () => {
                         value={vehicle.currentDistance}
                         onChange={(e) => handleChange(index, e)}
                         fullWidth
-                        placeholder="예: 50000"
                         type="number"
-                        InputProps={{ endAdornment: <span>km</span> }}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -306,42 +238,22 @@ const RegisterVehicles = () => {
                 </CardContent>
               </Card>
             ))}
+
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={addVehicle}
               fullWidth
-              sx={{
-                py: 3,
-                borderColor: "secondary.main",
-                color: "secondary.main",
-                fontSize: "1.1rem",
-                fontWeight: "bold",
-                "&:hover": {
-                  bgcolor: "secondary.main",
-                  color: "secondary.contrastText",
-                  borderColor: "secondary.main",
-                },
-              }}
+              sx={{ borderColor: "#E8A93F", color: "#E8A93F", fontWeight: 600 }}
             >
-              + 차량 추가하기
+              차량 추가하기
             </Button>
+
             <Box display="flex" justifyContent="space-between" pt={4} gap={3}>
               <Button
                 variant="outlined"
-                color="inherit"
                 onClick={() => navigate("/driver/profile")}
-                sx={{
-                  px: 4,
-                  py: 1.5,
-                  fontSize: "1rem",
-                  borderColor: "grey.400",
-                  color: "text.secondary",
-                  "&:hover": {
-                    borderColor: "grey.600",
-                    bgcolor: "grey.50",
-                  },
-                }}
+                sx={{ color: "#2A2A2A", borderColor: "#E0E6ED" }}
               >
                 취소
               </Button>
@@ -349,13 +261,9 @@ const RegisterVehicles = () => {
                 variant="contained"
                 type="submit"
                 sx={{
-                  px: 4,
-                  py: 1.5,
-                  fontSize: "1rem",
-                  bgcolor: "primary.main",
-                  "&:hover": {
-                    bgcolor: "primary.dark",
-                  },
+                  bgcolor: "#113F67",
+                  fontWeight: 600,
+                  "&:hover": { bgcolor: "#0d2f4d" },
                 }}
               >
                 전체 차량 등록
