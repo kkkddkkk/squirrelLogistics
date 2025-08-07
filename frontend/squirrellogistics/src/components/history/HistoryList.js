@@ -1,8 +1,9 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ListBoxContainer, TwoBtns } from "../common/CommonForCompany";
 
 export const Buttons = ({ children, func }) => {
     return (
@@ -20,39 +21,13 @@ const HistoryList = () => {
     const [params] = useSearchParams();
     const date = params.get("date");
 
-    const ListBox = ({ children }) => {
-        return (
-            <Box
-                sx={{
-                    width: "90%",
-                    border: "1px solid #2A2A2A",
-                    borderRadius: "5px",
-                    padding: "7px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap"
-                }}
-            >
-                {children}
-            </Box>
-        )
-    }
-
     const [isExpand, setIsExpand] = useState(false);
-    const [stopOver1, setStopOver1] = useState('');
+    const [stopOver1, setStopOver1] = useState("1번입니다");
     const [stopOver2, setStopOver2] = useState('');
-    const [stopOver3, setStopOver3] = useState('');
-    const [caution, setCaution] = useState(false);
+    const [stopOver3, setStopOver3] = useState("3번입니다");
+    const [caution, setCaution] = useState(true);
     const [mountainous, setMountainous] = useState(false);
 
-    const handleExpand = () => {
-        //임시
-        setStopOver1("1번 경유지입니다.");
-        setMountainous(true);
-
-        if (!isExpand) setIsExpand(true);
-        else setIsExpand(false);
-    }
 
     const showTransactionStatement = () => {
         window.open(`${window.location.origin}/payment/transactionStatement`, 'name', 'width=1000, height=600');
@@ -63,55 +38,51 @@ const HistoryList = () => {
     }
 
     return (
-        <ListBox>
-            <input type="hidden" value={"주문ID 들어갈 곳"}></input>
-            ooo- 000
+        <ListBoxContainer isExpand={isExpand} setIsExpand={setIsExpand}>
             {!isExpand ?
+                <></> :
                 <>
-                    <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
-                </> :
-                <>
-                    <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} />
-                    {stopOver1 ? <Box sx={{ width: "100%" }}>경유지1: {stopOver1}</Box> : <></>}
-                    {stopOver2 ? <Box sx={{ width: "100%" }}>경유지2: {stopOver2}</Box> : <></>}
-                    {stopOver3 ? <Box sx={{ width: "100%" }}>경유지3: {stopOver3}</Box> : <></>}
-
-                    {caution ? <Box sx={{ width: "100%" }}><br />취급주의물품 포함</Box> : <></>}
-                    {mountainous ? <Box sx={{ width: "100%" }}>{!caution ? <br /> : <></>}산간지역 포함</Box> : <></>}
-                    <Box
-                        sx={{
-                            width: "100%", borderTop: "1px solid #909095", borderBottom: "1px solid #909095",
-                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                            padding: "8px 8px"
-                        }}
-                    >
-                        <Box>
-                            <Buttons func={showTransactionStatement}>명세서</Buttons>
-                            <Buttons func={showReciept}>영수증</Buttons>
-                        </Box>
-                        <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 000 원</Typography>
-                    </Box>
-                    <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-                        <Box
-                            component="img"
-                            sx={{
-                                height: "40px",
-                                aspectRatio: "1/1",
-                                borderRadius: "100%",
-                                marginTop: "2%"
-                            }}
-                            alt="OtterImg"
-                            src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
-                        />
-                        <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>운전자명(차종)</Typography>
-                    </Box>
-                    <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5px 0" }}>
-                        <Buttons>신고</Buttons>
-                        <Buttons>리뷰 작성</Buttons>
-                    </Box>
+                    <Grid container sx={{ margin: "2%" }}>
+                        {stopOver1!='' ? <Grid size={12}>경유지1: {stopOver1}</Grid> : <></>}
+                        {stopOver2!='' ? <Grid size={12}>경유지2: {stopOver2}</Grid> : <></>}
+                        {stopOver3!='' ? <Grid size={12}>경유지3: {stopOver3}</Grid> : <></>}
+                        {caution ? <Grid size={12}><br />취급주의물품 포함</Grid> : <></>}
+                        {mountainous ? <Grid size={12}>{!caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
+                        <Grid size={12} sx={{
+                            borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
+                            , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
+                            margin: "8px 0"
+                        }}>
+                            <TwoBtns
+                                children1={"명세서"} func1={showTransactionStatement}
+                                children2={"영수증"} func2={showReciept}
+                            />
+                            <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 000 원</Typography>
+                        </Grid>
+                        <Grid size={12} sx={{ display: "flex", alignItems: "center" }}>
+                            <Box
+                                component="img"
+                                sx={{
+                                    height: "40px",
+                                    aspectRatio: "1/1",
+                                    borderRadius: "100%",
+                                    marginTop: "2%"
+                                }}
+                                alt="OtterImg"
+                                src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                            />
+                            <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>운전자명(차종)</Typography>
+                        </Grid>
+                        <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
+                            <TwoBtns
+                                children1={"신고"} func1={showTransactionStatement}
+                                children2={"리뷰 작성"} func2={showReciept}
+                            />
+                        </Grid>
+                    </Grid>
                 </>
             }
-        </ListBox>
+        </ListBoxContainer>
     )
 }
 export default HistoryList;

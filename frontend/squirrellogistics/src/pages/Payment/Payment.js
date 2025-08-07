@@ -1,10 +1,11 @@
-import { Box, Button, Checkbox, Typography } from "@mui/material";
+import { Box, Button, Checkbox, Grid, Typography } from "@mui/material";
 import PayBox from "../../components/payment/payBox";
 import { RefundDate } from "../../components/payment/RefundDate";
 import { PayMethod } from "../../components/payment/PayMethod";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
+import { SubTitle } from "../../components/common/CommonForCompany";
 
 
 
@@ -14,7 +15,7 @@ export function SubTitleForCharge({ children }) {
             variant="h6"
             color="#2A2A2A"
             width={"100%"}
-            padding={"2%"}
+            marginBottom={"2%"}
         >
             {children}
         </Typography>
@@ -142,15 +143,22 @@ export const Payment = () => {
         );
     }
 
-
     return (
-        <>
-            <TitleForCharge>결제</TitleForCharge>
-            <Box width={"60%"} maxWidth={"700px"}>
-                <SubTitleForCharge>결제금액</SubTitleForCharge>
-                <PayBox />
+        <Grid size={12} display={"flex"} justifyContent={"center"}>
+            <Box width={"60%"} maxWidth={"600px"}>
+                <SubTitle>결제금액</SubTitle>
+                <PayBox
+                    mileage={'45'}
+                    weight={'8,000'}
+                    baseRate={400000}
+                    stopOver1={30000}
+                    stopOver2={20000}
+                    stopOver3={10000}
+                    caution={true}
+                    mountainous={false}
+                />
 
-                <SubTitleForCharge>환불일자</SubTitleForCharge>
+                <SubTitle>환불일자</SubTitle>
                 <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
 
                 <SubTitleForCharge>결제수단</SubTitleForCharge>
@@ -171,7 +179,7 @@ export const Payment = () => {
                     </Button>
                 </Box>
             </Box>
-        </>
+        </Grid>
 
 
     );
