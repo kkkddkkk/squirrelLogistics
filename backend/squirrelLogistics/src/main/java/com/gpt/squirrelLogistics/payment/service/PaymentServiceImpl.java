@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.payment.service;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import com.gpt.squirrelLogistics.payment.dto.PaymentDTO;
@@ -16,7 +17,7 @@ import lombok.extern.log4j.Log4j2;
 public class PaymentServiceImpl implements PaymentService {
 	
 	private final PaymentRepository paymentRepository;
-
+	private final ModelMapper modelMapper;
 	@Override
 	public Long registerPayment(PaymentDTO paymentDTO) {
 		// TODO Auto-generated method stub

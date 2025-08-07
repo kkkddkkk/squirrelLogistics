@@ -4,6 +4,7 @@ import { Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+import { TwoBtns } from "../common/CommonForCompany";
 
 
 const HistoryCalendar = () => {
@@ -25,7 +26,7 @@ const HistoryCalendar = () => {
     let clickedMonth;
     let clickedDate;
     let today = new Date();
-    let todayFullDate = `${today.getFullYear()}.${(today.getMonth() + 1) > 10 ? today.getMonth() + 1 : `0${today.getMonth() + 1}`}.${today.getDate() > 10 ? today.getDate() : `0${today.getDate()}`}`;
+    let todayFullDate = `${today.getFullYear()}-${(today.getMonth() + 1) > 10 ? today.getMonth() + 1 : `0${today.getMonth() + 1}`}-${today.getDate() > 10 ? today.getDate() : `0${today.getDate()}`}`;
     const [clickedFullDate, setClickedFullDate] = useState(todayFullDate);
     const handleChangeDate = (date) => {//날짜 클릭 시 clickedFullDate값 변경
         setSelectedDate(date);
@@ -35,7 +36,7 @@ const HistoryCalendar = () => {
 
         if (date.getDate() < 10) clickedDate = `0${date.getDate()}`;
         else clickedDate = date.getDate();
-        setClickedFullDate(`${date.getFullYear()}.${clickedMonth}.${clickedDate}`);
+        setClickedFullDate(`${date.getFullYear()}-${clickedMonth}-${clickedDate}`);
     }
 
     useEffect(() => {//날짜 클릭 시 랜더링
@@ -45,7 +46,6 @@ const HistoryCalendar = () => {
     // 임시 날짜 리스트
     const markedDatesFromDB = ["2025-08-01", "2025-08-04", "2025-08-05"];
     const markedDates = markedDatesFromDB.map(d => new Date(d));
-
 
     return (
         <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>

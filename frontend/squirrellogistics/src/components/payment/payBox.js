@@ -1,129 +1,88 @@
-import { Box, Typography } from "@mui/material";
-import { SubTitleForCharge } from "../../pages/Payment/Payment";
+import { Grid, Typography } from "@mui/material";
+import { SubTitle } from "../common/CommonForCompany";
 
 //PayBox=({총금액 파라미터})로 Payment.js에 전달
-const PayBox = ({all}) => {
-    function ContentBox({ children, width }) {
+const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, caution, mountainous }) => {
+
+    const ContentBox = ({ children, subTitle }) => {
         return (
-            <Box
-                display={"flex"}
-                justifyContent={"space-between"}
-                borderBottom={2}
-                borderColor={"#909095"}
-                width={width}
-            >
-                {children}
-            </Box>
+            <Grid container sx={{ border: "1px solid #2A2A2A", marginBottom: "5%" }}>
+                <Grid item size={12} margin={"4% 0 0 4%"} >
+                    <SubTitle>{subTitle}</SubTitle>
+                </Grid>
+                <Grid item size={12} margin={"0 4% 2% 4%"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}
+                >
+                    {children}
+                </Grid>
+
+            </Grid>
+        )
+
+    }
+
+    const Content = ({ dataKey, value }) => {
+
+        function PforCharge({ children }) {
+            return (
+                <Typography
+                    variant="body1"
+                    component={"p"}
+                    color="#2A2A2A"
+                    margin={"2%"}
+                >
+                    {children}
+                </Typography>
+            )
+        }
+
+        return (
+            <>
+                <PforCharge>{dataKey}</PforCharge>
+                <PforCharge>{value}</PforCharge>
+                <Grid size={12} borderBottom={"2px solid #909095"} />
+            </>
         )
     }
 
-    function PforCharge({ children }) {
-        return (
-            <Typography
-                variant="body1"
-                component={"p"}
-                color="#2A2A2A"
-                marginLeft={"2%"}
-                marginRight={"2%"}
-                marginBottom={"1%"}
-            >
-                {children}
-            </Typography>
-        )
-    }
+    let additionalRate = stopOver1 + stopOver2 + stopOver3;
+    if (caution) additionalRate += 50000;
+    if (mountainous) additionalRate += 50000;
 
-    function ChargeBox({ children }) {
+    function HowMuch({ children, fontSize }) {
         return (
-            <Box
-                display={"flex"}
-                justifyContent={"center"}
-                flexWrap={"wrap"}
-                width={"100%"}
-                border={1}
-                borderColor={"#2A2A2A"}
-                marginBottom={"10px"}
-                paddingBottom={"20px"}
-            >
-                {children}
-            </Box>
-        )
-    }
-
-    function HowMuch({ children, fontSize, topLine, inBox }) {
-        return (
-            <Box
-
-                sx={{
-                    width: inBox ? "90%" : "100%",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    justifyContent: "end",
-                    borderTop: topLine ? "2px solid #909095" : "none",
-                    marginTop: !inBox ? "5%" : "2%",
-                    paddingTop: !inBox ? "5%" : "0%",
-                }}
-            >
+            <Grid size={12} display={"flex"} justifyContent={"end"} margin={"2%"}>
                 <Typography
                     sx={{
                         color: "#2A2A2A",
                         fontWeight: "bold",
                         fontSize: `${fontSize}px`,
-                        marginRight: '2%'
                     }}
                 >
                     {children}
                 </Typography>
-
-            </Box>
+            </Grid>
         )
 
     }
 
     return (
         <>
+            <ContentBox subTitle={"기본요금"}>
+                <Content dataKey={"주행거리"} value={`${mileage}km`} />
+                <Content dataKey={"무게"} value={`${weight}kg`} />
+                <HowMuch fontSize={20} inBox={true}>{baseRate}원</HowMuch>
+            </ContentBox>
 
-            <ChargeBox>
-                <SubTitleForCharge>기본요금</SubTitleForCharge>
-                <ContentBox width={"90%"}>
-                    <PforCharge>주행거리</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>무&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;게</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <HowMuch fontSize={20} inBox={true}>00원</HowMuch>
-            </ChargeBox>
+            <ContentBox subTitle={"추가요금"}>
+                {stopOver1 ? <Content dataKey={"경유지1"} value={stopOver1} /> : <></>}
+                {stopOver2 ? <Content dataKey={"경유지2"} value={stopOver2} /> : <></>}
+                {stopOver3 ? <Content dataKey={"경유지3"} value={stopOver3} /> : <></>}
+                {caution ? <Content dataKey={"산간지역"} value={50000} /> : <></>}
+                {mountainous ? <Content dataKey={"취급주의"} value={50000} /> : <></>}
+                <HowMuch fontSize={20} inBox={true}>{additionalRate}원</HowMuch>
+            </ContentBox>
 
-            <ChargeBox>
-                <SubTitleForCharge>추가요금</SubTitleForCharge>
-                <ContentBox width={"90%"}>
-                    <PforCharge>경유지1</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>경유지2</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>경유지3</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>산간지역</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>취급주의</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <ContentBox width={"90%"}>
-                    <PforCharge>무&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;게</PforCharge>
-                    <PforCharge>00</PforCharge>
-                </ContentBox>
-                <HowMuch fontSize={20} inBox={true}>00원</HowMuch>
-            </ChargeBox>
-            <HowMuch fontSize={25} topLine={true}>{!all?"총 ":<></>}00원</HowMuch>
+            <HowMuch fontSize={25} topLine={true}> 총  {baseRate+additionalRate}원</HowMuch>
 
         </>
 

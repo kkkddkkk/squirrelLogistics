@@ -1,28 +1,9 @@
-import { Box } from "@mui/material";
-import HistoryCalendar from "../../components/history/HistoryCalendar";
-import { BGBox } from "../Payment/PaymentLayout"
-import HistoryList from "../../components/history/HistoryList";
-import { Outlet } from "react-router-dom";
-import { TitleForCharge } from "../Payment/Payment";
+import { Layout } from "../../components/common/CommonForCompany";
+
 
 const HistoryLayout = () => {
     return (
-        <Box
-            bgcolor={"#F5F7FA"}
-            display="flex"
-            justifyContent="space-between"
-            width={"100%"}
-            marginBottom={"2%"}
-            flexWrap={"wrap"}
-            minHeight={"100vh"}
-            alignItems="flex-start"
-            gap={0}
-        >
-            <TitleForCharge>이용기록</TitleForCharge>
-            <Outlet />
-        </Box>
-
-
+        <Layout title={"이용기록"}></Layout>
     )
 }
 

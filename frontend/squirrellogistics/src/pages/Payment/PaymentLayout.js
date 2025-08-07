@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { TitleForCharge } from "./Payment";
+import { Layout } from "../../components/common/CommonForCompany";
 
 export function BGBox({ children, title }) {
     return (
@@ -20,9 +21,7 @@ export function BGBox({ children, title }) {
 
 const PaymentLayout = () => {
     return (
-        <BGBox title={"결제"}>
-            <Outlet></Outlet>
-        </BGBox>
+        <Layout title={"결제"}></Layout>
     )
 }
 export default PaymentLayout;
