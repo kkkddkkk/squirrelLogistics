@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 const driverRouter = () => {
   const Loading = "<div>로딩중</div>";
 
-  //const RequestList = lazy(() => import("../../pages/DeliveryRequest/ListPage"));
+  const RequestList = lazy(() => import("../../pages/DeliveryRequest/ListPage"));
   const RequestDetail = lazy(() =>
     import("../../pages/DeliveryRequest/RequestDetailPage")
   );
@@ -26,14 +26,14 @@ const driverRouter = () => {
   );
 
   return [
-    // {
-    //     path: "list",
-    //     element: (
-    //         <Suspense fallback={Loading}>
-    //             <RequestList />
-    //         </Suspense>
-    //     )
-    // },
+    {
+        path: "list",
+        element: (
+            <Suspense fallback={Loading}>
+                <RequestList />
+            </Suspense>
+        )
+    },
     {
       path: "detail/:requestId",
       element: (

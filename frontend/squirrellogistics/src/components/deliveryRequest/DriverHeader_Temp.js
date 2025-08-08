@@ -1,7 +1,22 @@
 import { AppBar, Box, Button, Toolbar } from "@mui/material";
 import logo from '../../pages/Driver/images/logo.jpg'
+import { useNavigate } from "react-router-dom";
 const DriverHeader_Temp = () => {
 
+    const driverId = 1;
+    const navigate = useNavigate();
+
+    const menuItems = [
+        { path: "/driver/list", label: "요청 목록" },
+        { path: `/driver/ongoing/${driverId}`, label: "진행 중 운송" },
+        { path: `/driver/calendar/${driverId}`, label: "캘린더" },
+        { path: `/driver/delivered`, label: "운송 목록" },
+        { path: "/driver/profile", label: "나의 정보" },
+    ];
+
+    const handleClick = (path) => {
+        navigate(path);
+    };
     return (
         <Box>
             <AppBar position="static" sx={{
@@ -12,11 +27,13 @@ const DriverHeader_Temp = () => {
                 <Toolbar sx={{ justifyContent: 'space-between' }}>
                     <Box component="img" src={logo} alt="logo" sx={{ height: 40 }} />
                     <Box sx={{ display: 'flex', justifyContent: "space-evenly", gap: 4 }}>
-                        {['요청목록', '진행중 운송', '운송 기록', '캘린더', '나의정보', '신고하기'].map(menu => (
-                            <Button key={menu} color="inherit" sx={{
-                                fontFamily: 'inherit', fontSize: '1.1rem',
-                                fontWeight: 'bold'
-                            }}>{menu}</Button>
+                        {menuItems.map((item, index) => (
+                            <Button key={index} color="inherit"
+                                onClick={() => handleClick(item.path)}
+                                sx={{
+                                    fontFamily: 'inherit', fontSize: '1.1rem',
+                                    fontWeight: 'bold'
+                                }}>{item.label}</Button>
                         ))}
                     </Box>
                 </Toolbar>
