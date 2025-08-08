@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.gpt.squirrelLogistics.entity.admin.AdminUser;
 
-public interface AdinUserRepository extends JpaRepository<AdminUser, Long> {
+public interface AdminUserRepository extends JpaRepository<AdminUser, Long> {
 
 }
