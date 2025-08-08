@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.enums.role;
+package com.gpt.squirrelLogistics.enums.user;
 
 public enum UserRoleEnum {
     COMPANY, //물류회사.

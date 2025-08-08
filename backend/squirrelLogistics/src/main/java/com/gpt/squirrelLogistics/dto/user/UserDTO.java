@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
-import com.gpt.squirrelLogistics.enums.role.UserRoleEnum;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

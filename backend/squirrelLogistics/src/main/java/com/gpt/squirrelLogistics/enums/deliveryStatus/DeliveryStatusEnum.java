@@ -1,6 +1,6 @@
 package com.gpt.squirrelLogistics.enums.deliveryStatus;
 
-public enum DeliveryStatusEnum {
+public enum DeliveryStatusEnum {//DeliveryStatusLog
     ASSIGNED,            // 할당되었지만 미시작
     MOVING_TO_PICKUP,    // 집하처로 이동 중
     PICKUP_COMPLETED,    // 픽업 완료

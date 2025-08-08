@@ -2,7 +2,7 @@ package com.gpt.squirrelLogistics.entity.user;
 
 import java.time.LocalDateTime;
 
-import com.gpt.squirrelLogistics.enums.role.UserRoleEnum;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
