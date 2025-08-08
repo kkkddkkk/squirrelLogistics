@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.actualDelivery.ActualDelivery;
 import com.gpt.squirrelLogistics.entity.company.Company;
+import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
 import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.payment.Payment;
@@ -51,7 +52,7 @@ public class DeliveryAssignment {//운송 기록
 	
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "request_id")
-	private DeliveryAssignment deliveryRequest;//배송 요청
+	private DeliveryRequest deliveryRequest;//배송 요청
 	
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "payment_id")

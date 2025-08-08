@@ -41,6 +41,6 @@ public class Answer {//답변
     private AdminUser adminUser; //관리자 아이디.
 	
 	@OneToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "admin_id", nullable = false) 
+    @JoinColumn(name = "report_id", nullable = false) 
 	private Report report;//신고
 }

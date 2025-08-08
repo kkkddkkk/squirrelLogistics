@@ -35,7 +35,7 @@ public class DeliveryWaypoint {//배송 경유지
 	private Long waypointId;// 경유지 ID
 
 	private String address;// 주소
-	private int order;// 배송순서
+	private int dropOrder;// 배송순서
 	
 	private LocalDateTime arriveAt;//도착시간
 	private LocalDateTime droppedAt;//배송시간
@@ -44,6 +44,6 @@ public class DeliveryWaypoint {//배송 경유지
 	private StatusEnum status;//경유지 상태
 	
 	@ManyToOne
-	@JoinColumn(name = "handling_id")
+	@JoinColumn(name = "request_id")
 	private DeliveryRequest deliveryRequest;//배송 요청
 }

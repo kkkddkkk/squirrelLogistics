@@ -20,7 +20,7 @@ public class DeliveryWaypointResponseDTO {
 	private Long waypointId;// 경유지 ID
 
 	private String address;// 주소
-	private int order;// 배송순서
+	private int dropOrder;// 배송순서
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime arriveAt;//도착시간

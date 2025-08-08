@@ -1,6 +1,5 @@
 package com.gpt.squirrelLogistics.entity.deliveryStatusLog;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
@@ -26,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "delivery_tracking_log")
+@Table(name = "delivery_status_log")
 @Getter
 @ToString
 @Builder
