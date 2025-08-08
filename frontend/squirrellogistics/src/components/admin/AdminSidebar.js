@@ -3,23 +3,23 @@ import { Drawer, List, ListItem, ListItemText, ListItemButton } from "@mui/mater
 import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { label: "대시보드", path: "/dashboard" },
+  { label: "대시보드", path: "/admin/dashboard" },
   {
     label: "관리",
     children: [
-      { label: "사용자 관리", path: "/management/users" },
-      { label: "차량 관리", path: "/management/vehicles" },
-      { label: "배송 관리", path: "/management/deliveries" },
-      { label: "정산 관리", path: "/management/settlement" },
+      { label: "사용자 관리", path: "/admin/management/users" },
+      { label: "차량 관리", path: "/admin/management/vehicles" },
+      { label: "배송 관리", path: "/admin/management/deliveries" },
+      { label: "정산 관리", path: "/admin/management/settlement" },
     ],
   },
   {
     label: "고객지원",
     children: [
-      { label: "공지사항", path: "/support/notices" },
-      { label: "FAQ", path: "/support/faq" },
-      { label: "1:1 문의", path: "/support/inquiry" },
-      { label: "정책", path: "/support/policy" },
+      { label: "공지사항", path: "/admin/support/notices" },
+      { label: "FAQ", path: "/admin/support/faq" },
+      { label: "1:1 문의", path: "/admin/support/inquiry" },
+      { label: "정책", path: "/admin/support/policy" },
     ],
   },
 ];

@@ -6,7 +6,7 @@ const AdminTopbar = () => {
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, background: "#113F67" }}>
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-          Squirrel Logistics 관리자
+          Squirrel Logistics
         </Typography>
         <Box flexGrow={1} />
         {/* 사용자 메뉴 or 알림 추가 가능 */}
