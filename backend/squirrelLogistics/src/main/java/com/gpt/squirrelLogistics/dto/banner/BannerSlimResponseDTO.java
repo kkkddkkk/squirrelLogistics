@@ -3,7 +3,6 @@ package com.gpt.squirrelLogistics.dto.banner;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.gpt.squirrelLogistics.dto.admin.AdminUserResponseDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BannerResponseDTO {
+public class BannerSlimResponseDTO {
 	private Long bannerId; //배너 아이디.
-	private AdminUserResponseDTO adminUser; //관리자 정보 객체.
+	private Long adminUserId; //관리자 아이디.
 	private String title; //제목.
 	private String imageUrl; //이미지 경로.
 	private boolean isActive; //노출 여부.

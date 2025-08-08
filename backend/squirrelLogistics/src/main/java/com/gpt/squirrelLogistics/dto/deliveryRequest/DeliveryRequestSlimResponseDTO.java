@@ -2,9 +2,6 @@ package com.gpt.squirrelLogistics.dto.deliveryRequest;
 
 import java.time.LocalDateTime;
 
-import com.gpt.squirrelLogistics.dto.company.CompanySlimResponseDTO;
-import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
-import com.gpt.squirrelLogistics.dto.vehicleType.VehicleTypeResponseDTO;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -16,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeliveryRequestResponseDTO {
+public class DeliveryRequestSlimResponseDTO {
 	private Long requestId;// 요청 ID
 	
 	private String startAddress;//출발지 위치
@@ -36,7 +33,7 @@ public class DeliveryRequestResponseDTO {
 	
 	private StatusEnum status;//요청 상태
 
-	private PaymentDTO paymentId;//결제
-	private CompanySlimResponseDTO companyId;//물류회사
-	private VehicleTypeResponseDTO vehicleTypeId;//차량 종류
+	private Long paymentId;//결제 ID
+	private Long companyId;//물류회사 ID
+	private Long vehicleTypeId;//차량 종류 ID
 }

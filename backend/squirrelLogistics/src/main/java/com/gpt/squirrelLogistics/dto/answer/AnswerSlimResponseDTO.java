@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
-import com.gpt.squirrelLogistics.dto.admin.AdminUserResponseDTO;
-import com.gpt.squirrelLogistics.dto.report.ReportResponseDTO;
 
 
 import lombok.AllArgsConstructor;
@@ -17,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AnswerResponseDTO {
+public class AnswerSlimResponseDTO {
 	private Long answerId; //답변 아이디.
 	  
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -28,6 +26,6 @@ public class AnswerResponseDTO {
 	
 	private String content;//답변 내용
 	
-    private AdminUserResponseDTO adminUser; //관리자 아이디.
-	private ReportResponseDTO report;//신고
+	private Long adminUserId; //관리자 아이디.
+	private Long reportId;//신고 아이디.
 }

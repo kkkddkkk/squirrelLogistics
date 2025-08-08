@@ -1,6 +1,5 @@
 package com.gpt.squirrelLogistics.dto.admin;
 
-import com.gpt.squirrelLogistics.entity.user.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdminUserResponseDTO {
+public class AdminUserSlimResponseDTO {
 
 	private Long adminId; //관리자 아이디.
-	private User user; //회원 정보 객체.
+	private Long userId; //회원 아이디.
 }

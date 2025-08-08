@@ -4,10 +4,6 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
-import com.gpt.squirrelLogistics.dto.actualDelivery.ActualDeliveryDTO;
-import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
-import com.gpt.squirrelLogistics.dto.driver.DriverResponseDTO;
-import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeliveryAssignmentResponseDTO {
+public class DeliveryAssignmentSlimResponseDTO {
 	private Long assignedId;// 요청 ID
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -33,8 +29,8 @@ public class DeliveryAssignmentResponseDTO {
 	
 	private StatusEnum status;//수락 상태
 	
-	private DeliveryRequestResponseDTO deliveryRequest;//배송 요청
-	private PaymentDTO payment;//결제
-	private DriverResponseDTO driver;//운전자
-	private ActualDeliveryDTO actualDelivery;//실제 운송
+	private Long deliveryRequestId;//배송 요청 ID
+	private Long paymentId;//결제 ID
+	private Long driverId;//운전자 ID
+	private Long actualDeliveryId;//실제 운송 ID
 }

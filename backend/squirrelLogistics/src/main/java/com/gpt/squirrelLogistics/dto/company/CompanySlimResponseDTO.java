@@ -1,7 +1,5 @@
 package com.gpt.squirrelLogistics.dto.company;
 
-import com.gpt.squirrelLogistics.dto.user.UserDTO;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CompanyResponseDTO {
+public class CompanySlimResponseDTO {
 	private Long companyId;//회사 ID
 	
 	private String address;//주소
 	private String mainLoca;//기본 출발지
 
-	private UserDTO user;//회원
+	private Long userId;//회원 ID
 }
