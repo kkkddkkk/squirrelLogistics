@@ -1,0 +1,179 @@
+/* 기존 스타일 + 버튼 스타일 포함 */
+
+/* 마이페이지 전체 컨테이너 */
+.mypage-container {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #F5F7FA;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  font-family: 'sans-serif';
+}
+
+/* 페이지 타이틀 */
+.mypage-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: bold;
+  color: #113F67;
+}
+
+/* 회원정보 섹션 */
+.info-section {
+  background-color: #E0E6ED;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  border: 1px solid #cdd7e0;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.info-header h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2A2A2A;
+  margin: 0;
+}
+
+.edit-images {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #d3dbe2;
+  font-size: 1rem;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #2A2A2A;
+}
+
+.info-value {
+  color: #333;
+}
+
+.mask-toggle {
+  margin-left: 0.8rem;
+  background-color: #e8a93f;
+  border: none;
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #2A2A2A;
+  cursor: pointer;
+}
+
+.delivery-filter {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.delivery-filter input {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 140px;
+}
+
+.filter-btn {
+  background-color: #E8A93F;
+  color: #2A2A2A;
+  font-weight: bold;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delivery-section {
+  margin-top: 2rem;
+}
+
+.delivery-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.delivery-table thead {
+  background-color: #E0E6ED;
+}
+
+.delivery-table th,
+.delivery-table td {
+  padding: 0.8rem;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.delivery-table th {
+  font-weight: bold;
+  color: #2A2A2A;
+}
+
+.delivery-table td {
+  color: #444;
+}
+
+.no-delivery {
+  text-align: center;
+  padding: 1rem;
+  color: #777;
+}
+
+/* 하단 버튼 */
+.mypage-bottom-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.bottom-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bottom-btn.review {
+  background-color: #E8A93F;
+  color: #2A2A2A;
+}
+
+/* 회원탈퇴 링크 스타일 */
+.withdraw-link {
+  background: none;
+  border: none;
+  color: gray;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+

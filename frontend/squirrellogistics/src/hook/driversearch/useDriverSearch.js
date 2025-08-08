@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDriverList, calculateDistance } from "../../api/driversearch/driverSearchApi";
-import { setDrivers } from "../../slice/driversearch/driverSearchSlice";
+import { setDrivers } from "../../slices/driversearch/driverSearchSlice";
 
 const useDriverSearch = () => {
   const dispatch = useDispatch();

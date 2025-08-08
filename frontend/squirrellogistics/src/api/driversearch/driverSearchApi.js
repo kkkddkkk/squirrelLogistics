@@ -1,7 +1,8 @@
 // src/api/driversearch/driverSearchApi.js
 import axios from "axios";
+export const API_SERVER_HOST = "http://localhost:8080";
 
-const BASE_URL = "/api/company/drivers"; // 실제 백엔드 주소에 맞게 조정 필요
+const BASE_URL = `${API_SERVER_HOST}/api/company/drivers`; // 실제 백엔드 주소에 맞게 조정 필요
 
 // 🔍 기사 리스트 가져오기 (필터 조건 포함)
 export const fetchDriverList = async (filters) => {
@@ -31,7 +32,7 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
 // 🚀 기사님에게 요청 보내기
 export const sendDriverRequest = async (driverId) => {
   try {
-    const response = await axios.post(`/api/company/drivers/${driverId}/request`);
+    const response = await axios.post(`${API_SERVER_HOST}/api/company/drivers/${driverId}/request`);
     return response.data;
   } catch (error) {
     console.error("기사 요청 실패:", error);

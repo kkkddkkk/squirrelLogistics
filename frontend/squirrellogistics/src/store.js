@@ -2,12 +2,14 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import estimateReducer from './slice/estimate/estimateSlice';
-import driverSearchReducer from './slice/driversearch/driverSearchSlice'; // ✅ 추가
+import driverSearchReducer from './slice/driversearch/driverSearchSlice';
+import companyReducer from './slice/company/companySlice'; // ✅ 추가
 
 const store = configureStore({
   reducer: {
     estimate: estimateReducer,
-    driverSearch: driverSearchReducer, // ✅ 여기 반드시 등록
+    driverSearch: driverSearchReducer,
+    company: companyReducer, // ✅ 등록 완료
   },
 });
 
