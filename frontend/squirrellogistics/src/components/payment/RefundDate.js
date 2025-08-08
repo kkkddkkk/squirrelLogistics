@@ -26,24 +26,29 @@ export const RefundDate = ({ refundDate, setRefundDate }) => {
                     width="100%"
                     display='flex'
                     flexWrap={'wrap'}
-                    justifyContent={'space-evenly'}
+                    justifyContent={'space-around'}
                     margin={"2%"}
                 >
+
                     {refundOption.map((item) => (
-                        <FormControlLabel
-                            key={item.value}
-                            value={item.value}
-                            control={
-                                <Radio
-                                    checked={refundDate === item.value}
-                                    onChange={(e) => setRefundDate(e.target.value)}
-                                    value={item.value}
-                                    name="refund_date"
-                                />
-                            }
-                            label={item.label}
-                        />
+                        <Box>
+                            <FormControlLabel
+                                key={item.value}
+                                value={item.value}
+                                control={
+                                    <Radio
+                                        checked={refundDate === item.value}
+                                        onChange={(e) => setRefundDate(e.target.value)}
+                                        value={item.value}
+                                        name="refund_date"
+                                    />
+                                }
+                                label={item.label}
+                            />
+                        </Box>
                     ))}
+
+
                 </Box>
             </FormControl>
         );
@@ -51,17 +56,17 @@ export const RefundDate = ({ refundDate, setRefundDate }) => {
 
     return (
 
-            <Grid container sx={{ border: "1px solid #2A2A2A", marginBottom: "5%" }}>
-                <RefundRadioForm></RefundRadioForm>
-                <Divider
-                    orientation="horizontal"
-                    flexItem
-                    sx={{
-                        backgroundColor: "#909095",
-                        height: "0.5px"
-                    }}
-                />
-                <RefundCaution />
-            </Grid>
+        <Grid container sx={{ border: "1px solid #2A2A2A", marginBottom: "5%" }}>
+            <RefundRadioForm></RefundRadioForm>
+            <Divider
+                orientation="horizontal"
+                flexItem
+                sx={{
+                    backgroundColor: "#909095",
+                    height: "0.5px"
+                }}
+            />
+            <RefundCaution />
+        </Grid>
     );
 }
