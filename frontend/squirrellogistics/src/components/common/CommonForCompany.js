@@ -36,21 +36,22 @@ export function SubTitle({ children }) {
     )
 }
 
-export const Layout = ({ title }) => {
+export const Layout = ({ title, children }) => {
     return (
         <Box
             bgcolor={"#F5F7FA"}
             display="flex"
             width={"100%"}
-            marginBottom={"2%"}
+            marginBottom={"2% 0"}
             flexWrap={"wrap"}
             minHeight={"100vh"}
             gap={0}
             flexDirection={"column"}
+            justifyContent={""}
         >
             {title ? <Title>{title}</Title> : <></>}
             <div style={{ width: "100%" }}>
-                <Outlet />
+                {children}
             </div>
         </Box>
     )

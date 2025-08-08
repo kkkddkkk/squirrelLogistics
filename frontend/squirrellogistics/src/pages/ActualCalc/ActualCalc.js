@@ -7,120 +7,120 @@ import HelpIcon from '@mui/icons-material/Help';
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { useState } from "react";
 import { TitleForCharge } from "../Payment/Payment";
-import { Title } from "../../components/common/CommonForCompany";
+import { Layout, Title } from "../../components/common/CommonForCompany";
 
 const ActualCalc = () => {
     const { moveToPayment } = usePaymentMove();
 
     const showTransactionStatement = () => {
-        window.open(`${window.location.origin}/payment/transactionStatement`, 'name', 'width=1000, height=600');
+        window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
     }
 
     const [modal, setModal] = useState(false);
 
     return (
-        <Box
-            sx={{
-                width: "90%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignContent: "center"
-            }}
-        >
-            <Box sx={{ width: "45%" }}>
-                <ActualMap></ActualMap>
-            </Box>
-            <Box sx={{ width: "45%" }}>
-                <PayBox
-                    mileage={'45'}
-                    weight={'8,000'}
-                    baseRate={400000}
-                    stopOver1={30000}
-                    stopOver2={20000}
-                    stopOver3={10000}
-                    caution={true}
-                    mountainous={false}
-                />
-                <Box
-                    sx={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "5%",
-                        paddingBottom: "5%",
-                        borderBottom: "2px solid #909095"
-                    }}
-                >
-                    <RemoveIcon />
-                    <Typography
+        <Layout title={"이용기록"}>
+            <Box
+                sx={{
+                    width: "90%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignContent: "center"
+                }}
+            >
+                <Box sx={{ width: "45%" }}>
+                    <ActualMap></ActualMap>
+                </Box>
+                <Box sx={{ width: "45%" }}>
+                    <PayBox
+                        mileage={'45'}
+                        weight={'8,000'}
+                        baseRate={400000}
+                        stopOver1={30000}
+                        stopOver2={20000}
+                        stopOver3={10000}
+                        caution={true}
+                        mountainous={false}
+                    />
+                    <Box
                         sx={{
-                            color: "#2A2A2A",
-                            fontWeight: "bold",
-                            fontSize: `25px`,
-                            marginRight: '2%',
+                            width: "100%",
                             display: "flex",
-                            alignItems: "center"
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "5%",
+                            paddingBottom: "5%",
+                            borderBottom: "2px solid #909095"
                         }}
                     >
-                        <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} color="#909095" />&nbsp;
-                        <Modal open={modal} onClose={() => setModal(false)}
+                        <RemoveIcon />
+                        <Typography
+                            sx={{
+                                color: "#2A2A2A",
+                                fontWeight: "bold",
+                                fontSize: `25px`,
+                                marginRight: '2%',
+                                display: "flex",
+                                alignItems: "center"
+                            }}
                         >
-                            <Box sx={{
-                                height: "100vh", width: "50%", position: "fixed", bgcolor: "background.paper",
-                                display: "flex", justifyContent: "center", flexWrap: "wrap"
-                                , maxWidth: "500px"
-                            }}>
-                                {/* <TitleForCharge> 예상금액 </TitleForCharge> */}
-                                <Title>예상금액</Title>
-                                <Box sx={{ width: "90%" }}>
-                                    <PayBox
-                                        mileage={'45'}
-                                        weight={'7,500'}
-                                        baseRate={350000}
-                                        stopOver1={30000}
-                                        stopOver2={20000}
-                                        stopOver3={10000}
-                                        caution={true}
-                                        mountainous={false}
-                                    />
+                            <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} color="#909095" />&nbsp;
+                            <Modal open={modal} onClose={() => setModal(false)}
+                            >
+                                <Box sx={{
+                                    height: "100vh", width: "50%", position: "fixed", bgcolor: "background.paper",
+                                    display: "flex", justifyContent: "center", flexWrap: "wrap"
+                                    , maxWidth: "500px"
+                                }}>
+                                    <Title>예상금액</Title>
+                                    <Box sx={{ width: "90%" }}>
+                                        <PayBox
+                                            mileage={'45'}
+                                            weight={'7,500'}
+                                            baseRate={350000}
+                                            stopOver1={30000}
+                                            stopOver2={20000}
+                                            stopOver3={10000}
+                                            caution={true}
+                                            mountainous={false}
+                                        />
+                                    </Box>
                                 </Box>
-                            </Box>
-                        </Modal>
-                        460000원
+                            </Modal>
+                            460000원
 
-                    </Typography>
+                        </Typography>
 
-                </Box>
-                <Box
-                    sx={{
-                        width: "100%",
-                        display: "flex",
-                        flexWrap: "wrap",
-                        justifyContent: "end",
-                    }}
-                >
-                    <Typography
+                    </Box>
+                    <Box
                         sx={{
-                            color: "#2A2A2A",
-                            fontWeight: "bold",
-                            fontSize: `25px`,
-                            marginRight: '2%'
+                            width: "100%",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "end",
                         }}
                     >
-                        총 50000원
-                    </Typography>
+                        <Typography
+                            sx={{
+                                color: "#2A2A2A",
+                                fontWeight: "bold",
+                                fontSize: `25px`,
+                                marginRight: '2%'
+                            }}
+                        >
+                            총 50000원
+                        </Typography>
 
+                    </Box>
+                    <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5% 0" }}>
+                        <Buttons>신고</Buttons>
+                        <Buttons func={showTransactionStatement}>명세서</Buttons>
+                        <Buttons func={moveToPayment}>정 산</Buttons>
+                    </Box>
                 </Box>
-                <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5% 0" }}>
-                    <Buttons>신고</Buttons>
-                    <Buttons func={showTransactionStatement}>명세서</Buttons>
-                    <Buttons func={moveToPayment}>정 산</Buttons>
-                </Box>
-            </Box>
 
-        </Box >
-
+            </Box >
+        </Layout>
     )
 }
 

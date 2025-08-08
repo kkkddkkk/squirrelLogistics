@@ -30,11 +30,11 @@ const HistoryList = () => {
 
 
     const showTransactionStatement = () => {
-        window.open(`${window.location.origin}/payment/transactionStatement`, 'name', 'width=1000, height=600');
+        window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
     }
 
     const showReciept = () => {
-        window.open(`${window.location.origin}/payment/reciept`, 'name', 'width=500, height=600');
+        window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
     }
 
     return (

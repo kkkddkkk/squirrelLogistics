@@ -4,7 +4,7 @@ const useHistoryMove=()=>{
     const navigate = useNavigate();
 
     const moveToAnotherDay = (state)=>{
-        navigate({pathname: `/history`, search: `?date=${state}`});
+        navigate({pathname: `/company/history`, search: `?date=${state}`});
     }
     const moveBack = ()=>{
         navigate(-1);

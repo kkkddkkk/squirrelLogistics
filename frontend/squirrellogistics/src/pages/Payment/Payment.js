@@ -5,7 +5,8 @@ import { PayMethod } from "../../components/payment/PayMethod";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { SubTitle } from "../../components/common/CommonForCompany";
+import { Layout, SubTitle } from "../../components/common/CommonForCompany";
+
 
 
 
@@ -144,43 +145,46 @@ export const Payment = () => {
     }
 
     return (
-        <Grid size={12} display={"flex"} justifyContent={"center"}>
-            <Box width={"60%"} maxWidth={"600px"}>
-                <SubTitle>결제금액</SubTitle>
-                <PayBox
-                    mileage={'45'}
-                    weight={'8,000'}
-                    baseRate={400000}
-                    stopOver1={30000}
-                    stopOver2={20000}
-                    stopOver3={10000}
-                    caution={true}
-                    mountainous={false}
-                    isAll={true}
-                />
+        <Layout title={"결제"}>
+            <Grid size={12} display={"flex"} justifyContent={"center"}>
+                <Box width={"60%"} maxWidth={"600px"}>
+                    <SubTitle>결제금액</SubTitle>
+                    <PayBox
+                        mileage={'45'}
+                        weight={'8,000'}
+                        baseRate={400000}
+                        stopOver1={30000}
+                        stopOver2={20000}
+                        stopOver3={10000}
+                        caution={true}
+                        mountainous={false}
+                        isAll={true}
+                    />
 
-                <SubTitle>환불일자</SubTitle>
-                <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
+                    <SubTitle>환불일자</SubTitle>
+                    <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
 
-                <SubTitleForCharge>결제수단</SubTitleForCharge>
-                <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
+                    <SubTitleForCharge>결제수단</SubTitleForCharge>
+                    <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
 
-                <SubTitleForCharge><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitleForCharge>
-                <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
-                <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
+                    <SubTitleForCharge><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitleForCharge>
+                    <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
+                    <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
 
-                <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                    <Button
-                        variant="contained"
-                        sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
-                        onClick={handleClickPayment}
-                        disabled={!(checkedAll && (paymentMethod !== ''))}
-                    >
-                        결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
-                    </Button>
+                    <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                        <Button
+                            variant="contained"
+                            sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
+                            onClick={handleClickPayment}
+                            disabled={!(checkedAll && (paymentMethod !== ''))}
+                        >
+                            결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
+                        </Button>
+                    </Box>
                 </Box>
-            </Box>
-        </Grid>
+            </Grid>
+        </Layout>
+
 
 
     );

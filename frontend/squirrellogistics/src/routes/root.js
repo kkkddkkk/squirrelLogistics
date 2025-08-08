@@ -1,19 +1,19 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
-import paymentRouter from "./paymentRoutes/paymentRouter"
 import driverRouter from "./driverRoutes/driverRouter";
-import historyRouter from "./historyRoutes/historyRouter";
 import adminRouter from "./adminRoutes/adminRouter";
+import companyRouter from "./company/companyRouter";
 
-const Loading = <div>Loding...</div>
+const Loading = <div>Loading...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
 const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
-const Payment = lazy(() => import("../pages/Payment/PaymentLayout"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
-const History = lazy(() => import("../pages/History/HistoryLayout"));
 const DriverSearchPage = lazy(() => import("../pages/driversearch/DriverSearchPage"));
 const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
+const Company = lazy(() => import("../pages/company/CompanyLayout"));
+const Reciept = lazy(() => import("../pages/Payment/Reciept"));
+const TransactionStatement = lazy(() => import("../pages/Payment/TransactionStatement"));
 
 const root = createBrowserRouter([
     {
@@ -33,21 +33,27 @@ const root = createBrowserRouter([
         )
         // children: registRouter()
     }, {
-        path: "/payment",
+        path: "/company",
         element: (
             <Suspense fallback={Loading}>
-                <Payment></Payment>
+                <Company></Company>
             </Suspense>
         ),
-        children: paymentRouter()
+        children: companyRouter()
     }, {
-        path: "/history",
+        path: "/company/reciept",
         element: (
             <Suspense fallback={Loading}>
-                <History></History>
+                <Reciept></Reciept>
             </Suspense>
-        ),
-        children: historyRouter()
+        )
+    }, {
+        path: "/company/transactionStatement",
+        element: (
+            <Suspense fallback={Loading}>
+                <TransactionStatement></TransactionStatement>
+            </Suspense>
+        )
     }, {
         path: "/estimate",
         element: (
@@ -71,17 +77,16 @@ const root = createBrowserRouter([
                 <DriverSearchPage></DriverSearchPage>
             </Suspense>
         ),
-    },  
+    },
     {
-       path: "/admin",
+        path: "/admin",
         element: (
             <Suspense fallback={Loading}>
                 <AdminPage></AdminPage>
             </Suspense>
         ),
-        children:adminRouter()
-    },
-
+        children: adminRouter()
+    }
 
 ]);
 export default root;
