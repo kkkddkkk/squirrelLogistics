@@ -156,6 +156,7 @@ export const Payment = () => {
                     stopOver3={10000}
                     caution={true}
                     mountainous={false}
+                    isAll={true}
                 />
 
                 <SubTitle>환불일자</SubTitle>

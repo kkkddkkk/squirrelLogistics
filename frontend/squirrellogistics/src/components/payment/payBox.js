@@ -2,7 +2,7 @@ import { Grid, Typography } from "@mui/material";
 import { SubTitle } from "../common/CommonForCompany";
 
 //PayBox=({총금액 파라미터})로 Payment.js에 전달
-const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, caution, mountainous }) => {
+const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, caution, mountainous, isAll }) => {
 
     const ContentBox = ({ children, subTitle }) => {
         return (
@@ -47,6 +47,14 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
     let additionalRate = stopOver1 + stopOver2 + stopOver3;
     if (caution) additionalRate += 50000;
     if (mountainous) additionalRate += 50000;
+    let mileageFormat = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let weightFormat = weight.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let stopOver1Format = stopOver1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let stopOver2Format = stopOver2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let stopOver3Format = stopOver3.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let baseRateFormat = baseRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let additionalRateFormat = additionalRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let allRateFormat = (baseRate+additionalRate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     function HowMuch({ children, fontSize }) {
         return (
@@ -68,21 +76,21 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
     return (
         <>
             <ContentBox subTitle={"기본요금"}>
-                <Content dataKey={"주행거리"} value={`${mileage}km`} />
-                <Content dataKey={"무게"} value={`${weight}kg`} />
-                <HowMuch fontSize={20} inBox={true}>{baseRate}원</HowMuch>
+                <Content dataKey={"주행거리"} value={`${mileageFormat}km`} />
+                <Content dataKey={"무게"} value={`${weightFormat}kg`} />
+                <HowMuch fontSize={20} inBox={true}>{baseRateFormat}원</HowMuch>
             </ContentBox>
 
             <ContentBox subTitle={"추가요금"}>
-                {stopOver1 ? <Content dataKey={"경유지1"} value={stopOver1} /> : <></>}
-                {stopOver2 ? <Content dataKey={"경유지2"} value={stopOver2} /> : <></>}
-                {stopOver3 ? <Content dataKey={"경유지3"} value={stopOver3} /> : <></>}
+                {stopOver1 ? <Content dataKey={"경유지1"} value={stopOver1Format} /> : <></>}
+                {stopOver2 ? <Content dataKey={"경유지2"} value={stopOver2Format} /> : <></>}
+                {stopOver3 ? <Content dataKey={"경유지3"} value={stopOver3Format} /> : <></>}
                 {caution ? <Content dataKey={"산간지역"} value={50000} /> : <></>}
                 {mountainous ? <Content dataKey={"취급주의"} value={50000} /> : <></>}
-                <HowMuch fontSize={20} inBox={true}>{additionalRate}원</HowMuch>
+                <HowMuch fontSize={20} inBox={true}>{additionalRateFormat}원</HowMuch>
             </ContentBox>
 
-            <HowMuch fontSize={25} topLine={true}> 총  {baseRate+additionalRate}원</HowMuch>
+            <HowMuch fontSize={25} topLine={true}> {isAll ? '총' : ''}  {allRateFormat}원</HowMuch>
 
         </>
 
