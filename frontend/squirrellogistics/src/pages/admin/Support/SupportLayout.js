@@ -8,15 +8,15 @@ const SupportLayout = () => {
 
   // 현재 경로에서 탭 상태 파악
   const getTabValue = () => {
-    if (location.pathname.includes("/support/notices")) return "notices";
-    if (location.pathname.includes("/support/faq")) return "faq";
-    if (location.pathname.includes("/support/inquiry")) return "inquiry";
-    if (location.pathname.includes("/support/policy")) return "policy";
+    if (location.pathname.includes("notices")) return "notices";
+    if (location.pathname.includes("faq")) return "faq";
+    if (location.pathname.includes("inquiry")) return "inquiry";
+    if (location.pathname.includes("policy")) return "policy";
     return false;
   };
 
   const handleTabChange = (_, newValue) => {
-    navigate(`/support/${newValue}`);
+    navigate(newValue); // ✅ 상대 경로로 이동
   };
 
   return (

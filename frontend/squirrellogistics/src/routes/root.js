@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import paymentRouter from "./paymentRoutes/paymentRouter"
 import driverRouter from "./driverRoutes/driverRouter";
 import historyRouter from "./historyRoutes/historyRouter";
+import adminRouter from "./adminRoutes/adminRouter";
 
 const Loading = <div>Loding...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
@@ -10,9 +11,9 @@ const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
 const Payment = lazy(() => import("../pages/Payment/PaymentLayout"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
-const AdminPage = lazy(() => import("../pages/Support/SupportLayout"));
 const History = lazy(() => import("../pages/History/HistoryLayout"));
 const DriverSearchPage = lazy(() => import("../pages/driversearch/DriverSearchPage"));
+const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
 
 const root = createBrowserRouter([
     {
@@ -55,13 +56,6 @@ const root = createBrowserRouter([
             </Suspense>
         )
     }, {
-        path: "/admin",
-        element: (
-            <Suspense fallback={Loading}>
-                <AdminPage></AdminPage>
-            </Suspense>
-        )
-    }, {
         path: "/driver",
         element: (
             <Suspense fallback={Loading}>
@@ -76,10 +70,18 @@ const root = createBrowserRouter([
             <Suspense fallback={Loading}>
                 <DriverSearchPage></DriverSearchPage>
             </Suspense>
-        )
-    }
+        ),
+    },  
+    {
+       path: "/admin",
+        element: (
+            <Suspense fallback={Loading}>
+                <AdminPage></AdminPage>
+            </Suspense>
+        ),
+        children:adminRouter()
+    },
 
 
-
-])
+]);
 export default root;
