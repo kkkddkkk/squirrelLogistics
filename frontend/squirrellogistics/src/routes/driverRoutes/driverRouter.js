@@ -21,7 +21,9 @@ const driverRouter = () => {
     import("../../pages/Driver/RegisterVehicles")
   );
   const DeliveredList = lazy(() => import("../../pages/Driver/DeliveredList"));
-  const EditVehicle = lazy(() => import("../../pages/Driver/EditVehicles"));
+  const DeliveredDetail = lazy(() =>
+    import("../../pages/Driver/DeliveredDetail")
+  );
 
   return [
     // {
@@ -113,10 +115,10 @@ const driverRouter = () => {
       ),
     },
     {
-      path: "editvehicle",
+      path: "deliveredetail/:actualDelivery_id",
       element: (
         <Suspense fallback={Loading}>
-          <EditVehicle />
+          <DeliveredDetail />
         </Suspense>
       ),
     },

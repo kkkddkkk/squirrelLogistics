@@ -13,11 +13,11 @@ export default function NavBar() {
   const menuItems = [
     { path: `/driver/detail/${requestId}`, label: "요청상세" },
     { path: `/driver/ongoing/${driverId}`, label: "진행중운송" },
-    { path: `/driver/delivered`, label: "운송목록" },
+    { path: `/driver/deliveredlist`, label: "운송목록" },
     { path: "/driver/registervehicle", label: "차량등록" },
-    { path: "/driver/editvehicle", label: "차량수정" }, // 라우터와 일치하도록 경로 및 레이블 수정
-    { path: "/driver/profile", label: "나의정보" }, // 라우터와 일치하도록 경로 수정
-    { path: "/driver/editprofile", label: "정보수정" }, // 라우터와 일치하도록 경로 수정
+    // { path: "/driver/calendar", label: "캘린더" },
+    { path: "/driver/profile", label: "나의정보" },
+    // { path: "/driver/support", label: "고객지원" },
   ];
 
   const handleClick = (path) => {
