@@ -3,9 +3,9 @@ package com.gpt.squirrelLogistics.entity.report;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
-import com.gpt.squirrelLogistics.enums.reportCategory.ReportCategoryEnum;
-import com.gpt.squirrelLogistics.enums.reportReporter.ReportReporterEnum;
-import com.gpt.squirrelLogistics.enums.reportStatus.ReportStatusEnum;
+import com.gpt.squirrelLogistics.enums.report.ReportCategoryEnum;
+import com.gpt.squirrelLogistics.enums.report.ReportReporterEnum;
+import com.gpt.squirrelLogistics.enums.report.ReportStatusEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -3,11 +3,10 @@ package com.gpt.squirrelLogistics.dto.report;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentResponseDTO;
-import com.gpt.squirrelLogistics.enums.reportCategory.ReportCategoryEnum;
-import com.gpt.squirrelLogistics.enums.reportReporter.ReportReporterEnum;
-import com.gpt.squirrelLogistics.enums.reportStatus.ReportStatusEnum;
 
+import com.gpt.squirrelLogistics.enums.report.ReportCategoryEnum;
+import com.gpt.squirrelLogistics.enums.report.ReportReporterEnum;
+import com.gpt.squirrelLogistics.enums.report.ReportStatusEnum;
 import lombok.*;
 
 @Getter

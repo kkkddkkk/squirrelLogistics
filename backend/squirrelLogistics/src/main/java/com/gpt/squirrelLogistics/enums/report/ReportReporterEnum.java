@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.enums.reportReporter;
+package com.gpt.squirrelLogistics.enums.report;
 
 public enum ReportReporterEnum {
 	driver,//운전자
