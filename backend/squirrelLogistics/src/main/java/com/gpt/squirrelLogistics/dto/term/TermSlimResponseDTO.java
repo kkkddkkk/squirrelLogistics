@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.dto.promotion;
+package com.gpt.squirrelLogistics.dto.term;
 
 import java.time.LocalDateTime;
 
@@ -15,17 +15,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PromotionResponseDTO {
-	private Long promotionId;//프로모션 ID(할인종류)
+public class TermSlimResponseDTO {
+	private Long termId;//약관 ID
 	
-	private String promo;//할인종류
-	private Long discount;//할인율
-	
-	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime startDT;//시작일
+	private String termName;//약관
+	private String termContent;//약관내용
+	private boolean isRequired;//약관 필수 여부
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime endDate;//종료일
+	private LocalDateTime createDT;//생성일
+	
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime updateDT;//수정일
 
-	private UserDTO user;//회원
+	private Long userId;//회원
 }

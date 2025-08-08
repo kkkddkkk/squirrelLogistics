@@ -1,7 +1,5 @@
 package com.gpt.squirrelLogistics.dto.driver;
 
-import com.gpt.squirrelLogistics.dto.user.UserDTO;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +9,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DriverResponseDTO {
+public class DriverSlimResponseDTO {
 	private Long driverId;//운전자 ID
 	
 	private String mainLoca;//선호지역
 	private String licenseNum;//운전면허번호
 	private boolean drivable;//운전 가능 여부
 
-	private UserDTO userDTO;//회원
+	private Long userId;//회원
+	private String account;//계좌번호
 }

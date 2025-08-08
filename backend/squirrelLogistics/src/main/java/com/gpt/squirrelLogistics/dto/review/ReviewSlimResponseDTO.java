@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewResponseDTO {
+public class ReviewSlimResponseDTO {
 	private Long reviewId;//리뷰 ID
 	
 	private int rating;//평점
@@ -31,5 +31,9 @@ public class ReviewResponseDTO {
 	
 	private StateEnum stateEnum;//등록 상태
 	
-	private DeliveryAssignmentResponseDTO deliveryAssignmentResponseDTO;//운송 기록
+	private Long assignedId;//운송기록 ID
+	private Long driverId;//운전자 ID
+	private String driverName;//운전자 이름
+	private Long companyId;//물류회사 ID
+	
 }

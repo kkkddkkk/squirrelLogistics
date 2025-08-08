@@ -1,0 +1,23 @@
+package com.gpt.squirrelLogistics.dto.notification;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class NotificationSlimResponseDTO {
+	private Long notiId; //공지 아이디.
+    private Long adminUserId; //관리자 ID
+	private String adminUserName;//관리자 이름
+
+    private String title; //제목.
+    private String content; //내용.
+    private String type; //종류.
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime regDate; //생성일.
+}

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PromotionResponseDTO {
+public class PromotionSlimResponseDTO {
 	private Long promotionId;//프로모션 ID(할인종류)
 	
 	private String promo;//할인종류
@@ -27,5 +27,5 @@ public class PromotionResponseDTO {
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime endDate;//종료일
 
-	private UserDTO user;//회원
+	private Long userId;//회원 Id
 }
