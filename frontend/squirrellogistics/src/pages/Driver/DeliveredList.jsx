@@ -1,5 +1,3 @@
-// DeliveredList.jsx
-
 import React, { useState } from "react";
 import {
   Box,
@@ -7,7 +5,6 @@ import {
   Container,
   TextField,
   Stack,
-  Button,
   MenuItem,
   Table,
   TableBody,
@@ -17,20 +14,16 @@ import {
   TableRow,
   Paper,
   Pagination,
-  Dialog,
-  DialogTitle,
-  DialogContent,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-// 🚧 실제 API 연동 전까지는 임시 mock 데이터 사용
 const mockDeliveredData = Array.from({ length: 23 }).map((_, i) => ({
-  id: i + 1,
-  date: `2025-08-${(i % 28) + 1}`,
-  origin: "서울 강남구",
-  destination: "부산 해운대구",
-  cargo: "가전제품",
-  price: "450,000원",
+  actualDelivery_id: `#9933${i + 1}`,
+  date: `2025.08.${((i % 28) + 1).toString().padStart(2, "0")}`,
+  company_id: "(주)마녀공장",
+  user_id: "김인주",
+  product_id: `앰플세럼 세트 외 ${(i % 5) + 1}건`,
+  deliveryStatus: "배송완료",
 }));
 
 const ITEMS_PER_PAGE = 10;
@@ -40,20 +33,26 @@ const DeliveredList = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
   const [page, setPage] = useState(1);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const handleOpenModal = () => setModalOpen(true);
-  const handleCloseModal = () => setModalOpen(false);
 
   const filteredData = mockDeliveredData
-    .filter(
-      (item) =>
-        item.origin.toLowerCase().includes(search.toLowerCase()) ||
-        item.destination.toLowerCase().includes(search.toLowerCase())
+    .filter((item) =>
+      `${item.company_id}${item.user_id}${item.product_id}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
     )
     .sort((a, b) => {
-      if (sort === "latest") return new Date(b.date) - new Date(a.date);
-      return new Date(a.date) - new Date(b.date);
+      switch (sort) {
+        case "latest":
+          return new Date(b.date) - new Date(a.date);
+        case "oldest":
+          return new Date(a.date) - new Date(b.date);
+        case "product":
+          return a.product_id.localeCompare(b.product_id);
+        case "customer":
+          return a.user_id.localeCompare(b.user_id);
+        default:
+          return 0;
+      }
     });
 
   const paginatedData = filteredData.slice(
@@ -64,106 +63,102 @@ const DeliveredList = () => {
   return (
     <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh", py: 6 }}>
       <Container maxWidth="lg">
-        {/* 검색 및 정렬 */}
-        <Stack direction="row" spacing={2} mb={4} sx={{ width: "100%" }}>
+        <Typography variant="h4" fontWeight="bold" mb={4} color="#113F67">
+          운송 완료 목록
+        </Typography>
+
+        {/* 검색 + 정렬 */}
+        <Stack direction="row" spacing={2} mb={4}>
           <TextField
-            label="검색 (출발지 / 도착지)"
+            label="검색 (기업처 / 고객명 / 상품명)"
             variant="outlined"
-            size="small"
+            size="medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             sx={{ flex: 1 }}
+            InputProps={{ sx: { fontSize: "1.1rem", height: 50 } }}
+            InputLabelProps={{ sx: { fontSize: "1rem" } }}
           />
           <TextField
             select
-            size="small"
+            size="medium"
             label="정렬"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            sx={{ width: 150 }}
+            sx={{ width: 200 }}
+            InputProps={{ sx: { fontSize: "1.1rem", height: 50 } }}
+            InputLabelProps={{ sx: { fontSize: "1rem" } }}
           >
             <MenuItem value="latest">최신순</MenuItem>
             <MenuItem value="oldest">오래된순</MenuItem>
+            <MenuItem value="product">상품명순</MenuItem>
+            <MenuItem value="customer">고객명순</MenuItem>
           </TextField>
         </Stack>
 
-        {/* 운송 기록 테이블 */}
+        {/* 테이블 */}
         <TableContainer component={Paper} elevation={3}>
           <Table>
             <TableHead sx={{ bgcolor: "#113F67" }}>
               <TableRow>
-                <TableCell sx={{ color: "white", fontSize: "1rem" }}>
-                  날짜
-                </TableCell>
-                <TableCell sx={{ color: "white", fontSize: "1rem" }}>
-                  출발지
-                </TableCell>
-                <TableCell sx={{ color: "white", fontSize: "1rem" }}>
-                  도착지
-                </TableCell>
-                <TableCell sx={{ color: "white", fontSize: "1rem" }}>
-                  화물
-                </TableCell>
-                <TableCell sx={{ color: "white", fontSize: "1rem" }}>
-                  금액
-                </TableCell>
-                <TableCell
-                  sx={{ color: "white", fontSize: "1rem" }}
-                  align="center"
-                >
-                  작업
-                </TableCell>
+                {[
+                  "운송번호",
+                  "처리상태",
+                  "운송완료일자",
+                  "기업처",
+                  "고객명",
+                  "상품명",
+                ].map((header) => (
+                  <TableCell
+                    key={header}
+                    sx={{
+                      color: "white",
+                      fontSize: "1.2rem",
+                      fontWeight: "bold",
+                      py: 2.5,
+                    }}
+                  >
+                    {header}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedData.map((row) => (
-                <TableRow key={row.id} hover sx={{ height: 72 }}>
-                  <TableCell sx={{ fontSize: "1.05rem" }}>{row.date}</TableCell>
-                  <TableCell sx={{ fontSize: "1.05rem" }}>
-                    {row.origin}
+              {paginatedData.map((row, idx) => (
+                <TableRow
+                  key={idx}
+                  hover
+                  sx={{ height: 72, cursor: "pointer" }}
+                  onClick={() =>
+                    navigate(`/driver/deliveredetail/${row.actualDelivery_id}`)
+                  }
+                >
+                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                    {row.actualDelivery_id}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "1.05rem" }}>
-                    {row.destination}
+                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                    {row.deliveryStatus}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "1.05rem" }}>
-                    {row.cargo}
+                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                    {row.date}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "1.05rem" }}>
-                    {row.price}
+                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                    {row.company_id}
                   </TableCell>
-                  <TableCell align="center">
-                    <Stack direction="column" spacing={1} alignItems="center">
-                      {/* ❗ RequestDetailPage 없으면 주석 처리 */}
-                      {/* <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => navigate(`/driver/delivereddetail/${row.id}`)}
-                        sx={{ width: 120, py: 1 }}
-                      >
-                        다시 운송하기
-                      </Button> */}
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        disabled
-                        sx={{ width: 120, py: 1 }}
-                      >
-                        다시 운송하기
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{
-                          width: 120,
-                          py: 1,
-                          bgcolor: "#E8A93F",
-                          color: "white",
-                        }}
-                        onClick={handleOpenModal}
-                      >
-                        정산내역
-                      </Button>
-                    </Stack>
+                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                    {row.user_id}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontSize: "1.1rem",
+                      py: 2.5,
+                      maxWidth: 300,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {row.product_id}
                   </TableCell>
                 </TableRow>
               ))}
@@ -179,24 +174,10 @@ const DeliveredList = () => {
               page={page}
               onChange={(_, value) => setPage(value)}
               color="primary"
+              size="large"
             />
           </Stack>
         )}
-
-        {/* 정산내역 모니터링 */}
-        <Dialog
-          open={modalOpen}
-          onClose={handleCloseModal}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>정산 내역</DialogTitle>
-          <DialogContent>
-            <Typography variant="body1" color="text.secondary">
-              정산 정보는 추후 여기에 표시됩니다.
-            </Typography>
-          </DialogContent>
-        </Dialog>
       </Container>
     </Box>
   );
