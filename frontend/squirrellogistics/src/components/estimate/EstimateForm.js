@@ -1,19 +1,11 @@
+// src/components/estimate/EstimateForm.jsx
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
-import {
-  getCoordsFromAddress,
-  calculateDistance,
-} from "../../api/estimate/estimateApi";
+import { calculateDistance } from "../../api/estimate/estimateApi";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  setDistance,
-  setMinWeight,
-  setMaxWeight,
-  calculatePrice,
-} from "../../slice/estimate/estimateSlice";
-
+import { setDistance, setMinWeight, setMaxWeight } from "../../slice/estimate/estimateSlice";
 import "./EstimateForm.css";
 
 const cargoOptions = [
@@ -46,21 +38,24 @@ const EstimateForm = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
+  // 저장된 기본 주소 불러오기
   useEffect(() => {
     const loaded = localStorage.getItem("defaultAddresses");
     if (loaded) setSavedAddresses(JSON.parse(loaded));
   }, []);
 
+  // 거리/무게/화물종류 변경 시 금액 재계산
   useEffect(() => {
     recalculatePrice();
   }, [distance, weight, cargoTypes]);
 
+  // ✅ 요금 정책: 기본 10,000 + (ceil(거리km) × 2,000) + (무게 × 5,000) + 취급주의 각 +5,000
   const recalculatePrice = () => {
-    const base = distance && !isNaN(distance) ? distance : 0;
-    const basePrice = base <= 0 ? 10000 : base <= 10 ? 20000 : 20000 + Math.ceil(base - 10) * 2000;
-    setDistanceOnlyPrice(basePrice);
+    const km = distance && !isNaN(distance) ? distance : 0;
+    const distPrice = 10000 + Math.ceil(km) * 2000;
+    setDistanceOnlyPrice(distPrice);
 
-    let total = basePrice + weight * 5000;
+    let total = distPrice + weight * 5000;
     if (cargoTypes.includes("위험물 (취급주의 +5000)")) total += 5000;
     if (cargoTypes.includes("귀중품 (취급주의 +5000)")) total += 5000;
 
@@ -90,7 +85,6 @@ const EstimateForm = () => {
       alert("출발지와 도착지를 입력해주세요.");
       return;
     }
-
     const addresses = [departure, ...waypoints.filter(Boolean), arrival];
     const result = await calculateDistance(addresses);
 
@@ -98,7 +92,6 @@ const EstimateForm = () => {
       dispatch(setDistance(0));
       return;
     }
-
     dispatch(setDistance(result));
     dispatch(setMinWeight(weight));
     dispatch(setMaxWeight(weight));
@@ -153,13 +146,33 @@ const EstimateForm = () => {
     setCargoTypes(cargoTypes.filter((v) => v !== value));
   };
 
+  // ✅ 결제 페이지로 값 넘기기 (route state 사용)
   const handleRequest = () => {
     if (!departure || !arrival || !cargoTypes.length || !vehicle || !title || !startDate || !distance || !price) {
       alert("필수 항목을 모두 입력하고 거리 및 금액 계산을 완료해주세요.");
       return;
     }
+
     const confirm = window.confirm("기사님 검색 없이 요청하시겠습니까?");
-    if (confirm) navigate("/payment");
+    if (!confirm) return;
+
+    const orderData = {
+      departure,
+      arrival,
+      waypoints: waypoints.filter(Boolean),
+      title,
+      vehicle,
+      volume,
+      weight,
+      distance,
+      price,
+      cargoTypes,
+      startDate,
+      endDate,
+    };
+
+    // 결제 페이지에서 useLocation().state로 참조 가능
+    navigate("/payment", { state: { order: orderData } });
   };
 
   return (
