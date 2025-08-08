@@ -1,0 +1,29 @@
+/* src/components/company/DeliveryTable.css */
+
+.delivery-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.delivery-table thead {
+  background-color: #f0f0f0;
+}
+
+.delivery-table th,
+.delivery-table td {
+  padding: 0.8rem;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.no-data {
+  margin-top: 1rem;
+  text-align: center;
+  color: gray;
+}

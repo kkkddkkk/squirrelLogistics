@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DriverCard from "./DriverCard";
-import { useNavigate } from "react-router-dom"; // ✅ 추가
+import { useNavigate } from "react-router-dom";
 import {
   setKeyword,
   setRegion,
@@ -10,13 +10,24 @@ import {
   setVehicleType,
   setIsImmediate,
   setDrivers,
+  setMyLocation,
 } from "../../slice/driversearch/driverSearchSlice";
-
 import "./DriverSearchForm.css";
+
+// 📍 주소 → 좌표 변환 함수
+const convertAddressToCoords = (address, callback) => {
+  const geocoder = new window.kakao.maps.services.Geocoder();
+  geocoder.addressSearch(address, function (result, status) {
+    if (status === window.kakao.maps.services.Status.OK) {
+      const { y: lat, x: lng } = result[0];
+      callback({ lat: parseFloat(lat), lng: parseFloat(lng) });
+    }
+  });
+};
 
 const DriverSearchForm = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ 추가
+  const navigate = useNavigate();
   const {
     keyword,
     region,
@@ -27,14 +38,19 @@ const DriverSearchForm = () => {
     drivers,
   } = useSelector((state) => state.driverSearch);
 
+  // 📍 주소 검색 + 위도/경도 설정
   const handleAddressSearch = () => {
     new window.daum.Postcode({
       oncomplete: function (data) {
         dispatch(setRegion(data.address));
+        convertAddressToCoords(data.address, (coords) => {
+          dispatch(setMyLocation(coords));
+        });
       },
     }).open();
   };
 
+  // 🧪 임시 mock 검색 (API 연동 전용)
   const handleSearchClick = () => {
     const mockDrivers = [
       {
@@ -46,6 +62,8 @@ const DriverSearchForm = () => {
         region: "서울, 경기",
         insurance: true,
         profileUrl: null,
+        lat: 37.5665,
+        lng: 126.9780,
       },
       {
         id: 2,
@@ -56,6 +74,8 @@ const DriverSearchForm = () => {
         region: "부산, 대구",
         insurance: false,
         profileUrl: null,
+        lat: 35.1796,
+        lng: 129.0756,
       },
     ];
     dispatch(setDrivers(mockDrivers));
@@ -65,7 +85,9 @@ const DriverSearchForm = () => {
     <div className="driversearch-form">
       {/* 🔍 검색창 */}
       <div className="search-bar">
-        <button className="region-btn" onClick={handleAddressSearch}>지역</button>
+        <button className="region-btn" onClick={handleAddressSearch}>
+          지역
+        </button>
         <input
           type="text"
           className="keyword-input"
@@ -73,7 +95,9 @@ const DriverSearchForm = () => {
           placeholder="검색어 입력"
           onChange={(e) => dispatch(setKeyword(e.target.value))}
         />
-        <button className="search-btn" onClick={handleSearchClick}>→</button>
+        <button className="search-btn" onClick={handleSearchClick}>
+          →
+        </button>
       </div>
 
       {/* 🎛️ 필터 */}
@@ -88,7 +112,10 @@ const DriverSearchForm = () => {
         </label>
 
         <div className="select-wrapper">
-          <select value={maxWeight} onChange={(e) => dispatch(setMaxWeight(e.target.value))}>
+          <select
+            value={maxWeight}
+            onChange={(e) => dispatch(setMaxWeight(e.target.value))}
+          >
             <option value="">최대 적재량</option>
             <option value="1">1톤</option>
             <option value="3">1~3톤</option>
@@ -101,7 +128,10 @@ const DriverSearchForm = () => {
         </div>
 
         <div className="select-wrapper">
-          <select value={vehicleType} onChange={(e) => dispatch(setVehicleType(e.target.value))}>
+          <select
+            value={vehicleType}
+            onChange={(e) => dispatch(setVehicleType(e.target.value))}
+          >
             <option value="">차량 종류</option>
             <option value="일반 카고">일반 카고</option>
             <option value="윙바디">윙바디</option>
@@ -112,7 +142,10 @@ const DriverSearchForm = () => {
         </div>
 
         <div className="select-wrapper">
-          <select value={sortOption} onChange={(e) => dispatch(setSortOption(e.target.value))}>
+          <select
+            value={sortOption}
+            onChange={(e) => dispatch(setSortOption(e.target.value))}
+          >
             <option value="">정렬 기준</option>
             <option value="distance">거리순</option>
             <option value="rating">별점 높은순</option>
@@ -137,10 +170,7 @@ const DriverSearchForm = () => {
 
       {/* 🔙 돌아가기 버튼 */}
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <button
-          className="back-button"
-          onClick={() => navigate("/estimate")}
-        >
+        <button className="back-button" onClick={() => navigate("/estimate")}>
           돌아가기
         </button>
       </div>

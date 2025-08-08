@@ -4,8 +4,6 @@ import axios from "axios";
 // 반드시 Kakao Developers에서 발급 받은 REST API 키를 아래에 입력
 const KAKAO_REST_API_KEY = "KakaoAK c0e48ee321373e897ad48c8bf2d72460";
 
-export const API_SERVER_HOST = "http://localhost:8080";
-
 // 주소 → 좌표 변환
 export const getCoordsFromAddress = async (address) => {
   try {
@@ -64,7 +62,7 @@ export const calculateDistance = async (addresses) => {
 // 예상 금액 계산 API 호출
 export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) => {
   try {
-    const response = await axios.post(`${API_SERVER_HOST}/api/company/ExpectedPay`, {
+    const response = await axios.post("/api/company/ExpectedPay", {
       distance,
       weight,
       special: hasSpecialCargo,

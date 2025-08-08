@@ -1,0 +1,27 @@
+/* src/components/company/AccountBox.css */
+
+.account-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.account-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mask-toggle {
+  background-color: #e8a93f;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #2a2a2a;
+  cursor: pointer;
+}
