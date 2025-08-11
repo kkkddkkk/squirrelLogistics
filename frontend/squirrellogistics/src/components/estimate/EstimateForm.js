@@ -5,7 +5,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { calculateDistance } from "../../api/estimate/estimateApi";
 import { useSelector, useDispatch } from "react-redux";
-import { setDistance, setMinWeight, setMaxWeight } from "../../slice/estimate/estimateSlice";
+import {
+  setDistance,
+  setMinWeight,
+  setMaxWeight,
+} from "../../slice/estimate/estimateSlice";
+
 import "./EstimateForm.css";
 
 const cargoOptions = [
@@ -38,7 +43,7 @@ const EstimateForm = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  // 저장된 기본 주소 불러오기
+  // 기본 주소 로드
   useEffect(() => {
     const loaded = localStorage.getItem("defaultAddresses");
     if (loaded) setSavedAddresses(JSON.parse(loaded));
@@ -49,13 +54,13 @@ const EstimateForm = () => {
     recalculatePrice();
   }, [distance, weight, cargoTypes]);
 
-  // ✅ 요금 정책: 기본 10,000 + (ceil(거리km) × 2,000) + (무게 × 5,000) + 취급주의 각 +5,000
+  // ✅ 요금정책: 기본 10,000 + (ceil(거리km)*2,000) + 무게*5,000 + 취급주의 각각 +5,000
   const recalculatePrice = () => {
     const km = distance && !isNaN(distance) ? distance : 0;
-    const distPrice = 10000 + Math.ceil(km) * 2000;
-    setDistanceOnlyPrice(distPrice);
+    const baseByDistance = 10000 + Math.ceil(km) * 2000; // 기본 + 거리요금
+    setDistanceOnlyPrice(baseByDistance);
 
-    let total = distPrice + weight * 5000;
+    let total = baseByDistance + weight * 5000;
     if (cargoTypes.includes("위험물 (취급주의 +5000)")) total += 5000;
     if (cargoTypes.includes("귀중품 (취급주의 +5000)")) total += 5000;
 
@@ -92,6 +97,7 @@ const EstimateForm = () => {
       dispatch(setDistance(0));
       return;
     }
+
     dispatch(setDistance(result));
     dispatch(setMinWeight(weight));
     dispatch(setMaxWeight(weight));
@@ -111,7 +117,9 @@ const EstimateForm = () => {
     waypoints.filter(Boolean).forEach((w) => {
       updated.push({ type: "경유지", value: w });
     });
-    const unique = Array.from(new Map(updated.map((obj) => [obj.type + obj.value, obj])).values()).slice(0, 10);
+    const unique = Array.from(
+      new Map(updated.map((obj) => [obj.type + obj.value, obj])).values()
+    ).slice(0, 10);
     setSavedAddresses(unique);
     localStorage.setItem("defaultAddresses", JSON.stringify(unique));
   };
@@ -146,13 +154,21 @@ const EstimateForm = () => {
     setCargoTypes(cargoTypes.filter((v) => v !== value));
   };
 
-  // ✅ 결제 페이지로 값 넘기기 (route state 사용)
+  // ✅ 결제 페이지로 데이터 전달 (route state 사용)
   const handleRequest = () => {
-    if (!departure || !arrival || !cargoTypes.length || !vehicle || !title || !startDate || !distance || !price) {
+    if (
+      !departure ||
+      !arrival ||
+      !cargoTypes.length ||
+      !vehicle ||
+      !title ||
+      !startDate ||
+      !distance ||
+      !price
+    ) {
       alert("필수 항목을 모두 입력하고 거리 및 금액 계산을 완료해주세요.");
       return;
     }
-
     const confirm = window.confirm("기사님 검색 없이 요청하시겠습니까?");
     if (!confirm) return;
 
@@ -171,7 +187,7 @@ const EstimateForm = () => {
       endDate,
     };
 
-    // 결제 페이지에서 useLocation().state로 참조 가능
+    // 결제 페이지에서 useLocation().state.order 로 접근
     navigate("/payment", { state: { order: orderData } });
   };
 
@@ -180,36 +196,67 @@ const EstimateForm = () => {
       <h2>🚚 예상 금액 계산</h2>
 
       <div className="address-row">
-        <button className="address-button" onClick={() => openAddressPopup(setDeparture)}>출발지 검색</button>
-        <button className="address-button" onClick={() => openAddressPopup(setArrival)}>도착지 검색</button>
-        <button className="address-button" onClick={() => setWaypoints([...waypoints, ""].slice(0, 3))}>경유지 추가</button>
+        <button className="address-button" onClick={() => openAddressPopup(setDeparture)}>
+          출발지 검색
+        </button>
+        <button className="address-button" onClick={() => openAddressPopup(setArrival)}>
+          도착지 검색
+        </button>
+        <button
+          className="address-button"
+          onClick={() => setWaypoints([...waypoints, ""].slice(0, 3))}
+        >
+          경유지 추가
+        </button>
       </div>
 
-      <div className="form-row"><div>출발지: {departure || "(미입력)"}</div></div>
-      <div className="form-row"><div>도착지: {arrival || "(미입력)"}</div></div>
+      <div className="form-row">
+        <div>출발지: {departure || "(미입력)"}</div>
+      </div>
+      <div className="form-row">
+        <div>도착지: {arrival || "(미입력)"}</div>
+      </div>
 
       {waypoints.map((w, i) => (
         <div className="form-row" key={i}>
           <span>경유지 {i + 1}:</span>
-          <button className="address-button small waypoint-search" onClick={() => openWaypointPopup(i)}>검색</button>
+          <button
+            className="address-button small waypoint-search"
+            onClick={() => openWaypointPopup(i)}
+          >
+            검색
+          </button>
           <span>{w || "(미입력)"}</span>
         </div>
       ))}
 
       <div className="button-row">
-        <button className="action-button small" onClick={resetAddresses}>거리 다시 계산</button>
-        <button className="action-button small" onClick={handleCalculateDistance}>거리 및 금액 계산</button>
-        <button className="action-button small" onClick={saveDefaultAddress}>기본주소로 설정</button>
+        <button className="action-button small" onClick={resetAddresses}>
+          거리 다시 계산
+        </button>
+        <button className="action-button small" onClick={handleCalculateDistance}>
+          거리 및 금액 계산
+        </button>
+        <button className="action-button small" onClick={saveDefaultAddress}>
+          기본주소로 설정
+        </button>
       </div>
 
       {savedAddresses.length > 0 && (
         <div className="info-section">
           <p>📌 저장된 기본 주소:</p>
           {savedAddresses.map((addr, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>{addr.type}: {addr.value}</span>
+            <div
+              key={i}
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <span>
+                {addr.type}: {addr.value}
+              </span>
               <div>
-                <button onClick={() => applySavedAddress(addr)} style={{ marginRight: "8px" }}>선택</button>
+                <button onClick={() => applySavedAddress(addr)} style={{ marginRight: "8px" }}>
+                  선택
+                </button>
                 <button onClick={() => removeDefaultAddress(addr)}>삭제</button>
               </div>
             </div>
@@ -218,8 +265,8 @@ const EstimateForm = () => {
       )}
 
       <div className="info-section">
-        <p> 예상 거리 : {distance ? Math.floor(distance) + " km" : "0 km"}</p>
-        <p> 거리 예상 금액 : {distanceOnlyPrice.toLocaleString()} 원</p>
+        <p>예상 거리 : {distance ? Math.floor(distance) + " km" : "0 km"}</p>
+        <p>거리 예상 금액 : {distanceOnlyPrice.toLocaleString()} 원</p>
       </div>
 
       <div className="form-row">
@@ -247,34 +294,60 @@ const EstimateForm = () => {
       </div>
 
       <div className="form-row">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="product title (필수)" />
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="product title (필수)"
+        />
         <input value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="예상 부피 (선택)" />
       </div>
 
       <div className="weight-slider">
         <label>📦 무게 선택 (1톤 ~ 26톤)</label>
-        <input type="range" min="1" max="26" value={weight} onChange={(e) => setWeight(Number(e.target.value))} />
+        <input
+          type="range"
+          min="1"
+          max="26"
+          value={weight}
+          onChange={(e) => setWeight(Number(e.target.value))}
+        />
         <div className="weight-labels">
-          <span>1톤</span><span>{weight}톤</span><span>26톤</span>
+          <span>1톤</span>
+          <span>{weight}톤</span>
+          <span>26톤</span>
         </div>
       </div>
 
       <div className="info-section">
-        <p> 총 예상 금액: {price.toLocaleString()}원</p>
+        <p>총 예상 금액: {price.toLocaleString()}원</p>
       </div>
 
       <p className="delivery-label">배송 희망 날짜 :</p>
       <div className="datepicker-row">
-        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} placeholderText="출발 날짜" />
-        <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} placeholderText="도착 날짜" />
+        <DatePicker
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          placeholderText="출발 날짜"
+        />
+        <DatePicker
+          selected={endDate}
+          onChange={(date) => setEndDate(date)}
+          placeholderText="도착 날짜"
+        />
       </div>
 
       <div className="form-row">
-        <button className="driver-button" onClick={() => navigate("/driverSearch")}>기사님 검색</button>
-        <button className="submit-button" onClick={handleRequest}>요청완료</button>
+        <button className="driver-button" onClick={() => navigate("/driverSearch")}>
+          기사님 검색
+        </button>
+        <button className="submit-button" onClick={handleRequest}>
+          요청완료
+        </button>
       </div>
 
-      <p className="inquiry" onClick={() => navigate("/contact")}>문의하기</p>
+      <p className="inquiry" onClick={() => navigate("/contact")}>
+        문의하기
+      </p>
     </div>
   );
 };
