@@ -3,11 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfoItem from '../../components/company/InfoItem';
 import { useNavigate } from 'react-router-dom';
-import useDeliveryFilter from '../../hooks/company/useDeliveryFilter';
+import useDeliveryFilter from '../../hook/company/useDeliveryFilter';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './MyPage.css';
-import { logout } from '../../slices/company/companySlice';
+import { logout } from '../../slice/company/companySlice';
 
 const MyPage = () => {
   const dispatch = useDispatch();

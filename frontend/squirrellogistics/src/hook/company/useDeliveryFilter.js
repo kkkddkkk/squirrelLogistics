@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setFilteredList, resetFilteredList } from "../../slices/company/companySlice";
+import { setFilteredList, resetFilteredList } from "../../slice/company/companySlice";
 
 const useDeliveryFilter = () => {
   const dispatch = useDispatch();
