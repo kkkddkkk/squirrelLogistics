@@ -30,6 +30,7 @@ class SquirrelLogisticsApplicationTests {
 	@Test
 	@Commit
 	void contextLoads() {
+<<<<<<< HEAD
 
 		String mainLoca;
 		boolean drivable = true;
@@ -70,6 +71,13 @@ class SquirrelLogisticsApplicationTests {
 
 			driverRepository.save(driver);
 		}
+=======
+<<<<<<< Updated upstream
+=======
+
+		}
+>>>>>>> Stashed changes
+>>>>>>> feature/review+report/GPT-30
 	}
 
-}
+
