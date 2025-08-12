@@ -2,9 +2,9 @@ import StarIcon from '@mui/icons-material/Star';
 import { Box } from '@mui/material';
 import { forwardRef } from 'react';
 
-const StarRate = ({ scope, setScope, modifying }) => {
+const StarRate = ({ scope, setScope, modifying, size }) => {
     const StarUseRef = forwardRef((props, ref) => (
-        <StarIcon {...props} ref={ref} />
+        <StarIcon {...props} ref={ref}/>
     ));
 
 
@@ -14,7 +14,8 @@ const StarRate = ({ scope, setScope, modifying }) => {
             <StarUseRef
                 sx={{
                     color: scope>=rate && modifying?"#E8A93F":"#909095",
-                    cursor: modifying ? "pointer" : ""
+                    cursor: modifying ? "pointer" : "",
+                    fontSize: size
                 }}
                 ref={ref}
                 onClick={() => setScope(rate)}

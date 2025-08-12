@@ -1,15 +1,23 @@
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const useHistoryMove=()=>{
+const useHistoryMove = () => {
     const navigate = useNavigate();
 
-    const moveToAnotherDay = (state)=>{
-        navigate({pathname: `/company/history`, search: `?date=${state}`});
+    const moveToAnotherDay = (state) => {
+        navigate({ pathname: `/company/history`, search: `?date=${state}` });
     }
-    const moveBack = ()=>{
+    const moveBack = () => {
         navigate(-1);
     }
 
-    return {moveToAnotherDay, moveBack}
+    const moveToReportList = () => {
+        navigate({ pathname: `/company/reportList` })
+    }
+    const moveToReviewList = () => {
+        navigate({ pathname: `/company/reviewList` })
+    }
+
+
+    return { moveToAnotherDay, moveBack, moveToReportList, moveToReviewList }
 }
 export default useHistoryMove;

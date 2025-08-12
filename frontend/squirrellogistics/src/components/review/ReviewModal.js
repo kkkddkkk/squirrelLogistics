@@ -1,8 +1,13 @@
-import { Box, Modal, Typography } from "@mui/material";
+import { Box, Modal, TextField, Typography } from "@mui/material";
 import StarRate from "./StarRate";
-import { OneBigBtn, SubTitle } from "../common/CommonForCompany";
+import { OneBigBtn, SubTitle, TwoBtns } from "../common/CommonForCompany";
 
-const ReviewModal = ({ modal, setModal, scope, setScope }) => {
+const ReviewModal = ({ modal, setModal, scope, setScope, isreviewed }) => {
+    const regiReview=()=>{
+
+        setModal(false);
+    }
+
     return (
         <Modal open={modal} onClose={() => setModal(false)}
         >
@@ -21,7 +26,7 @@ const ReviewModal = ({ modal, setModal, scope, setScope }) => {
                 <Box
                     sx={{
                         width: "20%",
-                        margin: "5%",
+                        margin: "5% 5% 0 5%",
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
@@ -45,15 +50,17 @@ const ReviewModal = ({ modal, setModal, scope, setScope }) => {
                             src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
                         />
                         <Typography sx={{ marginBottom: "10%" }}>운전자명</Typography>
-                        <StarRate modifying={true} scope={scope} setScope={setScope} />
+                        <Box width={"100%"} display={"flex"} justifyContent={"center"}>
+                            <StarRate modifying={true} scope={scope} setScope={setScope} />
+                        </Box>
+
                     </Box>
 
                 </Box>
-                <Box sx={{ width: "60%", margin: "5% 5% 5% 0", border: "1px solid black" }}>
-
-                </Box>
-                <Box width={"60%"}>
-                    <OneBigBtn>리뷰등록</OneBigBtn>
+                <TextField rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0"}} value={isreviewed?"수정중입니다":""}></TextField>
+                <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
+                    {!isreviewed?<OneBigBtn func={regiReview}>리뷰등록</OneBigBtn>:
+                    <TwoBtns children1={"리뷰 삭제"} children2={"리뷰 수정"}></TwoBtns>}
                 </Box>
 
             </Box>

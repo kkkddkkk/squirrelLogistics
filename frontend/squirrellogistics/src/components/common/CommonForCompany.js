@@ -114,12 +114,12 @@ export const TwoBtns = ({ children1, children2, func1, func2 }) => {
     );
 }
 
-export const OneBigBtn = ({children, disabled, func}) => {
+export const OneBigBtn = ({children, disabled, func, margin}) => {
     return (
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
             <Button
                 variant="contained"
-                sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
+                sx={{ width: "60%", height: "50px", margin: {margin}, fontSize: "25px" }}
                 onClick={func}
                 disabled={disabled}
             >
