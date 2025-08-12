@@ -1,6 +1,6 @@
-package com.gpt.squirrelLogistics.user.dto;
+package com.gpt.squirrelLogistics.dto.regist;
 
-import com.gpt.squirrelLogistics.user.Role;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,5 +10,5 @@ import lombok.Getter;
 public class RegisterResponse {
   private Long userId;
   private String loginId;
-  private Role role;
+  private UserRoleEnum role;
 }

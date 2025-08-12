@@ -15,17 +15,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TermRequestDTO {
-	private Long termId;//약관 ID
-	
-	private String termName;//약관
-	private String termContent;//약관내용
-	private boolean isRequired;//약관 필수 여부
-	
-	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime createDT;//생성일
-	
-	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime updateDT;//수정일
+	private Long termId;// 약관 ID
 
-	private Long userId;//회원ID
+	private String termName;// 약관
+	private String termContent;// 약관내용
+	private boolean isRequired;// 약관 필수 여부
+
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime createDT;// 생성일
+
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime updateDT;// 수정일
+
+	private Long userId;// 회원ID
+
+	public TermRequestDTO(Long termId, String termName, String termContent,
+            Boolean isRequired, LocalDateTime createDT, LocalDateTime updateDT) {
+	 this.termId = termId;
+	 this.termName = termName;
+	 this.termContent = termContent;
+	 this.isRequired = isRequired;
+	 this.createDT = createDT;
+	 this.updateDT = updateDT;
+	}
 }

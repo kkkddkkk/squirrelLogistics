@@ -39,4 +39,10 @@ public class VehicleType {
 
 	private int maxWeight; //최대 적재량(kg 단위).
 	private LocalDateTime regDate; //생성일.
+	
+    public VehicleType(int maxWeight, String name) {
+        this.maxWeight = maxWeight;
+        this.name = name;
+        this.regDate = LocalDateTime.now();
+    }
 }

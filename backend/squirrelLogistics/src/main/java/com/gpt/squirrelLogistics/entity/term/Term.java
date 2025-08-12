@@ -2,6 +2,8 @@ package com.gpt.squirrelLogistics.entity.term;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.gpt.squirrelLogistics.entity.user.User;
 
 import jakarta.persistence.Column;
@@ -37,7 +39,9 @@ public class Term {//약관동의
 	private String termContent;//약관내용
 	private boolean isRequired;//약관 필수 여부
 	
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createDT;//생성일
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime updateDT;//수정일
 	
 	@ManyToOne(fetch = FetchType.LAZY)

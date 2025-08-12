@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.user.controller;
+package com.gpt.squirrelLogistics.controller.user;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -12,15 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.user.User;
-import com.gpt.squirrelLogistics.user.config.JwtTokenProvider;
-import com.gpt.squirrelLogistics.user.dto.LoginRequest;
-import com.gpt.squirrelLogistics.user.dto.LoginResponse;
-import com.gpt.squirrelLogistics.user.dto.RegisterCompanyRequest;
-import com.gpt.squirrelLogistics.user.dto.RegisterDriverRequest;
-import com.gpt.squirrelLogistics.user.dto.RegisterResponse;
-import com.gpt.squirrelLogistics.user.repository.UserRepository;
-import com.gpt.squirrelLogistics.user.service.AuthService;
+import com.gpt.squirrelLogistics.config.user.JwtTokenProvider;
+import com.gpt.squirrelLogistics.dto.login.LoginRequest;
+import com.gpt.squirrelLogistics.dto.login.LoginResponse;
+import com.gpt.squirrelLogistics.dto.regist.RegisterCompanyRequest;
+import com.gpt.squirrelLogistics.dto.regist.RegisterDriverRequest;
+import com.gpt.squirrelLogistics.dto.regist.RegisterResponse;
+import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
+import com.gpt.squirrelLogistics.service.user.AuthService;
 
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;

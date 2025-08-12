@@ -1,6 +1,7 @@
-package com.gpt.squirrelLogistics.user.dto;
+package com.gpt.squirrelLogistics.dto.regist;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import lombok.Getter;
@@ -16,12 +17,12 @@ public class RegisterDriverRequest {
   private String phone;
   private String account;
   private String businessN;
-  private LocalDate birthday;
+  private LocalDateTime birthday;
 
   // driver-specific
   private String mainLoca;
   private String licenseNum;
-  private LocalDate licenseDT;
+  private LocalDateTime licenseDT;
   private Boolean drivable;
 
   // car (optional on register)

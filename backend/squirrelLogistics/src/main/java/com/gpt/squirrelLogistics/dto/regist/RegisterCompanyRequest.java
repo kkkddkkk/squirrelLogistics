@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.user.dto;
+package com.gpt.squirrelLogistics.dto.regist;
 
 import java.util.Date;
 

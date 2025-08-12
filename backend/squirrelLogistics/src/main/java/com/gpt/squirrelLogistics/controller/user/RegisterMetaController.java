@@ -1,11 +1,11 @@
-package com.gpt.squirrelLogistics.user.controller;
+package com.gpt.squirrelLogistics.controller.user;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.user.dto.RegisterMetaResponse;
-import com.gpt.squirrelLogistics.user.service.RegisterMetaService;
+import com.gpt.squirrelLogistics.dto.regist.RegisterMetaResponse;
+import com.gpt.squirrelLogistics.service.user.RegisterMetaService;
 
 @RestController
 @RequestMapping("/api/public")

@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.user.controller;
+package com.gpt.squirrelLogistics.controller.user;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.user.VehicleType;
-import com.gpt.squirrelLogistics.user.service.VehicleTypeService;
+import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
+import com.gpt.squirrelLogistics.service.user.VehicleTypeService;
 
 @RestController
 @RequestMapping("/api/vehicle-types")

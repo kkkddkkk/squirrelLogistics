@@ -1,12 +1,12 @@
-package com.gpt.squirrelLogistics.user.service;
+package com.gpt.squirrelLogistics.service.user;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.gpt.squirrelLogistics.user.User;
-import com.gpt.squirrelLogistics.user.repository.UserRepository;
+import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

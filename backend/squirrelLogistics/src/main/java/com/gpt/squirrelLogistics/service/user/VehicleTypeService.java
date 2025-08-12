@@ -1,11 +1,11 @@
-package com.gpt.squirrelLogistics.user.service;
+package com.gpt.squirrelLogistics.service.user;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.gpt.squirrelLogistics.user.VehicleType;
-import com.gpt.squirrelLogistics.user.repository.VehicleTypeRepository;
+import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
+import com.gpt.squirrelLogistics.repository.vehicleType.VehicleTypeRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -25,8 +25,8 @@ public class VehicleTypeService {
         if (!list.isEmpty()) return list;
         // DB는 그대로 두고, 기본값만 반환 (응답 전용)
         return List.of(
-            new VehicleType("1T", "1톤 트럭"),
-            new VehicleType("2.5T", "2.5톤 트럭")
+            new VehicleType(1, "1톤 트럭"),
+            new VehicleType(2, "2.5톤 트럭")
         );
     }
 
@@ -35,8 +35,8 @@ public class VehicleTypeService {
     public void seedIfEmpty() {
         if (repository.count() == 0) {
             repository.saveAll(List.of(
-                new VehicleType("1T", "1톤 트럭"),
-                new VehicleType("2.5T", "2.5톤 트럭")
+                new VehicleType(1, "1톤 트럭"),
+                new VehicleType(2, "2.5톤 트럭")
             ));
         }
     }

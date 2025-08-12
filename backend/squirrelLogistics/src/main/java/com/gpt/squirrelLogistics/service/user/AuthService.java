@@ -1,24 +1,25 @@
-package com.gpt.squirrelLogistics.user.service;
+package com.gpt.squirrelLogistics.service.user;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.gpt.squirrelLogistics.user.Car;
-import com.gpt.squirrelLogistics.user.Company;
-import com.gpt.squirrelLogistics.user.Driver;
-import com.gpt.squirrelLogistics.user.Role;
-import com.gpt.squirrelLogistics.user.User;
-import com.gpt.squirrelLogistics.user.VehicleType;
-import com.gpt.squirrelLogistics.user.dto.RegisterCompanyRequest;
-import com.gpt.squirrelLogistics.user.dto.RegisterDriverRequest;
-import com.gpt.squirrelLogistics.user.dto.RegisterResponse;
-import com.gpt.squirrelLogistics.user.repository.CarRepository;
-import com.gpt.squirrelLogistics.user.repository.CompanyRepository;
-import com.gpt.squirrelLogistics.user.repository.DriverRepository;
-import com.gpt.squirrelLogistics.user.repository.UserRepository;
-import com.gpt.squirrelLogistics.user.repository.VehicleTypeRepository;
+import com.gpt.squirrelLogistics.dto.regist.RegisterCompanyRequest;
+import com.gpt.squirrelLogistics.dto.regist.RegisterDriverRequest;
+import com.gpt.squirrelLogistics.dto.regist.RegisterResponse;
+import com.gpt.squirrelLogistics.entity.car.Car;
+import com.gpt.squirrelLogistics.entity.company.Company;
+import com.gpt.squirrelLogistics.entity.driver.Driver;
+import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
+import com.gpt.squirrelLogistics.repository.car.CarRepository;
+import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
+import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
+import com.gpt.squirrelLogistics.repository.vehicleType.VehicleTypeRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +42,9 @@ public class AuthService {
     user.setLoginId(req.getLoginId());
     user.setName(req.getName());
     user.setEmail(req.getEmail());
-    user.setPhone(req.getPhone());
+    user.setPnumber(req.getPhone());
     user.setPassword(passwordEncoder.encode(req.getPassword()));
-    user.setRole(Role.DRIVER);
+    user.setRole(UserRoleEnum.DRIVER);
     user.setAccount(req.getAccount());
     user.setBirthday(req.getBirthday());
     user.setBusinessN(req.getBusinessN());
@@ -65,7 +66,7 @@ public class AuthService {
       car.setVehicleType(vt);
       car.setDriver(d);
       car.setCarNum(req.getCarNum());
-      car.setRegDate(LocalDate.now());
+      car.setRegDate(LocalDateTime.now());
       carRepo.save(car);
     }
 
@@ -80,9 +81,9 @@ public class AuthService {
     user.setLoginId(req.getLoginId());
     user.setName(req.getName());
     user.setEmail(req.getEmail());
-    user.setPhone(req.getPhone());
+    user.setPnumber(req.getPhone());
     user.setPassword(passwordEncoder.encode(req.getPassword()));
-    user.setRole(Role.COMPANY);
+    user.setRole(UserRoleEnum.COMPANY);
     user.setAccount(req.getAccount());
     user.setBusinessN(req.getBusinessN());
 

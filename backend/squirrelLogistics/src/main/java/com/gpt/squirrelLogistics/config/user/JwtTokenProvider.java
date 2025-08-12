@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.user.config;
+package com.gpt.squirrelLogistics.config.user;
 
 import org.springframework.stereotype.Component;
 
