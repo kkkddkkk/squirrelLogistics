@@ -45,6 +45,7 @@ public class User {// 회원
 	private String password;// 비밀번호
 	private String account;// 계좌번호
 	private String businessN;// 사업자등록번호
+	private boolean snsLogin;
 	private LocalDateTime birthday;// 생년월일
 	private LocalDateTime regDate;// 가입일자
 	private LocalDateTime modiDate;// 수정일

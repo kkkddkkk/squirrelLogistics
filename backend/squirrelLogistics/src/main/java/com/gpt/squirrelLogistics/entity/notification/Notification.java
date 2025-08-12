@@ -3,9 +3,12 @@ package com.gpt.squirrelLogistics.entity.notification;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.admin.AdminUser;
+import com.gpt.squirrelLogistics.enums.notification.NotificationTypeEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,8 +43,8 @@ public class Notification {
     @Column(length = 300)
 	private String content; //내용.
     
-    @Column(length = 30)
-	private String type; //타입.
+	@Enumerated(EnumType.STRING)
+	private NotificationTypeEnum type; //타입.
     
 	private LocalDateTime regDate; //생성일.
 }

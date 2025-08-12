@@ -40,6 +40,11 @@ public class Driver {//운전자 세부정보
 	private LocalDateTime LicenseDT;//면허 유효기간
 	private boolean drivable;//운전 가능 여부
 	
+	private LocalDateTime preferredStartTime; //선호 시간대
+	private LocalDateTime preferredEndTime;//선호 시간대
+	private String profileImageName;//프사 이미지 저장명
+	private String profileImagePath;//프사 이미지 경로
+	
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;//회원

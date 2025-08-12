@@ -2,6 +2,7 @@ package com.gpt.squirrelLogistics.dto.notification;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.gpt.squirrelLogistics.enums.notification.NotificationTypeEnum;
 
 import lombok.*;
 
@@ -16,7 +17,7 @@ public class NotificationSlimResponseDTO {
 
     private String title; //제목.
     private String content; //내용.
-    private String type; //종류.
+	private NotificationTypeEnum type; //종류.
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime regDate; //생성일.
