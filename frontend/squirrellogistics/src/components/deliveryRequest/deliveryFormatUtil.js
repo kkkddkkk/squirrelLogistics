@@ -18,7 +18,7 @@ function formatCreatedAt(createdAt) {
   return `등록: ${diffMin}분 전`;
 }
 
-function renderWarningTags(waypoints) {
+export function renderWarningTags(waypoints) {
   const tagSet = new Map();
 
   waypoints.forEach(wp => {

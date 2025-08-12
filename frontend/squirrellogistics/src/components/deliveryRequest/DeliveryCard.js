@@ -1,12 +1,18 @@
 import { Paper, Typography, Divider, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDeliveryDTO } from './deliveryFormatUtil';
 
-const DeliveryCard = ({ item }) => {
+const DeliveryCard = ({item}) => {
+
+
+    const { driverId } = useParams();
     const navigate = useNavigate();
     const formatted = formatDeliveryDTO(item); // 여기서 포맷 수행
+
+
+
     const handleClick = () => {
-        navigate(`/driver/detail/${item.request_id}`, { state: { item } });
+        navigate(`/driver/${driverId}/detail/${item.request_id}`, { state: { item } });
     };
     return (
         <Paper

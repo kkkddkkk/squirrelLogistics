@@ -7,7 +7,7 @@ import { useLocation, useParams } from "react-router-dom";
 const RequestDetailPage = () => {
     const location = useLocation();
     const { item } = location.state || {};
-    const { request_id } = useParams();
+    const { requestId } = useParams();
 
     return (
         <Box>

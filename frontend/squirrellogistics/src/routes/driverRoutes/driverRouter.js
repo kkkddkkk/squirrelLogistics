@@ -3,18 +3,34 @@ import { lazy, Suspense } from "react";
 const driverRouter = () => {
   const Loading = "<div>로딩중</div>";
 
-  const RequestList = lazy(() => import("../../pages/DeliveryRequest/ListPage"));
+  //요청 목록 페이지.
+  const RequestList = lazy(() =>
+    import("../../pages/DeliveryRequest/ListPage")
+  );
+  //요청 상세 페이지.
   const RequestDetail = lazy(() =>
     import("../../pages/DeliveryRequest/RequestDetailPage")
   );
+  //현재 진행중 요청 페이지.
   const OnGoing = lazy(() =>
     import("../../pages/DeliveryTracking/DeliveryTrackingPage")
   );
-  //const Review = lazy(() => import("../../pages/DeliveryReview/ReviewListPage"));
-  //const Calender = lazy(() => import("../pages/member/KakaoRedirectPage"));
-  //const Report = lazy(() => import("../pages/member/KakaoRedirectPage"));
+  //기사 월별 일정 페이지.
+  const Calender = lazy(() =>
+    import("../../pages/DriverSchedule/DriverMonthlyPage")
+  );
+  //개별 일정 상세 페이지.
+  const Schedule = lazy(() =>
+    import("../../pages/DriverSchedule/DriverIndividualSchedulePage")
+  );
+  //기사 리뷰 목록 페이지.
+  const Review = lazy(() =>
+    import("../../pages/DriverReview/DriverReviewListPage")
+  );
 
+  //const Report = lazy(() => import("../pages/member/KakaoRedirectPage"));
   //const History = lazy(() => import("../../pages/DeliveryHistory/HistoryListPage"));
+  
   const Profile = lazy(() => import("../../pages/Driver/DriverProfile"));
   const EditProfile = lazy(() => import("../../pages/Driver/EditProfile"));
   const RegisterVehicle = lazy(() =>
@@ -27,15 +43,15 @@ const driverRouter = () => {
 
   return [
     {
-        path: "list",
-        element: (
-            <Suspense fallback={Loading}>
-                <RequestList />
-            </Suspense>
-        )
+      path: ":driverId/list",
+      element: (
+        <Suspense fallback={Loading}>
+          <RequestList />
+        </Suspense>
+      )
     },
     {
-      path: "detail/:requestId",
+      path: ":driverId/detail/:requestId",
       element: (
         <Suspense fallback={Loading}>
           <RequestDetail />
@@ -43,21 +59,21 @@ const driverRouter = () => {
       ),
     },
     {
-      path: "ongoing/:driverId",
+      path: ":driverId/ongoing",
       element: (
         <Suspense fallback={Loading}>
           <OnGoing />
         </Suspense>
       ),
     },
-    // {
-    //     path: "review/:driverId",
-    //     element: (
-    //         <Suspense fallback={Loading}>
-    //             <Review />
-    //         </Suspense>
-    //     )
-    // },
+    {
+      path: ":driverId/review",
+      element: (
+        <Suspense fallback={Loading}>
+          <Review />
+        </Suspense>
+      )
+    },
     // {
     //     path: "report/:driverId",
     //     element: (
@@ -66,22 +82,22 @@ const driverRouter = () => {
     //         </Suspense>
     //     )
     // },
-    // {
-    //     path: "calendar/:driverId/:month",
-    //     element: (
-    //         <Suspense fallback={Loading}>
-    //             <Calender />
-    //         </Suspense>
-    //     )
-    // },
-    // {
-    //     path: "history/:driverId",
-    //     element: (
-    //         <Suspense fallback={Loading}>
-    //             <History />
-    //         </Suspense>
-    //     )
-    // },
+    {
+      path: ":driverId/calendar/:year/:month",
+      element: (
+        <Suspense fallback={Loading}>
+          <Calender />
+        </Suspense>
+      )
+    },
+    {
+      path: ":driverId/schedule/:scheduleId",
+      element: (
+        <Suspense fallback={Loading}>
+          <Schedule />
+        </Suspense>
+      )
+    },
     {
       path: "profile",
       element: (
