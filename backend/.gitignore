@@ -26,8 +26,3 @@ target/
 Thumbs.db
 
 # Application properties/secrets
-application.yml
-application.properties
-application-*.yml
-application-*.properties
-.env
