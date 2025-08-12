@@ -8,6 +8,11 @@ class SquirrelLogisticsApplicationTests {
 
 	@Test
 	void contextLoads() {
+<<<<<<< Updated upstream
+=======
+
+		}
+>>>>>>> Stashed changes
 	}
 
-}
+

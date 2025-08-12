@@ -20,9 +20,6 @@ export const Buttons = ({ children, func }) => {
 }
 
 const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isreviewed, setIsReviewed}) => {
-    const [params] = useSearchParams();
-    const date = params.get("date");
-
     const [isExpand, setIsExpand] = useState(false);
     // const [stopOver1, setStopOver1] = useState("1번입니다");
     // const [stopOver2, setStopOver2] = useState('');
