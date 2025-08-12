@@ -2,8 +2,11 @@ import { Box, Grid, ListItem } from "@mui/material";
 import HistoryCalendar from "../../components/history/HistoryCalendar";
 import HistoryList from "../../components/history/HistoryList";
 import { Layout } from "../../components/common/CommonForCompany";
+import { useState } from "react";
 
 const History = () => {
+    const [isreviewed, setIsReviewed] = useState(true);
+
     return (
         <Layout title={"이용기록"}>
             <Grid container spacing={3}>
@@ -11,8 +14,16 @@ const History = () => {
                     <HistoryCalendar></HistoryCalendar>
                 </Grid>
                 <Grid size={6}>
-                    <HistoryList></HistoryList>
-                    <HistoryList></HistoryList>
+                    <HistoryList
+                     stopOver1={"stopOver1"}
+                     stopOver2={"stopOver2"}
+                     stopOver3={"stopOver3"}
+                     mountainous={true}
+                     caution={true}
+                     isreviewed={isreviewed}
+                     setIsReviewed={setIsReviewed}
+                    ></HistoryList>
+                    <HistoryList stopOver1={""}></HistoryList>
                     <HistoryList></HistoryList>
                 </Grid>
             </Grid>

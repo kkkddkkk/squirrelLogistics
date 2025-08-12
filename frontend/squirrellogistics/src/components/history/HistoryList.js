@@ -19,18 +19,18 @@ export const Buttons = ({ children, func }) => {
     );
 }
 
-const HistoryList = () => {
+const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isreviewed, setIsReviewed}) => {
     const [params] = useSearchParams();
     const date = params.get("date");
 
     const [isExpand, setIsExpand] = useState(false);
-    const [stopOver1, setStopOver1] = useState("1번입니다");
-    const [stopOver2, setStopOver2] = useState('');
-    const [stopOver3, setStopOver3] = useState("3번입니다");
-    const [caution, setCaution] = useState(true);
-    const [mountainous, setMountainous] = useState(false);
-    const [scope, setScope] = useState(1);
-    const [isreviewed, setIsReviewed] = useState(false);
+    // const [stopOver1, setStopOver1] = useState("1번입니다");
+    // const [stopOver2, setStopOver2] = useState('');
+    // const [stopOver3, setStopOver3] = useState("3번입니다");
+    // const [caution, setCaution] = useState(true);
+    // const [mountainous, setMountainous] = useState(false);
+    const [scope, setScope] = useState(5);
+    // const [isreviewed, setIsReviewed] = useState(true);
     const [modal, setModal] = useState(false);
 
 
@@ -40,6 +40,10 @@ const HistoryList = () => {
 
     const showReciept = () => {
         window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
+    }
+
+    const showReport = () => {
+        window.open(`${window.location.origin}/company/report`, 'name', 'width=1000, height=600');
     }
 
     return (
@@ -82,7 +86,7 @@ const HistoryList = () => {
                     </Grid>
                     <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
                         <TwoBtns
-                            children1={"신고"} func1={showTransactionStatement}
+                            children1={"신고"} func1={showReport}
                             children2={isreviewed ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
                         />
 
@@ -90,7 +94,7 @@ const HistoryList = () => {
                 </Grid>
 
             </ListBoxContainer>
-            <ReviewModal modal={modal} setModal={setModal} scope={scope} setScope={setScope}></ReviewModal>
+            <ReviewModal modal={modal} setModal={setModal} scope={scope} setScope={setScope} isreviewed={isreviewed}></ReviewModal>
         </>
 
     )

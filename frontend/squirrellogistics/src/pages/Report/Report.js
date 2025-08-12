@@ -67,7 +67,7 @@ const Report = () => {
                             </Grid>
                         </Box>
                     </FormControl>
-                    <OneBigBtn func={handleReport}>등&nbsp;&nbsp;&nbsp;록</OneBigBtn>
+                    <OneBigBtn func={handleReport} margin={"5%"}>등&nbsp;&nbsp;&nbsp;록</OneBigBtn>
                 </Grid>
 
                 <Grid size={3} />

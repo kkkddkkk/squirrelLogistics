@@ -9,7 +9,7 @@ import { TwoBtns } from "../common/CommonForCompany";
 
 const HistoryCalendar = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const {moveToAnotherDay} = useHistoryMove();
+    const {moveToAnotherDay, moveToReportList, moveToReviewList} = useHistoryMove();
 
     const PsButton = ({ children, func }) => {
         return (
@@ -47,6 +47,7 @@ const HistoryCalendar = () => {
     const markedDatesFromDB = ["2025-08-01", "2025-08-04", "2025-08-05"];
     const markedDates = markedDatesFromDB.map(d => new Date(d));
 
+
     return (
         <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>
             <DatePicker
@@ -58,8 +59,8 @@ const HistoryCalendar = () => {
                 ]}
             />
             <Box sx={{ width: "100%", display: "flex", justifyContent: "space-around", marginTop: "5%" }} >
-                <PsButton>내 신고목록</PsButton>
-                <PsButton>내 리뷰목록</PsButton>
+                <PsButton func={moveToReportList}>내 신고목록</PsButton>
+                <PsButton func={moveToReviewList}>내 리뷰목록</PsButton>
             </Box>
 
         </div>
