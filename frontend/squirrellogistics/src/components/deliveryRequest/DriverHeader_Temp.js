@@ -3,14 +3,18 @@ import logo from '../../pages/Driver/images/logo.jpg'
 import { useNavigate } from "react-router-dom";
 const DriverHeader_Temp = () => {
 
-    const driverId = 1;
+    const driverId = 17;
+    const year = 2025;
+    const month = 8;
+
     const navigate = useNavigate();
 
     const menuItems = [
-        { path: "/driver/list", label: "요청 목록" },
-        { path: `/driver/ongoing/${driverId}`, label: "진행 중 운송" },
-        { path: `/driver/calendar/${driverId}`, label: "캘린더" },
-        { path: `/driver/delivered`, label: "운송 목록" },
+        { path: `/driver/${driverId}/list`, label: "요청 목록" },
+        { path: `/driver/${driverId}/ongoing`, label: "진행 중 운송" },
+        { path: `/driver/${driverId}/calendar/${year}/${month}`, label: "캘린더" },
+        { path: `/driver/deliveredlist`, label: "운송 목록" },
+        { path: `/driver/${driverId}/review`, label: "리뷰 관리" },
         { path: "/driver/profile", label: "나의 정보" },
     ];
 

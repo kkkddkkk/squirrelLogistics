@@ -8,8 +8,12 @@ import DeliveryCard from './DeliveryCard';
 const dataDTOs = Array(7).fill({
     request_id: 2025072500123,
     company_id: 177,
-    company_name:"(주) 광진물산",
+    company_name: "(주) 광진물산",
     estimated_fee: 98000,
+    total_cargo_count: 17,
+    total_cargo_weight: 480,
+    estimated_start_at: "2025-08-05",
+    estimated_end_at: "2025-08-05",
     created_at: new Date(new Date() - 15 * 60 * 1000), // 15분 전
     start_address: "서울특별시 강남구 테헤란로 212",
     end_address: "경기 하남시 위례대로 200",
