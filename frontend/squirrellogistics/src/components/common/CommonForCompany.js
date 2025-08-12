@@ -57,7 +57,7 @@ export const Layout = ({ title, children }) => {
     )
 }
 
-export const ListBoxContainer = ({ children, id, isExpand, setIsExpand }) => {
+export const ListBoxContainer = ({ children, header, id, isExpand, setIsExpand }) => {
     const handleExpand = () => {
         if (!isExpand) setIsExpand(true);
         else setIsExpand(false);
@@ -78,7 +78,7 @@ export const ListBoxContainer = ({ children, id, isExpand, setIsExpand }) => {
             }}
         >
             <input type="hidden" value={id}></input>
-            <Typography sx={{ margin: "2%" }}>id.startPlace - id.endPlace</Typography>
+            <Typography sx={{ margin: "2%" }}>{header}</Typography>
             {!isExpand ?
                 <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
                 :
@@ -112,6 +112,21 @@ export const TwoBtns = ({ children1, children2, func1, func2 }) => {
             </Button>
         </Box>
     );
+}
+
+export const OneBigBtn = ({children, disabled, func}) => {
+    return (
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+            <Button
+                variant="contained"
+                sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
+                onClick={func}
+                disabled={disabled}
+            >
+                {children}
+            </Button>
+        </Box>
+    )
 }
 
 //#endregion
