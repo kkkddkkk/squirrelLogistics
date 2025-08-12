@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.entity.user;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.company.Company;
@@ -45,10 +46,11 @@ public class User {// 회원
 	private String password;// 비밀번호
 	private String account;// 계좌번호
 	private String businessN;// 사업자등록번호
-	private LocalDateTime birthday;// 생년월일
+	private LocalDate birthday;// 생년월일
 	private LocalDateTime regDate;// 가입일자
 	private LocalDateTime modiDate;// 수정일
 	private LocalDateTime lastLogin;// 마지막 로그인
+	private boolean sns_login;
 
 	@Enumerated(EnumType.STRING)
 	private UserRoleEnum role;// 권한

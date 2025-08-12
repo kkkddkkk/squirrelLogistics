@@ -415,14 +415,14 @@ export default function DriverForm() {
                         label="차종"
                         select
                         fullWidth
-                        value={form.vehicleTypeId}
-                        onChange={onChange("vehicleTypeId")}
+                        value={form.vehicleTypeId ?? ""}
+                        onChange={(e) => setForm(p => ({ ...p, vehicleTypeId: e.target.value ?? "" }))}
                         error={!!errors.vehicleTypeId}
                         helperText={errors.vehicleTypeId || " "}
                         FormHelperTextProps={helperProps}
                     >
                         {vehicleOptions.map((v) => (
-                            <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>
+                            <MenuItem key={v.id} value={String(v.id)}>{v.name}</MenuItem>  // string으로 통일
                         ))}
                     </TextField>
                 </div>

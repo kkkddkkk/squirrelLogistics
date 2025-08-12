@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.entity.driver;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.user.User;
@@ -37,7 +38,7 @@ public class Driver {//운전자 세부정보
 	
 	private String mainLoca;//선호지역
 	private String licenseNum;//운전면허번호
-	private LocalDateTime LicenseDT;//면허 유효기간
+	private LocalDate LicenseDT;//면허 유효기간
 	private boolean drivable;//운전 가능 여부
 	
 	@OneToOne(fetch = FetchType.LAZY)

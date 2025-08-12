@@ -15,15 +15,8 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
-	
-<<<<<<< HEAD:backend/squirrelLogistics/src/main/java/com/gpt/squirrelLogistics/payment/service/PaymentServiceImpl.java
 	//private final PaymentRepository paymentRepository;
 	//private final ModelMapper modelMapper;
-=======
-	private final PaymentRepository paymentRepository;
-	private final ModelMapper modelMapper;
-	
->>>>>>> DBBranch:backend/squirrelLogistics/src/main/java/com/gpt/squirrelLogistics/service/payment/PaymentServiceImpl.java
 	@Override
 	public Long registerPayment(PaymentDTO paymentDTO) {
 		// TODO Auto-generated method stub

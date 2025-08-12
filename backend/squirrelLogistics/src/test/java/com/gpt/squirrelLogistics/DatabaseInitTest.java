@@ -8,9 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.gpt.squirrelLogistics.user.Role;
-import com.gpt.squirrelLogistics.user.User;
-import com.gpt.squirrelLogistics.user.repository.UserRepository;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
 
 @EntityScan(basePackages = {
   "com.gpt.squirrelLogistics.user", // 당신 엔티티 패키지

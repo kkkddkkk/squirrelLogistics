@@ -48,6 +48,7 @@ public class AuthService {
     user.setAccount(req.getAccount());
     user.setBirthday(req.getBirthday());
     user.setBusinessN(req.getBusinessN());
+    user.setSns_login(false);
 
     Driver d = new Driver();
     d.setUser(user);
@@ -86,6 +87,7 @@ public class AuthService {
     user.setRole(UserRoleEnum.COMPANY);
     user.setAccount(req.getAccount());
     user.setBusinessN(req.getBusinessN());
+    user.setSns_login(false);
 
     Company c = new Company();
     c.setUser(user);

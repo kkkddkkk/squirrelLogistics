@@ -17,12 +17,12 @@ public class RegisterDriverRequest {
   private String phone;
   private String account;
   private String businessN;
-  private LocalDateTime birthday;
+  private LocalDate birthday;
 
   // driver-specific
   private String mainLoca;
   private String licenseNum;
-  private LocalDateTime licenseDT;
+  private LocalDate licenseDT;
   private Boolean drivable;
 
   // car (optional on register)
