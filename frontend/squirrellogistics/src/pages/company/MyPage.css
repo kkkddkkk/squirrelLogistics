@@ -43,7 +43,7 @@
   margin: 0;
 }
 
-.edit-images {
+.edit-icon {
   width: 20px;
   height: 20px;
   cursor: pointer;
@@ -77,6 +77,31 @@
   color: #2A2A2A;
   cursor: pointer;
 }
+
+/* 📌 배송 상태 드롭다운 스타일 */
+.status-select {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #2a2a2a;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 140px;
+}
+
+/* .status-select:focus {
+  border-color: #2a2a2a;
+  box-shadow: 0 0 0 2px rgba(232, 169, 63, 0.2);
+} */
+
+
+.status-select option {
+  padding: 0.4rem;
+}
+
 
 .delivery-filter {
   display: flex;

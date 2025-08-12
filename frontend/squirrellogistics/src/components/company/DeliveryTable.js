@@ -1,5 +1,4 @@
 // src/components/company/DeliveryTable.jsx
-
 import React from "react";
 import "./DeliveryTable.css";
 
