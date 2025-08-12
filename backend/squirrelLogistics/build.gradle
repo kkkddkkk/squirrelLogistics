@@ -23,6 +23,10 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+    JJWT_VERSION = "0.11.5"
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
@@ -37,6 +41,9 @@ dependencies {
 	implementation 'org.postgresql:postgresql:42.7.2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.modelmapper:modelmapper:3.1.1'
+	implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
+	runtimeOnly "io.jsonwebtoken:jjwt-gson:${JJWT_VERSION}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
 }
 
 tasks.named('test') {
