@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/driver/NavBar";
 import {
@@ -18,16 +18,35 @@ import {
   Grid,
   IconButton,
   Stack,
+  Avatar,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import PersonIcon from "@mui/icons-material/Person";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+
+  // 인증 상태 확인 (비밀번호 확인으로 대체)
+  /*
+  React.useEffect(() => {
+    const verificationStatus = localStorage.getItem("verificationStatus");
+    if (verificationStatus !== "verified") {
+      alert("본인인증이 필요합니다.");
+      navigate("/driver/verification");
+      return;
+    }
+  }, [navigate]);
+  */
+
   const [form, setForm] = useState({
     name: "김동현",
     birth: "1989-02-19",
     phone: "010-2342-2342",
     email: "driver119@naver.com",
+    password: "",
+    confirmPassword: "",
     bankAccount: "3333-1988-67613",
     businessId: "123-222-2342",
     unavailableStart: "2025-08-10",
@@ -35,7 +54,17 @@ const EditProfile = () => {
     deliveryArea: "서울 전체",
     rating: 4.8,
   });
+
+  // 프로필 사진 관련 state
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const fileInputRef = useRef(null);
   const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordConfirmError, setPasswordConfirmError] = useState("");
+  const [idError, setIdError] = useState("");
+  const [isIdChecked, setIsIdChecked] = useState(false);
+
   const [selectedCity, setSelectedCity] = useState("서울");
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
@@ -326,6 +355,12 @@ const EditProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // 아이디 변경 시 중복확인 초기화
+    if (name === "id") {
+      setIsIdChecked(false);
+      setIdError("");
+    }
+
     if (name === "phone") {
       let formatted = value.replace(/[^0-9]/g, "");
       if (formatted.length < 4) {
@@ -345,6 +380,33 @@ const EditProfile = () => {
     if (name === "email") {
       const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
       setEmailError(isValidEmail ? "" : "이메일 형식이 올바르지 않습니다.");
+    }
+
+    // 비밀번호 검증
+    if (name === "password") {
+      // 비밀번호 정규식: 8자 이상, 영문 대소문자, 숫자, 특수문자 포함
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      const isValidPassword = passwordRegex.test(value);
+      setPasswordError(
+        isValidPassword ? "" : "*비밀번호 형식이 올바르지 않습니다."
+      );
+
+      // 비밀번호 확인 필드도 검증
+      if (form.confirmPassword && value !== form.confirmPassword) {
+        setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+      } else {
+        setPasswordConfirmError("");
+      }
+    }
+
+    // 비밀번호 확인 검증
+    if (name === "confirmPassword") {
+      if (form.password && value !== form.password) {
+        setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+      } else {
+        setPasswordConfirmError("");
+      }
     }
 
     setForm((prev) => ({
@@ -388,13 +450,114 @@ const EditProfile = () => {
     setShowBankModal(false);
   };
 
+  // 아이디 중복확인
+  const handleIdCheck = () => {
+    if (!form.id || form.id.trim() === "") {
+      setIdError("아이디를 입력해주세요.");
+      return;
+    }
+
+    // 실제로는 서버 API 호출이 필요하지만, 여기서는 테스트용으로 시뮬레이션
+    const existingIds = ["test123", "driver119", "user001", "admin"]; // 기존 아이디 목록
+
+    if (existingIds.includes(form.id)) {
+      setIdError("이미 사용 중인 아이디입니다.");
+      setIsIdChecked(false);
+    } else {
+      setIdError("");
+      setIsIdChecked(true);
+      alert("사용 가능한 아이디입니다.");
+    }
+  };
+
+  // 프로필 사진 업로드 처리
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // 파일 크기 검증 (5MB 이하)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("파일 크기는 5MB 이하여야 합니다.");
+        return;
+      }
+
+      // 파일 타입 검증 (이미지 파일만)
+      if (!file.type.startsWith("image/")) {
+        alert("이미지 파일만 업로드 가능합니다.");
+        return;
+      }
+
+      setProfileImage(file);
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImageUrl(imageUrl);
+
+      // 로컬 스토리지에 이미지 URL 저장
+      localStorage.setItem("profileImageUrl", imageUrl);
+    }
+  };
+
+  // 프로필 사진 삭제
+  const handleImageDelete = () => {
+    setProfileImage(null);
+    setProfileImageUrl("");
+    localStorage.removeItem("profileImageUrl");
+
+    // 파일 입력 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // 컴포넌트 마운트 시 저장된 프로필 이미지 로드
+  React.useEffect(() => {
+    const savedImageUrl = localStorage.getItem("profileImageUrl");
+    if (savedImageUrl) {
+      setProfileImageUrl(savedImageUrl);
+    }
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // 필수 필드 검증
+    if (!form.id || form.id.trim() === "") {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+    if (!isIdChecked) {
+      alert("아이디 중복확인을 해주세요.");
+      return;
+    }
+    if (idError) {
+      alert("사용할 수 없는 아이디입니다.");
+      return;
+    }
+
+    if (!form.password || form.password.trim() === "") {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+    if (!form.confirmPassword || form.confirmPassword.trim() === "") {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
     if (emailError) {
       alert("이메일 형식을 확인해주세요.");
       return;
     }
+    if (passwordError) {
+      alert("비밀번호 형식을 확인해주세요.");
+      return;
+    }
+    if (passwordConfirmError) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
     alert("수정이 완료되었습니다.");
+    // 인증 상태 초기화
+    localStorage.removeItem("verificationStatus");
+    localStorage.removeItem("verifiedPhone");
+    localStorage.removeItem("verificationMethod");
     navigate("/driver/profile");
   };
 
@@ -407,6 +570,152 @@ const EditProfile = () => {
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
           <Stack spacing={2}>
+            {/* 프로필 사진 업로드 */}
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              sx={{ mb: 3 }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ mb: 2, color: "#113F67" }}
+              >
+                프로필 사진
+              </Typography>
+              <Box position="relative" sx={{ mb: 2 }}>
+                <Avatar
+                  src={profileImageUrl}
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: profileImageUrl ? "transparent" : "white",
+                    border: "3px solid #E0E6ED",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 70, color: "#113F67" }} />
+                </Avatar>
+              </Box>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<PhotoCameraIcon />}
+                  sx={{
+                    borderColor: "#113F67",
+                    color: "#113F67",
+                    "&:hover": {
+                      borderColor: "#0d2d4a",
+                      bgcolor: "#113F67",
+                      color: "white",
+                    },
+                  }}
+                >
+                  사진 업로드
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                </Button>
+                {profileImageUrl && (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleImageDelete}
+                    sx={{
+                      borderColor: "#A20025",
+                      color: "#A20025",
+                      "&:hover": {
+                        borderColor: "#8B001F",
+                        bgcolor: "#A20025",
+                        color: "white",
+                      },
+                    }}
+                  >
+                    삭제
+                  </Button>
+                )}
+              </Stack>
+            </Box>
+
+            <Box display="flex" gap={2} alignItems="center">
+              <TextField
+                label="아이디"
+                name="id"
+                value={form.id}
+                onChange={handleChange}
+                error={!!idError}
+                helperText={idError}
+                sx={{ flex: 1 }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleIdCheck}
+                disabled={!form.id || form.id.trim() === ""}
+                sx={{
+                  height: 56,
+                  borderColor: "#113F67",
+                  color: "#113F67",
+                  "&:hover": {
+                    borderColor: "#0d2d4a",
+                    bgcolor: "#113F67",
+                    color: "white",
+                  },
+                }}
+              >
+                중복확인
+              </Button>
+            </Box>
+            <Box display="flex" gap={2}>
+              <Box flex={1}>
+                <TextField
+                  label="비밀번호"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  error={!!passwordError}
+                  fullWidth
+                />
+                {passwordError && (
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                  >
+                    {passwordError}
+                  </Typography>
+                )}
+              </Box>
+              <Box flex={1}>
+                <TextField
+                  label="비밀번호 확인"
+                  name="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  error={!!passwordConfirmError}
+                  fullWidth
+                />
+                {passwordConfirmError && (
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                  >
+                    {passwordConfirmError}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+
             <TextField
               label="이름"
               name="name"
@@ -440,7 +749,7 @@ const EditProfile = () => {
               fullWidth
             />
             <Grid container spacing={2} alignItems="center">
-              <Grid item xs={5}>
+              <Grid item xs={3}>
                 <Button
                   variant="outlined"
                   fullWidth
@@ -449,7 +758,7 @@ const EditProfile = () => {
                   {selectedBank}
                 </Button>
               </Grid>
-              <Grid item xs={7}>
+              <Grid item xs={9}>
                 <TextField
                   label="계좌번호"
                   name="bankAccount"

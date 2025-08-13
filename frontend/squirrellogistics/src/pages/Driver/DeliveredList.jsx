@@ -123,7 +123,17 @@ const DeliveredList = () => {
                 ))}
               </TableRow>
             </TableHead>
-            <TableBody>
+            {/* 홀수/짝수 행 배경색 변경 (색상 변경) */}
+            <TableBody
+              sx={{
+                "& tr:nth-of-type(odd)": {
+                  backgroundColor: "#ffffff",
+                },
+                "& tr:nth-of-type(even)": {
+                  backgroundColor: "#f3f6faff", // 더 눈에 띄는 색상으로 변경
+                },
+              }}
+            >
               {paginatedData.map((row, idx) => (
                 <TableRow
                   key={idx}
