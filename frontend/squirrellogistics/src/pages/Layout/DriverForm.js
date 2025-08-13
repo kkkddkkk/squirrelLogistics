@@ -39,6 +39,8 @@ export default function DriverForm() {
         carNum: "",
         licenseNum: "",
         licenseDT: "",
+        preferredStartTime: "",
+        preferredEndTime: "",
         timeWindow: "07:00AM ~ 18:00PM",
         preferredAreas: [],
         mainLoca: "서울",
@@ -96,7 +98,7 @@ export default function DriverForm() {
         if (errors.phone) setErrors((prev) => ({ ...prev, phone: "" }));
     };
 
-    // ✅ 차종 불러오기: /api/vehicles/types → 실패/빈배열이면 /api/vehicle-types → 그래도 실패면 기본값
+    // 차종 불러오기: /api/vehicles/types → 실패/빈배열이면 /api/vehicle-types → 그래도 실패면 기본값
     const [terms, setTerms] = useState([]);                  // /api/public/register-meta 로 받아온 약관
     const [agreedTerms, setAgreedTerms] = useState(new Set()); // 동의한 term id 집합
     const [vehicleTypes, setVehicleTypes] = useState(DEFAULT_VEHICLES);
@@ -106,7 +108,7 @@ export default function DriverForm() {
             try {
                 const { data } = await api.get("/api/public/register-meta");
                 // 차종
-                const vts = (data?.vehicleTypes || []).map(v => ({ id: v.id, name: v.name }));
+                const vts = (data?.vehicleTypes || []).map(v => ({ id: v.vehicleTypeId, name: v.name }));
                 setVehicleTypes(vts.length ? vts : DEFAULT_VEHICLES);
                 // 약관
                 setTerms(Array.isArray(data?.terms) ? data.terms : []);
@@ -228,6 +230,8 @@ export default function DriverForm() {
             mainLoca: form.preferredAreas.join(","),
             licenseNum: form.licenseNum,
             licenseDT: form.licenseDT,
+            preferred_start_time: form.preferredStartTime || fmt(startTime),
+            preferred_end_time: form.preferredEndTime || fmt(endTime),
             drivable: true,
             vehicleTypeId: Number(form.vehicleTypeId),
             carNum: form.carNum || null,
@@ -255,6 +259,9 @@ export default function DriverForm() {
         () => vehicleTypes.map((v) => ({ id: v.id, name: v.name })),
         [vehicleTypes]
     );
+
+    // 시간 포멧
+    const fmt = (d) => (d ? dayjs(d).format("HH:mm:ss") : null);
 
     return (
         <Box component="form" onSubmit={onSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -415,14 +422,14 @@ export default function DriverForm() {
                         label="차종"
                         select
                         fullWidth
-                        value={form.vehicleTypeId ?? ""}
-                        onChange={(e) => setForm(p => ({ ...p, vehicleTypeId: e.target.value ?? "" }))}
+                        value={form.vehicleTypeId}
+                        onChange={onChange("vehicleTypeId")}
                         error={!!errors.vehicleTypeId}
                         helperText={errors.vehicleTypeId || " "}
                         FormHelperTextProps={helperProps}
                     >
                         {vehicleOptions.map((v) => (
-                            <MenuItem key={v.id} value={String(v.id)}>{v.name}</MenuItem>  // string으로 통일
+                            <MenuItem key={v.id} value={(v.id)}>{v.name}</MenuItem>
                         ))}
                     </TextField>
                 </div>
@@ -476,10 +483,12 @@ export default function DriverForm() {
                             if (errors.timeWindow) setErrors((p) => ({ ...p, timeWindow: "" }));
                             setStartTime(start);
                             setEndTime(end);
+                            setForm((p) => ({
+                                ...p,
+                                preferredStartTime: fmt(start),
+                                preferredEndTime: fmt(end),
+                            }));
                         }}
-                        error={!!errors.timeWindow}
-                        helperText={errors.timeWindow}
-                        minuteStep={15}
                     />
                 </div>
 

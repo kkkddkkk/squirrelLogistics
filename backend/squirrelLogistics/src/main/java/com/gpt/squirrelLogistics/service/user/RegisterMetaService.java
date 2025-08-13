@@ -37,11 +37,10 @@ public class RegisterMetaService {
         List<VehicleTypeResponseDTO> vehicleTypes = vehicleTypeRepository.findAll().stream()
                 .map(this::toVehicleDto)
                 .toList();
-
         if (vehicleTypes.isEmpty()) {
             vehicleTypes = List.of(
                 new VehicleTypeResponseDTO(1L, "1톤 트럭"),
-                new VehicleTypeResponseDTO(1L, "2.5톤 트럭")
+                new VehicleTypeResponseDTO(2L, "2.5톤 트럭")
             );
         }
 

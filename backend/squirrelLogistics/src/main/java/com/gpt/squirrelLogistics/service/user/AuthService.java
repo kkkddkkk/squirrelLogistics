@@ -48,6 +48,7 @@ public class AuthService {
     user.setAccount(req.getAccount());
     user.setBirthday(req.getBirthday());
     user.setBusinessN(req.getBusinessN());
+    user.setRegDate(LocalDateTime.now());
     user.setSns_login(false);
 
     Driver d = new Driver();
@@ -56,6 +57,8 @@ public class AuthService {
     d.setLicenseNum(req.getLicenseNum());
     d.setLicenseDT(req.getLicenseDT());
     d.setDrivable(Boolean.TRUE.equals(req.getDrivable()));
+    d.setPreferred_start_time(req.getPreferred_start_time());
+    d.setPreferred_end_time(req.getPreferred_end_time());
     user.setDriver(d);
 
     userRepo.save(user); // cascade로 Driver 저장
@@ -88,6 +91,7 @@ public class AuthService {
     user.setAccount(req.getAccount());
     user.setBusinessN(req.getBusinessN());
     user.setSns_login(false);
+    user.setRegDate(LocalDateTime.now());
 
     Company c = new Company();
     c.setUser(user);
