@@ -9,11 +9,5 @@ import org.springframework.data.repository.query.Param;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 
 public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssignment, Long> {
-<<<<<<< Updated upstream
 	List<DeliveryAssignment> findByCompletedAt(LocalDateTime completedAt);
-=======
-
-	List<DeliveryAssignment> findByCompletedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
->>>>>>> Stashed changes
 }
