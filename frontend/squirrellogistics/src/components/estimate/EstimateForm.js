@@ -1,4 +1,4 @@
-// src/components/estimate/EstimateForm.jsx
+// src/components/estimate/EstimateForm.js
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
