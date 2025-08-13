@@ -42,15 +42,17 @@ export const Layout = ({ title, children }) => {
             bgcolor={"#F5F7FA"}
             display="flex"
             width={"100%"}
+            height={"100vh"}
             marginBottom={"2% 0"}
             flexWrap={"wrap"}
             minHeight={"100vh"}
             gap={0}
             flexDirection={"column"}
-            justifyContent={""}
+            justifyContent={"flex-start"}
+            alignItems={"baseline"}
         >
             {title ? <Title>{title}</Title> : <></>}
-            <div style={{ width: "100%" }}>
+            <div style={{ width: "100%", display: "flex", justifyContent: "center"}}>
                 {children}
             </div>
         </Box>

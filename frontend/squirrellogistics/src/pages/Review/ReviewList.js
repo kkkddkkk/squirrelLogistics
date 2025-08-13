@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout, ListBoxContainer, SubTitle, TwoBtns } from "../../components/common/CommonForCompany";
 import { Box, Grid, Typography } from "@mui/material";
-import StarRate from "../../components/review/StarRate";
+// import StarRate from "../../components/review/StarRate";
 import ReviewModal from "../../components/review/ReviewModal";
 import ReviewContent from "../../components/review/ReviewContent";
 
@@ -14,7 +14,7 @@ const ReviewList = () => {
 
     return (
         <Layout title={"내 리뷰목록"}>
-            <Grid container>
+            <Grid container width={"80%"}>
                 <Grid size={3} />
                 <Grid size={6}>
                     <SubTitle>0000.00.00.</SubTitle>

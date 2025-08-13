@@ -11,41 +11,66 @@ const History = () => {
     const date = params.get("date");
     const [isreviewed, setIsReviewed] = useState(true);
     const [historyList, setHistoryList] = useState([]);
+    const [todayList, setTodayList] = useState([]);
+
+    useEffect(() => {
+        axios.get(`http://localhost:8080/api/public/companyHistory`)
+            .then(res => {
+                setHistoryList(res.data);
+                const filtered = res.data.filter(data => data.completedAt && data.completedAt.slice(0, 10) === date);
+                setTodayList(filtered);
+            })
+            .catch(err => console.error(err));
+    }, []);  //최초 한 번만 실행
 
     useEffect(() => {
         if (!date) return;
 
         axios.get(`http://localhost:8080/api/public/companyHistory`, {
-            params: { date } 
+            params: { date }
         }).then(res => {
-            setHistoryList(res.data)
             console.log(res.data);
+            const filtered = res.data.filter(data => date === data.completedAt.slice(0, 10));
+            setTodayList(filtered);
         })
             .catch(err => console.error(err));
-
     }, [date])
 
 
     return (
         <Layout title={"이용기록"}>
-            <Grid container spacing={3}>
-                <Grid size={6}>
-                    <HistoryCalendar></HistoryCalendar>
+            <Box width={"80%"}>
+                <Grid container spacing={3}>
+                    <Grid size={6}>
+                        <HistoryCalendar historyList={historyList}></HistoryCalendar>
+                    </Grid>
+                    <Grid size={6} height={"65vh"} overflow={"auto"}>
+                        {todayList.map((today) => (
+                            
+                            <HistoryList
+                                key={today.assignedId}
+                                assignedId={today.assignedId}
+                                start={today.startAddress.slice(0, 13) + "..."}
+                                end={today.endAddress.slice(0, 13) + "..."}
+                                stopOver1={today.waypoints[0] ? today.waypoints[0].address : ''}
+                                stopOver2={today.waypoints[1] ? today.waypoints[1].address : ''}
+                                stopOver3={today.waypoints[2] ? today.waypoints[2].address : ''}
+                                mountainous={today.mountainous}
+                                caution={today.caution}
+                                actualFee={today.actualFee}
+                                driverName={today.driverName}
+                                carName={today.carName}
+                                isreviewed={isreviewed}
+                                setIsReviewed={setIsReviewed}
+                                reviewId={today.reviewId}
+                                rate={today.rating}
+                            // 필요한 다른 props도 같이 넘기기
+                            />
+                        ))}
+                    </Grid>
                 </Grid>
-                <Grid size={6}>
-                    <HistoryList
-                        stopOver1={"stopOver1"}
-                        stopOver2={"stopOver2"}
-                        stopOver3={"stopOver3"}
-                        mountainous={true}
-                        caution={true}
-                        isreviewed={isreviewed}
-                        setIsReviewed={setIsReviewed}
-                    ></HistoryList>
-                    <HistoryList stopOver1={""}></HistoryList>
-                    <HistoryList></HistoryList>
-                </Grid>
-            </Grid>
+            </Box>
+
         </Layout>
 
     )
