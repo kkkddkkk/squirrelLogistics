@@ -27,7 +27,7 @@ const companyRouter = () => {
     //   element: <Suspense fallback={Loading}><MyReviews /></Suspense>,
     // },
     { 
-      path: "/auth/social-complete",
+      path: "/company/auth/social-complete",
       element: <Suspense fallback={Loading}><SocialReauthComplete /></Suspense> 
     },
   ];
