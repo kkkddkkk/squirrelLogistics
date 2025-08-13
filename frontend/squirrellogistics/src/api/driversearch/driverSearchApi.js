@@ -1,8 +1,8 @@
 // src/api/driversearch/driverSearchApi.js
 import axios from "axios";
-export const API_SERVER_HOST = "http://localhost:8080";
 
-const BASE_URL = `${API_SERVER_HOST}/api/company/drivers`; // 실제 백엔드 주소에 맞게 조정 필요
+const API_SERVER_HOST = "http://localhost:8080";
+const BASE_URL = `${API_SERVER_HOST}/api/company/drivers`;
 
 // 🔍 기사 리스트 가져오기 (필터 조건 포함)
 export const fetchDriverList = async (filters) => {
@@ -39,4 +39,3 @@ export const sendDriverRequest = async (driverId) => {
     return null;
   }
 };
-
