@@ -33,7 +33,7 @@ public class CompanyHistoryController {
 	
 	@GetMapping
 	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
-		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
+//		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
 		return list;
 	}
 
