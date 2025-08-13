@@ -7,9 +7,16 @@ import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import { TwoBtns } from "../common/CommonForCompany";
 
 
-const HistoryCalendar = () => {
+const HistoryCalendar = ({ historyList }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const {moveToAnotherDay, moveToReportList, moveToReviewList} = useHistoryMove();
+    const [historyDate, setHistoryDate] = useState([]);
+    const { moveToAnotherDay, moveToReportList, moveToReviewList } = useHistoryMove();
+
+    useEffect(() => {//전체 history에서 assignedAt만 historyDate에 배열로 set.
+        const dates = historyList.map(history => history.completedAt.slice(0, 10));
+        setHistoryDate(dates);
+    }, [historyList]);
+    const markedDates = historyDate.map(d => new Date(d));
 
     const PsButton = ({ children, func }) => {
         return (
@@ -42,11 +49,6 @@ const HistoryCalendar = () => {
     useEffect(() => {//날짜 클릭 시 랜더링
         moveToAnotherDay(clickedFullDate);//path에 date 파라미터 추가
     }, [clickedFullDate]);
-
-    // 임시 날짜 리스트
-    const markedDatesFromDB = ["2025-08-01", "2025-08-04", "2025-08-05"];
-    const markedDates = markedDatesFromDB.map(d => new Date(d));
-
 
     return (
         <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>

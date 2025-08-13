@@ -1,12 +1,25 @@
 import { Box, Modal, TextField, Typography } from "@mui/material";
 import StarRate from "./StarRate";
 import { OneBigBtn, SubTitle, TwoBtns } from "../common/CommonForCompany";
+import { useState } from "react";
 
-const ReviewModal = ({ modal, setModal, scope, setScope, isreviewed }) => {
+const ReviewModal = ({ modal, setModal, scope, setScope, reviewId}) => {
     const regiReview=()=>{
 
         setModal(false);
     }
+
+    const initState={
+        reviewId:0,
+        rating:0,
+        reason:'',
+        state:''
+    }
+
+    const [review, setReview] = useState(initState);
+    const writingReview=(e=>{
+        // review[e.target.]
+    })
 
     return (
         <Modal open={modal} onClose={() => setModal(false)}
@@ -57,9 +70,9 @@ const ReviewModal = ({ modal, setModal, scope, setScope, isreviewed }) => {
                     </Box>
 
                 </Box>
-                <TextField rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0"}} value={isreviewed?"수정중입니다":""}></TextField>
+                <TextField rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0"}} value={reviewId!=0?"수정중입니다":""} onclick={writingReview}></TextField>
                 <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
-                    {!isreviewed?<OneBigBtn func={regiReview}>리뷰등록</OneBigBtn>:
+                    {reviewId==0?<OneBigBtn func={regiReview}>리뷰등록</OneBigBtn>:
                     <TwoBtns children1={"리뷰 삭제"} children2={"리뷰 수정"}></TwoBtns>}
                 </Box>
 

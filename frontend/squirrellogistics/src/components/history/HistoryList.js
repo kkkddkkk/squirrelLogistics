@@ -19,19 +19,16 @@ export const Buttons = ({ children, func }) => {
     );
 }
 
-const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isreviewed, setIsReviewed}) => {
+const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3, 
+    caution, mountainous, actualFee, driverName, carName, isreviewed, setIsReviewed, rate, reviewId }) => {
     const [isExpand, setIsExpand] = useState(false);
-    // const [stopOver1, setStopOver1] = useState("1번입니다");
-    // const [stopOver2, setStopOver2] = useState('');
-    // const [stopOver3, setStopOver3] = useState("3번입니다");
-    // const [caution, setCaution] = useState(true);
-    // const [mountainous, setMountainous] = useState(false);
-    const [scope, setScope] = useState(5);
-    // const [isreviewed, setIsReviewed] = useState(true);
+    const [scope, setScope] = useState(rate);
     const [modal, setModal] = useState(false);
+    let actualFeeFormat = actualFee.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 
     const showTransactionStatement = () => {
+        console.log("rate: " +rate);
         window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
     }
 
@@ -45,7 +42,8 @@ const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isr
 
     return (
         <>
-            <ListBoxContainer isExpand={isExpand} setIsExpand={setIsExpand} header={"id.start->id.end"}>
+            <ListBoxContainer isExpand={isExpand} setIsExpand={setIsExpand} header={`${start} -> ${end}`}>
+                <input type="hidden" value={assignedId}></input>
                 <Grid container sx={{ margin: "2%" }}>
                     {stopOver1 != '' ? <Grid size={12}>경유지1: {stopOver1}</Grid> : <></>}
                     {stopOver2 != '' ? <Grid size={12}>경유지2: {stopOver2}</Grid> : <></>}
@@ -61,7 +59,7 @@ const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isr
                             children1={"명세서"} func1={showTransactionStatement}
                             children2={"영수증"} func2={showReciept}
                         />
-                        <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 000 원</Typography>
+                        <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {actualFeeFormat} 원</Typography>
                     </Grid>
                     <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -76,7 +74,7 @@ const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isr
                                 alt="OtterImg"
                                 src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
                             />
-                            <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>운전자명(차종)</Typography>
+                            <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{driverName}({carName})</Typography>
                         </Box>
                         {isreviewed ? <StarRate scope={scope} setScope={setScope} /> : <></>}
 
@@ -84,14 +82,14 @@ const HistoryList = ({stopOver1, stopOver2, stopOver3, caution, mountainous, isr
                     <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
                         <TwoBtns
                             children1={"신고"} func1={showReport}
-                            children2={isreviewed ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
+                            children2={scope!=0 ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
                         />
 
                     </Grid>
                 </Grid>
 
             </ListBoxContainer>
-            <ReviewModal modal={modal} setModal={setModal} scope={scope} setScope={setScope} isreviewed={isreviewed}></ReviewModal>
+            <ReviewModal modal={modal} setModal={setModal} scope={scope} setScope={setScope} reviewId={reviewId}></ReviewModal>
         </>
 
     )
