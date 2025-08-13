@@ -8,7 +8,7 @@ import com.gpt.squirrelLogistics.dto.actualDelivery.ActualDeliveryDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.driver.DriverResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
-import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
+import com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
