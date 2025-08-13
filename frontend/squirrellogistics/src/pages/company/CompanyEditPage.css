@@ -1,0 +1,74 @@
+/* src/pages/company/CompanyEditPage.css */
+.edit-wrap {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+.edit-title {
+  font-size: 1.8rem;
+  text-align: left;
+  margin-bottom: 1rem;
+  color: #113F67;
+  font-weight: 800;
+}
+.edit-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 1.5rem;
+}
+
+:root { --input-max: 600px; }
+
+.field-group { margin-bottom: 1rem; }
+.label { display:block; font-weight:700; margin-bottom:.4rem; color:#2A2A2A; }
+
+.input {
+  width: 300px;
+  max-width: var(--input-max);
+  margin-right: auto;
+  height: 44px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0 .8rem;
+  background: #ddd;
+}
+
+/* ✅ select도 input 스타일과 동일하게 */
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-position: right .6rem center;
+  background-repeat: no-repeat;
+}
+
+.bank-select { width: 180px; }   /* 은행 드롭다운 고정폭 */
+
+.row { display:flex; gap:.6rem; }
+.row-2col { display:block; }
+.flex1 { flex: 0 1 var(--input-max); }
+
+.ghost-btn {
+  background: #d9d9d9;
+  border: none;
+  padding: .6rem .9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hint { color:#666; font-size:.9rem; margin-top:.2rem; }
+
+.save-btn {
+  width: 100%;
+  max-width: var(--input-max);
+  margin-right: auto;
+  height: 52px;
+  border: none;
+  border-radius: 10px;
+  background: #E0E0E0;
+  cursor: pointer;
+  font-weight: 800;
+  margin-top: 1rem;
+}
+.save-btn:hover { opacity:.95; }

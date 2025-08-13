@@ -1,11 +1,13 @@
 // src/pages/company/MyPage.jsx
+
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfoItem from '../../components/company/InfoItem';
 import { useNavigate } from 'react-router-dom';
+
+
 import useDeliveryFilter from '../../hook/company/useDeliveryFilter';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+
 import './MyPage.css';
 import { logout } from '../../slice/company/companySlice';
 
@@ -15,11 +17,12 @@ const MyPage = () => {
   const { userInfo, deliveryList, filteredList } = useSelector((state) => state.company);
 
   const {
-    deliveryDate,
+    status,
     driverName,
     trackingNumber,
     handleChange,
     handleReset,
+    STATUS_OPTIONS,
   } = useDeliveryFilter();
 
   const [showFullAccount, setShowFullAccount] = useState(true);
@@ -27,7 +30,7 @@ const MyPage = () => {
     ? userInfo.accountNumber.slice(0, -7) + '•'.repeat(7)
     : '';
 
-  // ✅ 임시 데이터 삽입
+  // ✅ 임시 데이터 삽입 (실서버 연동 시 제거)
   useEffect(() => {
     const mockUser = {
       companyName: "테스트 주식회사",
@@ -54,6 +57,22 @@ const MyPage = () => {
         status: "배송중",
         paymentMethod: "계좌이체",
         price: 42000,
+      },
+      {
+        title: "식자재",
+        trackingNumber: "TRK55553333",
+        driverName: "성춘향",
+        status: "배송시작",
+        paymentMethod: "무통장",
+        price: 31000,
+      },
+      {
+        title: "생활용품",
+        trackingNumber: "TRK99990000",
+        driverName: "변학도",
+        status: "주문접수",
+        paymentMethod: "카드결제",
+        price: 18000,
       },
     ];
 
@@ -90,7 +109,7 @@ const MyPage = () => {
             src="/images/edit.png"
             alt="수정"
             className="edit-images"
-            onClick={() => navigate('/company/edit')}
+            onClick={() => navigate('/company/verify')}
           />
         </div>
         <InfoItem label="회사명" value={userInfo?.companyName} />
@@ -109,13 +128,19 @@ const MyPage = () => {
         </div>
       </div>
 
-      {/* 배송 검색 필터 */}
+      {/* 배송 검색 필터 (✅ 상태 필터로 변경, 도착날짜 제거) */}
       <div className="delivery-filter">
-        <DatePicker
-          selected={deliveryDate}
-          onChange={(date) => handleChange("deliveryDate", date)}
-          placeholderText="도착 날짜"
-        />
+        <select
+          value={status}
+          onChange={(e) => handleChange("status", e.target.value)}
+          className="status-select"
+        >
+          <option value="">전체 상태</option>
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+
         <input
           type="text"
           placeholder="기사명"
@@ -147,7 +172,7 @@ const MyPage = () => {
             </tr>
           </thead>
           <tbody>
-            {deliveries.length === 0 ? (
+            {(!deliveries || deliveries.length === 0) ? (
               <tr>
                 <td colSpan={6} className="no-delivery">
                   배송 정보가 없습니다.
@@ -178,7 +203,6 @@ const MyPage = () => {
           회원탈퇴
         </button>
       </div>
-
     </div>
   );
 };

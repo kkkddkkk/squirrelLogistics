@@ -1,0 +1,102 @@
+/* src/pages/company/CompanyVerifyPage.css */
+.verify-wrap {
+  max-width: 560px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+.verify-title {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #113F67;
+  font-weight: 800;
+}
+.verify-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 1.5rem;
+}
+.section-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #2A2A2A;
+  font-weight: 700;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-bottom: .9rem;
+}
+.field > span {
+  font-weight: 600;
+  color: #2A2A2A;
+}
+.field input {
+  height: 44px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0 .8rem;
+  background: #eee;
+}
+.row-between {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: .5rem;
+}
+.ghost-btn {
+  background: #d9d9d9;
+  border: none;
+  padding: .5rem .9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.error-text {
+  color: #e74c3c;
+  font-size: .9rem;
+  margin-top: .6rem;
+}
+.social-box {
+  background: #f7f7f7;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.social-row {
+  display: flex;
+  gap: .8rem;
+  margin-top: .6rem;
+}
+.social-btn {
+  flex: 1;
+  background: #d9d9d9;
+  border: none;
+  padding: .7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.action-row {
+  display: flex;
+  gap: .8rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.primary {
+  background: #E8A93F;
+  color: #2A2A2A;
+  border: none;
+  padding: .7rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.secondary {
+  background: #E0E6ED;
+  color: #2A2A2A;
+  border: none;
+  padding: .7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
