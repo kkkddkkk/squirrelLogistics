@@ -14,9 +14,19 @@ const NoticeList  = lazy(() => import("../../pages/admin/Support/Notice/NoticeLi
 const NoticeForm  = lazy(() => import("../../pages/admin/Support/Notice/NoticeForm"));
 const InquiryList = lazy(() => import("../../pages/admin/Support/Inquiry/InquiryList"));
 const PolicyPage = lazy(() => import("../../pages/admin/Support/Policy/PolicyPage"));
-// Inquiry, Policy도 동일하게 import…
+//managemnet하위
+const UserManagementList = lazy(() => import("../../pages/admin/Management/Users/UserManagementList"));
+const UserForm = lazy(() => import("../../pages/admin/Management/Users/UserForm"));
+const VehicleManagementList =lazy(()=> import("../../pages/admin/Management/Vehicles/VehicleManagementList"));
+const VehicleForm =lazy(()=>import("../../pages/admin/Management/Vehicles/VehicleForm"));
+const DeliveriesList = lazy(() => import("../../pages/admin/Management/Deliveries/DeliveriesList"));
+const DeliveryForm   = lazy(() => import("../../pages/admin/Management/Deliveries/DeliveryForm"));
+const SettlementList = lazy(() => import("../../pages/admin/Management/Settlement/SettlementList"));
+const SettlementForm = lazy(() => import("../../pages/admin/Management/Settlement/SettlementForm"));
 
-export default function adminRouter() {
+// Inquiry, Policy도 동일하게 import… 
+
+export default function adminRouter() {           
   return [
     { path: "",       element: <LoginPage /> },
     { path: "signup",      element: <RegisterPage /> },
@@ -41,7 +51,29 @@ export default function adminRouter() {
          { path: "policy",  element: <PolicyPage /> },
       ]
     },
+    {
+  path: "management",
+  children: [
+    { path: "users", element: <UserManagementList /> },
+    { path: "users/new", element: <UserForm /> },
+    { path: "users/:id", element: <UserForm /> },
 
-    // 관리(Manage) 섹션이 따로 있다면 여기서 manageRouter() 불러와도 됩니다
+    {path: "vehicles", element: <VehicleManagementList/>},
+    {path:"vehicles/new",element:<VehicleForm/>},
+    {path:"vehicles/:id",element:<VehicleForm/>},
+
+    { path: "deliveries",     element: <DeliveriesList/>},
+    { path: "deliveries/new", element: <DeliveryForm/>},
+    { path: "deliveries/:id", element: <DeliveryForm/>},
+
+     { path: "settlement",      element: <SettlementList/>},
+    { path: "settlement/new",  element: <SettlementForm/>},
+    { path: "settlement/:id",  element: <SettlementForm/>},
+    
+  ]
+},
+
+
+
   ];
 }
