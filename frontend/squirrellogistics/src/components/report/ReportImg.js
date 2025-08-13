@@ -1,6 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { useRef } from 'react';
 
 
@@ -41,30 +41,34 @@ const ReportImg = ({ func, addPic, preview, setPreview }) => {
                 onChange={handleImgChange}
             />
 
-            <Box sx={{
-                width: "20%",
-                aspectRatio: "1/1",
-                marginLeft: "2%",
-                backgroundColor: "#113F67",
-                backgroundImage: preview ? `url(${preview})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                display: "flex",
-                justifyContent: preview ? "end" : "center",
-                alignItems: preview ? "baseline" : "center",
-                borderRadius: "5px",
-                cursor: "pointer"
-            }}
-                onClick={addPic ? handleClickAddImg : func}
-            >
-                {preview ?
-                    <Box sx={{ backgroundColor: "#F5F7FA", opacity: "0.5" }}>
-                        <CloseIcon onClick={handleImgRemove} sx={{ color: "#2A2A2A" }} />
-                    </Box> : <AddIcon sx={{
-                        color: "#F5F7FA",
-                        fontSize: 45
-                    }} />}
-            </Box>
+            <Grid size={2}>
+                <Box sx={{
+                    width: "100%",
+                    aspectRatio: "1/1",
+                    marginLeft: "2%",
+                    backgroundColor: "#113F67",
+                    backgroundImage: preview ? `url(${preview})` : "none",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    display: "flex",
+                    justifyContent: preview ? "end" : "center",
+                    alignItems: preview ? "baseline" : "center",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    marginRight: 1,
+                }}
+                    onClick={addPic ? handleClickAddImg : func}
+                >
+                    {preview ?
+                        <Box sx={{ backgroundColor: "#F5F7FA", opacity: "0.5" }}>
+                            <CloseIcon onClick={handleImgRemove} sx={{ color: "#2A2A2A" }} />
+                        </Box> : <AddIcon sx={{
+                            color: "#F5F7FA",
+                            fontSize: 45
+                        }} />}
+                </Box>
+            </Grid>
+
         </>
     )
 }

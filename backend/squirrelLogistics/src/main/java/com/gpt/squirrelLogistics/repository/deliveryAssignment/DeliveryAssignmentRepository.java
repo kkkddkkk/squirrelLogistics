@@ -9,6 +9,6 @@ import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 
 public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssignment, Long> {
 
-	List<DeliveryAssignment> findByCompletedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
+//	List<DeliveryAssignment> findByCompletedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    List<DeliveryAssignment> findByCompletedAt(LocalDateTime completedAt);
 }

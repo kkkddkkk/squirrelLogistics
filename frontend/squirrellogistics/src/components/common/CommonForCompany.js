@@ -43,7 +43,7 @@ export const Layout = ({ title, children }) => {
             display="flex"
             width={"100%"}
             height={"100vh"}
-            marginBottom={"2% 0"}
+            marginBottom={"2%"}
             flexWrap={"wrap"}
             minHeight={"100vh"}
             gap={0}

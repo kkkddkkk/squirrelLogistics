@@ -7,7 +7,7 @@ const ReportList = () => {
 
     return (
         <Layout title={"내 신고목록"}>
-            <Grid container>
+            <Grid container width={"80%"}>
                 <Grid size={3} />
                 <Grid size={6}>
                     <SubTitle>0000.00.00.</SubTitle>

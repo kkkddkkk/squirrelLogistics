@@ -29,12 +29,12 @@ import lombok.extern.log4j.Log4j2;
 @RequestMapping("/api/public/companyHistory")
 public class CompanyHistoryController {
 	private final DeliveryAssignmentRepository repository;
-//	private final DeliveryAssignmentService service;
+	private final DeliveryAssignmentService service;
 	
 	@GetMapping
 	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
-//		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
-		return null;
+		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
+		return list;
 	}
 
 	
