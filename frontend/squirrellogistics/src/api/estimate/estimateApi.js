@@ -1,10 +1,13 @@
 // src/api/estimate/estimateApi.js
 import axios from "axios";
 
-// 반드시 Kakao Developers에서 발급 받은 REST API 키를 아래에 입력
+// API 서버 주소
+const API_SERVER_HOST = "http://localhost:8080";
+
+// 반드시 Kakao Developers에서 발급 받은 REST API 키 입력
 const KAKAO_REST_API_KEY = "KakaoAK c0e48ee321373e897ad48c8bf2d72460";
 
-// 주소 → 좌표 변환
+// 📌 주소 → 좌표 변환
 export const getCoordsFromAddress = async (address) => {
   try {
     const res = await axios.get("https://dapi.kakao.com/v2/local/search/address.json", {
@@ -52,17 +55,17 @@ export const calculateDistance = async (addresses) => {
       Math.sin(dLat / 2) ** 2 +
       Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const R = 6371; // 지구 반지름 (km)
+    const R = 6371; // km
     total += R * c;
   }
 
   return total;
 };
 
-// 예상 금액 계산 API 호출
+// 💰 예상 금액 계산 API 호출
 export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) => {
   try {
-    const response = await axios.post("/api/company/ExpectedPay", {
+    const response = await axios.post(`${API_SERVER_HOST}/api/company/ExpectedPay`, {
       distance,
       weight,
       special: hasSpecialCargo,

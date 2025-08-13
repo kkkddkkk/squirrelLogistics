@@ -1,14 +1,12 @@
-// src/pages/company/CompanyEditPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CompanyEditPage.css";
-import { updateCompanyProfile } from "../../api/company/companyApi";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserInfo } from "../../slice/company/companySlice";
+import { updateProfile } from "../../slice/company/companySlice";
 import useCompanyEditGuard from "../../hook/company/useCompanyEditGuard";
 import useAddressSearch from "../../hook/company/useAddressSearch";
 
-/** 국내 은행사 선택 목록 (필요시 자유롭게 추가/수정) */
+/** 국내 은행사 선택 목록 */
 const BANK_OPTIONS = [
   { code: "004", name: "KB국민" },
   { code: "088", name: "신한" },
@@ -49,7 +47,7 @@ const CompanyEditPage = () => {
   const [newPw2, setNewPw2] = useState("");
 
   // 은행/계좌
-  const [bankCode, setBankCode] = useState("");                // 선택값(code)
+  const [bankCode, setBankCode] = useState("");                 // 선택값(code)
   const [bankName, setBankName] = useState(userInfo?.bankName || ""); // 표시/백업용(name)
   const [accountNumber, setAccountNumber] = useState(userInfo?.accountNumber || "");
 
@@ -59,16 +57,18 @@ const CompanyEditPage = () => {
 
   const [saving, setSaving] = useState(false);
 
-  // userInfo 로딩 후 로컬 상태 동기화
+  // userInfo → 로컬 상태 동기화
   useEffect(() => {
     if (!userInfo) return;
-    // bankCode 우선, 없으면 bankName으로 유추
     if (userInfo.bankCode) {
       setBankCode(userInfo.bankCode);
       setBankName(findBankByCode(userInfo.bankCode)?.name || userInfo.bankName || "");
     } else if (userInfo.bankName) {
       setBankName(userInfo.bankName);
       setBankCode(findBankByName(userInfo.bankName)?.code || "");
+    } else {
+      setBankCode("");
+      setBankName("");
     }
     setAccountNumber(userInfo.accountNumber || "");
     setAddress(userInfo.address || "");
@@ -79,7 +79,25 @@ const CompanyEditPage = () => {
   const { open } = useAddressSearch();
   const openAddressSearch = () => open((addr) => setAddress(addr));
 
+  // 🔎 변경 여부(없으면 저장 버튼 비활성화)
+  const isDirty = useMemo(() => {
+    const baseBankCode = userInfo?.bankCode || (userInfo?.bankName ? findBankByName(userInfo.bankName)?.code : "") || "";
+    const baseBankName = userInfo?.bankName || "";
+    const baseAcct = userInfo?.accountNumber || "";
+    const baseAddr = userInfo?.address || "";
+    const baseAddrDetail = userInfo?.addressDetail || "";
+
+    const changedPw = !isSocial && newPw.length > 0;
+    const changedBank = (bankCode || "") !== baseBankCode || (findBankByCode(bankCode)?.name || bankName) !== baseBankName;
+    const changedAcct = (accountNumber || "") !== baseAcct;
+    const changedAddr = (address || "") !== baseAddr || (addressDetail || "") !== baseAddrDetail;
+
+    return changedPw || changedBank || changedAcct || changedAddr;
+  }, [userInfo, isSocial, newPw, bankCode, bankName, accountNumber, address, addressDetail]);
+
   const handleSave = async () => {
+    if (saving) return;
+
     // 비번 검증(로컬만)
     if (!isSocial && (newPw || newPw2)) {
       if (newPw.length < 8) { alert("비밀번호는 8자 이상으로 설정해주세요."); return; }
@@ -92,10 +110,8 @@ const CompanyEditPage = () => {
 
     const resolvedBankName = findBankByCode(bankCode)?.name || bankName;
     const payload = {
-      // 서버 호환을 위해 둘 다 전달(백엔드가 필요한 값만 사용)
       bankCode: bankCode || undefined,
       bankName: resolvedBankName,
-
       accountNumber: accountNumber.replace(/\D/g, ""), // 숫자만
       address,
       addressDetail,
@@ -104,13 +120,13 @@ const CompanyEditPage = () => {
 
     try {
       setSaving(true);
-      await updateCompanyProfile(payload);
-      await dispatch(fetchUserInfo()); // 최신화
+      await dispatch(updateProfile(payload)).unwrap(); // ✅ thunk 사용 → userInfo 즉시 갱신
       sessionStorage.removeItem("company_edit_verified");
       alert("정보가 변경되었습니다.");
       navigate("/company");
-    } catch {
-      alert("저장에 실패했습니다.");
+    } catch (e) {
+      const msg = e?.response?.data?.message || "저장에 실패했습니다.";
+      alert(msg);
     } finally {
       setSaving(false);
     }
@@ -150,7 +166,6 @@ const CompanyEditPage = () => {
         <div className="field-group">
           <label className="label">계좌번호 변경하기</label>
           <div className="row">
-            {/* ✅ 은행사 드롭다운 */}
             <select
               className="input bank-select"
               value={bankCode}
@@ -195,7 +210,12 @@ const CompanyEditPage = () => {
           />
         </div>
 
-        <button className="save-btn" onClick={handleSave} disabled={saving}>
+        <button
+          className="save-btn"
+          onClick={handleSave}
+          disabled={saving || !isDirty}
+          title={!isDirty ? "변경된 내용이 없습니다." : ""}
+        >
           {saving ? "저장 중..." : "정보 변경하기"}
         </button>
       </div>

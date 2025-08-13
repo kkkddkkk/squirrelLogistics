@@ -1,15 +1,17 @@
 // src/pages/company/MyPage.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfoItem from '../../components/company/InfoItem';
 import { useNavigate } from 'react-router-dom';
 
-
 import useDeliveryFilter from '../../hook/company/useDeliveryFilter';
-
 import './MyPage.css';
-import { logout } from '../../slice/company/companySlice';
+
+import {
+  logout,
+  fetchUserInfo,
+  fetchDeliveryList,
+} from '../../slice/company/companySlice';
 
 const MyPage = () => {
   const dispatch = useDispatch();
@@ -30,55 +32,18 @@ const MyPage = () => {
     ? userInfo.accountNumber.slice(0, -7) + '•'.repeat(7)
     : '';
 
-  // ✅ 임시 데이터 삽입 (실서버 연동 시 제거)
+  // ✅ 실제 서버 데이터 불러오기 (목데이터 주입 삭제)
   useEffect(() => {
-    const mockUser = {
-      companyName: "테스트 주식회사",
-      email: "test@example.com",
-      phone: "010-1234-5678",
-      address: "서울특별시 강남구 역삼동",
-      bizNumber: "123-45-67890",
-      accountNumber: "12345678901234",
-    };
-
-    const mockDeliveries = [
-      {
-        title: "전자제품 배송",
-        trackingNumber: "TRK12345678",
-        driverName: "홍길동",
-        status: "배송완료",
-        paymentMethod: "카드결제",
-        price: 25000,
-      },
-      {
-        title: "사무용 가구",
-        trackingNumber: "TRK87654321",
-        driverName: "이몽룡",
-        status: "배송중",
-        paymentMethod: "계좌이체",
-        price: 42000,
-      },
-      {
-        title: "식자재",
-        trackingNumber: "TRK55553333",
-        driverName: "성춘향",
-        status: "배송시작",
-        paymentMethod: "무통장",
-        price: 31000,
-      },
-      {
-        title: "생활용품",
-        trackingNumber: "TRK99990000",
-        driverName: "변학도",
-        status: "주문접수",
-        paymentMethod: "카드결제",
-        price: 18000,
-      },
-    ];
-
-    dispatch({ type: "company/fetchUserInfo/fulfilled", payload: mockUser });
-    dispatch({ type: "company/fetchDeliveryList/fulfilled", payload: mockDeliveries });
+    dispatch(fetchUserInfo());
+    dispatch(fetchDeliveryList());
   }, [dispatch]);
+
+  // (선택) 탭으로 돌아왔을 때 최신화하고 싶다면 아래 주석 해제
+  // useEffect(() => {
+  //   const onFocus = () => dispatch(fetchUserInfo());
+  //   window.addEventListener('focus', onFocus);
+  //   return () => window.removeEventListener('focus', onFocus);
+  // }, [dispatch]);
 
   const deliveries = filteredList.length ? filteredList : deliveryList;
 
@@ -117,6 +82,9 @@ const MyPage = () => {
         <InfoItem label="연락처" value={userInfo?.phone} />
         <InfoItem label="회사 주소" value={userInfo?.address} />
         <InfoItem label="사업자 등록번호" value={userInfo?.bizNumber} />
+        {/* (선택) 은행사도 표시 */}
+        <InfoItem label="은행사" value={userInfo?.bankName} />
+
         <div className="info-item">
           <span className="info-label">메인 계좌</span>
           <span className="info-value">
@@ -128,7 +96,7 @@ const MyPage = () => {
         </div>
       </div>
 
-      {/* 배송 검색 필터 (✅ 상태 필터로 변경, 도착날짜 제거) */}
+      {/* 배송 검색 필터 */}
       <div className="delivery-filter">
         <select
           value={status}
