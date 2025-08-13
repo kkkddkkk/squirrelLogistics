@@ -9,7 +9,7 @@ import {
   setDistance,
   setMinWeight,
   setMaxWeight,
-} from "../../slices/estimate/estimateSlice";
+} from "../../slice/estimate/estimateSlice";
 
 import "./EstimateForm.css";
 
