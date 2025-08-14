@@ -62,7 +62,7 @@ export const calculateDistance = async (addresses) => {
   return total;
 };
 
-// 💰 예상 금액 계산 API 호출
+// 💰 예상 금액 계산 API 호출(선택)
 export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) => {
   try {
     const response = await axios.post(`${API_SERVER_HOST}/api/company/ExpectedPay`, {
@@ -75,4 +75,14 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
     console.error("예상금액 계산 API 실패:", error);
     return 0;
   }
+};
+
+// 🚀 배송요청 저장 (Spring Boot: POST /api/delivery-requests)
+export const createDeliveryRequest = async (payload) => {
+  const res = await axios.post(
+    `${API_SERVER_HOST}/api/delivery-requests`,
+    payload,
+    { withCredentials: true, headers: { "Content-Type": "application/json" } }
+  );
+  return res.data; // DeliveryRequestResponseDTO
 };

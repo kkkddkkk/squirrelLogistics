@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
-import { calculateDistance } from "../../api/estimate/estimateApi";
+import { calculateDistance, createDeliveryRequest } from "../../api/estimate/estimateApi";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setDistance,
@@ -28,6 +28,9 @@ const EstimateForm = () => {
   const dispatch = useDispatch();
 
   const { distance } = useSelector((state) => state.estimate);
+  const companyIdFromStore = useSelector((state) =>
+    state.company?.companyId ?? state.company?.userInfo?.companyId ?? null
+  );
 
   const [price, setPrice] = useState(0);
   const [distanceOnlyPrice, setDistanceOnlyPrice] = useState(0);
@@ -154,8 +157,34 @@ const EstimateForm = () => {
     setCargoTypes(cargoTypes.filter((v) => v !== value));
   };
 
-  // ✅ 결제 페이지로 데이터 전달 (route state 사용)
-  const handleRequest = () => {
+  // === Helpers ===
+  // LocalDateTime 문자열(yyyy-MM-dd'T'HH:mm:ss) 생성
+  const toLocalDateTime = (d) => {
+    if (!d) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    const yy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${yy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+  };
+
+  // 차량 라벨 → vehicleTypeId 매핑 (임시)
+  const mapVehicleToId = (label) => {
+    const table = {
+      "일반 카고": 1,
+      "윙바디": 2,
+      "냉장/냉동": 3,
+      "탑차": 4,
+      "리프트": 5,
+    };
+    return table[label] ?? null;
+  };
+
+  // ✅ 요청완료 → 백엔드 저장
+  const handleRequest = async () => {
     if (
       !departure ||
       !arrival ||
@@ -169,26 +198,44 @@ const EstimateForm = () => {
       alert("필수 항목을 모두 입력하고 거리 및 금액 계산을 완료해주세요.");
       return;
     }
-    const confirm = window.confirm("기사님 검색 없이 요청하시겠습니까?");
-    if (!confirm) return;
+    const ok = window.confirm("이 내용으로 저장하시겠습니까?");
+    if (!ok) return;
 
-    const orderData = {
-      departure,
-      arrival,
-      waypoints: waypoints.filter(Boolean),
-      title,
-      vehicle,
-      volume,
-      weight,
-      distance,
-      price,
-      cargoTypes,
-      startDate,
-      endDate,
+    const payload = {
+      startAddress: departure,
+      endAddress: arrival,
+      memoToDriver: title,                         // product title을 메모로 저장
+      totalCargoCount: waypoints.filter(Boolean).length + 1, // 필요 시 0으로 조정
+      totalCargoWeight: Math.round(Number(weight) * 1000),   // 톤 → kg 예시
+      estimatedFee: Math.round(Number(price)),               // Long
+      distance: Math.round(Number(distance)),                // Long
+      createAt: null,                                        // 서버에서 생성하거나 DTO로 전달
+      wantToStart: toLocalDateTime(startDate),
+      wantToEnd: toLocalDateTime(endDate),
+      expectedPolyline: null,
+      expectedRoute: JSON.stringify({
+        waypoints: waypoints.filter(Boolean),
+        cargoTypes,
+        distance,
+        price,
+        volume,
+      }),
+      status: "REQUESTED",
+      paymentId: null,
+      companyId: companyIdFromStore,
+      vehicleTypeId: mapVehicleToId(vehicle),
     };
 
-    // 결제 페이지에서 useLocation().state.order 로 접근
-    navigate("/payment", { state: { order: orderData } });
+    try {
+      const saved = await createDeliveryRequest(payload);
+      alert("요청이 저장되었습니다.");
+      // 저장 후 원하는 곳으로 이동
+      // navigate(`/requests/${saved.requestId}`);
+      // navigate("/board");
+    } catch (e) {
+      console.error(e);
+      alert("저장에 실패했습니다.");
+    }
   };
 
   return (
