@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Modal, Typography } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ListBoxContainer, Title, TwoBtns } from "../common/CommonForCompany";
 import StarRate from "../review/StarRate";
@@ -20,15 +20,22 @@ export const Buttons = ({ children, func }) => {
 }
 
 const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3, 
-    caution, mountainous, actualFee, driverName, carName, isreviewed, setIsReviewed, rate, reviewId }) => {
+    caution, mountainous, actualFee, driverName, carName, rate, reviewId, reason}) => {
     const [isExpand, setIsExpand] = useState(false);
     const [scope, setScope] = useState(rate);
     const [modal, setModal] = useState(false);
+    const [isReviewed, setIsReviewed] = useState(reviewId);
     let actualFeeFormat = actualFee.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    useEffect(()=>{
+        setScope(rate);
+        setIsReviewed(reviewId);
+        console.log(scope);
+    },[reviewId])
 
 
     const showTransactionStatement = () => {
-        console.log("rate: " +rate);
+        console.log(rate);
         window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
     }
 
@@ -76,20 +83,30 @@ const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3,
                             />
                             <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{driverName}({carName})</Typography>
                         </Box>
-                        {isreviewed ? <StarRate scope={scope} setScope={setScope} /> : <></>}
+                        {isReviewed!=0? <StarRate scope={scope} setScope={setScope} /> : <></>}
 
                     </Grid>
                     <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
                         <TwoBtns
                             children1={"신고"} func1={showReport}
-                            children2={scope!=0 ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
+                            children2={isReviewed!=0 ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
                         />
 
                     </Grid>
                 </Grid>
 
             </ListBoxContainer>
-            <ReviewModal modal={modal} setModal={setModal} scope={scope} setScope={setScope} reviewId={reviewId}></ReviewModal>
+            <ReviewModal 
+                modal={modal}
+                setModal={setModal}
+                scope={scope}
+                setScope={setScope}
+                reviewId={reviewId}
+                driverName={driverName}
+                assignedId={assignedId}
+                rating={rate}
+                reason={reason}
+                ></ReviewModal>
         </>
 
     )

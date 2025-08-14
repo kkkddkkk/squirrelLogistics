@@ -61,13 +61,16 @@ public class DeliveryAssignmentService {
 		    //리뷰
 		    long reviewId;
 		    int rate;
+		    String reason;
 		    Optional<Review> optionalReview = reviewRepository.findAllByDeliveryAssignment_AssignedId(entity.getAssignedId());
 		    if(optionalReview.isEmpty()) {
 		    	reviewId = 0;
 		    	rate = 0;
+		    	reason="";
 		    }else {
 		    	reviewId = optionalReview.get().getReviewId();
 		    	rate = optionalReview.get().getRating();
+		    	reason = optionalReview.get().getReason();
 		    }
 		    
 			DeliveryAssignmentSlimResponseDTO dto = DeliveryAssignmentSlimResponseDTO.builder()
@@ -85,6 +88,7 @@ public class DeliveryAssignmentService {
 					.waypoints(waypointDTOs)//경유지리스트
 					.reviewId(reviewId)//리뷰아이디
 					.rating(rate)//평점
+					.reason(reason)//리뷰
 					.build();
 
 			return dto;
