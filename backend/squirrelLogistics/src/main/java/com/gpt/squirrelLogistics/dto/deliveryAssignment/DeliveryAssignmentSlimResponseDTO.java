@@ -60,6 +60,7 @@ public class DeliveryAssignmentSlimResponseDTO {
 	//review
 	private long reviewId;//리뷰아이디
 	private int rating;//평점
+	private String reason;//리뷰
 	//2025-08-13 김도경 수정 끝.
 	
 }
