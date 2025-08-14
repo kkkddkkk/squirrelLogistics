@@ -11,7 +11,8 @@ import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 public interface DeliveryWaypointRepository extends JpaRepository<DeliveryWaypoint, Long> {
 
 	List<DeliveryWaypoint> findAllByDeliveryRequest_RequestId(Long requestId);
-	
+    List<DeliveryWaypoint> findByDeliveryRequest_RequestIdOrderByDropOrderAsc(Long requestId);
+
 	
 	//운송기록 ID로 경유지 목록 찾기
 	@Query("SELECT dw.dropOrder, dw.address " +
