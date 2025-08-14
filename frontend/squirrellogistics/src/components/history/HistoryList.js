@@ -19,20 +19,24 @@ export const Buttons = ({ children, func }) => {
     );
 }
 
-const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3, 
-    caution, mountainous, actualFee, driverName, carName, rate, reviewId, reason}) => {
+const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3,
+    caution, mountainous, actualFee, driverName, carName, rate, reviewId, reason }) => {
     const [isExpand, setIsExpand] = useState(false);
     const [scope, setScope] = useState(rate);
     const [modal, setModal] = useState(false);
     const [isReviewed, setIsReviewed] = useState(reviewId);
-    let actualFeeFormat = actualFee.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // let actualFeeFormat = actualFee.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-    useEffect(()=>{
+    useEffect(() => {
         setScope(rate);
         setIsReviewed(reviewId);
         console.log(scope);
-    },[reviewId])
+    }, [reviewId])
 
+    const handleExpand = () => {
+        if (!isExpand) setIsExpand(true);
+        else setIsExpand(false);
+    }
 
     const showTransactionStatement = () => {
         console.log(rate);
@@ -49,54 +53,65 @@ const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3,
 
     return (
         <>
-            <ListBoxContainer isExpand={isExpand} setIsExpand={setIsExpand} header={`${start} -> ${end}`}>
-                <input type="hidden" value={assignedId}></input>
-                <Grid container sx={{ margin: "2%" }}>
-                    {stopOver1 != '' ? <Grid size={12}>경유지1: {stopOver1}</Grid> : <></>}
-                    {stopOver2 != '' ? <Grid size={12}>경유지2: {stopOver2}</Grid> : <></>}
-                    {stopOver3 != '' ? <Grid size={12}>경유지3: {stopOver3}</Grid> : <></>}
-                    {caution ? <Grid size={12}><br />취급주의물품 포함</Grid> : <></>}
-                    {mountainous ? <Grid size={12}>{!caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
-                    <Grid size={12} sx={{
-                        borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
-                        , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
-                        margin: "8px 0"
-                    }}>
-                        <TwoBtns
-                            children1={"명세서"} func1={showTransactionStatement}
-                            children2={"영수증"} func2={showReciept}
-                        />
-                        <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {actualFeeFormat} 원</Typography>
-                    </Grid>
-                    <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <Box
-                                component="img"
-                                sx={{
-                                    height: "40px",
-                                    aspectRatio: "1/1",
-                                    borderRadius: "100%",
-                                    marginTop: "2%"
-                                }}
-                                alt="OtterImg"
-                                src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
-                            />
-                            <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{driverName}({carName})</Typography>
-                        </Box>
-                        {isReviewed!=0? <StarRate scope={scope} setScope={setScope} /> : <></>}
+            <ListBoxContainer id={assignedId} header={`${start} -> ${end}`}>
 
-                    </Grid>
-                    <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
-                        <TwoBtns
-                            children1={"신고"} func1={showReport}
-                            children2={isReviewed!=0 ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
-                        />
+                {!isExpand ?
+                    <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
+                    :
+                    <>
+                        <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} />
+                        <Grid sx={{ margin: "2%" }} size={12}>
+                            <Grid container sx={{ margin: "2%" }}>
+                                {stopOver1 != '' ? <Grid size={12}>경유지1: {stopOver1}</Grid> : <></>}
+                                {stopOver2 != '' ? <Grid size={12}>경유지2: {stopOver2}</Grid> : <></>}
+                                {stopOver3 != '' ? <Grid size={12}>경유지3: {stopOver3}</Grid> : <></>}
+                                {caution ? <Grid size={12}><br />취급주의물품 포함</Grid> : <></>}
+                                {mountainous ? <Grid size={12}>{!caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
+                                <Grid size={12} sx={{
+                                    borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
+                                    , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
+                                    margin: "8px 0"
+                                }}>
+                                    <TwoBtns
+                                        children1={"명세서"} func1={showTransactionStatement}
+                                        children2={"영수증"} func2={showReciept}
+                                    />
+                                    {/* <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {actualFeeFormat} 원</Typography> */}
+                                </Grid>
+                                <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                                        <Box
+                                            component="img"
+                                            sx={{
+                                                height: "40px",
+                                                aspectRatio: "1/1",
+                                                borderRadius: "100%",
+                                                marginTop: "2%"
+                                            }}
+                                            alt="OtterImg"
+                                            src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                                        />
+                                        <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{driverName}({carName})</Typography>
+                                    </Box>
+                                    {isReviewed != 0 ? <StarRate scope={scope} setScope={setScope} /> : <></>}
 
-                    </Grid>
-                </Grid>
+                                </Grid>
+                                <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
+                                    <TwoBtns
+                                        children1={"신고"} func1={showReport}
+                                        children2={isReviewed != 0 ? "리뷰 수정" : "리뷰 작성"} func2={() => setModal(true)}
+                                    />
+
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </>
+                }
+
+
 
             </ListBoxContainer>
-            <ReviewModal 
+            <ReviewModal
                 modal={modal}
                 setModal={setModal}
                 scope={scope}
@@ -106,7 +121,7 @@ const HistoryList = ({ assignedId, start, end, stopOver1, stopOver2, stopOver3,
                 assignedId={assignedId}
                 rating={rate}
                 reason={reason}
-                ></ReviewModal>
+            ></ReviewModal>
         </>
 
     )

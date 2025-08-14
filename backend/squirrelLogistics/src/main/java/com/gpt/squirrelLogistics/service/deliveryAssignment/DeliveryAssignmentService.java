@@ -1,7 +1,9 @@
 package com.gpt.squirrelLogistics.service.deliveryAssignment;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.review.Review;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
+import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepository;
 import com.gpt.squirrelLogistics.repository.deliveryWaypoint.DeliveryWaypointRepository;
 import com.gpt.squirrelLogistics.repository.review.ReviewRepository;
 
@@ -36,63 +39,36 @@ public class DeliveryAssignmentService {
 	private final DeliveryAssignmentRepository repository;
 	private final DeliveryWaypointRepository deliveryWaypointRepository;
 	private final ReviewRepository reviewRepository;
-
-	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
-		List<DeliveryAssignment> list = repository.findAll();
-
-		return list.stream().map(entity -> {
-
-			DeliveryRequestResponseDTO deliveryRequestResponseDTO = new DeliveryRequestResponseDTO();
-			deliveryRequestResponseDTO.setRequestId(entity.getDeliveryRequest().getRequestId());
-
-			//배송요청에 따른 경유지 목록
-			List<DeliveryWaypoint> wayPointList = deliveryWaypointRepository
-					.findAllByDeliveryRequest_RequestId(deliveryRequestResponseDTO.getRequestId());
-			//을 DTO로
-		    List<DeliveryWaypointResponseDTO> waypointDTOs = wayPointList.stream()
-		            .map(w -> DeliveryWaypointResponseDTO.builder()
-		                .deliveryRequest(deliveryRequestResponseDTO)
-		                .waypointId(w.getWaypointId())
-		                .address(w.getAddress())
-		                .dropOrder(w.getDropOrder())
-		                .build())
-		            .toList();
-		    
-		    //리뷰
-		    long reviewId;
-		    int rate;
-		    String reason;
-		    Optional<Review> optionalReview = reviewRepository.findAllByDeliveryAssignment_AssignedId(entity.getAssignedId());
-		    if(optionalReview.isEmpty()) {
-		    	reviewId = 0;
-		    	rate = 0;
-		    	reason="";
-		    }else {
-		    	reviewId = optionalReview.get().getReviewId();
-		    	rate = optionalReview.get().getRating();
-		    	reason = optionalReview.get().getReason();
-		    }
-		    
-			DeliveryAssignmentSlimResponseDTO dto = DeliveryAssignmentSlimResponseDTO.builder()
-					.assignedId(entity.getAssignedId())//운송기록ID
-					.completedAt(entity.getCompletedAt())//도착시간
-					.startAddress(entity.getDeliveryRequest().getStartAddress())//출발지
-					.endAddress(entity.getDeliveryRequest().getEndAddress())//도착지
-					.paymentId(entity.getPayment().getPaymentId())//결제ID
-					.driverName(entity.getDriver().getUser().getName())//운전자이름
-//					.profileImageName(null)//운전자 사진
-					.carName(entity.getDeliveryRequest().getVehicleType().getName())//차량이름
-					.mountainous(entity.getActualDelivery().isMountainous())//산간지역여부
-					.caution(entity.getActualDelivery().isCaution())//취급주의여부
-					.actualFee(entity.getActualDelivery().getActualFee())//실제금액
-					.waypoints(waypointDTOs)//경유지리스트
-					.reviewId(reviewId)//리뷰아이디
-					.rating(rate)//평점
-					.reason(reason)//리뷰
-					.build();
-
-			return dto;
-		}).collect(Collectors.toList());
+	
+	
+	
+	public List<Date> getHistoryDate(){//completedAt 뽑기
+		return repository.findOnlyCompletedAt();
 	}
+	
+
+	public List<Object[]> getTodayList(String completedAt){
+		return repository.findStartEndAddress(completedAt);
+	}
+	
+	public List<Object[]> getTodayContent(String assignedId){
+		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId);
+		List<Object[]> actualDeliveryList = repository.findActualDeliveryById(assignedId);
+		List<Object[]> reviewList = repository.findReviewById(assignedId);
+		List<Object[]> driverList = repository.findDriverById(assignedId);
+		
+		List<Object[]> todayContent = new ArrayList();
+		
+		todayContent.addAll(waypointList);
+		todayContent.addAll(actualDeliveryList);
+		todayContent.addAll(reviewList);
+		todayContent.addAll(driverList);
+		
+		return todayContent;
+	}
+	
+
+	
+	
 
 }
