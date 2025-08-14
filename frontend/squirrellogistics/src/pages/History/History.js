@@ -37,6 +37,7 @@ const History = () => {
     }, [date])
 
 
+
     return (
         <Layout title={"이용기록"}>
             <Box width={"80%"}>
@@ -64,6 +65,7 @@ const History = () => {
                                 setIsReviewed={setIsReviewed}
                                 reviewId={today.reviewId}
                                 rate={today.rating}
+                                reason={today.reason}
                             // 필요한 다른 props도 같이 넘기기
                             />
                         ))}
