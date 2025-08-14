@@ -19,6 +19,9 @@ function formatCreatedAt(createdAt) {
 }
 
 export function renderWarningTags(waypoints) {
+  if(waypoints == null){
+    return;
+  }
   const tagSet = new Map();
 
   waypoints.forEach(wp => {
@@ -33,7 +36,7 @@ export function renderWarningTags(waypoints) {
     <Typography
       key={idx}
       component="span"
-      sx={{ color, fontWeight: 'bold', fontSize: '0.8rem'}}
+      sx={{ color, fontWeight: 'bold', fontSize: '0.8rem' }}
     >
       [{label}]
     </Typography>
@@ -42,12 +45,13 @@ export function renderWarningTags(waypoints) {
 
 export function formatDeliveryDTO(dto) {
   return {
-    request_id: dto.request_id,
-    title: `${formatAddress(dto.start_address)} → ${formatAddress(dto.end_address)}`,
-    distance: `총 거리 ${dto.distance || 0}km / 경유지 ${dto.waypoints.length}곳`,
+    request_id: dto.requestId,
+    title: `${formatAddress(dto.startAddress)} → ${formatAddress(dto.endAddress)}`,
+    distance: `총 거리 ${dto.distance || 0}km`,
+
     warning: renderWarningTags(dto.waypoints), // ← 이제 JSX 배열
-    profit: `수익: ${dto.estimated_fee.toLocaleString()}원`,
-    registered: formatCreatedAt(dto.created_at),
+    profit: `수익: ${dto.estimatedFee.toLocaleString()}원`,
+    registered: formatCreatedAt(dto.createAt),
   };
 
 }

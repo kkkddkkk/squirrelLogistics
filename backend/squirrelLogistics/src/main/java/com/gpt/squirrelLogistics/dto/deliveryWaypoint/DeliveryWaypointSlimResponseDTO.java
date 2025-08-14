@@ -27,7 +27,15 @@ public class DeliveryWaypointSlimResponseDTO {
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime droppedAt;//배송시간
 	
+	//경유지 위경도(작성자: 고은설)
+	private double lat; 
+    private double lng;
+    
 	private StatusEnum status;//경유지 상태
 	
 	private Long deliveryRequestId;//배송 요청 ID
+	private Long handlingId;//취급유형 ID
+	private String handlingTags;//취급유형 ID
+
+	
 }

@@ -25,11 +25,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
 @Table(name = "delivery_request")
 @Getter
+@Setter
 @ToString
 @Builder
 @AllArgsConstructor
@@ -76,5 +78,11 @@ public class DeliveryRequest {//배송요청
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "vehicle_type_id")
 	private VehicleType vehicleType;//차량 종류
+	
+	public void updateStatus(StatusEnum status) {
+		this.status = status;
+		
+	}
+
 	
 }

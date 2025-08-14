@@ -16,4 +16,6 @@ public class CompanySlimResponseDTO {
 	private String mainLoca;//기본 출발지
 
 	private Long userId;//회원 ID
+	private String companyName;//회사명(작성자: 고은설).
+
 }
