@@ -52,18 +52,14 @@ export const Layout = ({ title, children }) => {
             alignItems={"baseline"}
         >
             {title ? <Title>{title}</Title> : <></>}
-            <div style={{ width: "100%", display: "flex", justifyContent: "center"}}>
+            <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
                 {children}
             </div>
         </Box>
     )
 }
 
-export const ListBoxContainer = ({ children, header, id, isExpand, setIsExpand }) => {
-    const handleExpand = () => {
-        if (!isExpand) setIsExpand(true);
-        else setIsExpand(false);
-    }
+export const ListBoxContainer = ({ children, header, id }) => {
 
     return (
         <Box
@@ -81,16 +77,7 @@ export const ListBoxContainer = ({ children, header, id, isExpand, setIsExpand }
         >
             <input type="hidden" value={id}></input>
             <Typography sx={{ margin: "2%" }}>{header}</Typography>
-            {!isExpand ?
-                <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
-                :
-                <>
-                    <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} />
-                    <Grid sx={{ margin: "2%" }} size={12}>
-                        {children}
-                    </Grid>
-                </>
-            }
+            {children}
         </Box>
     )
 }
@@ -116,12 +103,12 @@ export const TwoBtns = ({ children1, children2, func1, func2 }) => {
     );
 }
 
-export const OneBigBtn = ({children, disabled, func, margin}) => {
+export const OneBigBtn = ({ children, disabled, func, margin }) => {
     return (
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
             <Button
                 variant="contained"
-                sx={{ width: "60%", height: "50px", margin: {margin}, fontSize: "25px" }}
+                sx={{ width: "60%", height: "50px", margin: { margin }, fontSize: "25px" }}
                 onClick={func}
                 disabled={disabled}
             >

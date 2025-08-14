@@ -1,9 +1,12 @@
 package com.gpt.squirrelLogistics.controller.companyHistory;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentReques
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
+import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 
@@ -31,11 +35,34 @@ public class CompanyHistoryController {
 	private final DeliveryAssignmentRepository repository;
 	private final DeliveryAssignmentService service;
 	
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	
+//	@GetMapping
+//	@TimedEndpoint("getAllHistory")
+//	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
+//		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
+//		return list;
+//	}
+	
 	@GetMapping
-	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
-		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
-		return list;
+	@TimedEndpoint("getTodayList")
+	public List<Object[]> getTodayList(@RequestParam("completedAt") String CompletedAt){
+		return service.getTodayList(CompletedAt);
 	}
+	
+	@GetMapping("/getList")
+	@TimedEndpoint("getTodayContent")
+	public List<Object[]> getTodayContent(@RequestParam("assignedId") String assignedId){
+		return service.getTodayContent(assignedId);
+	}
+	
+	
+	@GetMapping("/calendar")
+	@TimedEndpoint("getCalendar")
+	public List<Date> getCalendar(){
+		return service.getHistoryDate();
+	}
+	
 
 	
 	

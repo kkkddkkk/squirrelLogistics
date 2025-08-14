@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import { TwoBtns } from "../common/CommonForCompany";
+import axios from "axios";
 
 
 const HistoryCalendar = ({ historyList }) => {
@@ -12,10 +13,13 @@ const HistoryCalendar = ({ historyList }) => {
     const [historyDate, setHistoryDate] = useState([]);
     const { moveToAnotherDay, moveToReportList, moveToReviewList } = useHistoryMove();
 
-    useEffect(() => {//전체 history에서 assignedAt만 historyDate에 배열로 set.
-        const dates = historyList.map(history => history.completedAt.slice(0, 10));
-        setHistoryDate(dates);
-    }, [historyList]);
+    useEffect(() => {//날짜목록을 historyDate에 set.
+        axios.get(`http://localhost:8080/api/public/companyHistory/calendar`)
+            .then(res => {
+                setHistoryDate(res.data);
+            })
+            .catch(err => console.error(err));
+    }, []); //최초 한 번만 실행
     const markedDates = historyDate.map(d => new Date(d));
 
     const PsButton = ({ children, func }) => {
