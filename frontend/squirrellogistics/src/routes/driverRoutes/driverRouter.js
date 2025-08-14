@@ -43,6 +43,14 @@ const driverRouter = () => {
 
   return [
     {
+      path: "",
+      element: (
+        <Suspense fallback={Loading}>
+          <RequestList />
+        </Suspense>
+      )
+    },
+    {
       path: ":driverId/list",
       element: (
         <Suspense fallback={Loading}>

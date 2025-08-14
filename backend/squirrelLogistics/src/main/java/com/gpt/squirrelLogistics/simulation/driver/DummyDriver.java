@@ -52,8 +52,8 @@ public class DummyDriver {
 		LatLng from = expected.get(0);
 		LatLng to = expected.get(expected.size() - 1);
 
-		int remainingDistance = kakaoClient.calculateTotalDistance(from, to);
-		int estimatedDuration = kakaoClient.estimateDuration(from, to); // 속도 기준 임의 계산
+		Long remainingDistance = kakaoClient.calculateTotalDistance(from, to);
+		Long estimatedDuration = kakaoClient.estimateDuration(from, to); // 속도 기준 임의 계산
 
 		return RouteInfoDTO.builder()
 				.visited(visited)

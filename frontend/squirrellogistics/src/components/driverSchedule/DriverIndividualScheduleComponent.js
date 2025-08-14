@@ -47,7 +47,7 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                         fontWeight: 'bold',
                         color: '#2A2A2A',
                         margin: 0
-                    }}>요청 정보
+                    }}>예약 운송 정보
                 </Typography>
 
                 <Grid container m={4} mb={0} justifySelf="center" width={"80%"}>
@@ -105,33 +105,19 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                         </Grid>
 
                         {/* 버튼 영역 */}
-                        <Grid container justifyContent="space-between" mt={4} width={"100%"}>
-                            <Grid item width={"50%"}>
-                                <Button variant="contained" color="primary" size="large" width="100%"
-                                    sx={{
-                                        minWidth: 'auto',
-                                        height: '48px',
-                                        width: '260px',
-                                        padding: '2px 8px',
-                                        fontSize: '18px',
-                                        lineHeight: 1.2,
-                                        bgcolor: '#113F67'
-                                    }}>
-                                    운송 수락하기
-                                </Button>
-                            </Grid>
+                        <Grid container justifyContent="center" mt={4} width={"100%"}>
                             <Grid item>
                                 <Button variant="contained" color="primary" size="large"
                                     sx={{
                                         minWidth: 'auto',
                                         height: '48px',
-                                        width: '160px',
+                                        width: '200px',
                                         padding: '2px 8px',
                                         fontSize: '18px',
                                         lineHeight: 1.2,
                                         bgcolor: '#2A2A2A'
                                     }}>
-                                    신고하기
+                                    예약 운송 취소하기
                                 </Button>
                             </Grid>
                         </Grid>

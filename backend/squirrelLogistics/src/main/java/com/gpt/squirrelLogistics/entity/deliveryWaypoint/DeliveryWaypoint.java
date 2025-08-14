@@ -28,22 +28,43 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeliveryWaypoint {//배송 경유지
+public class DeliveryWaypoint {// 배송 경유지
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name="waypoint_id")
+	@Column(name = "waypoint_id")
 	private Long waypointId;// 경유지 ID
 
 	private String address;// 주소
 	private int dropOrder;// 배송순서
-	
-	private LocalDateTime arriveAt;//도착시간
-	private LocalDateTime droppedAt;//배송시간
-	
+
+	private LocalDateTime arriveAt;// 도착시간
+	private LocalDateTime droppedAt;// 배송시간
+
 	@Enumerated(EnumType.STRING)
-	private StatusEnum status;//경유지 상태
-	
+	private StatusEnum status;// 경유지 상태
+
 	@ManyToOne
 	@JoinColumn(name = "request_id")
-	private DeliveryRequest deliveryRequest;//배송 요청
+	private DeliveryRequest deliveryRequest;// 배송 요청
+
+
+	public void updateAddress(String address) {
+		this.address = address;
+	}
+	
+	public void updateDropOrder(int dropOrder) {
+		this.dropOrder = dropOrder;
+	}
+	
+	public void updateStatus(StatusEnum status) {
+		this.status = status;
+	}
+	
+	public void updateArriveAt(LocalDateTime arriveAt) {
+		this.arriveAt = arriveAt;
+	}
+	
+	public void updateDroppedAt(LocalDateTime droppedAt) {
+		this.droppedAt = droppedAt;
+	}
 }

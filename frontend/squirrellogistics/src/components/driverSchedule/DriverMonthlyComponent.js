@@ -362,6 +362,9 @@ export default function DriverMonthlyComponent() {
     // 캘린더 이벤트 클릭
     const handleSelectEvent = useCallback((ev) => {
         const dto = dtoById.get(String(ev.schedule_id));
+        if(dto.event_type === 'vacation'){
+            return;
+        }
         setSelectedDto(dto ?? null);
         setDialogOpen(true);
     }, [dtoById]);

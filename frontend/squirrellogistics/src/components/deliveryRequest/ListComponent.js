@@ -4,6 +4,8 @@ import {
 } from '@mui/material';
 
 import DeliveryCard from './DeliveryCard';
+import { fetchDeliveryRequests } from '../../api/deliveryRequest/deliveryRequestAPI';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 const dataDTOs = Array(7).fill({
     request_id: 2025072500123,
@@ -26,6 +28,33 @@ const dataDTOs = Array(7).fill({
     ]
 });
 const ListComponent = () => {
+
+
+    const [pageData, setPageData] = useState(null);
+    const [pageReq, setPageReq] = useState({ page: 1, size: 10, sort: "createAt", dir: "DESC" });
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState(null);
+
+    useEffect(() => {
+        setLoading(true);
+        setErr(null);
+        fetchDeliveryRequests(pageReq)
+            .then(setPageData)
+            .catch(e => {
+                setErr(e?.response?.data || e.message);
+            })
+            .finally(() => setLoading(false));
+    }, [pageReq]);
+
+
+    if (loading) return <div>로딩...</div>;
+    if (err) return <div>에러: {String(err)}</div>;
+    if (!pageData) return null;
+
+    const { dtoList, pageNumList, current, prev, next, prevPage, nextPage, totalCount, totalPage, pageRequestDTO } = pageData;
+
+    console.log(pageData);
+    console.log(dtoList);
     return (
         <Box width={"100%"}>
             <Box width={"100%"}>
@@ -127,12 +156,26 @@ const ListComponent = () => {
                             </FormControl>
                         </Box>
 
-                        {dataDTOs.map((item, idx) => (
-                            <DeliveryCard key={idx} item={item} />
+                        {dtoList.map((item, idx) => (
+                            <DeliveryCard key={item.requestId} item={item} />
                         ))}
 
                         <Box display="flex" justifyContent="center" mt={4}>
-                            <Pagination count={3} shape="rounded" />
+                            <Pagination
+                                page={current}               // 1-based라 그대로 OK
+                                count={totalPage}            // 전체 페이지 수
+                                onChange={(_, value) => {
+                                    if (value !== pageReq.page) {
+                                        setPageReq(prev => ({ ...prev, page: value }));
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }
+                                }}
+                                shape="rounded"
+                                showFirstButton
+                                showLastButton
+                                siblingCount={1}
+                                boundaryCount={1}
+                            />
                         </Box>
                     </Grid>
                 </Grid>

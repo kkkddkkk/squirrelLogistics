@@ -11,8 +11,8 @@ import lombok.Data;
 @Builder
 public class RouteInfoDTO {
 	 private List<LatLng> polyline;      // 전체 경로
-	    private int distance;               // 선택
-	    private int duration;               // 선택
+	    private Long distance;               // 선택
+	    private Long duration;               // 선택
 	    
 	    private List<LatLng> visited;
 	    private List<LatLng> expected;

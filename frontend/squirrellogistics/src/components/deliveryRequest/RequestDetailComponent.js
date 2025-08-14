@@ -1,34 +1,99 @@
 
 import { Box, Typography, Paper, Grid, Button, List, ListItem, ListItemText, Divider } from "@mui/material";
 import RouteMapComponent from "../../components/deliveryMap/RouteMapComponent";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { renderWarningTags } from "./deliveryFormatUtil";
+import { useParams } from "react-router-dom";
+import { fetchDeliveryRequest } from "../../api/deliveryRequest/deliveryRequestAPI";
+import MontlyDetailPopupComponent from "../driverSchedule/MontlyDetailPopupComponent";
+import DeliveryWaypointPopupComponent from "./DeliveryWaypointPopupComponent";
 
-const RequestDetailComponent = ({ item }) => {
-    console.log(item);
+const RequestDetailComponent = () => {
 
-    const initData = {
-        request_id: item.request_id,
-        estimated_fee: item.estimated_fee,
-        total_cargo_count: item.total_cargo_count,
-        total_cargo_weight: item.total_cargo_weight,
-        created_at: item.created_at,
-        estimated_start_at: item.estimated_start_at,
-        estimated_end_at: item.estimated_start_at,
-        start_address: item.start_address,
-        company_id: item.company_id,
-        company_name: item.company_name,
-        end_address: item.end_address,
-        distance: item.distance,
-        duration: 0, // 없던 필드 추가
-        waypoints: item.waypoints.map(wp => ({
-            ...wp, // handling_id 등 그대로 유지
-            address: wp.address
-        }))
-    };
+    const { requestId } = useParams();
+    const [requestData, setRequestData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [deliveryData, setDeliveryData] = useState(initData);
-    console.log(deliveryData);
+    const [deliveryData, setDeliveryData] = useState({
+        request_id: null,
+        estimated_fee: 0,
+        total_cargo_count: 0,
+        total_cargo_weight: 0,
+        created_at: null,
+        estimated_start_at: null,
+        estimated_end_at: null,
+        start_address: '',
+        company_id: null,
+        company_name: '',
+        end_address: '',
+        distance: 0,
+        duration: 0,
+        waypoints: [],
+    });
+
+    useEffect(() => {
+        if (!requestId) return;
+
+        const controller = new AbortController();
+        setLoading(true);
+        setErr(null);
+
+        fetchDeliveryRequest(requestId, { signal: controller.signal })
+            .then((data) => {
+                setRequestData(data);
+            })
+            .catch((e) => {
+                if (e.name === 'CanceledError' || e.name === 'AbortError') return;
+                setErr(e?.response?.data || e.message);
+            })
+            .finally(() => setLoading(false));
+
+        return () => controller.abort();
+    }, [requestId]);
+
+    // requestData → deliveryData 매핑
+    useEffect(() => {
+        if (!requestData) return;
+
+        const mapped = {
+            request_id: requestData.requestId,
+            estimated_fee: requestData.estimatedFee,
+            total_cargo_count: requestData.totalCargoCount,
+            total_cargo_weight: requestData.totalCargoWeight,
+            created_at: requestData.createAt,
+            vehicle_type_name: requestData.vehicleTypeName,
+            estimated_start_at: requestData.wantToStart,
+            estimated_end_at: requestData.wantToEnd,
+            company_id: requestData.companyId,
+            company_name: requestData.companyName,
+            start_address: requestData.startAddress,
+            end_address: requestData.endAddress,
+            polyline: requestData.expectedPolyline,
+            routes: requestData.expectedRoute,
+            distance: requestData.distance ?? 0,
+            memo_to_driver: requestData.memoToDriver,
+            duration: 0,
+            waypoints: (requestData.waypoints ?? []).map(wp => ({
+                address: wp.address,
+                order: wp.dropOrder,
+                arriveAt: wp.arriveAt,
+                droppedAt: wp.droppedAt,
+                status: wp.status,
+            })),
+        };
+
+        setDeliveryData(mapped);
+    }, [requestData]);
+
+    const handleSelectEvent = useCallback(() => {
+        setDialogOpen(true);
+    }, []);
+
+    const handleCloseDialog = useCallback(() => {
+        setDialogOpen(false);
+    }, []);
 
     const handleRouteUpdate = (dist, dur) => {
 
@@ -44,6 +109,7 @@ const RequestDetailComponent = ({ item }) => {
         color: '#2A2A2A',
         fontSize: 'clamp(12px, 1vw, 14px)',
     };
+
     const fmtDateTime = (d) => {
         const dt = d instanceof Date ? d : new Date(d);
         return isNaN(dt) ? '-' : dt.toLocaleString('ko-KR', {
@@ -51,6 +117,7 @@ const RequestDetailComponent = ({ item }) => {
             hour: '2-digit', minute: '2-digit'
         });
     };
+    
     const formatWon = (n) => (Number(n) || 0).toLocaleString('ko-KR') + '원';
     const handlingTagString = renderWarningTags(deliveryData?.waypoints);
 
@@ -113,9 +180,9 @@ const RequestDetailComponent = ({ item }) => {
                                 }}>
                                 {/* 카카오 지도 컴포넌트 자리 */}
                                 <RouteMapComponent
-                                    startAddress={deliveryData.start_address}
+                                    routes={deliveryData.routes}
+                                    polyline={deliveryData.polyline}
                                     waypoints={deliveryData.waypoints}
-                                    endAddress={deliveryData.end_address}
                                     onRouteUpdate={handleRouteUpdate}
                                 />
                             </Paper>
@@ -125,7 +192,7 @@ const RequestDetailComponent = ({ item }) => {
                             <Box mt={2}>
                                 <Typography fontWeight="bold">안내 및 주의 사항</Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    화물은 깨지기 쉬운 포장으로 되어 있어 상하차시 파손에 유의해주세요.
+                                    {deliveryData.memo_to_driver}
                                 </Typography>
                             </Box>
                         </Grid>
@@ -186,6 +253,7 @@ const RequestDetailComponent = ({ item }) => {
                                         </Grid>
                                         <Grid>
                                             <Button variant="outlined"
+                                                onClick={handleSelectEvent}
                                                 sx={{
                                                     minWidth: 'auto',
                                                     height: '24px',
@@ -196,7 +264,6 @@ const RequestDetailComponent = ({ item }) => {
                                         </Grid>
                                     </Grid>
                                     <Typography variant="body2" mb={1} sx={textSx}><strong>총 이동 거리:</strong> 약 {(deliveryData.distance / 1000).toFixed(1)}km</Typography>
-                                    <Typography variant="body2" gutterBottom sx={textSx}><strong>예상 소요 시간:</strong> 약 {Math.floor(deliveryData.duration / 3600)}시간 {Math.floor((deliveryData.duration % 3600) / 60)}분</Typography>
                                 </Paper>
                             </Grid>
 
@@ -210,6 +277,9 @@ const RequestDetailComponent = ({ item }) => {
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
                                         <strong>총 중량:</strong> {deliveryData?.total_cargo_weight ?? 0}kg
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>필요 차종:</strong> {deliveryData?.vehicle_type_name}
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
                                         <strong>특수 태그:</strong>{" "}
@@ -227,13 +297,13 @@ const RequestDetailComponent = ({ item }) => {
                                         요청 시간
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>출발 가능 시간:</strong> {fmtDateTime(deliveryData?.estimated_start_at)}
+                                        <strong>출발:</strong> {fmtDateTime(deliveryData?.estimated_start_at)}
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>도착 마감 시간:</strong> {fmtDateTime(deliveryData?.estimated_end_at)}
+                                        <strong>도착:</strong> {fmtDateTime(deliveryData?.estimated_end_at)}
                                     </Typography>
                                     <Typography variant="body2" sx={textSx}>
-                                        <strong>요청 등록일:</strong> {fmtDateTime(deliveryData?.created_at)}
+                                        <strong>등록일:</strong> {fmtDateTime(deliveryData?.created_at)}
                                     </Typography>
                                 </Paper>
                             </Grid>
@@ -245,7 +315,7 @@ const RequestDetailComponent = ({ item }) => {
                                         운송 수익 정보
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>기본 운임:</strong> {formatWon(140000)}
+                                        <strong>기본 운임:</strong> {formatWon(deliveryData.estimated_fee)}
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
                                         <strong>경유지 가산금:</strong> {formatWon(30000)}
@@ -267,6 +337,14 @@ const RequestDetailComponent = ({ item }) => {
                     </Grid>
                 </Grid>
             </Box>
+
+            {dialogOpen && (
+                <DeliveryWaypointPopupComponent
+                    waypoints={deliveryData.waypoints}
+                    onClose={handleCloseDialog}
+                    open={dialogOpen}
+                />
+            )}
 
         </Box>
 

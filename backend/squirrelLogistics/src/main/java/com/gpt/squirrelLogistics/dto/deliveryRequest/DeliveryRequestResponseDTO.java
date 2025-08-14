@@ -1,10 +1,9 @@
 package com.gpt.squirrelLogistics.dto.deliveryRequest;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import com.gpt.squirrelLogistics.dto.company.CompanySlimResponseDTO;
-import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
-import com.gpt.squirrelLogistics.dto.vehicleType.VehicleTypeResponseDTO;
+import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -36,7 +35,15 @@ public class DeliveryRequestResponseDTO {
 	
 	private StatusEnum status;//요청 상태
 
-	private PaymentDTO paymentId;//결제
-	private CompanySlimResponseDTO companyId;//물류회사
-	private VehicleTypeResponseDTO vehicleTypeId;//차량 종류
+
+	private Long paymentId;// 결제 ID
+	private Long companyId;// 물류회사 ID
+	private Long vehicleTypeId;// 차량 종류 ID
+	
+	// 차량 종류 이름 추가 (고은설 08.13)
+	private String vehicleTypeName;
+	// 물류회사 이름 추가 (고은설 08.13)
+	private String companyName;
+	//경유지 목록 추가 (고은설 08.13)
+	private List<DeliveryWaypointSlimResponseDTO> waypoints;
 }

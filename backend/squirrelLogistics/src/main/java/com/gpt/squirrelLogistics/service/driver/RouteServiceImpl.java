@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class RouteServiceImpl implements RouteService {
 	
-    private final KakaoRouteClient kakaoClient;
 	private final DummyTracker dummyTracker;
 
 	@Override
