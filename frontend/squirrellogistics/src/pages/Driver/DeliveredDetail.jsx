@@ -52,7 +52,8 @@ const DeliveredDetail = () => {
     holder: "(주)마녀공장",
   };
 
-  const formatPrice = (price) => `₩${price.toLocaleString()}`;
+  const formatPrice = (price) => `₩ 
+  ${price.toLocaleString()}`;
 
   const tableStyle = {
     backgroundColor: "#F5F7FA",
@@ -286,7 +287,7 @@ const DeliveredDetail = () => {
               fontSize: "1rem",
               "&:hover": { bgcolor: "#0d3050" },
             }}
-            onClick={() => navigate("/admin/delivered")}
+            onClick={() => navigate("/driver/deliveredlist")}
           >
             목록으로
           </Button>

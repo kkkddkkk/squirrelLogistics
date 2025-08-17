@@ -3,7 +3,9 @@ import { lazy, Suspense } from "react";
 const driverRouter = () => {
   const Loading = "<div>로딩중</div>";
 
-  const RequestList = lazy(() => import("../../pages/DeliveryRequest/ListPage"));
+  const RequestList = lazy(() =>
+    import("../../pages/DeliveryRequest/ListPage")
+  );
   const RequestDetail = lazy(() =>
     import("../../pages/DeliveryRequest/RequestDetailPage")
   );
@@ -17,6 +19,9 @@ const driverRouter = () => {
   //const History = lazy(() => import("../../pages/DeliveryHistory/HistoryListPage"));
   const Profile = lazy(() => import("../../pages/Driver/DriverProfile"));
   const EditProfile = lazy(() => import("../../pages/Driver/EditProfile"));
+  const VerificationPage = lazy(() =>
+    import("../../pages/Driver/VerificationPage")
+  );
   const RegisterVehicle = lazy(() =>
     import("../../pages/Driver/RegisterVehicles")
   );
@@ -26,14 +31,6 @@ const driverRouter = () => {
   );
 
   return [
-    {
-        path: "list",
-        element: (
-            <Suspense fallback={Loading}>
-                <RequestList />
-            </Suspense>
-        )
-    },
     {
       path: "detail/:requestId",
       element: (
@@ -87,6 +84,14 @@ const driverRouter = () => {
       element: (
         <Suspense fallback={Loading}>
           <Profile />
+        </Suspense>
+      ),
+    },
+    {
+      path: "verification",
+      element: (
+        <Suspense fallback={Loading}>
+          <VerificationPage />
         </Suspense>
       ),
     },
