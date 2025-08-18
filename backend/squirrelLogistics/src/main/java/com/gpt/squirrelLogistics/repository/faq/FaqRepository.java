@@ -4,6 +4,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.gpt.squirrelLogistics.entity.faq.Faq;
 
-public interface FaqRepository extends JpaRepository<Faq, Long> {
-
-}
+public interface FaqRepository extends JpaRepository<Faq, Long> {}

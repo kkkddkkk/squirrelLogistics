@@ -1,19 +1,19 @@
 package com.gpt.squirrelLogistics.dto.faq;
 
 import com.gpt.squirrelLogistics.enums.faq.FaqCategoryEnum;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class FaqRequestDTO {
-	private Long adminId; //관리자 아이디.
-	private String question; //질문.
-	private String answer; //답변.
-	private FaqCategoryEnum category; //카테고리.
+    @NotBlank(message = "질문은 필수입니다.")
+    private String question;
+
+    @NotBlank(message = "답변은 필수입니다.")
+    private String answer;
+
+    private FaqCategoryEnum category; // nullable 허용
 }
