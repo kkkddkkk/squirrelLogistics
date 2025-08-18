@@ -3,7 +3,6 @@ import { ListBoxContainer, SubTitle } from "../common/CommonForCompany"
 import { useState } from "react";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ReportImgList from "./ReportImgList";
 
 const ReportContent = ({ header, title, content, answer, preview }) => {
     const [isExpand, setIsExpand] = useState();

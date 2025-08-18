@@ -91,7 +91,6 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
             <HowMuch fontSize={25} topLine={true}> {isAll ? '총' : ''}  {allRateFormat}원</HowMuch>
 
         </>
-
     )
 }
 
