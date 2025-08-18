@@ -13,7 +13,8 @@ import lombok.*;
 @Builder
 public class ReportRequestDTO {
 
-    private int assigned_id; //할당 아이디.
+    private long assignedId; //할당 아이디.
+    private long reportId;//신고ID
     private ReportReporterEnum reporter; //신고자.
     private String rTitle; //신고 제목.
     private String rContent; //신고 내용.

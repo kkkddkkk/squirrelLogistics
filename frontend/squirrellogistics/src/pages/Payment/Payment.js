@@ -147,7 +147,7 @@ export const Payment = () => {
     return (
         <Layout title={"결제"}>
             <Grid size={12} display={"flex"} justifyContent={"center"}>
-                <Box width={"60%"} maxWidth={"600px"}>
+                <Box width={"90%"} maxWidth={"600px"}>
                     <SubTitle>결제금액</SubTitle>
                     <PayBox
                         mileage={'45'}

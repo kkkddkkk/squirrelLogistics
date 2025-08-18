@@ -6,22 +6,12 @@ import axios from "axios";
 import StarRateMemo from "./StarRate";
 
 
-const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged }) => {
-
-    const regiReview = () => {//등록
-        axios.post(`http://localhost:8080/api/public/review`, review, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-            .then(res => {
-                console.log('등록 성공', res.data)
-                setChanged(true);
-                setModal(false);
-            }).catch(err => console.error('등록 실패', err));
-    }
+const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setChanged }) => {
 
     const modiReview = () => {//수정
+        review.regDate = review.regDate.split('.')[0];
+        review.regDate = review.regDate.replace('T', ' ');
+        console.log(review);
         axios.put(`http://localhost:8080/api/public/review/${review.reviewId}`, review)
             .then(res => {
                 console.log('수정 성공', res.data)
@@ -42,6 +32,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     const writingReview = (e => {//인풋 수정 시 review set
         review[e.target.name] = e.target.value;
         setReview({ ...review });
+
     })
 
     const [scope, setScope] = useState(review.rating);
@@ -49,6 +40,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
         if (review.rating != null) {
             setScope(review.rating);
         }
+        console.log(review);
     }, [review.rating]);
 
     useEffect(() => {//별점 클릭 시 별점 변동
@@ -73,7 +65,6 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                 justifyContent: "center",
                 flexWrap: "wrap"
             }}>
-                <input type="hidden" value={assignedId}></input>
                 <Box
                     sx={{
                         width: "20%",
@@ -100,19 +91,16 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                             alt="OtterImg"
                             src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
                         />
-                        <Typography sx={{ marginBottom: "10%" }}>{review.driverName}({review.carName})</Typography>
+                        <Typography sx={{ marginBottom: "10%" }}>{review.driverName}</Typography>
                         <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                             <StarRate modifying={true} scope={scope} setScope={setScope} />
                         </Box>
-
-
                     </Box>
 
                 </Box>
                 <TextField name="reason" rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0" }} value={review.reason} onChange={writingReview}></TextField>
                 <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
-                    {review.reviewId == 0 ? <OneBigBtn func={regiReview}>리뷰등록</OneBigBtn> :
-                        <TwoBtns children1={"리뷰 삭제"} func1={delReview} children2={"리뷰 수정"} func2={modiReview}></TwoBtns>}
+                    <TwoBtns children1={"리뷰 삭제"} func1={delReview} children2={"리뷰 수정"} func2={modiReview}></TwoBtns>
                 </Box>
 
             </Box>
@@ -120,4 +108,4 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     )
 }
 
-export default ReviewModal;
+export default ReviewModalForList;

@@ -1,22 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout, ListBoxContainer, SubTitle } from "../../components/common/CommonForCompany";
 import { Box, Grid, Typography } from "@mui/material";
 import ReportContent from "../../components/report/ReportContent";
+import axios from "axios";
 
 const ReportList = () => {
 
+    const [reportList, setReportList] = useState([]);
+    const [dates, setDates] = useState([]);
+
+    useEffect(() => {
+        axios.get(`http://localhost:8080/api/public/report/list`)
+            .then(res => {
+                setReportList(res.data);
+                const dateSet = [...new Set(res.data.map(report => report.regDate.toString().slice(0, 10)))];
+                setDates(dateSet);
+            })
+    }, [])
+
     return (
         <Layout title={"내 신고목록"}>
-            <Grid container width={"80%"}>
+            <Grid container width={"100%"}>
                 <Grid size={3} />
                 <Grid size={6}>
-                    <SubTitle>0000.00.00.</SubTitle>
-                    <ReportContent
-                        header={"id.start->id.end"}
-                        title={"reportTitle"}
-                        content={"reportContent"}
-                        answer={"answer"}
-                    ></ReportContent>
+                    {dates.map((date) => (
+                        <Box marginBottom={"5%"}>
+                            <SubTitle>{date}</SubTitle>
+                            {reportList.map((report) => (
+                                <ReportContent
+                                    header={`${report.startAddress.toString().slice(0, 15)}... > ${report.endAddress.toString().slice(0, 15)}...`}
+                                    title={report.rTitle}
+                                    content={report.rContent}
+                                    answer={"answer"}
+                                    preview={report.fileNames}
+                                ></ReportContent>
+                            ))
+                            }
+                        </Box>
+                    ))}
+
+
                 </Grid>
                 <Grid size={3} />
             </Grid>

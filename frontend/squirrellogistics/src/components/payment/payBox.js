@@ -48,10 +48,8 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
     if (caution) additionalRate += 50000;
     if (mountainous) additionalRate += 50000;
     let mileageFormat = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // let stopOverFormat = 20000.toString().
     let weightFormat = weight.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    let stopOver1Format = stopOver1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    let stopOver2Format = stopOver2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    let stopOver3Format = stopOver3.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     let baseRateFormat = baseRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     let additionalRateFormat = additionalRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     let allRateFormat = (baseRate+additionalRate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -82,9 +80,9 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
             </ContentBox>
 
             <ContentBox subTitle={"추가요금"}>
-                {stopOver1 ? <Content dataKey={"경유지1"} value={stopOver1Format} /> : <></>}
-                {stopOver2 ? <Content dataKey={"경유지2"} value={stopOver2Format} /> : <></>}
-                {stopOver3 ? <Content dataKey={"경유지3"} value={stopOver3Format} /> : <></>}
+                {stopOver1 ? <Content dataKey={"경유지1"} value={20000} /> : <></>}
+                {stopOver2 ? <Content dataKey={"경유지2"} value={20000} /> : <></>}
+                {stopOver3 ? <Content dataKey={"경유지3"} value={20000} /> : <></>}
                 {caution ? <Content dataKey={"산간지역"} value={50000} /> : <></>}
                 {mountainous ? <Content dataKey={"취급주의"} value={50000} /> : <></>}
                 <HowMuch fontSize={20} inBox={true}>{additionalRateFormat}원</HowMuch>
