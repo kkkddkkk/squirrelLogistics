@@ -43,6 +43,9 @@ public class Driver {//운전자 세부정보
 	private boolean drivable;//운전 가능 여부	
 	private LocalTime preferred_start_time; // 선호 시작 시간
 	private LocalTime preferred_end_time; // 선호 마무리 시간
+	private String profileImageName;
+	private String profileImagePath;
+	private String profileImageUrl;
 	
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")

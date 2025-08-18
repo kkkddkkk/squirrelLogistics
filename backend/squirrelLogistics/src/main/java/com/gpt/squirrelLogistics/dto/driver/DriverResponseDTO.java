@@ -21,6 +21,9 @@ public class DriverResponseDTO {
 	private String mainLoca;//선호지역
 	private String licenseNum;//운전면허번호
 	private boolean drivable;//운전 가능 여부
+	private String profileImageName;
+	private String profileImagePath;
+	private String profileImageUrl;
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime LicenseDT;//면허 유효기간
