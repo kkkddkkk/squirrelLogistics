@@ -41,6 +41,7 @@ const EditProfile = () => {
   */
 
   const [form, setForm] = useState({
+    id: "", // 회원가입 시 입력한 아이디가 들어올 예정
     name: "김동현",
     birth: "1989-02-19",
     phone: "010-2342-2342",
@@ -62,8 +63,11 @@ const EditProfile = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
+<<<<<<< HEAD
   const [idError, setIdError] = useState("");
   const [isIdChecked, setIsIdChecked] = useState(false);
+=======
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
 
   const [selectedCity, setSelectedCity] = useState("서울");
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
@@ -450,6 +454,7 @@ const EditProfile = () => {
     setShowBankModal(false);
   };
 
+<<<<<<< HEAD
   // 아이디 중복확인
   const handleIdCheck = () => {
     if (!form.id || form.id.trim() === "") {
@@ -470,6 +475,8 @@ const EditProfile = () => {
     }
   };
 
+=======
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   // 프로필 사진 업로드 처리
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -507,17 +514,33 @@ const EditProfile = () => {
     }
   };
 
+<<<<<<< HEAD
   // 컴포넌트 마운트 시 저장된 프로필 이미지 로드
+=======
+  // 컴포넌트 마운트 시 저장된 프로필 이미지 로드 및 사용자 정보 로드
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   React.useEffect(() => {
     const savedImageUrl = localStorage.getItem("profileImageUrl");
     if (savedImageUrl) {
       setProfileImageUrl(savedImageUrl);
     }
+<<<<<<< HEAD
+=======
+
+    // 로그인한 사용자의 아이디 가져오기 (실제로는 API 호출)
+    const userLoginId =
+      localStorage.getItem("userLoginId") ||
+      sessionStorage.getItem("userLoginId");
+    if (userLoginId) {
+      setForm((prev) => ({ ...prev, id: userLoginId }));
+    }
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+<<<<<<< HEAD
     // 필수 필드 검증
     if (!form.id || form.id.trim() === "") {
       alert("아이디를 입력해주세요.");
@@ -532,6 +555,8 @@ const EditProfile = () => {
       return;
     }
 
+=======
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
     if (!form.password || form.password.trim() === "") {
       alert("비밀번호를 입력해주세요.");
       return;
@@ -645,6 +670,7 @@ const EditProfile = () => {
               </Stack>
             </Box>
 
+<<<<<<< HEAD
             <Box display="flex" gap={2} alignItems="center">
               <TextField
                 label="아이디"
@@ -673,6 +699,21 @@ const EditProfile = () => {
                 중복확인
               </Button>
             </Box>
+=======
+            <TextField
+              label="아이디"
+              name="id"
+              value={form.id}
+              disabled
+              fullWidth
+              sx={{
+                "& .MuiInputBase-input.Mui-disabled": {
+                  color: "#000000",
+                  WebkitTextFillColor: "#000000",
+                },
+              }}
+            />
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
             <Box display="flex" gap={2}>
               <Box flex={1}>
                 <TextField
@@ -728,9 +769,15 @@ const EditProfile = () => {
               name="birth"
               type="date"
               value={form.birth}
-              onChange={handleChange}
+              disabled
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiInputBase-input.Mui-disabled": {
+                  color: "#000000",
+                  WebkitTextFillColor: "#000000",
+                },
+              }}
             />
             <TextField
               label="연락처"

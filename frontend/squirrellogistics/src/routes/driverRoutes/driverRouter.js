@@ -33,6 +33,9 @@ const driverRouter = () => {
   
   const Profile = lazy(() => import("../../pages/Driver/DriverProfile"));
   const EditProfile = lazy(() => import("../../pages/Driver/EditProfile"));
+  const VerificationPage = lazy(() =>
+    import("../../pages/Driver/VerificationPage")
+  );
   const RegisterVehicle = lazy(() =>
     import("../../pages/Driver/RegisterVehicles")
   );
@@ -43,6 +46,7 @@ const driverRouter = () => {
 
   return [
     {
+<<<<<<< HEAD
       path: "",
       element: (
         <Suspense fallback={Loading}>
@@ -60,6 +64,9 @@ const driverRouter = () => {
     },
     {
       path: ":driverId/detail/:requestId",
+=======
+      path: "detail/:requestId",
+>>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
       element: (
         <Suspense fallback={Loading}>
           <RequestDetail />
@@ -111,6 +118,14 @@ const driverRouter = () => {
       element: (
         <Suspense fallback={Loading}>
           <Profile />
+        </Suspense>
+      ),
+    },
+    {
+      path: "verification",
+      element: (
+        <Suspense fallback={Loading}>
+          <VerificationPage />
         </Suspense>
       ),
     },
