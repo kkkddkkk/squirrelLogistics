@@ -53,9 +53,9 @@ public class SecurityConfig {
 						// ✅ 모든 프리플라이트 허용
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-						// ✅ 공개 엔드포인트 (로그인, 회원가입, 메타, 차량종류, 중복확인 등)
+						// ✅ 공개 엔드포인트 (로그인, 회원가입, 메타, 차량종류, 중복확인, 기사 관련 등)
 						.requestMatchers("/api/auth/login", "/api/auth/register/**", "/api/public/**",
-								"/api/vehicle-types/**", "/api/auth/exists/**", "/error" // 스프링 기본 에러 페이지 허용 (의외로 필요한 경우
+								"/api/vehicle-types/**", "/api/auth/exists/**", "/api/driver/**", "/error" // 스프링 기본 에러 페이지 허용 (의외로 필요한 경우
 																							// 있음)
 						).permitAll()
 
