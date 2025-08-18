@@ -30,12 +30,9 @@ const driverRouter = () => {
 
   //const Report = lazy(() => import("../pages/member/KakaoRedirectPage"));
   //const History = lazy(() => import("../../pages/DeliveryHistory/HistoryListPage"));
-  
+
   const Profile = lazy(() => import("../../pages/Driver/DriverProfile"));
   const EditProfile = lazy(() => import("../../pages/Driver/EditProfile"));
-  const VerificationPage = lazy(() =>
-    import("../../pages/Driver/VerificationPage")
-  );
   const RegisterVehicle = lazy(() =>
     import("../../pages/Driver/RegisterVehicles")
   );
@@ -46,27 +43,15 @@ const driverRouter = () => {
 
   return [
     {
-<<<<<<< HEAD
-      path: "",
-      element: (
-        <Suspense fallback={Loading}>
-          <RequestList />
-        </Suspense>
-      )
-    },
-    {
       path: ":driverId/list",
       element: (
         <Suspense fallback={Loading}>
           <RequestList />
         </Suspense>
-      )
+      ),
     },
     {
       path: ":driverId/detail/:requestId",
-=======
-      path: "detail/:requestId",
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
       element: (
         <Suspense fallback={Loading}>
           <RequestDetail />
@@ -87,7 +72,7 @@ const driverRouter = () => {
         <Suspense fallback={Loading}>
           <Review />
         </Suspense>
-      )
+      ),
     },
     // {
     //     path: "report/:driverId",
@@ -103,7 +88,7 @@ const driverRouter = () => {
         <Suspense fallback={Loading}>
           <Calender />
         </Suspense>
-      )
+      ),
     },
     {
       path: ":driverId/schedule/:scheduleId",
@@ -111,21 +96,13 @@ const driverRouter = () => {
         <Suspense fallback={Loading}>
           <Schedule />
         </Suspense>
-      )
+      ),
     },
     {
       path: "profile",
       element: (
         <Suspense fallback={Loading}>
           <Profile />
-        </Suspense>
-      ),
-    },
-    {
-      path: "verification",
-      element: (
-        <Suspense fallback={Loading}>
-          <VerificationPage />
         </Suspense>
       ),
     },

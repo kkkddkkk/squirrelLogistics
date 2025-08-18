@@ -1,6 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/driver/NavBar";
+import ProfileImage from "../../components/driver/ProfileImage";
+import {
+  getDriverProfile,
+  updateDriverProfile,
+  uploadProfileImage,
+} from "../../api/driver/driverApi";
 import {
   Box,
   Button,
@@ -18,11 +24,8 @@ import {
   Grid,
   IconButton,
   Stack,
-  Avatar,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonIcon from "@mui/icons-material/Person";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const EditProfile = () => {
@@ -42,32 +45,109 @@ const EditProfile = () => {
 
   const [form, setForm] = useState({
     id: "", // 회원가입 시 입력한 아이디가 들어올 예정
-    name: "김동현",
-    birth: "1989-02-19",
-    phone: "010-2342-2342",
-    email: "driver119@naver.com",
+    name: "",
+    birth: "",
+    phone: "",
+    email: "",
     password: "",
     confirmPassword: "",
-    bankAccount: "3333-1988-67613",
-    businessId: "123-222-2342",
-    unavailableStart: "2025-08-10",
-    unavailableEnd: "2025-08-20",
-    deliveryArea: "서울 전체",
-    rating: 4.8,
+    bankAccount: "",
+    businessId: "",
+    unavailableStart: "",
+    unavailableEnd: "",
+    deliveryArea: "",
+    rating: 0,
   });
+
+  // 로딩 상태 추가
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [loginType, setLoginType] = useState("EMAIL");
+  const [hasSetPassword, setHasSetPassword] = useState(false);
+
+  // 페이지 로드 시 로그인한 사용자 정보 불러오기
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        // localStorage 또는 sessionStorage에서 사용자 ID 가져오기
+        const userLoginId =
+          localStorage.getItem("userLoginId") ||
+          sessionStorage.getItem("userLoginId");
+        const driverId =
+          localStorage.getItem("driverId") ||
+          sessionStorage.getItem("driverId") ||
+          "1";
+
+        if (!userLoginId) {
+          setError("로그인이 필요합니다.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("사용자 로그인 ID:", userLoginId);
+        console.log("기사 ID:", driverId);
+
+        // API를 통해 사용자 프로필 정보 가져오기
+        const profileData = await getDriverProfile(driverId);
+
+        console.log("가져온 프로필 데이터:", profileData);
+
+        // 폼 데이터 설정
+        setForm({
+          id: profileData.userDTO?.loginId || userLoginId,
+          name: profileData.userDTO?.name || "",
+          birth: profileData.userDTO?.birthday || "",
+          phone: profileData.userDTO?.pnumber || "",
+          email: profileData.userDTO?.email || "",
+          password: "",
+          confirmPassword: "",
+          bankAccount: profileData.userDTO?.account || "",
+          businessId: profileData.userDTO?.businessN || "",
+          unavailableStart: "",
+          unavailableEnd: "",
+          deliveryArea: profileData.mainLoca || "",
+          rating: 0,
+        });
+
+        // 프로필 이미지 설정
+        if (profileData.profileImageUrl) {
+          setProfileImageUrl(profileData.profileImageUrl);
+        }
+
+        // 활동 지역 설정
+        if (profileData.mainLoca) {
+          setSelectedAreas([profileData.mainLoca]);
+        }
+
+        // 로그인 타입과 비밀번호 설정 여부 확인
+        const savedLoginType = localStorage.getItem("loginType");
+        const savedHasSetPassword = localStorage.getItem("hasSetPassword");
+
+        if (savedLoginType) {
+          setLoginType(savedLoginType);
+        }
+
+        if (savedHasSetPassword) {
+          setHasSetPassword(savedHasSetPassword === "true");
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("프로필 로드 실패:", error);
+        setError("프로필 정보를 불러오는데 실패했습니다.");
+        setLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   // 프로필 사진 관련 state
   const [profileImage, setProfileImage] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState("");
-  const fileInputRef = useRef(null);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
-<<<<<<< HEAD
-  const [idError, setIdError] = useState("");
-  const [isIdChecked, setIsIdChecked] = useState(false);
-=======
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
 
   const [selectedCity, setSelectedCity] = useState("서울");
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
@@ -353,17 +433,10 @@ const EditProfile = () => {
       "거창군",
       "합천군",
     ],
-    제주: ["제주 전체", "제주시", "서귀포시"],
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // 아이디 변경 시 중복확인 초기화
-    if (name === "id") {
-      setIsIdChecked(false);
-      setIdError("");
-    }
 
     if (name === "phone") {
       let formatted = value.replace(/[^0-9]/g, "");
@@ -454,32 +527,8 @@ const EditProfile = () => {
     setShowBankModal(false);
   };
 
-<<<<<<< HEAD
-  // 아이디 중복확인
-  const handleIdCheck = () => {
-    if (!form.id || form.id.trim() === "") {
-      setIdError("아이디를 입력해주세요.");
-      return;
-    }
-
-    // 실제로는 서버 API 호출이 필요하지만, 여기서는 테스트용으로 시뮬레이션
-    const existingIds = ["test123", "driver119", "user001", "admin"]; // 기존 아이디 목록
-
-    if (existingIds.includes(form.id)) {
-      setIdError("이미 사용 중인 아이디입니다.");
-      setIsIdChecked(false);
-    } else {
-      setIdError("");
-      setIsIdChecked(true);
-      alert("사용 가능한 아이디입니다.");
-    }
-  };
-
-=======
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   // 프로필 사진 업로드 처리
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
+  const handleImageUpload = async (file) => {
     if (file) {
       // 파일 크기 검증 (5MB 이하)
       if (file.size > 5 * 1024 * 1024) {
@@ -493,12 +542,25 @@ const EditProfile = () => {
         return;
       }
 
-      setProfileImage(file);
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImageUrl(imageUrl);
+      try {
+        setProfileImage(file);
+        const imageUrl = URL.createObjectURL(file);
+        setProfileImageUrl(imageUrl);
 
-      // 로컬 스토리지에 이미지 URL 저장
-      localStorage.setItem("profileImageUrl", imageUrl);
+        // 로컬 스토리지에 이미지 URL 저장
+        localStorage.setItem("profileImageUrl", imageUrl);
+
+        // 실제 API 호출하여 이미지 업로드
+        const driverId = localStorage.getItem("driverId") || "1";
+        const uploadedImageUrl = await uploadProfileImage(driverId, file);
+
+        // 업로드된 이미지 URL로 업데이트
+        setProfileImageUrl(uploadedImageUrl);
+        localStorage.setItem("profileImageUrl", uploadedImageUrl);
+      } catch (error) {
+        console.error("이미지 업로드 실패:", error);
+        alert("이미지 업로드에 실패했습니다.");
+      }
     }
   };
 
@@ -507,25 +569,14 @@ const EditProfile = () => {
     setProfileImage(null);
     setProfileImageUrl("");
     localStorage.removeItem("profileImageUrl");
-
-    // 파일 입력 초기화
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
-<<<<<<< HEAD
-  // 컴포넌트 마운트 시 저장된 프로필 이미지 로드
-=======
   // 컴포넌트 마운트 시 저장된 프로필 이미지 로드 및 사용자 정보 로드
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   React.useEffect(() => {
     const savedImageUrl = localStorage.getItem("profileImageUrl");
     if (savedImageUrl) {
       setProfileImageUrl(savedImageUrl);
     }
-<<<<<<< HEAD
-=======
 
     // 로그인한 사용자의 아이디 가져오기 (실제로는 API 호출)
     const userLoginId =
@@ -534,29 +585,11 @@ const EditProfile = () => {
     if (userLoginId) {
       setForm((prev) => ({ ...prev, id: userLoginId }));
     }
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-<<<<<<< HEAD
-    // 필수 필드 검증
-    if (!form.id || form.id.trim() === "") {
-      alert("아이디를 입력해주세요.");
-      return;
-    }
-    if (!isIdChecked) {
-      alert("아이디 중복확인을 해주세요.");
-      return;
-    }
-    if (idError) {
-      alert("사용할 수 없는 아이디입니다.");
-      return;
-    }
-
-=======
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
     if (!form.password || form.password.trim() === "") {
       alert("비밀번호를 입력해주세요.");
       return;
@@ -578,13 +611,102 @@ const EditProfile = () => {
       alert("비밀번호가 일치하지 않습니다.");
       return;
     }
-    alert("수정이 완료되었습니다.");
-    // 인증 상태 초기화
-    localStorage.removeItem("verificationStatus");
-    localStorage.removeItem("verifiedPhone");
-    localStorage.removeItem("verificationMethod");
-    navigate("/driver/profile");
+
+    try {
+      const driverId = localStorage.getItem("driverId") || "1";
+
+      // API 요청 데이터 구성
+      const profileData = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        account: form.bankAccount,
+        businessN: form.businessId,
+        mainLoca: form.deliveryArea,
+        // 비밀번호는 별도 API로 처리해야 함
+      };
+
+      // 프로필 정보 업데이트
+      await updateDriverProfile(driverId, profileData);
+
+      // SNS 로그인 사용자가 비밀번호를 설정한 경우 저장
+      if (
+        (loginType === "GOOGLE" || loginType === "KAKAO") &&
+        !hasSetPassword &&
+        form.password
+      ) {
+        localStorage.setItem("hasSetPassword", "true");
+        localStorage.setItem("snsUserPassword", form.password);
+      }
+
+      alert("수정이 완료되었습니다.");
+
+      // 인증 상태 초기화
+      localStorage.removeItem("verificationStatus");
+      localStorage.removeItem("verifiedPhone");
+      localStorage.removeItem("verificationMethod");
+
+      navigate("/driver/profile");
+    } catch (error) {
+      console.error("프로필 수정 실패:", error);
+      alert("프로필 수정에 실패했습니다.");
+    }
   };
+
+  // 로딩 중이거나 에러가 있는 경우 처리
+  if (loading) {
+    return (
+      <Box>
+        <NavBar />
+        <Container maxWidth="sm" sx={{ py: 4 }}>
+          <Typography
+            variant="h4"
+            align="center"
+            fontWeight="bold"
+            gutterBottom
+          >
+            회원 정보 수정
+          </Typography>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            sx={{ minHeight: "200px" }}
+          >
+            <Typography variant="h6">프로필 정보를 불러오는 중...</Typography>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <NavBar />
+        <Container maxWidth="sm" sx={{ py: 4 }}>
+          <Typography
+            variant="h4"
+            align="center"
+            fontWeight="bold"
+            gutterBottom
+          >
+            회원 정보 수정
+          </Typography>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            sx={{ minHeight: "200px" }}
+          >
+            <Typography variant="h6" color="error">
+              {error}
+            </Typography>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -609,97 +731,40 @@ const EditProfile = () => {
               >
                 프로필 사진
               </Typography>
-              <Box position="relative" sx={{ mb: 2 }}>
-                <Avatar
-                  src={profileImageUrl}
-                  sx={{
-                    width: 120,
-                    height: 120,
+              <ProfileImage
+                imageUrl={profileImageUrl}
+                alt="프로필 편집"
+                size={120}
+                editable={true}
+                onImageChange={handleImageUpload}
+                sx={{
+                  "& .MuiAvatar-root": {
                     bgcolor: profileImageUrl ? "transparent" : "white",
                     border: "3px solid #E0E6ED",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <PersonIcon sx={{ fontSize: 70, color: "#113F67" }} />
-                </Avatar>
-              </Box>
-              <Stack direction="row" spacing={2}>
+                  },
+                }}
+              />
+              {profileImageUrl && (
                 <Button
                   variant="outlined"
-                  component="label"
-                  startIcon={<PhotoCameraIcon />}
+                  color="error"
+                  onClick={handleImageDelete}
                   sx={{
-                    borderColor: "#113F67",
-                    color: "#113F67",
+                    mt: 2,
+                    borderColor: "#A20025",
+                    color: "#A20025",
                     "&:hover": {
-                      borderColor: "#0d2d4a",
-                      bgcolor: "#113F67",
+                      borderColor: "#8B001F",
+                      bgcolor: "#A20025",
                       color: "white",
                     },
                   }}
                 >
-                  사진 업로드
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
+                  삭제
                 </Button>
-                {profileImageUrl && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={handleImageDelete}
-                    sx={{
-                      borderColor: "#A20025",
-                      color: "#A20025",
-                      "&:hover": {
-                        borderColor: "#8B001F",
-                        bgcolor: "#A20025",
-                        color: "white",
-                      },
-                    }}
-                  >
-                    삭제
-                  </Button>
-                )}
-              </Stack>
+              )}
             </Box>
 
-<<<<<<< HEAD
-            <Box display="flex" gap={2} alignItems="center">
-              <TextField
-                label="아이디"
-                name="id"
-                value={form.id}
-                onChange={handleChange}
-                error={!!idError}
-                helperText={idError}
-                sx={{ flex: 1 }}
-              />
-              <Button
-                variant="outlined"
-                onClick={handleIdCheck}
-                disabled={!form.id || form.id.trim() === ""}
-                sx={{
-                  height: 56,
-                  borderColor: "#113F67",
-                  color: "#113F67",
-                  "&:hover": {
-                    borderColor: "#0d2d4a",
-                    bgcolor: "#113F67",
-                    color: "white",
-                  },
-                }}
-              >
-                중복확인
-              </Button>
-            </Box>
-=======
             <TextField
               label="아이디"
               name="id"
@@ -713,7 +778,6 @@ const EditProfile = () => {
                 },
               }}
             />
->>>>>>> GPT-38-회원정보-조회/수정/삭제-driver
             <Box display="flex" gap={2}>
               <Box flex={1}>
                 <TextField
