@@ -107,6 +107,7 @@ input, select {
 /* 무게 슬라이더 */
 .weight-slider {
   margin-bottom: 1rem;
+  margin-right: 2rem;
 }
 
 .weight-slider input[type="range"] {

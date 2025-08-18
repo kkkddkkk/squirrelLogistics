@@ -3,6 +3,10 @@ package com.gpt.squirrelLogistics.controller.deliveryRequest;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,19 +39,24 @@ public class DeliveryRequestController {
 	private final DeliveryRequestService requestService;
 
 	// 생성
-	@PostMapping
-	public Long create(@Valid @RequestBody DeliveryRequestRequestDTO dto) {
-
+	// [MOD] 프론트가 '/api/delivery/request'로도 POST를 보내므로, 슬래시 유무 모두 매핑
+	@PostMapping(value = { "", "/" })
+	public Long create(@RequestBody DeliveryRequestRequestDTO dto) {
 		return requestService.create(dto);
 	}
 
 	// 단건 조회 (상세 응답 사용 권장)
 	@GetMapping("/{id}")
-    @TimedEndpoint("request_detail")  // ★ 상세만 타겟팅
+	@TimedEndpoint("request_detail") // ★ 상세만 타겟팅
 	public ResponseEntity<DeliveryRequestResponseDTO> read(@PathVariable("id") Long id) {
-
 		DeliveryRequestResponseDTO dto = requestService.readFull(id);
 		return ResponseEntity.ok(dto);
+	}
+
+	/** 단건 슬림 조회 (Slim DTO) - 필요 시 사용 */
+	@GetMapping("/{id}/slim")
+	public ResponseEntity<DeliveryRequestSlimResponseDTO> readSlim(@PathVariable("id") Long id) {
+		return ResponseEntity.ok(requestService.readSlim(id));
 	}
 
 	// 수정 (PUT 전체/ PATCH 부분)
@@ -72,4 +81,11 @@ public class DeliveryRequestController {
 		PageResponseDTO<DeliveryRequestSlimResponseDTO> page = requestService.list(pageReq);
 		return ResponseEntity.ok(page);
 	}
+
+	/** 목록 - Spring 표준 Pageable(Page<T>) */
+	@GetMapping("/page")
+	public Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable) {
+		return requestService.getPage(pageable);
+	}
+
 }

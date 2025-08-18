@@ -1,5 +1,11 @@
 package com.gpt.squirrelLogistics.service.deliveryRequest;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+
+
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -23,6 +29,9 @@ public interface DeliveryRequestService {
     //운송 요청 삭제(작성자: 고은설).
     void delete(Long requestId);
     
-    //운송 요청 목록 포기, 페이지네이션 포함(작성자: 고은설).
+ // 목록 - 커스텀 페이지 DTO
     PageResponseDTO<DeliveryRequestSlimResponseDTO> list(PageRequestDTO pageReq);
+
+    // 목록 - Spring 표준 Page<T>
+    Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable);
 }
