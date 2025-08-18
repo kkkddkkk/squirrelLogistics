@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @RestController
-@RequestMapping("/api/delivery/request")
+@RequestMapping("/api/public/delivery/request")
 @RequiredArgsConstructor
 @Log4j2
 public class DeliveryRequestController {

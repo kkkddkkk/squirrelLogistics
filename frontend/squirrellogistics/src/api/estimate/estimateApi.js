@@ -120,7 +120,7 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
 /** 🚀 배송요청 저장 (POST /api/delivery/request → Long id) */
 export const createDeliveryRequest = async (payload) => {
   try {
-    const { data } = await http.post("/api/delivery/request", payload);
+    const { data } = await http.post("/api/public/delivery/request", payload);
     return data;
   } catch (error) {
     if (error.response) {

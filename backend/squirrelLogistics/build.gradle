@@ -48,6 +48,9 @@ dependencies {
 	
 	//AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // jackson 버전에 맞추기
 }
 
 tasks.named('test') {

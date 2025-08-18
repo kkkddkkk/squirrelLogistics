@@ -113,10 +113,10 @@ const EstimateForm = () => {
   // 거리/무게/화물종류 변경 시 금액 재계산
   useEffect(() => {
     const km = distance && !isNaN(distance) ? distance : 0;
-    const baseByDistance = 100000 + Math.ceil(km) * 3000;
+    const baseByDistance = 10000 + Math.ceil(km) * 2000;
     setDistanceOnlyPrice(baseByDistance);
 
-    let total = baseByDistance + weight * 30000;
+    let total = baseByDistance + weight * 5000;
     if (cargoTypes.includes("위험물 (취급주의 +5000)")) total += 5000;
     if (cargoTypes.includes("귀중품 (취급주의 +5000)")) total += 5000;
 
@@ -324,7 +324,7 @@ const EstimateForm = () => {
 
       {savedAddresses.length > 0 && (
         <div className="info-section">
-          <p>📌 저장된 기본 주소:</p>
+          <p> 저장된 기본 주소:</p>
           {savedAddresses.map((addr) => (
             <div
               key={addr.id}
@@ -385,7 +385,7 @@ const EstimateForm = () => {
       </div>
 
       <div className="weight-slider">
-        <label>📦 무게 선택 (1톤 ~ 26톤)</label>
+        <label> 무게 선택 (1톤 ~ 26톤)</label>
         <input type="range" min="1" max="26" value={weight} onChange={(e) => setWeight(Number(e.target.value))} />
         <div className="weight-labels">
           <span>1톤</span><span>{weight}톤</span><span>26톤</span>
