@@ -10,12 +10,15 @@ import java.util.TimeZone;
 
 @Configuration
 public class JacksonConfig {
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        om.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
-        om.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
-        return om;
-    }
+	@Bean
+	public ObjectMapper objectMapper() {
+		ObjectMapper om = new ObjectMapper();
+		om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		om.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
+		om.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+		//작성자: 고은설
+		//기능: LocalDateTime 지원 모듈 등록
+		om.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+		return om;
+	}
 }

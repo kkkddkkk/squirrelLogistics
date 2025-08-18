@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+import com.gpt.squirrelLogistics.dto.deliveryCargo.DeliveryCargoRequestDTO;
 import com.gpt.squirrelLogistics.enums.deliveryWaypoint.StatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -32,4 +33,8 @@ public class DeliveryWaypointRequestDTO {
 	private StatusEnum status;//경유지 상태
 	
 	private Long requestId;//배송 요청
+	
+	//경유지 하차 화물 (작성자: 고은설)
+	private DeliveryCargoRequestDTO cargo;
+
 }

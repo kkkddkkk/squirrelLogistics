@@ -4,14 +4,14 @@ import java.util.List;
 
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
+import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
 
 public interface DeliveryWaypointService {
 
 	//경유지 정보 생성(작성자: 고은설).
-	Long create(DeliveryWaypointRequestDTO dto);
+    Long create(DeliveryRequest parent, DeliveryWaypointRequestDTO dto);
 	//일괄 생성(작성자: 고은설).
-	void createBatch(Long requestId, List<DeliveryWaypointRequestDTO> dtos);
-	
+    void createBatch(DeliveryRequest parent, List<DeliveryWaypointRequestDTO> dtos);	
 	//개볅 경유지 데이터 간략하게 읽기(작성자: 고은설).
 	DeliveryWaypointSlimResponseDTO readSlim(Long waypointId);
 

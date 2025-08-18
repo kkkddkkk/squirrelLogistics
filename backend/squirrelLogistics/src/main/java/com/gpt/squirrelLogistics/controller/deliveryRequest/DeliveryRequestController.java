@@ -2,11 +2,13 @@ package com.gpt.squirrelLogistics.controller.deliveryRequest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +25,10 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
+import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
+import com.gpt.squirrelLogistics.service.deliveryOrchestrator.DeliveryOrchestrator;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
 
 import jakarta.validation.Valid;
@@ -31,25 +36,33 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @RestController
-@RequestMapping("/api/delivery/request")
+@RequestMapping("/api/delivery/requests")
 @RequiredArgsConstructor
 @Log4j2
 public class DeliveryRequestController {
 
 	private final DeliveryRequestService requestService;
+	private final DeliveryAssignmentService assignmentService;
+	private final DeliveryOrchestrator deliveryOrchestrator;
+
+	public record CreateProposeRequest(@jakarta.validation.Valid PaymentDTO payment,
+			@jakarta.validation.Valid DeliveryRequestRequestDTO request) {
+	}
 
 	// 생성
-	// [MOD] 프론트가 '/api/delivery/request'로도 POST를 보내므로, 슬래시 유무 모두 매핑
-	@PostMapping(value = { "", "/" })
-	public Long create(@RequestBody DeliveryRequestRequestDTO dto) {
-		return requestService.create(dto);
+	@PostMapping
+	public Long create(@Valid @RequestBody CreateProposeRequest payload) {
+
+		return requestService.create(payload.payment(), payload.request());
 	}
 
 	// 단건 조회 (상세 응답 사용 권장)
 	@GetMapping("/{id}")
 	@TimedEndpoint("request_detail") // ★ 상세만 타겟팅
-	public ResponseEntity<DeliveryRequestResponseDTO> read(@PathVariable("id") Long id) {
-		DeliveryRequestResponseDTO dto = requestService.readFull(id);
+	public ResponseEntity<DeliveryRequestResponseDTO> read(@PathVariable("id") Long id,
+			@RequestParam(value = "driverId", required = false) Long driverId) throws NotFoundException {
+
+		DeliveryRequestResponseDTO dto = requestService.readFullSafe(id, driverId);
 		return ResponseEntity.ok(dto);
 	}
 
@@ -86,6 +99,43 @@ public class DeliveryRequestController {
 	@GetMapping("/page")
 	public Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable) {
 		return requestService.getPage(pageable);
+	}
+
+	// 요청 승낙
+	@PutMapping("/{id}/accept")
+	public ResponseEntity<Map<String, String>> accept(@PathVariable("id") Long requestId,
+			@RequestParam("driverId") Long driverId) {
+
+		Map<String, String> result = assignmentService.accept(requestId, driverId);
+
+		if (result.containsKey("FAILED")) {
+			HttpStatus s = switch (result.get("FAILED")) {
+			case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+			case "REQUEST_ALREADY_TAKEN", "VEHICLE_TYPE_MISMATCH", "SCHEDULE_CONFLICT" -> HttpStatus.CONFLICT;
+			default -> HttpStatus.BAD_REQUEST;
+			};
+			return ResponseEntity.status(s).body(result);
+		}
+		return ResponseEntity.ok(result);
+	}
+
+	// 요청 생성과 동시에 지명 제안, 물류회사 전용.
+	@PostMapping("/propose")
+	public ResponseEntity<Map<String, Object>> createAndPropose(@Valid @RequestBody CreateProposeRequest payload,
+			@RequestParam("driverId") Long driverId) {
+
+		Map<String, Object> result = deliveryOrchestrator.createAndPropose(payload.request(), payload.payment(),
+				driverId);
+
+		if (result.containsKey("FAILED")) {
+			HttpStatus s = switch (String.valueOf(result.get("FAILED"))) {
+			case "DRIVER_NOT_FOUND", "COMPANY_NOT_FOUND", "VEHICLE_TYPE_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+			case "VALIDATION_ERROR" -> HttpStatus.BAD_REQUEST;
+			default -> HttpStatus.CONFLICT;
+			};
+			return ResponseEntity.status(s).body(result);
+		}
+		return ResponseEntity.ok(result);
 	}
 
 }

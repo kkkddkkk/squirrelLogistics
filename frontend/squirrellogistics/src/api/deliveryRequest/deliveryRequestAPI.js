@@ -2,7 +2,7 @@ import axios from "axios";
 
 // 백엔드 서버 주소.
 export const API_SERVER_HOST = "http://localhost:8080";
-const BASE = `${API_SERVER_HOST}/api/delivery/request`;
+const BASE = `${API_SERVER_HOST}/api/delivery/requests`;
 
 
 //1. 목록 조회 
@@ -14,7 +14,6 @@ const BASE = `${API_SERVER_HOST}/api/delivery/request`;
 //dir: "ASC" 혹은 "DESC".
 
 export async function fetchDeliveryRequests(pageReq = {}) {
-    console.log("fetchDeliveryRequests 시작!");
     const params = {
         page: pageReq.page ?? 1,
         size: pageReq.size ?? 10,
@@ -27,19 +26,19 @@ export async function fetchDeliveryRequests(pageReq = {}) {
 
 //2. 개별 요청 정보 조회
 //DeliveryRequestResponseDTO로 도착
-
-export async function fetchDeliveryRequest(id) {
-    console.log("hello!");
-    const res = await axios.get(`${BASE}/${id}`);
-    console.log('[fetchDeliveryRequest] status=', res.status, 'data=', res.data, 'typeof=', typeof res.data);
-
-    return res.data;
+export async function fetchDeliveryRequest(id, driverId, options = {}) {
+  const { signal, ...rest } = options; // signal만 분리
+  const res = await axios.get(`${BASE}/${id}`, {
+    params: { driverId },
+    signal,              
+    ...rest              
+  });
+  return res.data;
 }
 
 
 //3. 새 요청 생성
 //DeliveryRequestRequestDTO를 전송, 생성된 id 도착.
-
 export async function createDeliveryRequest(payload) {
     const res = await axios.post(`${BASE}`, payload, {
         headers: { "Content-Type": "application/json" },
@@ -48,10 +47,8 @@ export async function createDeliveryRequest(payload) {
 }
 
 
-
 //4. 운송 요청 게시글 수정.
 //DeliveryRequestRequestDTO를 전송, 리턴없음.
-
 export async function updateDeliveryRequest(id, payload) {
     await axios.put(`${BASE}/${id}`, payload, {
         headers: { "Content-Type": "application/json" },
@@ -61,5 +58,15 @@ export async function updateDeliveryRequest(id, payload) {
 //5. 운송 요청 게시글 삭제.
 //id를 전송, 리턴없음.
 export async function deleteDeliveryRequest(id) {
-    await axios.delete(`${BASE}/${id}`);
+    await axios.delete(`${BASE}/${id}/accept`);
+}
+
+//6. 운송 요청 게시글 수락.
+//{"SUCCESS": "ACCEPTED"}
+//{"FAILED": "REQUEST_ALREADY_TAKEN"}
+export async function acceptDeliveryRequest(id, driverId) {
+  const res = await axios.put(`${BASE}/${id}/accept`, null, {
+    params: { driverId }
+  });
+  return res.data;
 }

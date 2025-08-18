@@ -58,6 +58,8 @@ public class SecurityConfig {
 								"/api/vehicle-types/**", "/api/auth/exists/**", "/api/driver/**", "/error" // 스프링 기본 에러 페이지 허용 (의외로 필요한 경우
 																							// 있음)
 						).permitAll()
+						// 드라이버 측 요청 확인.
+						.requestMatchers("/api/delivery/requests/**","/api/delivery/assignments/**", "/api/delivery/proposals/**").permitAll()
 
 						// 그 외는 인증 필요
 						.anyRequest().authenticated())

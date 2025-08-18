@@ -1,6 +1,8 @@
 package com.gpt.squirrelLogistics.dto.deliveryRequest;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -22,9 +24,11 @@ public class DeliveryRequestSlimResponseDTO {
 	private int totalCargoWeight;// 총 화물 무게
 	private Long estimatedFee;// 예상금액
 	private Long distance;// 거리
-
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createAt;// 요청 등록 시간
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime wantToStart;// 희망 시작일
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime wantToEnd;// 희망 종료일
 
 	private StatusEnum status;// 요청 상태

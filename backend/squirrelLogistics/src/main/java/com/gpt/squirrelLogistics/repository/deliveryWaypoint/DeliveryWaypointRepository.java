@@ -20,4 +20,5 @@ public interface DeliveryWaypointRepository extends JpaRepository<DeliveryWaypoi
 		       "JOIN dw.deliveryRequest dr " +
 		       "WHERE dr = (SELECT d.deliveryRequest FROM DeliveryAssignment d WHERE d.assignedId = :assignedId)")
 		List<Object[]> findWaypointByAssignmentId(@Param("assignedId") String assignedId);
+
 }

@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.dto.deliveryRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
@@ -26,8 +27,11 @@ public class DeliveryRequestResponseDTO {
 	private Long estimatedFee;//예상금액
 	private Long distance;//거리
 	
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createAt;//요청 등록 시간
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime wantToStart;//희망 시작일
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime wantToEnd;//희망 종료일
 	
 	private String expectedPolyline;//예상 폴리라인

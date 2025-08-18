@@ -28,11 +28,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
 @Table(name = "delivery_assignment")
 @Getter
+@Setter
 @ToString
 @Builder
 @AllArgsConstructor
@@ -50,12 +52,12 @@ public class DeliveryAssignment {//운송 기록
 	@Enumerated(EnumType.STRING)
 	private StatusEnum status;//수락 상태
 	
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "request_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id", nullable = false)
 	private DeliveryRequest deliveryRequest;//배송 요청
 	
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "payment_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id")
 	private Payment payment;//결제
 	
 	@ManyToOne(fetch = FetchType.LAZY)

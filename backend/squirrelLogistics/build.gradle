@@ -45,6 +45,7 @@ dependencies {
 	implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
 	runtimeOnly "io.jsonwebtoken:jjwt-gson:${JJWT_VERSION}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	
 	//AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
