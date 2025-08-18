@@ -1,7 +1,6 @@
-import { Box, Button, Grid, Typography } from "@mui/material"
-import { Outlet } from "react-router-dom";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { Box, Button, Typography } from "@mui/material"
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 
 export const Title = ({ children }) => {
     return (
@@ -42,8 +41,8 @@ export const Layout = ({ title, children }) => {
             bgcolor={"#F5F7FA"}
             display="flex"
             width={"100%"}
-            height={"100vh"}
-            marginBottom={"2%"}
+            // height={"100vh"}
+            // marginBottom={"2%"}
             flexWrap={"wrap"}
             minHeight={"100vh"}
             gap={0}
@@ -74,6 +73,7 @@ export const ListBoxContainer = ({ children, header, id }) => {
                 flexWrap: "wrap",
                 marginBottom: "2%"
             }}
+            className="listBoxContainer"
         >
             <input type="hidden" value={id}></input>
             <Typography sx={{ margin: "2%" }}>{header}</Typography>
@@ -81,6 +81,69 @@ export const ListBoxContainer = ({ children, header, id }) => {
         </Box>
     )
 }
+
+export const ImgBox = ({ func, children, sx }) => {//기본 ImgBox
+    return (
+        <Box sx={{
+            width: "100%",
+            aspectRatio: "1/1",
+            marginLeft: "2%",
+            display: "flex",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginRight: 1,
+            marginBottom: "5%",
+            ...sx
+        }}
+            onClick={func}
+        >
+            {children}
+        </Box>
+    )
+}
+
+export const AddImgInput = ({fileRef, funcAdd, funcChange, preview}) => {//사진추가 인풋
+    return (
+        <Box>
+            <input
+                type="file"
+                accept="image/*"
+                ref={fileRef}
+                style={{ display: "none" }} // 화면에서 숨김
+                onChange={funcChange}
+            />
+            <ImgBox func={funcAdd} preview={preview} sx={{
+                backgroundColor: "#113F67",
+                justifyContent: "center",
+                alignItems: "center",
+            }}>
+                <AddIcon sx={{
+                    color: "#F5F7FA",
+                    fontSize: 45
+                }} />
+            </ImgBox>
+        </Box>
+    )
+}
+
+export const AddedImg = ({ preview, idx, func }) => {//추가된 사진
+
+    return (
+        <ImgBox sx={{
+            backgroundImage: `url(${URL.createObjectURL(preview)})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            justifyContent: "end",
+            alignItems: "baseline",
+        }}>
+            <Box sx={{ backgroundColor: "#F5F7FA", opacity: "0.5" }}>
+                <CloseIcon onClick={(e) => func(e, idx)} sx={{ color: "#2A2A2A" }} />
+            </Box>
+        </ImgBox >
+    )
+}
+
+
 
 //#region [버튼]
 export const TwoBtns = ({ children1, children2, func1, func2 }) => {
@@ -107,6 +170,7 @@ export const OneBigBtn = ({ children, disabled, func, margin }) => {
     return (
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
             <Button
+                type="submit"
                 variant="contained"
                 sx={{ width: "60%", height: "50px", margin: { margin }, fontSize: "25px" }}
                 onClick={func}

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -37,22 +38,16 @@ public class CompanyHistoryController {
 	
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	
-//	@GetMapping
-//	@TimedEndpoint("getAllHistory")
-//	public List<DeliveryAssignmentSlimResponseDTO> getAllHistory() {
-//		List<DeliveryAssignmentSlimResponseDTO> list = service.getAllHistory();
-//		return list;
-//	}
-	
 	@GetMapping
 	@TimedEndpoint("getTodayList")
 	public List<Object[]> getTodayList(@RequestParam("completedAt") String CompletedAt){
 		return service.getTodayList(CompletedAt);
 	}
 	
-	@GetMapping("/getList")
+	@GetMapping("/getTodayContent")
 	@TimedEndpoint("getTodayContent")
-	public List<Object[]> getTodayContent(@RequestParam("assignedId") String assignedId){
+	public Map<String, Object> getTodayContent(@RequestParam("assignedId") String assignedId){
+		
 		return service.getTodayContent(assignedId);
 	}
 	
@@ -60,6 +55,7 @@ public class CompanyHistoryController {
 	@GetMapping("/calendar")
 	@TimedEndpoint("getCalendar")
 	public List<Date> getCalendar(){
+		
 		return service.getHistoryDate();
 	}
 	

@@ -51,12 +51,12 @@ const ActualMap = () => {
 
     return (
         <div style={{
-            width: "35%",
+            width: "100%",
             marginLeft: "10%",
             display: "flex",
             justifyContent: "center",
             flexWrap: "wrap",
-            position: 'fixed',
+            // position: 'fixed',
         }}>
             <div
                 id="map"

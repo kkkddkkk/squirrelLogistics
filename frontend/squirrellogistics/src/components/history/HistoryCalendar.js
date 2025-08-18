@@ -8,7 +8,7 @@ import { TwoBtns } from "../common/CommonForCompany";
 import axios from "axios";
 
 
-const HistoryCalendar = ({ historyList }) => {
+const HistoryCalendar = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [historyDate, setHistoryDate] = useState([]);
     const { moveToAnotherDay, moveToReportList, moveToReviewList } = useHistoryMove();
@@ -34,6 +34,10 @@ const HistoryCalendar = ({ historyList }) => {
         );
     }
 
+    const handleClickReportList=()=>{
+        moveToReportList();
+    }
+
     let clickedMonth;
     let clickedDate;
     let today = new Date();
@@ -52,6 +56,8 @@ const HistoryCalendar = ({ historyList }) => {
 
     useEffect(() => {//날짜 클릭 시 랜더링
         moveToAnotherDay(clickedFullDate);//path에 date 파라미터 추가
+
+        
     }, [clickedFullDate]);
 
     return (
@@ -65,7 +71,7 @@ const HistoryCalendar = ({ historyList }) => {
                 ]}
             />
             <Box sx={{ width: "100%", display: "flex", justifyContent: "space-around", marginTop: "5%" }} >
-                <PsButton func={moveToReportList}>내 신고목록</PsButton>
+                <PsButton func={handleClickReportList}>내 신고목록</PsButton>
                 <PsButton func={moveToReviewList}>내 리뷰목록</PsButton>
             </Box>
 

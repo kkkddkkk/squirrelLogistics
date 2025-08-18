@@ -6,7 +6,6 @@ import { Buttons } from "../../components/history/HistoryList";
 import HelpIcon from '@mui/icons-material/Help';
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { useState } from "react";
-import { TitleForCharge } from "../Payment/Payment";
 import { Layout, Title } from "../../components/common/CommonForCompany";
 
 const ActualCalc = () => {
@@ -19,7 +18,7 @@ const ActualCalc = () => {
     const [modal, setModal] = useState(false);
 
     return (
-        <Layout title={"이용기록"}>
+        <Layout title={"실 계산"}>
             <Box
                 sx={{
                     width: "90%",
@@ -28,10 +27,10 @@ const ActualCalc = () => {
                     alignContent: "center"
                 }}
             >
-                <Box sx={{ width: "45%" }}>
+                <Box sx={{ width: "40%" }}>
                     <ActualMap></ActualMap>
                 </Box>
-                <Box sx={{ width: "45%" }}>
+                <Box sx={{ width: "45%", aspectRatio: "1/1", overflow: "auto"}}>
                     <PayBox
                         mileage={'45'}
                         weight={'8,000'}

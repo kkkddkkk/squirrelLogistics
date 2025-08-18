@@ -9,8 +9,6 @@ import axios from "axios"
 const History = () => {
     const [params] = useSearchParams();
     const date = params.get("date");
-    const [isreviewed, setIsReviewed] = useState(true);
-    const [historyList, setHistoryList] = useState([]);
     const [todayList, setTodayList] = useState([]);
 
     useEffect(() => {
@@ -24,7 +22,6 @@ const History = () => {
                 startAddress: item[1],
                 endAddress: item[2]
             }));
-            console.log(formattedData);
             setTodayList(formattedData);
         })
             .catch(err => console.error(err));
@@ -37,7 +34,7 @@ const History = () => {
             <Box width={"80%"}>
                 <Grid container spacing={3}>
                     <Grid size={6}>
-                        <HistoryCalendar historyList={historyList}></HistoryCalendar>
+                        <HistoryCalendar/>
                     </Grid>
                     <Grid size={6} height={"65vh"} overflow={"auto"}>
                         {todayList.map((today) => (
@@ -46,20 +43,6 @@ const History = () => {
                                 assignedId={today.assignedId}
                                 start={today.startAddress.toString().slice(0, 10)+"..."}
                                 end={today.endAddress.toString().slice(0, 10)+"..."}
-                            // stopOver1={today.waypoints[0] ? today.waypoints[0].address : ''}
-                            // stopOver2={today.waypoints[1] ? today.waypoints[1].address : ''}
-                            // stopOver3={today.waypoints[2] ? today.waypoints[2].address : ''}
-                            // mountainous={today.mountainous}
-                            // caution={today.caution}
-                            // actualFee={today.actualFee}
-                            // driverName={today.driverName}
-                            // carName={today.carName}
-                            // isreviewed={isreviewed}
-                            // setIsReviewed={setIsReviewed}
-                            // reviewId={today.reviewId}
-                            // rate={today.rating}
-                            // reason={today.reason}
-                            // 필요한 다른 props도 같이 넘기기
                             />
                         ))}
                     </Grid>

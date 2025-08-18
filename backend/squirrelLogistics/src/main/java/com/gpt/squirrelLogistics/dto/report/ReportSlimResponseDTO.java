@@ -1,9 +1,10 @@
 package com.gpt.squirrelLogistics.dto.report;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
+import com.gpt.squirrelLogistics.dto.reportImage.ReportImageRequestDTO;
 import com.gpt.squirrelLogistics.enums.report.ReportCategoryEnum;
 import com.gpt.squirrelLogistics.enums.report.ReportReporterEnum;
 import com.gpt.squirrelLogistics.enums.report.ReportStatusEnum;
@@ -30,4 +31,6 @@ public class ReportSlimResponseDTO {
 	
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime modiDate; //수정일.
+	
+	List<String> fileName;//이미지 파일 리스트
 }

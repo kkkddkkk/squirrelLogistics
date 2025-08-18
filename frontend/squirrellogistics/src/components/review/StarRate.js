@@ -1,8 +1,8 @@
 import StarIcon from '@mui/icons-material/Star';
 import { Box } from '@mui/material';
-import { forwardRef, useEffect } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 
-const StarRate = ({ scope, setScope, modifying, size }) => {
+const StarRateOrigin = ({ scope, setScope, modifying, size }) => {
 
     const StarUseRef = forwardRef((props, ref) => <StarIcon {...props} ref={ref} />);
 
@@ -31,4 +31,7 @@ const StarRate = ({ scope, setScope, modifying, size }) => {
         </Box>
     );
 };
+
+const StarRate = React.memo(StarRateOrigin);
+
 export default StarRate;

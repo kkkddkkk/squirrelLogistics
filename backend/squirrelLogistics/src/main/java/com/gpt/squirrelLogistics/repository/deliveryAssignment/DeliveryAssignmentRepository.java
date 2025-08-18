@@ -16,27 +16,23 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 //	List<DeliveryAssignment> findByCompletedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 	List<DeliveryAssignment> findByCompletedAt(LocalDateTime completedAt);
 
+	//일정에 포함된 날짜 찾기
 	@Query("SELECT DISTINCT FUNCTION('DATE', d.completedAt) FROM DeliveryAssignment d")
 	List<Date> findOnlyCompletedAt();
 
+	//날짜별 출발주소+도착주소 찾기
 	@Query("SELECT d.assignedId, r.startAddress, r.endAddress FROM DeliveryAssignment d "
 			+ "JOIN d.deliveryRequest r WHERE FUNCTION('DATE', d.completedAt) = :completedAt")
 	List<Object[]> findStartEndAddress(@Param("completedAt") String completedAt);
-
-//	기사 이름, 차량종류
-//	@Query("SELECT  dw.address, a.mountainous, a.caution, a.actualFee, r.rating, u.name, ve.name"
-//			+ "FROM DeliveryAssignment d " + // 운송기록
-//			"JOIN d.actualDelivery a " + // 실제운송
-//			"JOIN DeliveryRequest re " + // 배송요청
-//			"JOIN re.vehicleType ve " + // 차량종류
-//			"JOIN DeliveryWaypoint dw ON dw.deliveryRequest = re " + // 경유지
-//			"JOIN d.driver dr JOIN dr.user u " + // driver
-//			"JOIN Reviw r ON r.deliveryAssignment = d " + "WHERE d.assignedId = :assignedId")
-//	List<Object[]> findContentById(@Param("assignedId") String assignedId);
+	
+	//ID로 출발주소+도착주소 찾기
+	@Query("SELECT r.startAddress, r.endAddress FROM DeliveryAssignment d "
+			+ "JOIN d.deliveryRequest r WHERE d.assignedId=:assignedId")
+	List<Object[]> findStartEndAddressById(@Param("assignedId") Long assignedId);
 
 	
-	//ID로 리뷰(평점, 사유) 찾기
-	@Query("SELECT r.rating, r.reason FROM DeliveryAssignment d "
+	//ID로 리뷰(id, 평점, 사유) 찾기
+	@Query("SELECT r.reviewId, r.rating, r.reason FROM DeliveryAssignment d "
 			+ "JOIN Review r ON r.deliveryAssignment = d WHERE d.assignedId = :assignedId")
 	List<Object[]> findReviewById(@Param("assignedId") String assignedId);
 	
