@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -15,17 +15,44 @@ import {
 import { useNavigate } from "react-router-dom";
 import PhoneIcon from "@mui/icons-material/Phone";
 import SecurityIcon from "@mui/icons-material/Security";
+import LockIcon from "@mui/icons-material/Lock";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { verifyPassword } from "../../api/driver/driverApi";
 
 const VerificationPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isCodeSent, setIsCodeSent] = useState(false);
+  const [loginType, setLoginType] = useState("EMAIL");
+  const [hasSetPassword, setHasSetPassword] = useState(false);
+
+  // 로그인 타입과 비밀번호 설정 여부 확인
+  useEffect(() => {
+    const savedLoginType = localStorage.getItem("loginType");
+    const savedHasSetPassword = localStorage.getItem("hasSetPassword");
+
+    if (savedLoginType) {
+      setLoginType(savedLoginType);
+    }
+
+    if (savedHasSetPassword) {
+      setHasSetPassword(savedHasSetPassword === "true");
+    }
+
+    // 일반 로그인이거나 SNS 로그인에서 비밀번호를 설정한 경우 비밀번호 탭을 기본으로 설정
+    if (
+      savedLoginType === "EMAIL" ||
+      (savedLoginType !== "EMAIL" && savedHasSetPassword === "true")
+    ) {
+      setActiveTab(2); // 비밀번호 탭
+    }
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -135,6 +162,39 @@ const VerificationPage = () => {
     }
   };
 
+  // 비밀번호 확인
+  const handlePasswordVerification = async () => {
+    if (!password.trim()) {
+      setError("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const driverId = localStorage.getItem("driverId") || "1";
+      const isValid = await verifyPassword(driverId, password);
+
+      if (isValid) {
+        setSuccess("비밀번호 확인이 완료되었습니다.");
+        localStorage.setItem("verificationStatus", "verified");
+        localStorage.setItem("verificationMethod", "password");
+
+        setTimeout(() => {
+          navigate("/driver/editprofile");
+        }, 2000);
+      } else {
+        setError("비밀번호가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      console.error("비밀번호 확인 실패:", error);
+      setError("비밀번호 확인 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // 간편인증 (카카오)
   const handleKakaoVerification = async () => {
     setIsLoading(true);
@@ -215,6 +275,11 @@ const VerificationPage = () => {
             <Tab
               icon={<SecurityIcon />}
               label="간편인증"
+              iconPosition="start"
+            />
+            <Tab
+              icon={<LockIcon />}
+              label="비밀번호 확인"
               iconPosition="start"
             />
           </Tabs>
@@ -315,6 +380,40 @@ const VerificationPage = () => {
                 }}
               >
                 카카오 본인인증
+              </Button>
+            </Stack>
+          )}
+
+          {activeTab === 2 && (
+            <Stack spacing={3}>
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                textAlign="center"
+              >
+                비밀번호를 입력해주세요
+              </Typography>
+
+              <TextField
+                fullWidth
+                type="password"
+                placeholder="비밀번호 입력"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+
+              <Button
+                variant="contained"
+                onClick={handlePasswordVerification}
+                disabled={!password || isLoading}
+                fullWidth
+                sx={{
+                  bgcolor: "#113F67",
+                  "&:hover": { bgcolor: "#0d2d4a" },
+                }}
+              >
+                {isLoading ? <CircularProgress size={24} /> : "비밀번호 확인"}
               </Button>
             </Stack>
           )}

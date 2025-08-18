@@ -35,6 +35,12 @@ import {
   ReportProblemOutlined as ReportProblemOutlinedIcon,
 } from "@mui/icons-material";
 import NavBar from "../../components/driver/NavBar";
+import ProfileImage from "../../components/driver/ProfileImage";
+import {
+  getDriverProfile,
+  deleteAccount,
+  verifyPassword,
+} from "../../api/driver/driverApi";
 
 const DriverProfile = () => {
   const [driver, setDriver] = useState(null);
@@ -45,84 +51,125 @@ const DriverProfile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [loginType, setLoginType] = useState(0); // 0: 일반 로그인, 1: SNS 로그인
+  const [loginType, setLoginType] = useState("EMAIL"); // EMAIL: 일반 로그인, GOOGLE: 구글 로그인, KAKAO: 카카오 로그인
   const [hasSetPassword, setHasSetPassword] = useState(false); // SNS 로그인 사용자의 비밀번호 설정 여부
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setDriver({
-      name: "김동현",
-      birth: "1989.02.19",
-      phone: "010-2342-2342",
-      email: "driver119@naver.com",
-      bankAccount: "3333-1988-67613",
-      businessId: "123-222-2342",
-      unavailableStart: "2025-08-10",
-      unavailableEnd: "2025-08-20",
-      deliveryArea: "서울, 경기, 인천",
-      rating: 4.8,
-    });
+    const fetchDriverProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // 저장된 프로필 이미지 로드
-    const savedImageUrl = localStorage.getItem("profileImageUrl");
-    if (savedImageUrl) {
-      setProfileImageUrl(savedImageUrl);
-    }
+        // 실제로는 로그인된 사용자의 driverId를 가져와야 함
+        const driverId = localStorage.getItem("driverId") || "1"; // 임시로 1 사용
 
-    // 로그인 타입과 비밀번호 설정 여부 확인
-    const savedLoginType = localStorage.getItem("loginType");
-    const savedHasSetPassword = localStorage.getItem("hasSetPassword");
+        const driverData = await getDriverProfile(driverId);
 
-    if (savedLoginType) {
-      setLoginType(parseInt(savedLoginType));
-    }
+        // API 응답 데이터를 컴포넌트 상태에 맞게 변환
+        setDriver({
+          name: driverData.userDTO?.name || "",
+          birth: driverData.userDTO?.birthday || "",
+          phone: driverData.userDTO?.Pnumber || "",
+          email: driverData.userDTO?.email || "",
+          bankAccount: driverData.userDTO?.account || "",
+          businessId: driverData.userDTO?.businessN || "",
+          unavailableStart: "", // API에 없는 필드
+          unavailableEnd: "", // API에 없는 필드
+          deliveryArea: driverData.mainLoca || "",
+          rating: 0, // API에 없는 필드
+        });
 
-    if (savedHasSetPassword) {
-      setHasSetPassword(savedHasSetPassword === "true");
-    }
+        // 프로필 이미지 설정
+        if (driverData.profileImageUrl) {
+          setProfileImageUrl(driverData.profileImageUrl);
+        } else {
+          // 저장된 프로필 이미지 로드
+          const savedImageUrl = localStorage.getItem("profileImageUrl");
+          if (savedImageUrl) {
+            setProfileImageUrl(savedImageUrl);
+          }
+        }
 
-    // 여러 대의 차량 정보 설정
-    setVehicles([
-      {
-        id: 1,
-        registrationDate: "2023.01.15",
-        vehicleNumber: "24가 2839",
-        vehicleType: "윙바디 탑차",
-        loadCapacity: "3~5톤",
-        vehicleStatus: "운행 가능",
-        insuranceStatus: "유",
-        currentDistance: "35,090 km",
-        lastInspection: "2024.09.03",
-        nextInspection: "2025.08.03",
-        icon: "🚛",
-      },
-      {
-        id: 2,
-        registrationDate: "2022.06.20",
-        vehicleNumber: "12나 4567",
-        vehicleType: "카고 트럭",
-        loadCapacity: "1~2톤",
-        vehicleStatus: "정비중",
-        insuranceStatus: "유",
-        currentDistance: "28,450 km",
-        lastInspection: "2024.11.15",
-        nextInspection: "2025.11.15",
-        icon: "🚚",
-      },
-      {
-        id: 3,
-        registrationDate: "2021.12.10",
-        vehicleNumber: "34다 7890",
-        vehicleType: "냉장 탑차",
-        loadCapacity: "5톤",
-        vehicleStatus: "운행불가",
-        insuranceStatus: "유",
-        currentDistance: "42,300 km",
-        lastInspection: "2024.08.20",
-        nextInspection: "2025.08.20",
-        icon: "❄️",
-      },
-    ]);
+        // 로그인 타입과 비밀번호 설정 여부 확인
+        const savedLoginType = localStorage.getItem("loginType");
+        const savedHasSetPassword = localStorage.getItem("hasSetPassword");
+
+        if (savedLoginType) {
+          setLoginType(savedLoginType);
+        }
+
+        if (savedHasSetPassword) {
+          setHasSetPassword(savedHasSetPassword === "true");
+        }
+
+        // 여러 대의 차량 정보 설정 (임시 데이터)
+        setVehicles([
+          {
+            id: 1,
+            registrationDate: "2023.01.15",
+            vehicleNumber: "24가 2839",
+            vehicleType: "윙바디 탑차",
+            loadCapacity: "3~5톤",
+            vehicleStatus: "운행 가능",
+            insuranceStatus: "유",
+            currentDistance: "35,090 km",
+            lastInspection: "2024.09.03",
+            nextInspection: "2025.08.03",
+            icon: "🚛",
+          },
+          {
+            id: 2,
+            registrationDate: "2022.06.20",
+            vehicleNumber: "12나 4567",
+            vehicleType: "카고 트럭",
+            loadCapacity: "1~2톤",
+            vehicleStatus: "정비중",
+            insuranceStatus: "유",
+            currentDistance: "28,450 km",
+            lastInspection: "2024.11.15",
+            nextInspection: "2025.11.15",
+            icon: "🚚",
+          },
+          {
+            id: 3,
+            registrationDate: "2021.12.10",
+            vehicleNumber: "34다 7890",
+            vehicleType: "냉장 탑차",
+            loadCapacity: "5톤",
+            vehicleStatus: "운행불가",
+            insuranceStatus: "유",
+            currentDistance: "42,300 km",
+            lastInspection: "2024.08.20",
+            nextInspection: "2025.08.20",
+            icon: "❄️",
+          },
+        ]);
+      } catch (error) {
+        console.error("기사 프로필 조회 실패:", error);
+        setError("기사 정보를 불러오는데 실패했습니다.");
+
+        // 에러 시 빈 데이터 설정
+        setDriver({
+          name: "",
+          birth: "",
+          phone: "",
+          email: "",
+          bankAccount: "",
+          businessId: "",
+          unavailableStart: "",
+          unavailableEnd: "",
+          deliveryArea: "",
+          rating: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDriverProfile();
   }, []);
 
   const nextVehicle = () => {
@@ -165,35 +212,44 @@ const DriverProfile = () => {
     }
   };
 
-  if (!driver || vehicles.length === 0) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!driver) return <div>데이터를 불러올 수 없습니다.</div>;
 
   const currentVehicle = vehicles[currentVehicleIndex];
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     const confirmed = window.confirm(
       "정말 탈퇴하시겠습니까?\n확인을 누르면 모든 정보가 삭제됩니다."
     );
     if (confirmed) {
-      // TODO: 삭제 처리 로직 구현 필요 (예: API 요청 등)
-      alert("회원 정보가 삭제되었습니다.");
-      navigate("/goodbye");
+      try {
+        const driverId = localStorage.getItem("driverId") || "1";
+        await deleteAccount(driverId);
+
+        // 로컬 스토리지 정리
+        localStorage.clear();
+        sessionStorage.clear();
+
+        alert("회원 정보가 삭제되었습니다.");
+        navigate("/goodbye");
+      } catch (error) {
+        console.error("회원 탈퇴 실패:", error);
+        alert("회원 탈퇴 중 오류가 발생했습니다.");
+      }
     }
   };
 
   // 비밀번호 확인 모달 열기
   const handleEditClick = () => {
-    if (loginType === 0) {
-      // 일반 로그인 사용자: 비밀번호 확인
-      setShowPasswordModal(true);
-      setPassword("");
-      setPasswordError("");
-    } else if (loginType === 1) {
+    if (loginType === "EMAIL") {
+      // 일반 로그인 사용자: VerificationPage로 이동
+      navigate("/driver/verification");
+    } else if (loginType === "GOOGLE" || loginType === "KAKAO") {
       // SNS 로그인 사용자
       if (hasSetPassword) {
-        // 비밀번호를 이미 설정한 경우: 비밀번호 확인
-        setShowPasswordModal(true);
-        setPassword("");
-        setPasswordError("");
+        // 비밀번호를 이미 설정한 경우: VerificationPage로 이동
+        navigate("/driver/verification");
       } else {
         // 비밀번호를 아직 설정하지 않은 경우: 바로 EditProfile로 이동
         navigate("/driver/editprofile");
@@ -202,12 +258,14 @@ const DriverProfile = () => {
   };
 
   // 비밀번호 확인
-  const handlePasswordConfirm = () => {
-    if (loginType === 0) {
-      // 일반 로그인 사용자: 기존 비밀번호 확인
-      const correctPassword = "1234"; // 테스트용 비밀번호
+  const handlePasswordConfirm = async () => {
+    try {
+      const driverId = localStorage.getItem("driverId") || "1";
 
-      if (password === correctPassword) {
+      // 백엔드 API를 통해 비밀번호 확인
+      const isValid = await verifyPassword(driverId, password);
+
+      if (isValid) {
         setShowPasswordModal(false);
         setPassword("");
         setPasswordError("");
@@ -215,37 +273,9 @@ const DriverProfile = () => {
       } else {
         setPasswordError("비밀번호가 일치하지 않습니다.");
       }
-    } else if (loginType === 1) {
-      // SNS 로그인 사용자: 비밀번호 설정 또는 확인
-      if (hasSetPassword) {
-        // 이미 비밀번호를 설정한 경우: 비밀번호 확인
-        const savedPassword = localStorage.getItem("snsUserPassword");
-
-        if (password === savedPassword) {
-          setShowPasswordModal(false);
-          setPassword("");
-          setPasswordError("");
-          navigate("/driver/editprofile");
-        } else {
-          setPasswordError("비밀번호가 일치하지 않습니다.");
-        }
-      } else {
-        // 처음 비밀번호를 설정하는 경우
-        if (password.length < 4) {
-          setPasswordError("비밀번호는 4자 이상이어야 합니다.");
-          return;
-        }
-
-        // 비밀번호 저장
-        localStorage.setItem("snsUserPassword", password);
-        localStorage.setItem("hasSetPassword", "true");
-        setHasSetPassword(true);
-
-        setShowPasswordModal(false);
-        setPassword("");
-        setPasswordError("");
-        navigate("/driver/editprofile");
-      }
+    } catch (error) {
+      console.error("비밀번호 확인 실패:", error);
+      setPasswordError("비밀번호 확인 중 오류가 발생했습니다.");
     }
   };
 
@@ -332,28 +362,19 @@ const DriverProfile = () => {
             >
               {/* 프로필 사진 */}
               <Box display="flex" justifyContent="center" mb={4}>
-                {profileImageUrl ? (
-                  <Avatar
-                    src={profileImageUrl}
-                    sx={{
-                      width: 150,
-                      height: 150,
-                      boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                    }}
-                  />
-                ) : (
-                  <Avatar
-                    sx={{
-                      width: 150,
-                      height: 150,
+                <ProfileImage
+                  imageUrl={profileImageUrl}
+                  alt="기사 프로필"
+                  size={150}
+                  editable={false}
+                  sx={{
+                    "& .MuiAvatar-root": {
                       bgcolor: "white",
                       color: "#113F67",
                       boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                    }}
-                  >
-                    <PersonIcon sx={{ fontSize: 80 }} />
-                  </Avatar>
-                )}
+                    },
+                  }}
+                />
               </Box>
 
               {/* 이름 */}
