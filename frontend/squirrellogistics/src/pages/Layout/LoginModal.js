@@ -18,6 +18,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/user/api";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function LoginModal({ open, onClose, onLoggedIn }) {
     const navigate = useNavigate();
@@ -28,6 +29,27 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({ loginId: "", password: "" });
+
+    const REST_KEY =
+        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_KAKAO_REST_KEY) ||
+        process.env.REACT_APP_KAKAO_REST_KEY || "";
+
+    const REDIRECT_URI =
+        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_KAKAO_REDIRECT_URI) ||
+        process.env.REACT_APP_KAKAO_REDIRECT_URI ||
+        "http://localhost:8080/oauth/kakao/callback";
+
+    const handleKakaoLogin = () => {
+        if (REST_KEY) {
+            const url =
+                "https://kauth.kakao.com/oauth/authorize" +
+                `?response_type=code&client_id=${encodeURIComponent(REST_KEY)}` +
+                `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+            window.location.href = url;
+        } else {
+            window.location.href = "http://localhost:8080/oauth/kakao/login";
+        }
+    };
 
     // 저장된 아이디 불러오기
     useEffect(() => {
@@ -154,21 +176,33 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
 
                 {/* 소셜 로그인 (placeholder) */}
                 <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                    <Button
-                        variant="outlined"
-                        fullWidth
-                        startIcon={<GoogleIcon />}
-                        sx={{ backgroundColor: "#fff", borderColor: "#ccc" }}
-                        onClick={() => alert("구글 로그인은 추후 연동 예정입니다.")}
-                    >
-                        구글 로그인
-                    </Button>
+                    <GoogleLogin
+                        onSuccess={async (cred) => {
+                            try {
+                                const idToken = cred.credential; // ← 구글 ID 토큰
+                                const { data } = await api.post("/api/auth/oauth/google", { idToken });
+
+                                // 우리 서버가 반환한 액세스 토큰/유저정보 저장 (기존 로컬 로그인과 동일한 포맷)
+                                localStorage.setItem("accessToken", data.accessToken);
+                                if (data.name) localStorage.setItem("userName", data.name);
+                                if (data.role) localStorage.setItem("userRole", data.role);
+
+                                onLoggedIn?.(data);
+                                onClose();
+                            } catch (e) {
+                                console.error(e);
+                                alert("구글 로그인 처리 중 문제가 발생했습니다.");
+                            }
+                        }}
+                        onError={() => alert("구글 로그인에 실패했습니다.")}
+                        useOneTap // 원탭 사용(선택)
+                    />
                     <Button
                         variant="contained"
                         fullWidth
                         startIcon={<ChatBubbleIcon />}
                         sx={{ backgroundColor: "#fee500", color: "#000" }}
-                        onClick={() => alert("카카오 로그인은 추후 연동 예정입니다.")}
+                        onClick={handleKakaoLogin}
                     >
                         카카오 로그인
                     </Button>

@@ -19,8 +19,10 @@ import com.gpt.squirrelLogistics.dto.regist.RegisterCompanyRequest;
 import com.gpt.squirrelLogistics.dto.regist.RegisterDriverRequest;
 import com.gpt.squirrelLogistics.dto.regist.RegisterResponse;
 import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.repository.user.UserRepository;
 import com.gpt.squirrelLogistics.service.user.AuthService;
+import com.gpt.squirrelLogistics.service.user.GoogleVerifier;
 
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -36,6 +38,7 @@ public class AuthController {
 	private final AuthService authService;
 	private final JwtTokenProvider jwt;
 	private final UserRepository userRepository;
+	private final GoogleVerifier googleVerifier;
 
 	@PostMapping("/register/driver")
 	public ResponseEntity<RegisterResponse> registerDriver(@RequestBody RegisterDriverRequest req) {
@@ -80,4 +83,45 @@ public class AuthController {
 					.body(Map.of("error", "Unauthorized", "message", "아이디 또는 비밀번호가 올바르지 않습니다."));
 		}
 	}
+	
+	/** Google OAuth: 프론트에서 받은 idToken으로 로그인/회원연동 후 우리 JWT 발급 */
+    @PostMapping("/oauth/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+        String idToken = body.get("idToken");
+        var payload = googleVerifier.verify(idToken);
+
+        String googleId = payload.getSubject();        // 고유 식별자
+        String email    = (String) payload.getEmail();
+        String name     = (String) payload.get("name"); // null 가능
+
+        // 우리 시스템상의 loginId 형태 정책(임의): google_{sub}
+        String loginId = "google_" + googleId;
+
+        User user = userRepository.findByLoginId(loginId).orElse(null);
+        if (user == null) {
+            // 최초 소셜 로그인 → 자동 가입 (역할 정책은 자유롭게)
+            user = new User();
+            user.setLoginId(loginId);
+            user.setEmail(email);
+            user.setName(name != null ? name : "GoogleUser");
+            user.setPassword("{noop}");         
+            user.setRole(UserRoleEnum.ETC);     
+            user.setRegDate(LocalDateTime.now());
+            user.setSns_login(true);
+        }
+
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+
+        // 우리 JWT 발급 (이미 사용 중인 메서드 시그니처 유지)
+        String token = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
+
+        return ResponseEntity.ok(Map.of(
+            "accessToken", token,
+            "tokenType", "Bearer",
+            "userId", user.getUserId(),
+            "name", user.getName(),
+            "role", user.getRole().name()
+        ));
+    }
 }
