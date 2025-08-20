@@ -5,7 +5,7 @@ const RegisterPage  = lazy(() => import("../../pages/admin/Auth/RegisterPage"));
 const Dashboard     = lazy(() => import("../../pages/admin/Dashboard/Dashboard"));
 
 const FindIdPage = lazy(()=> import("../../pages/admin/Auth/FindIdPage"));
-const PasswordResetPage = lazy(()=> import("../../pages/admin/Auth/PasswordResetPage"))
+const PasswordResetPage = lazy(()=> import("../../pages/admin/Auth/PasswordResetPage"));
 
 // Support 하위
 const FAQList  = lazy(() => import("../../pages/admin/Support/FAQ/FAQList"));
@@ -15,8 +15,13 @@ const NoticeList  = lazy(() => import("../../pages/admin/Support/Notice/NoticeLi
 const NoticeForm  = lazy(() => import("../../pages/admin/Support/Notice/NoticeForm"));
 
 const InquiryList = lazy(() => import("../../pages/admin/Support/Inquiry/InquiryList"));
+const InquiryDetail = lazy(() => import("../../pages/admin/Support/Inquiry/InquiryDetail"));
 
-const PolicyPage = lazy(() => import("../../pages/admin/Support/Policy/PolicyPage"));
+const PolicyList = lazy(() => import("../../pages/admin/Support/Policy/PolicyList"));
+const PolicyForm = lazy(() => import("../../pages/admin/Support/Policy/PolicyForm"));
+
+const ReviewList = lazy(() => import("../../pages/admin/Support/Review/ReviewList"));
+const ReviewForm = lazy(() => import("../../pages/admin/Support/Review/ReviewForm"));
 //managemnet하위
 const UserManagementList = lazy(() => import("../../pages/admin/Management/Users/UserManagementList"));
 const UserForm = lazy(() => import("../../pages/admin/Management/Users/UserForm"));
@@ -40,62 +45,51 @@ export default function adminRouter() {
   return [
     { path: "",       element: <LoginPage /> },
     { path: "signup",      element: <RegisterPage /> },
-    { path: "dashboard",   element: <Dashboard /> },
+    
     {path: "find-id", element:<FindIdPage/>},
     {path: "password-reset", element:<PasswordResetPage/>},
-
-    // 고객지원 전체를 SupportLayout 아래에 중첩
-    {
-      path: "support",
-      children: [
-        { path: "faq",       element: <FAQList /> },
-        { path: "faq/new",   element: <FAQForm /> },
-        { path: "faq/:id",   element: <FAQForm /> },
-
-        { path: "notices",      element: <NoticeList /> },
-        { path: "notices/new",  element: <NoticeForm /> },
-        { path: "notices/:id",  element: <NoticeForm /> },
-
-         { path: "inquiry", element: <InquiryList /> },
-         { path: "policy",  element: <PolicyPage /> },
-      ]
-    },
-    {
-  path: "management",
-  children: [
-    { path: "users", element: <UserManagementList /> },
-    { path: "users/new", element: <UserForm /> },
-    { path: "users/:id", element: <UserForm /> },
-
-    {path: "vehicles", element: <VehicleManagementList/>},
-    {path:"vehicles/new",element:<VehicleForm/>},
-    {path:"vehicles/:id",element:<VehicleForm/>},
-
-    { path: "deliveries",     element: <DeliveriesList/>},
-    { path: "deliveries/new", element: <DeliveryForm/>},
-    { path: "deliveries/:id", element: <DeliveryForm/>},
-
-     { path: "settlement",      element: <SettlementList/>},
-    { path: "settlement/new",  element: <SettlementForm/>},
-    { path: "settlement/:id",  element: <SettlementForm/>},
-
-    {
-      path: "banners",
-      element: <BannerList />,
-    },
-    {
-      path: "banners/new",
-      element: <BannerForm />,
-    },
-    {
-      path: "banners/:id",
-      element: <BannerForm />,
-    },
     
-  ]
-},
+      { path: "dashboard",   element: <Dashboard /> },
+        { path: "support/faq",       element: <FAQList /> },
+        { path: "support/faq/new",   element: <FAQForm /> },
+        { path: "support/faq/:id",   element: <FAQForm /> },
 
+        { path: "support/notices",      element: <NoticeList /> },
+        { path: "support/notices/new",  element: <NoticeForm /> },
+        { path: "support/notices/:id",  element: <NoticeForm /> },
+
+         { path: "support/inquiry", element: <InquiryList /> },
+         { path: "support/inquiry/:id", element: <InquiryDetail /> },
+
+         { path: "support/policy",  element: <PolicyList /> },
+         { path: "support/policy/new",  element: <PolicyForm /> },
+         { path: "support/policy/:id",  element: <PolicyForm /> },
+         
+                             { path: "management/review",  element: <ReviewList /> },
+          { path: "management/review/:id",  element: <ReviewForm /> },
+      
+    
+    { path: "management/users", element: <UserManagementList /> },
+    { path: "management/users/new", element: <UserForm /> },
+    { path: "management/users/:id", element: <UserForm /> },
+
+    {path: "management/vehicles", element: <VehicleManagementList/>},
+    {path:"management/vehicles/new",element:<VehicleForm/>},
+    {path:"management/vehicles/:id",element:<VehicleForm/>},
+
+    { path: "management/deliveries",     element: <DeliveriesList/>},
+    { path: "management/deliveries/new", element: <DeliveryForm/>},
+    { path: "management/deliveries/:id", element: <DeliveryForm/>},
+
+     { path: "management/settlement",      element: <SettlementList/>},
+    { path: "management/settlement/new",  element: <SettlementForm/>},
+    { path: "management/settlement/:id",  element: <SettlementForm/>},
+
+    {path: "management/banners", element: <BannerList />},
+    { path: "management/banners/new", element: <BannerForm />},
+    {path: "management/banners/:id", element: <BannerForm />},
+    
 
 
   ];
-}
+};

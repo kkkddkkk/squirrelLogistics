@@ -16,8 +16,8 @@ const MENU = [
       { label: "차량 관리", path: "/admin/management/vehicles" },
       { label: "배송 관리", path: "/admin/management/deliveries" },
       { label: "정산 관리", path: "/admin/management/settlement" },
-      { label: "배너 관리",path: "/admin/management/banners",icon: <CampaignIcon />,},
-
+      { label: "배너 관리", path: "/admin/management/banners", icon: <CampaignIcon /> },
+      { label: "리뷰 관리", path: "/admin/management/review" },
     ],
   },
   {
@@ -25,12 +25,10 @@ const MENU = [
     children: [
       { label: "공지사항", path: "/admin/support/notices" },
       { label: "FAQ", path: "/admin/support/faq" },
-      { label: "1:1 문의", path: "/admin/support/inquiry" },
+      { label: "1:1 문의/신고 관리", path: "/admin/support/inquiry" },
       { label: "정책", path: "/admin/support/policy" },
-      
     ],
   },
-  
 ];
 
 const PALETTE = {
