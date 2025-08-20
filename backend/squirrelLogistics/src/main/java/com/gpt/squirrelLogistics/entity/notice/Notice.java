@@ -9,13 +9,12 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notice {
-
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notice_id")
     private Long id;
 
-    @Column(name = "admin_id")
-    private Long adminId; // (선택) 추후 관리자 FK 연동
+    @Column(name = "admin_id", nullable = false)
+    private Long adminId;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -24,9 +23,8 @@ public class Notice {
     private String content;
 
     @Column(nullable = false)
-    private boolean pinned;
+    private boolean pinned = false;
 
-    // DB는 created_at / updated_at 로 저장됨 (컬럼명 자동 매핑)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

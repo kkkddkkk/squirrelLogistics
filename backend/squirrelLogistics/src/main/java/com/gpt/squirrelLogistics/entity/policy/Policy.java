@@ -34,7 +34,7 @@ public class Policy {
 	private Long policyId; //정책 아이디.
   
 	@ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "admin_id", nullable = false) 
+    @JoinColumn(name = "admin_id", nullable = true) 
     private AdminUser adminUser; //관리자 아이디.
  
     @Enumerated(EnumType.STRING)

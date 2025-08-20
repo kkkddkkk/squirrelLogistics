@@ -26,109 +26,109 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   ExpandMore as ExpandMoreIcon,
-  Help as HelpIcon,
+  Policy as PolicyIcon,
   Category as CategoryIcon,
   Clear as ClearIcon
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { getFaqs, deleteFaq } from "./faqApi"; // API import 추가
+import { getPolicies, deletePolicy } from "./policyApi";
 
-const FAQList = () => {
-  const [faqs, setFaqs] = useState([]);
+const PolicyList = () => {
+  const [policies, setPolicies] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [selectedType, setSelectedType] = useState("ALL");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // 카테고리 옵션
-  const categories = [
+  // 정책 타입 옵션
+  const policyTypes = [
     { value: "ALL", label: "전체", color: "#113F67" },
-    { value: "DELIVERY", label: "배송", color: "#58A0C8" },
-    { value: "PAYMENT", label: "결제", color: "#34699A" },
-    { value: "SERVICE", label: "서비스", color: "#31A04F" },
-    { value: "ACCOUNT", label: "계정", color: "#E8A93F" },
-    { value: "EVENT", label: "이벤트", color: "#A20025" },
+    { value: "TERMS_OF_SERVICE", label: "서비스이용약관", color: "#58A0C8" },
+    { value: "PRIVACY_POLICY", label: "개인정보처리방침", color: "#34699A" },
+    { value: "DELIVERY_POLICY", label: "배송정책", color: "#31A04F" },
+    { value: "REFUND_POLICY", label: "환불/교환정책", color: "#E8A93F" },
+    { value: "SECURITY_POLICY", label: "보안정책", color: "#A20025" },
     { value: "ETC", label: "기타", color: "#909095" }
   ];
 
-  // 실제 API 호출로 FAQ 데이터 로드
-  const loadFaqs = async () => {
+  // 실제 API 호출로 정책 데이터 로드
+  const loadPolicies = async () => {
     try {
       setLoading(true);
       setError("");
       
-      console.log("FAQ 데이터 로드 시작...");
-      const data = await getFaqs();
-      console.log("로드된 FAQ 데이터:", data);
+      console.log("정책 데이터 로드 시작...");
+      const data = await getPolicies();
+      console.log("로드된 정책 데이터:", data);
       
       if (data && Array.isArray(data)) {
         // 백엔드 데이터 구조에 맞게 매핑
-        const mappedFaqs = data.map(faq => ({
-          id: faq.faqId || faq.id, // faqId 또는 id 사용
-          question: faq.question || "",
-          answer: faq.answer || "",
-          category: faq.category || "ETC",
-          createdAt: faq.regDate || faq.createdAt, // regDate 또는 createdAt 사용
-          updatedAt: faq.modiDate || faq.updatedAt  // modiDate 또는 updatedAt 사용
+        const mappedPolicies = data.map(policy => ({
+          id: policy.policyId || policy.id,
+          title: policy.title || "",
+          content: policy.content || "",
+          type: policy.type || "ETC",
+          createdAt: policy.regDate || policy.createdAt,
+          updatedAt: policy.modiDate || policy.updatedAt
         }));
         
-        console.log("매핑된 FAQ 데이터:", mappedFaqs);
-        setFaqs(mappedFaqs);
+        console.log("매핑된 정책 데이터:", mappedPolicies);
+        setPolicies(mappedPolicies);
       } else {
-        console.warn("FAQ 데이터가 배열이 아닙니다:", data);
-        setFaqs([]);
+        console.warn("정책 데이터가 배열이 아닙니다:", data);
+        setPolicies([]);
       }
     } catch (e) {
-      console.error("FAQ 데이터 로드 실패:", e);
-      setError(`FAQ 목록을 불러오지 못했습니다: ${e.message}`);
-      setFaqs([]);
+      console.error("정책 데이터 로드 실패:", e);
+      setError(`정책 목록을 불러오지 못했습니다: ${e.message}`);
+      setPolicies([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 컴포넌트 마운트 시 FAQ 데이터 로드
+  // 컴포넌트 마운트 시 정책 데이터 로드
   useEffect(() => {
-    loadFaqs();
+    loadPolicies();
   }, []);
 
-  // 새로고침 버튼 추가
+  // 새로고침 버튼
   const handleRefresh = () => {
-    loadFaqs();
+    loadPolicies();
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("정말 삭제하시겠습니까?\n삭제된 FAQ는 복구할 수 없습니다.")) {
+    if (window.confirm("정말 삭제하시겠습니까?\n삭제된 정책은 복구할 수 없습니다.")) {
       try {
-        await deleteFaq(id);
+        await deletePolicy(id);
         // 삭제 후 목록 새로고침
-        await loadFaqs();
+        await loadPolicies();
       } catch (e) {
         setError(`삭제 실패: ${e.message}`);
       }
     }
   };
 
-  const handleCategoryChange = (event) => {
-    setSelectedCategory(event.target.value);
+  const handleTypeChange = (event) => {
+    setSelectedType(event.target.value);
   };
 
   const handleClearSearch = () => {
     setSearch("");
-    setSelectedCategory("ALL");
+    setSelectedType("ALL");
   };
 
-  const filteredFaqs = faqs.filter((faq) => {
-    const matchesSearch = faq.question.toLowerCase().includes(search.toLowerCase()) ||
-                         faq.answer.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === "ALL" || faq.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  const filteredPolicies = policies.filter((policy) => {
+    const matchesSearch = policy.title.toLowerCase().includes(search.toLowerCase()) ||
+                         policy.content.toLowerCase().includes(search.toLowerCase());
+    const matchesType = selectedType === "ALL" || policy.type === selectedType;
+    return matchesSearch && matchesType;
   });
 
-  const getCategoryInfo = (categoryValue) => {
-    return categories.find(cat => cat.value === categoryValue) || categories[categories.length - 1];
+  const getTypeInfo = (typeValue) => {
+    return policyTypes.find(type => type.value === typeValue) || policyTypes[policyTypes.length - 1];
   };
 
   return (
@@ -143,14 +143,14 @@ const FAQList = () => {
         {/* 헤더 섹션 */}
         <Box sx={{ mb: 4 }}>
           <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-            <HelpIcon sx={{ color: '#113F67', fontSize: 40 }} />
+            <PolicyIcon sx={{ color: '#113F67', fontSize: 40 }} />
             <Typography variant="h3" sx={{ color: '#113F67', fontWeight: 700 }}>
-              FAQ 관리
+              정책 관리
             </Typography>
           </Stack>
           <Typography variant="body1" color="#909095" sx={{ fontSize: '1.1rem' }}>
-            자주 묻는 질문을 등록, 수정, 삭제할 수 있습니다.
-      </Typography>
+            서비스 정책을 등록, 수정, 삭제할 수 있습니다.
+          </Typography>
         </Box>
 
         {/* 에러 알림 */}
@@ -180,7 +180,7 @@ const FAQList = () => {
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h6" sx={{ color: '#2A2A2A', fontWeight: 600 }}>
               검색 및 필터
-          </Typography>
+            </Typography>
             <Stack direction="row" spacing={2}>
               <Button 
                 variant="outlined"
@@ -197,10 +197,10 @@ const FAQList = () => {
               >
                 새로고침
               </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("new")}
+              <Button 
+                variant="contained" 
+                startIcon={<AddIcon />}
+                onClick={() => navigate("new")}
                 sx={{ 
                   backgroundColor: '#113F67',
                   '&:hover': { backgroundColor: '#0d2d4f' },
@@ -210,22 +210,22 @@ const FAQList = () => {
                   fontWeight: 600,
                   boxShadow: '0 4px 12px rgba(17, 63, 103, 0.3)'
                 }}
-          >
-            FAQ 등록
-          </Button>
+              >
+                정책 등록
+              </Button>
             </Stack>
-        </Stack>
+          </Stack>
 
           <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <TextField
+            <TextField
               size="medium"
-              placeholder="질문 또는 답변으로 검색"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+              placeholder="제목 또는 내용으로 검색"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               sx={{ flex: 1 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
                     <SearchIcon sx={{ color: '#58A0C8' }} />
                   </InputAdornment>
                 ),
@@ -234,8 +234,8 @@ const FAQList = () => {
                     <IconButton size="small" onClick={handleClearSearch}>
                       <ClearIcon />
                     </IconButton>
-              </InputAdornment>
-            ),
+                  </InputAdornment>
+                ),
                 sx: {
                   backgroundColor: '#FFFFFF',
                   borderRadius: 2,
@@ -248,8 +248,8 @@ const FAQList = () => {
             
             <FormControl sx={{ minWidth: 150 }}>
               <Select
-                value={selectedCategory}
-                onChange={handleCategoryChange}
+                value={selectedType}
+                onChange={handleTypeChange}
                 sx={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: 2,
@@ -258,16 +258,16 @@ const FAQList = () => {
                   '&.Mui-focused fieldset': { borderColor: '#113F67' }
                 }}
               >
-                {categories.map((category) => (
-                  <MenuItem key={category.value} value={category.value}>
+                {policyTypes.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Box sx={{ 
                         width: 12, 
                         height: 12, 
                         borderRadius: '50%', 
-                        backgroundColor: category.color 
+                        backgroundColor: type.color 
                       }} />
-                      <span>{category.label}</span>
+                      <span>{type.label}</span>
                     </Stack>
                   </MenuItem>
                 ))}
@@ -277,13 +277,13 @@ const FAQList = () => {
 
           {/* 검색 결과 요약 */}
           <Typography variant="body2" color="#909095">
-            총 <strong>{faqs.length}</strong>개 중 <strong>{filteredFaqs.length}</strong>개 표시
+            총 <strong>{policies.length}</strong>개 중 <strong>{filteredPolicies.length}</strong>개 표시
             {search && ` (검색어: "${search}")`}
-            {selectedCategory !== "ALL" && ` (카테고리: ${getCategoryInfo(selectedCategory).label})`}
-                </Typography>
+            {selectedType !== "ALL" && ` (타입: ${getTypeInfo(selectedType).label})`}
+          </Typography>
         </Paper>
 
-        {/* FAQ 목록 */}
+        {/* 정책 목록 */}
         <Paper sx={{ 
           boxShadow: '0 4px 20px rgba(17, 63, 103, 0.1)',
           borderRadius: 3,
@@ -293,14 +293,14 @@ const FAQList = () => {
             <Box sx={{ p: 6, textAlign: 'center' }}>
               <CircularProgress size={32} sx={{ color: '#113F67' }} />
               <Typography variant="body1" sx={{ mt: 2, color: '#909095' }}>
-                FAQ를 불러오는 중...
-                </Typography>
-              </Box>
-          ) : filteredFaqs.length > 0 ? (
-            filteredFaqs.map((faq) => {
-              const categoryInfo = getCategoryInfo(faq.category);
+                정책을 불러오는 중...
+              </Typography>
+            </Box>
+          ) : filteredPolicies.length > 0 ? (
+            filteredPolicies.map((policy) => {
+              const typeInfo = getTypeInfo(policy.type);
               return (
-                <Accordion key={faq.id} sx={{ 
+                <Accordion key={policy.id} sx={{ 
                   '&:not(:last-child)': { borderBottom: '1px solid #E0E6ED' },
                   '&:before': { display: 'none' }
                 }}>
@@ -313,17 +313,17 @@ const FAQList = () => {
                   >
                     <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
                       <Chip 
-                        label={categoryInfo.label}
+                        label={typeInfo.label}
                         size="small"
                         sx={{ 
-                          backgroundColor: categoryInfo.color,
+                          backgroundColor: typeInfo.color,
                           color: '#FFFFFF',
                           fontWeight: 600
                         }}
                       />
                       <Typography variant="h6" sx={{ color: '#2A2A2A', fontWeight: 600 }}>
-                  Q. {faq.question}
-                </Typography>
+                        {policy.title}
+                      </Typography>
                     </Stack>
                     
                     <Stack direction="row" spacing={1} sx={{ mr: 2 }}>
@@ -332,7 +332,7 @@ const FAQList = () => {
                           component="div"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`${faq.id}`);
+                            navigate(`${policy.id}`);
                           }}
                           sx={{ 
                             color: '#58A0C8',
@@ -355,7 +355,7 @@ const FAQList = () => {
                           color="error"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(faq.id);
+                            handleDelete(policy.id);
                           }}
                           sx={{ 
                             backgroundColor: '#FFEBEE',
@@ -376,16 +376,16 @@ const FAQList = () => {
                   <AccordionDetails sx={{ backgroundColor: '#FFFFFF', p: 3 }}>
                     <Stack spacing={2}>
                       <Typography variant="body1" sx={{ color: '#2A2A2A', lineHeight: 1.6 }}>
-                  A. {faq.answer}
+                        {policy.content}
                       </Typography>
                       
                       <Stack direction="row" spacing={2} sx={{ pt: 2, borderTop: '1px solid #E0E6ED' }}>
                         <Typography variant="caption" color="#909095">
-                          등록일: {faq.createdAt ? dayjs(faq.createdAt).format("YYYY.MM.DD HH:mm") : "-"}
+                          등록일: {policy.createdAt ? dayjs(policy.createdAt).format("YYYY.MM.DD HH:mm") : "-"}
                         </Typography>
-                        {faq.updatedAt && faq.createdAt && !dayjs(faq.createdAt).isSame(dayjs(faq.updatedAt)) && (
+                        {policy.updatedAt && policy.createdAt && !dayjs(policy.createdAt).isSame(dayjs(policy.updatedAt)) && (
                           <Typography variant="caption" color="#E8A93F">
-                            수정일: {dayjs(faq.updatedAt).format("MM.DD HH:mm")}
+                            수정일: {dayjs(policy.updatedAt).format("MM.DD HH:mm")}
                           </Typography>
                         )}
                       </Stack>
@@ -396,19 +396,19 @@ const FAQList = () => {
             })
           ) : (
             <Box sx={{ p: 6, textAlign: 'center' }}>
-              <HelpIcon sx={{ fontSize: 48, color: '#E0E6ED', mb: 2 }} />
+              <PolicyIcon sx={{ fontSize: 48, color: '#E0E6ED', mb: 2 }} />
               <Typography variant="h6" color="#909095" sx={{ mb: 1 }}>
-                {search || selectedCategory !== "ALL" ? "검색 결과가 없습니다." : "등록된 FAQ가 없습니다."}
+                {search || selectedType !== "ALL" ? "검색 결과가 없습니다." : "등록된 정책이 없습니다."}
               </Typography>
               <Typography variant="body2" color="#909095">
-                {search || selectedCategory !== "ALL" ? "다른 검색어나 카테고리를 시도해보세요." : "새로운 FAQ를 등록해보세요."}
-                </Typography>
-              </Box>
-        )}
-      </Paper>
+                {search || selectedType !== "ALL" ? "다른 검색어나 타입을 시도해보세요." : "새로운 정책을 등록해보세요."}
+              </Typography>
+            </Box>
+          )}
+        </Paper>
       </Box>
     </Box>
   );
 };
 
-export default FAQList;
+export default PolicyList;

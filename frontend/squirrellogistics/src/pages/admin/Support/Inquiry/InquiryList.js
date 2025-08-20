@@ -14,40 +14,56 @@ import {
   TablePagination,
   InputAdornment,
   Tooltip,
+  Stack,
+  Button,
+  Alert,
+  CircularProgress,
+  Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
-// import { getInquiries } from "./inquiryApi";
+import { getInquiries } from "./inquiryApi";
 
 const InquiryList = () => {
   const [inquiries, setInquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
-  // 🔧 백엔드 연결 전 mock 데이터
+  // 실제 API 호출로 신고/문의 데이터 로드
   useEffect(() => {
-    setInquiries([
-      {
-        id: 1,
-        userName: "홍길동",
-        title: "배송 관련 문의",
-        status: "답변 완료",
-        createdAt: "2025-08-01",
-      },
-      {
-        id: 2,
-        userName: "김영희",
-        title: "정산 지연 문의",
-        status: "미처리",
-        createdAt: "2025-08-02",
-      },
-      // ... 더미 추가 가능
-    ]);
+    loadInquiries();
   }, []);
+
+  const loadInquiries = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      console.log("신고/문의 데이터 로드 시작...");
+      const data = await getInquiries();
+      console.log("로드된 신고/문의 데이터:", data);
+      
+      if (data && Array.isArray(data)) {
+        console.log("원본 데이터 구조:", data[0]);
+        setInquiries(data);
+      } else {
+        console.warn("신고/문의 데이터가 배열이 아닙니다:", data);
+        setInquiries([]);
+      }
+    } catch (e) {
+      console.error("신고/문의 데이터 로드 실패:", e);
+      setError("신고/문의 목록을 불러오지 못했습니다. 다시 시도해주세요.");
+      setInquiries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -63,29 +79,86 @@ const InquiryList = () => {
     setPage(0);
   };
 
+  // 검색 필터링 - rTitle 기준으로 검색
   const filtered = inquiries.filter((inq) =>
-    inq.title.toLowerCase().includes(search.toLowerCase())
+    inq.rTitle && inq.rTitle.toLowerCase().includes(search.toLowerCase())
   );
 
   const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  // 상태별 칩 렌더링
+  const renderStatusChip = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return <Chip label="신고 접수 대기" color="warning" size="small" />;
+      case 'IN_REVIEW':
+        return <Chip label="검토 중" color="info" size="small" />;
+      case 'ACTION_TAKEN':
+        return <Chip label="조치 완료" color="success" size="small" />;
+      case 'REJECTED':
+        return <Chip label="신고 반려" color="error" size="small" />;
+      case 'CLOSED':
+        return <Chip label="상황종료" color="default" size="small" />;
+      default:
+        return <Chip label="상태 없음" color="default" size="small" />;
+    }
+  };
+
   return (
     <Box p={4}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
-        1:1 문의 관리
+        신고/문의 현황
       </Typography>
+      
+      {/* 에러 알림 */}
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            backgroundColor: '#FFEBEE',
+            border: '1px solid #F44336',
+            borderRadius: 2,
+            '& .MuiAlert-icon': { color: '#D32F2F' }
+          }} 
+          onClose={() => setError("")}
+        >
+          {error}
+        </Alert>
+      )}
 
       <Paper elevation={3} sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" sx={{ color: '#2A2A2A', fontWeight: 600 }}>
+            검색 및 필터
+          </Typography>
+          <Button 
+            variant="outlined"
+            onClick={loadInquiries}
+            disabled={loading}
+            sx={{ 
+              borderColor: '#58A0C8',
+              color: '#58A0C8',
+              '&:hover': { 
+                borderColor: '#34699A',
+                backgroundColor: 'rgba(88, 160, 200, 0.04)'
+              }
+            }}
+          >
+            새로고침
+          </Button>
+        </Stack>
+        
         <TextField
           fullWidth
-          placeholder="문의 제목 검색"
+          placeholder="신고/문의 제목 검색"
           value={search}
           onChange={handleSearchChange}
           sx={{ mb: 2 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: '#58A0C8' }} />
               </InputAdornment>
             ),
           }}
@@ -105,17 +178,45 @@ const InquiryList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paged.map((inquiry) => (
-                <TableRow key={inquiry.id} hover>
-                  <TableCell>{inquiry.title}</TableCell>
-                  <TableCell>{inquiry.userName}</TableCell>
-                  <TableCell>{inquiry.createdAt}</TableCell>
-                  <TableCell>{inquiry.status}</TableCell>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} sx={{ color: '#113F67' }} />
+                    <Typography variant="body1" sx={{ mt: 2, color: '#909095' }}>
+                      신고/문의를 불러오는 중...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : paged.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    <Typography variant="h6" color="#909095" sx={{ mb: 1 }}>
+                      {search ? `"${search}" 검색 결과가 없습니다.` : "등록된 신고/문의가 없습니다."}
+                    </Typography>
+                    <Typography variant="body2" color="#909095">
+                      {search ? "다른 검색어를 시도해보세요." : "새로운 신고/문의가 등록될 때까지 기다려주세요."}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : paged.map((inquiry) => (
+                <TableRow key={inquiry.reportId} hover>
+                  <TableCell>
+                    {inquiry.rTitle || "제목 없음"}
+                  </TableCell>
+                  <TableCell>
+                    {inquiry.reporter || "사용자"}
+                  </TableCell>
+                  <TableCell>
+                    {inquiry.regDate || "날짜 없음"}
+                  </TableCell>
+                  <TableCell>
+                    {renderStatusChip(inquiry.rStatus)}
+                  </TableCell>
                   <TableCell align="right">
                     <Tooltip title="자세히 보기">
                       <IconButton
                         color="primary"
-                        onClick={() => navigate(`${inquiry.id}`)}
+                        onClick={() => navigate(`${inquiry.reportId}`)}
                       >
                         <VisibilityIcon />
                       </IconButton>
