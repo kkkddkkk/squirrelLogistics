@@ -15,6 +15,7 @@ const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
 const Company = lazy(() => import("../pages/company/CompanyLayout"));
 const Reciept = lazy(() => import("../pages/Payment/Reciept"));
 const TransactionStatement = lazy(() => import("../pages/Payment/TransactionStatement"));
+const OAuthSuccess = lazy(() => import("../api/user/OAuthSuccess"));
 
 const root = createBrowserRouter([
     {
@@ -76,7 +77,7 @@ const root = createBrowserRouter([
                 children: driverRouter()
             },
             {
-                path: "/driversearch",
+                path: "/search-drivers",
                 element: (
                     <Suspense fallback={Loading}>
                         <DriverSearchPage></DriverSearchPage>
@@ -91,7 +92,15 @@ const root = createBrowserRouter([
                     </Suspense>
                 ),
                 children: adminRouter()
-            }
+            },
+            {
+                path: "/oauth/success",
+                element: (
+                    <Suspense fallback={Loading}>
+                        <OAuthSuccess />
+                    </Suspense>
+                ),
+            },
         ],
     },
 ]);

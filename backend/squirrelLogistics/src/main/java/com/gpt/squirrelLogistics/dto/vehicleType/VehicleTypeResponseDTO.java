@@ -22,8 +22,4 @@ public class VehicleTypeResponseDTO {
     
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime regDate;  //등록일.
-	
-	public VehicleTypeResponseDTO(Long vehicleTypeId, String name) {
-        this.vehicleTypeId = vehicleTypeId; this.name = name;
-    }
 }

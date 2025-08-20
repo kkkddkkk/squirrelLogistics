@@ -1,9 +1,9 @@
 package com.gpt.squirrelLogistics.service.deliveryRequest;
 
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 
 
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
@@ -11,15 +11,15 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 
 public interface DeliveryRequestService {
 	
 	//운송 요청 생성(작성자: 고은설).
-	Long create(DeliveryRequestRequestDTO dto);
-	
+    Long create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO dto);	
 	//개별 운송 요청 자세히 읽기(작성자: 고은설).
 	DeliveryRequestResponseDTO readFull(Long requestId);
-	
+    DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId) throws NotFoundException;
 	//개별 운송 요청 간략하게 읽기(작성자 고은설).
 	DeliveryRequestSlimResponseDTO readSlim(Long requestId);
 

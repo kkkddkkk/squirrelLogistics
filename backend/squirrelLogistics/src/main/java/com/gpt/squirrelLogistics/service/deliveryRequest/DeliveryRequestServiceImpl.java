@@ -9,8 +9,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 
 import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
@@ -20,17 +23,25 @@ import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointRequestDTO
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.entity.cargoType.CargoType;
 import com.gpt.squirrelLogistics.entity.company.Company;
+import com.gpt.squirrelLogistics.entity.deliveryCargo.DeliveryCargo;
 import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
+import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.payment.Payment;
 import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoLocalClient;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoRouteClient;
 import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepository;
+import com.gpt.squirrelLogistics.repository.cargoType.CargoTypeRepository;
 import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
+import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
+import com.gpt.squirrelLogistics.repository.deliveryCargo.DeliveryCargoRepository;
 import com.gpt.squirrelLogistics.repository.vehicleType.VehicleTypeRepository;
 import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
+import com.gpt.squirrelLogistics.service.deliveryCargo.DelilveryCargoService;
 import com.gpt.squirrelLogistics.service.deliveryWaypoint.DeliveryWaypointService;
 
 import jakarta.persistence.EntityManager;
@@ -49,11 +60,20 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	private final CompanyRepository companyRepository;
 	private final VehicleTypeRepository vehicleTypeRepository;
 	private final PaymentRepository paymentRepository;
-
+	private final DeliveryAssignmentRepository assignmentRepository;
+	private final DelilveryCargoService cargoService;
 	private final DeliveryWaypointService waypointService;
 	private final KakaoLocalClient localClient;
 	private final KakaoRouteClient routeClient;
 
+	
+	/* ✅ 추가 주입(0821 정윤진) */
+	private final CargoTypeRepository cargoTypeRepository;
+	private final DeliveryCargoRepository deliveryCargoRepository;
+	
+	
+	
+	
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -154,6 +174,14 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 			vehicleTypeName = vt.getName();
 		}
 
+		Long paymentId = null;
+		if (request.getPayment() != null) {
+			Payment pm = request.getPayment();
+			if (pm.getPaymentId() != null) {
+				paymentId = pm.getPaymentId();
+			}
+		}
+
 		List<DeliveryWaypointSlimResponseDTO> waypoints = waypointService.readAll(request.getRequestId());
 
 		return DeliveryRequestResponseDTO.builder().requestId(request.getRequestId())
@@ -162,8 +190,8 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 				.distance(request.getDistance()).totalCargoWeight(request.getTotalCargoWeight())
 				.estimatedFee(request.getEstimatedFee()).wantToStart(request.getWantToStart())
 				.wantToEnd(request.getWantToEnd()).expectedPolyline(request.getExpectedPolyline())
-				.expectedRoute(request.getExpectedRoute()).companyName(companyName).vehicleTypeId(vehicleTypeId)
-				.vehicleTypeName(vehicleTypeName).waypoints(waypoints).build();
+				.expectedRoute(request.getExpectedRoute()).paymentId(paymentId).companyName(companyName)
+				.vehicleTypeId(vehicleTypeId).vehicleTypeName(vehicleTypeName).waypoints(waypoints).build();
 	}
 
 	// Entity -> Slim DTO
@@ -181,24 +209,79 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 
 		return DeliveryRequestSlimResponseDTO.builder().requestId(request.getRequestId())
 				.startAddress(request.getStartAddress()).endAddress(request.getEndAddress())
-				.vehicleTypeId(vehicleTypeId).vehicleTypeName(vehicleTypeName).estimatedFee(request.getEstimatedFee())
-				.distance(request.getDistance()).createAt(request.getCreateAt()).status(request.getStatus())
-				.wantToStart(request.getWantToStart()).wantToEnd(request.getWantToEnd()).build();
+				.distance(request.getDistance()).vehicleTypeId(vehicleTypeId).vehicleTypeName(vehicleTypeName)
+				.estimatedFee(request.getEstimatedFee()).distance(request.getDistance()).createAt(request.getCreateAt())
+				.status(request.getStatus()).wantToStart(request.getWantToStart()).wantToEnd(request.getWantToEnd())
+				.build();
 	}
 
 	/* ============== CRUD ============== */
-
 	@Override
-	public Long create(DeliveryRequestRequestDTO dto) {
-		DeliveryRequest entity = reqDtoToEntity(dto);
-		entity.setRequestId(null);
-		DeliveryRequest saved = repository.save(entity);
+	public Long create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO requestDTO) {
 
-		if (dto.getWaypoints() != null && !dto.getWaypoints().isEmpty()) {
-			waypointService.createBatch(saved.getRequestId(), dto.getWaypoints());
+		if (paymentDTO == null || requestDTO == null) {
+			return null;
 		}
 
-		return saved.getRequestId();
+		// 선결제 정보 생성.
+		Payment prePayment = Payment.builder().paid(paymentDTO.getPaid()).payAmount(paymentDTO.getPayAmount())
+				.payMethod(paymentDTO.getPayMethod()).payStatus(paymentDTO.getPayStatus())
+				.prepaidId(paymentDTO.getPrepaidId()).refundDate(paymentDTO.getRefundDate())
+				.settlement(paymentDTO.isSettlement()).settlementFee(paymentDTO.getSettlementFee()).build();
+		Long paymentId = paymentRepository.save(prePayment).getPaymentId();
+
+		requestDTO.setPaymentId(paymentId);
+		requestDTO.setStatus(com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED);
+
+		DeliveryRequest entity = reqDtoToEntity(requestDTO);
+		entity.setRequestId(null);
+		DeliveryRequest saved_request = repository.save(entity);
+
+		// ✅ 생성된 waypoint id들을 수집(08.21정윤진)
+		List<Long> waypointIds = new ArrayList<>();
+
+		if (requestDTO.getWaypoints() != null) {
+			for (DeliveryWaypointRequestDTO wpdto : requestDTO.getWaypoints()) {
+				Long wpId = waypointService.create(saved_request, wpdto);
+				if (wpdto.getCargo() != null) {
+					cargoService.create(wpId, wpdto.getCargo());
+				}
+			}
+		}
+
+		// 08.21 정윤진
+		// ✅ 경유지가 하나도 없으면, cargoTypes를 매핑할 수 있도록 도착지 기준으로 waypoint 1건 자동 생성
+		if (waypointIds.isEmpty()) {
+			DeliveryWaypointRequestDTO autoWp = new DeliveryWaypointRequestDTO();
+			autoWp.setAddress(requestDTO.getEndAddress());
+			autoWp.setDropOrder(1);
+			Long autoWpId = waypointService.create(saved_request, autoWp);
+			waypointIds.add(autoWpId);
+		}
+
+		/* ✅ cargoTypes → cargo_type 업서트 + delivery_cargo(waypoint 연동) 저장 */
+		if (requestDTO.getCargoTypes() != null && !requestDTO.getCargoTypes().isEmpty()) {
+			for (String tag : requestDTO.getCargoTypes()) {
+				if (tag == null || tag.isBlank())
+					continue;
+
+				// cargo_type upsert by handlingTags
+				CargoType ct = cargoTypeRepository.findByHandlingTags(tag.trim()).orElseGet(() -> cargoTypeRepository
+						.save(CargoType.builder().handlingTags(tag.trim()).extraFee(0L).build()));
+
+				// 모든 waypoint에 동일 cargoType 매핑 (요건에 맞게 필요시 조정)
+				for (Long wpId : waypointIds) {
+					DeliveryWaypoint wpRef = entityManager.getReference(DeliveryWaypoint.class, wpId);
+
+					DeliveryCargo dc = DeliveryCargo.builder().deliveryWaypoint(wpRef) // ✅ DeliveryCargo 필드명에 맞게 저장
+							.cargoType(ct).description(null).build();
+
+					deliveryCargoRepository.save(dc);
+				}
+			}
+		}
+
+		return saved_request.getRequestId();
 	}
 
 	@Override
@@ -215,6 +298,38 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		DeliveryRequest entity = repository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("요청 ID " + id + "를 찾을 수 없습니다."));
 		return entityToFullDto(entity);
+	}
+
+	@Transactional(readOnly = true)
+	public DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId) throws NotFoundException {
+		DeliveryRequest req = repository.findById(requestId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		switch (req.getStatus()) {
+		case REGISTERED:
+			// 공개 상태 => 누구나 상세 열람 가능.
+			break;
+
+		case PROPOSED:
+
+			if (driverId != null && assignmentRepository.existsByRequestAndDriverAndStatus(requestId, driverId,
+					com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.UNKNOWN))
+				break;
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+		case ASSIGNED:
+		case FAILED:
+		case RETRACTED:
+		case UNKNOWN:
+			// 열람 가능 상태가 아닌 게시글 차단.
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+		default:
+			// 기타 상태도 보수적으로 차단.
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+
+		return entityToFullDto(req);
 	}
 
 	@Override
@@ -240,7 +355,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	@Override
 	@Transactional(readOnly = true)
 	public PageResponseDTO<DeliveryRequestSlimResponseDTO> list(PageRequestDTO pageReq) {
-		Page<DeliveryRequest> page = repository.findAll(pageReq.toPageable());
+		Page<DeliveryRequest> page = repository.findActiveRegistered(pageReq.toPageable());
 		List<DeliveryRequestSlimResponseDTO> dtoList = page.getContent().stream().map(this::entityToSlimDto)
 				.collect(Collectors.toList());
 

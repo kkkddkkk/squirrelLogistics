@@ -22,22 +22,16 @@ public class VehicleTypeService {
     @Transactional
     public List<VehicleType> findAllWithFallback() {
         List<VehicleType> list = repository.findAll();
-        if (!list.isEmpty()) return list;
-        // DB는 그대로 두고, 기본값만 반환 (응답 전용)
-        return List.of(
-            new VehicleType(1, "1톤 트럭"),
-            new VehicleType(2, "2.5톤 트럭")
-        );
+        return list; // DB에 있는 실제 데이터만 반환
     }
 
     /** 시드용: 애플리케이션 기동 시 DB가 비면 기본값 저장 (영구) */
     @Transactional
     public void seedIfEmpty() {
+        // DB에 데이터가 있으면 그대로 사용, 없으면 기본값 저장
         if (repository.count() == 0) {
-            repository.saveAll(List.of(
-                new VehicleType(1, "1톤 트럭"),
-                new VehicleType(2, "2.5톤 트럭")
-            ));
+            // 기본 차량 데이터가 필요하다면 여기에 추가
+            // repository.saveAll(List.of(...));
         }
     }
 }

@@ -30,9 +30,17 @@ public class VehicleTypeController {
 		List<VehicleType> entities = service.findAllWithFallback();
 
 		// ✅ 엔티티 → DTO 매핑 (프록시 필드 직렬화 안 함)
-		return entities.stream().map(v -> new VehicleTypeResponseDTO(v.getVehicleTypeId(), // PK
-				v.getName() // 이름
-		// 필요하면 생성자 늘려서 maxWeight도 넣기
-		)).toList();
+		return entities.stream().map(v -> {
+			// 디버깅: maxWeight 값 확인
+			System.out.println("차량: " + v.getName() + ", maxWeight: " + v.getMaxWeight());
+			
+			return new VehicleTypeResponseDTO(
+				v.getVehicleTypeId(), // PK
+				null, // adminUserDTO (필요 없으면 null)
+				v.getName(), // 이름
+				v.getMaxWeight(), // 최대 적재량
+				null // regDate (필요 없으면 null)
+			);
+		}).toList();
 	}
 }
