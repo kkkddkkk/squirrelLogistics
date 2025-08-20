@@ -102,7 +102,7 @@ export const ImgBox = ({ func, children, sx }) => {//기본 ImgBox
     )
 }
 
-export const AddImgInput = ({fileRef, funcAdd, funcChange, preview}) => {//사진추가 인풋
+export const AddImgInput = ({ fileRef, funcAdd, funcChange, preview }) => {//사진추가 인풋
     return (
         <Box>
             <input
@@ -142,6 +142,11 @@ export const AddedImg = ({ preview, idx, func }) => {//추가된 사진
         </ImgBox >
     )
 }
+
+export const paymentFormat = ((payment) => {
+    if (payment == null) return "0"
+    return payment.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+});
 
 
 

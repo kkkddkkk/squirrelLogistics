@@ -1,12 +1,14 @@
 package com.gpt.squirrelLogistics.service.deliveryRequest;
 
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
-
+import com.gpt.squirrelLogistics.dto.actualCalc.EstimateCalcDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -35,4 +37,7 @@ public interface DeliveryRequestService {
 
     // 목록 - Spring 표준 Page<T>
     Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable);
+    
+    //운송 요청 payment 명세서(작성자: 김도경)
+    List<Object[]> getEstimateCalc(Long requestId);
 }

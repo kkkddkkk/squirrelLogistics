@@ -12,20 +12,23 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gpt.squirrelLogistics.dto.actualCalc.ActualCalcDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentProposalListDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
-
+import com.gpt.squirrelLogistics.entity.actualDelivery.ActualDelivery;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 import com.gpt.squirrelLogistics.enums.payment.PayStatusEnum;
+import com.gpt.squirrelLogistics.repository.actualDelivery.ActualDeliveryRepository;
 import com.gpt.squirrelLogistics.repository.car.CarRepository;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
 import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepository;
 import com.gpt.squirrelLogistics.repository.deliveryWaypoint.DeliveryWaypointRepository;
 import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
+import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
 import com.gpt.squirrelLogistics.repository.report.ReportRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -39,22 +42,55 @@ public class DeliveryAssignmentService {
 	private final DeliveryAssignmentRepository deliveryAssignmentRepository;
 	private final DeliveryWaypointRepository deliveryWaypointRepository;
 	private final ReportRepository reportRepository;
+	private final ActualDeliveryRepository actualDeliveryRepository;
+	private final PaymentRepository paymentRepository;
 	
     // 작성자 고은설.
     private final DeliveryRequestRepository requestRepository;
     private final DriverRepository driverRepository;
     private final CarRepository carRepository;
 	
+    //작성자: 김도경
+    //기능: 전 목록 완수일자 뽑기
 	public List<Date> getHistoryDate(){//completedAt 뽑기
 		return deliveryAssignmentRepository.findOnlyCompletedAt();
 	}
 	
 
+	//작성자: 김도경
+	//기능: 완수일자 별 출발지, 도착지
 	public List<Object[]> getTodayList(String completedAt){
 		return deliveryAssignmentRepository.findStartEndAddress(completedAt);
 	}
 	
-	//경유지를 json 형태로
+	
+	//작성자: 김도경
+	//기능: 실계산 페이지 랜더링
+	public ActualCalcDTO getActualCalc(Long assignedId){
+		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId.toString());
+		ActualDelivery actualDelivery = deliveryAssignmentRepository.findAllActualDeliveyById(assignedId.toString());
+		Long estimatedFee = requestRepository.findEstimatedFeeById(deliveryAssignmentRepository.findRequestIdById(assignedId));
+		Long paymentId = deliveryAssignmentRepository.findFirstPaymentIdById(assignedId);
+		
+		ActualCalcDTO actualCalcDTO = ActualCalcDTO.builder()
+				.paymentId(paymentId)
+				.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId))
+				.assignedId(Long.valueOf(assignedId))
+				.dropOrder1(waypointList.size()==1)
+				.dropOrder2(waypointList.size()==2)
+				.dropOrder3(waypointList.size()==3)
+				.mountainous(actualDelivery.isMountainous())
+				.caution(actualDelivery.isCaution())
+				.distance(actualDelivery.getDistance())
+				.weight(actualDelivery.getWeight())
+				.requestId(deliveryAssignmentRepository.findRequestIdById(assignedId))
+				.estimateFee(estimatedFee)
+				.build();
+		return actualCalcDTO;
+	}
+	
+	//작성자: 김도경
+	//완수일자 별 경유지, 리뷰, 신고, 운전자 정보를 json 형태로
 	public Map<String, Object> getTodayContent(String assignedId){
 		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId);
 		Object[] actualDeliveryList = deliveryAssignmentRepository.findActualDeliveryById(assignedId).get(0);
@@ -96,17 +132,10 @@ public class DeliveryAssignmentService {
 			}else {
 				map.put(keys[i], null);
 			}
-
 		}
-		
 	    return map;
 	}
-	
-	public Map<String, Object> getActualCalc(String assignedId){
-		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId);
-		Object[] actualDeliveryList = deliveryAssignmentRepository.findActualDeliveryById(assignedId).get(0);
-		return null;
-	}
+
 	
     // 작성자: 고은설.
     // 기능: 운송 요청 수락에 따흔 운송 할당 엔티티 생성.
@@ -325,6 +354,7 @@ public class DeliveryAssignmentService {
             return Map.of("FAILED", "INVALID_STATE");
         }
     }
+
 
     @Transactional
     public Long create(DeliveryRequest request, Driver driver, DeliveryAssignmentRequestDTO dto) {
