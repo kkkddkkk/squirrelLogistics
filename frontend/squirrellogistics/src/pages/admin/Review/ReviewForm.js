@@ -71,15 +71,15 @@ const ReviewForm = () => {
       const data = await getReviewById(id);
       console.log("로드된 리뷰 데이터:", data);
       
-      if (data) {
+      if (data && !data.error) {
         setReview(data);
         setEditData({
           rating: data.rating || 0,
-          reason: data.reason || "",
-          stateEnum: data.stateEnum || "PENDING",
+          reason: data.reason || data.content || "",
+          stateEnum: data.stateEnum || data.status || "PENDING",
         });
       } else {
-        setError("리뷰를 찾을 수 없습니다.");
+        setError(data?.error || "리뷰를 찾을 수 없습니다.");
       }
     } catch (e) {
       console.error("리뷰 데이터 로드 실패:", e);
@@ -394,7 +394,7 @@ const ReviewForm = () => {
                         }}
                       >
                         <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                          {review.reason || "내용 없음"}
+                          {review.reason || review.content || "내용 없음"}
                         </Typography>
                       </Paper>
                     )}

@@ -38,17 +38,34 @@ const handleError = (error) => {
   throw new Error("알 수 없는 오류가 발생했습니다.");
 };
 
-// 신고/문의 전체 목록 조회
+// 신고/문의 전체 목록 조회 (Company Report 데이터)
 export const getInquiries = async () => {
   try {
-    console.log("신고/문의 목록 조회 요청");
+    console.log("Company Report 데이터 조회 요청");
 
+    // Company Report 목록 조회
     const response = await axios.get(`${REPORT_API}/list`);
-    // ReportController는 List<Map<String, Object>>를 직접 반환
     const data = response.data;
-    console.log("신고/문의 목록 조회 응답:", data);
+    console.log("Company Report 목록 조회 응답:", data);
 
-    return data;
+    // Company Report 데이터를 Admin Inquiry 형태로 변환
+    const convertedData = data.map(report => ({
+      reportId: report.reportId || report.id,
+      rTitle: report.rTitle || report.title || "제목 없음",
+      rContent: report.rContent || report.content || "내용 없음",
+      regDate: report.regDate || report.createdAt || new Date().toISOString(),
+      rStatus: report.rStatus || report.status || "PENDING",
+      reporter: report.reporter || "COMPANY",
+      rCate: report.rCate || report.category || "",
+      assignedId: report.assignedId || report.deliveryId,
+      startAddress: report.startAddress || "주소 정보 없음",
+      endAddress: report.endAddress || "주소 정보 없음",
+      fileNames: report.fileNames || report.fileName || []
+    }));
+
+    console.log("변환된 Inquiry 데이터:", convertedData);
+    return convertedData;
+
   } catch (error) {
     console.error("백엔드 연결 실패, LocalStorage 폴백 사용:", error);
     
@@ -72,33 +89,37 @@ const getInquiriesFromLocalStorage = () => {
       return JSON.parse(stored);
     }
     
-    // LocalStorage에 데이터가 없으면 샘플 데이터 생성
+    // LocalStorage에 데이터가 없으면 Company Report 샘플 데이터 생성
     const sampleData = [
       {
         reportId: 1,
         rTitle: "배송 지연 문의",
-        rContent: "주문한 상품이 예상보다 늦게 도착합니다.",
+        rContent: "주문한 상품이 예상보다 늦게 도착합니다. 확인 부탁드립니다.",
         regDate: new Date().toISOString(),
-        rStatus: "IN_REVIEW",
-        reporter: "CUSTOMER",
-        startAddress: "서울시 강남구",
-        endAddress: "서울시 서초구",
+        rStatus: "PENDING",
+        reporter: "COMPANY",
+        rCate: "배송",
+        assignedId: 15,
+        startAddress: "서울시 강남구 테헤란로 123",
+        endAddress: "서울시 서초구 서초대로 456",
         fileNames: []
       },
       {
         reportId: 2,
         rTitle: "상품 파손 신고",
-        rContent: "택배 상자에 구멍이 뚫려있고 상품이 손상되었습니다.",
+        rContent: "택배 상자에 구멍이 뚫려있고 상품이 손상되었습니다. 조치 부탁드립니다.",
         regDate: new Date(Date.now() - 86400000).toISOString(),
-        rStatus: "COMPLETED",
-        reporter: "CUSTOMER",
-        startAddress: "부산시 해운대구",
-        endAddress: "부산시 동래구",
-        fileNames: []
+        rStatus: "IN_REVIEW",
+        reporter: "COMPANY",
+        rCate: "상품",
+        assignedId: 16,
+        startAddress: "부산시 해운대구 해운대로 789",
+        endAddress: "부산시 동래구 동래로 101",
+        fileNames: ["damage1.jpg", "damage2.jpg"]
       }
     ];
     
-    // 샘플 데이터를 LocalStorage에 저장
+    // LocalStorage에 저장
     localStorage.setItem('inquiries', JSON.stringify(sampleData));
     return sampleData;
     
@@ -108,19 +129,39 @@ const getInquiriesFromLocalStorage = () => {
   }
 };
 
-// 신고/문의 상세 조회
+// 신고/문의 상세 조회 (Company Report 상세 데이터)
 export const getInquiryById = async (id) => {
   try {
-    console.log("신고/문의 상세 조회 요청 (ID):", id);
+    console.log("Company Report 상세 조회 요청 (ID):", id);
 
-    const response = await axios.get(`${REPORT_API}?reportId=${id}`);
-    // ReportController는 ReportSlimResponseDTO를 직접 반환
-    const data = response.data;
-    console.log("신고/문의 상세 조회 응답:", data);
+    // Company Report 상세 조회
+    const response = await axios.get(`${REPORT_API}`, {
+      params: { reportId: id }
+    });
+    
+    const reportData = response.data;
+    console.log("Company Report 상세 조회 응답:", reportData);
 
-    return data;
+    // Company Report 데이터를 Admin Inquiry 형태로 변환
+    const convertedData = {
+      reportId: reportData.reportId || reportData.id,
+      rTitle: reportData.rTitle || reportData.title || "제목 없음",
+      rContent: reportData.rContent || reportData.content || "내용 없음",
+      regDate: reportData.regDate || reportData.createdAt || new Date().toISOString(),
+      rStatus: reportData.rStatus || reportData.status || "PENDING",
+      reporter: reportData.reporter || "COMPANY",
+      rCate: reportData.rCate || reportData.category || "",
+      assignedId: reportData.assignedId || reportData.deliveryId,
+      startAddress: reportData.startAddress || "주소 정보 없음",
+      endAddress: reportData.endAddress || "주소 정보 없음",
+      fileNames: reportData.fileNames || reportData.fileName || []
+    };
+
+    console.log("변환된 Inquiry 상세 데이터:", convertedData);
+    return convertedData;
+
   } catch (error) {
-    console.error("백엔드 상세조회 실패, LocalStorage 폴백 사용:", error);
+    console.error("백엔드 연결 실패, LocalStorage 폴백 사용:", error);
     
     // 백엔드 연결 실패 시 LocalStorage에서 데이터 로드
     try {
@@ -128,7 +169,7 @@ export const getInquiryById = async (id) => {
       console.log("LocalStorage에서 로드된 상세 데이터:", fallbackData);
       return fallbackData;
     } catch (fallbackError) {
-      console.error("LocalStorage 상세조회 폴백도 실패:", fallbackError);
+      console.error("LocalStorage 폴백도 실패:", fallbackError);
       throw error; // 원래 에러를 다시 던짐
     }
   }

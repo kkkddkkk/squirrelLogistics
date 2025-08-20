@@ -60,6 +60,18 @@ const ReviewList = () => {
       
       if (data && Array.isArray(data)) {
         console.log("원본 데이터 구조:", data[0]);
+        
+        // 상태값 디버깅
+        data.forEach((review, index) => {
+          console.log(`리뷰 ${index + 1}:`, {
+            reviewId: review.reviewId,
+            stateEnum: review.stateEnum,
+            status: review.status,
+            reason: review.reason,
+            content: review.content
+          });
+        });
+        
         setReviews(data);
       } else {
         console.warn("리뷰 데이터가 배열이 아닙니다:", data);
@@ -96,7 +108,10 @@ const ReviewList = () => {
   // 검색 및 탭별 필터링
   const getFilteredReviews = () => {
     let filtered = reviews.filter((review) =>
-      review.reason && review.reason.toLowerCase().includes(search.toLowerCase())
+      (review.reason && review.reason.toLowerCase().includes(search.toLowerCase())) ||
+      (review.content && review.content.toLowerCase().includes(search.toLowerCase())) ||
+      (review.reporter && review.reporter.toLowerCase().includes(search.toLowerCase())) ||
+      (review.driverName && review.driverName.toLowerCase().includes(search.toLowerCase()))
     );
 
     // 탭별 필터링
@@ -104,11 +119,20 @@ const ReviewList = () => {
       case 0: // 전체
         return filtered;
       case 1: // 승인됨
-        return filtered.filter(review => review.stateEnum === 'APPROVED');
+        return filtered.filter(review => 
+          (review.stateEnum && review.stateEnum.toUpperCase() === 'APPROVED') ||
+          (review.status && review.status.toUpperCase() === 'APPROVED')
+        );
       case 2: // 대기중
-        return filtered.filter(review => review.stateEnum === 'PENDING');
+        return filtered.filter(review => 
+          (review.stateEnum && review.stateEnum.toUpperCase() === 'PENDING') ||
+          (review.status && review.status.toUpperCase() === 'PENDING')
+        );
       case 3: // 신고됨
-        return filtered.filter(review => review.stateEnum === 'REPORTED');
+        return filtered.filter(review => 
+          (review.stateEnum && review.stateEnum.toUpperCase() === 'REPORTED') ||
+          (review.status && review.status.toUpperCase() === 'REPORTED')
+        );
       default:
         return filtered;
     }
@@ -119,19 +143,25 @@ const ReviewList = () => {
 
   // 상태별 칩 렌더링
   const renderStatusChip = (status) => {
-    switch (status) {
+    if (!status) return <Chip label="상태 없음" color="default" size="small" />;
+    
+    switch (status.toUpperCase()) {
       case 'PENDING':
         return <Chip label="대기중" color="warning" size="small" />;
       case 'APPROVED':
         return <Chip label="승인됨" color="success" size="small" />;
+      case 'EDITED':
+        return <Chip label="수정됨" color="info" size="small" />;
       case 'REJECTED':
         return <Chip label="반려됨" color="error" size="small" />;
       case 'HIDDEN':
         return <Chip label="숨김" color="default" size="small" />;
       case 'REPORTED':
         return <Chip label="신고됨" color="error" size="small" />;
+      case 'ERROR':
+        return <Chip label="오류" color="error" size="small" />;
       default:
-        return <Chip label="상태 없음" color="default" size="small" />;
+        return <Chip label={`${status}`} color="default" size="small" />;
     }
   };
 
@@ -288,24 +318,24 @@ const ReviewList = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ maxWidth: 300 }}>
-                      {review.reason || "내용 없음"}
+                      {review.reason || review.content || "내용 없음"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {review.reporter || "작성자 정보 없음"}
+                      {review.reporter || review.writer || "작성자 정보 없음"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {review.deliveryAssignment?.driverName || "기사 정보 없음"}
+                      {review.deliveryAssignment?.driverName || review.driverName || "기사 정보 없음"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     {review.regDate ? new Date(review.regDate).toLocaleDateString('ko-KR') : "날짜 없음"}
                   </TableCell>
                   <TableCell>
-                    {renderStatusChip(review.stateEnum)}
+                    {renderStatusChip(review.stateEnum || review.status)}
                   </TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
@@ -318,7 +348,8 @@ const ReviewList = () => {
                         </IconButton>
                       </Tooltip>
                       
-                      {review.stateEnum === 'PENDING' && (
+                      {(review.stateEnum && review.stateEnum.toUpperCase() === 'PENDING') || 
+                       (review.status && review.status.toUpperCase() === 'PENDING') ? (
                         <Tooltip title="승인">
                           <IconButton
                             color="success"
@@ -327,9 +358,10 @@ const ReviewList = () => {
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
-                      )}
+                      ) : null}
                       
-                      {review.stateEnum === 'APPROVED' && (
+                      {(review.stateEnum && review.stateEnum.toUpperCase() === 'APPROVED') || 
+                       (review.status && review.status.toUpperCase() === 'APPROVED') ? (
                         <Tooltip title="숨김 처리">
                           <IconButton
                             color="warning"
@@ -338,7 +370,7 @@ const ReviewList = () => {
                             <BlockIcon />
                           </IconButton>
                         </Tooltip>
-                      )}
+                      ) : null}
                       
                       <Tooltip title="삭제">
                         <IconButton

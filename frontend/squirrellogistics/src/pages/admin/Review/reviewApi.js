@@ -4,6 +4,53 @@ import axios from 'axios';
 const API_ROOT = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const REVIEW_API = `${API_ROOT}/api/public/review`;
 
+// 백엔드 연결 상태 확인
+export const checkBackendConnection = async () => {
+  try {
+    console.log("백엔드 연결 테스트 시작...");
+    console.log("테스트 URL:", `${API_ROOT}/actuator/health`);
+    
+    const response = await axios.get(`${API_ROOT}/actuator/health`, {
+      timeout: 5000 // 5초 타임아웃
+    });
+    
+    console.log("백엔드 연결 성공:", response.status, response.statusText);
+    return true;
+  } catch (error) {
+    console.error("백엔드 연결 실패:", {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method,
+      timeout: error.code === 'ECONNABORTED' ? '타임아웃' : '연결 실패'
+    });
+    return false;
+  }
+};
+
+// 간단한 연결 테스트 (health 엔드포인트가 없는 경우)
+export const testBackendConnection = async () => {
+  try {
+    console.log("간단한 백엔드 연결 테스트 시작...");
+    console.log("테스트 URL:", `${API_ROOT}/api/public/review/list`);
+    
+    const response = await axios.get(`${API_ROOT}/api/public/review/list`, {
+      timeout: 5000
+    });
+    
+    console.log("백엔드 연결 성공:", response.status);
+    return true;
+  } catch (error) {
+    console.error("백엔드 연결 테스트 실패:", {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText
+    });
+    return false;
+  }
+};
+
 // API 응답 데이터 추출 헬퍼
 const extractData = (response) => {
   if (response.data && response.data.success !== undefined) {
@@ -64,11 +111,41 @@ export const getHiddenReviews = async () => {
 export const getReviewById = async (id) => {
   try {
     console.log("리뷰 상세 조회 요청 (ID):", id);
-    const response = await axios.get(`${REVIEW_API}?reviewId=${id}`);
+    console.log("API URL:", `${REVIEW_API}/detail?reviewId=${id}`);
+    
+    // 백엔드 연결 상태 확인 (간단한 테스트 사용)
+    const isBackendConnected = await testBackendConnection();
+    if (!isBackendConnected) {
+      console.warn("백엔드 서버에 연결할 수 없습니다. LocalStorage 폴백 사용");
+      return getReviewByIdFromLocalStorage(id);
+    }
+    
+    console.log("백엔드 연결 확인됨, API 호출 시작...");
+    
+    // 백엔드 API 호출
+    const response = await axios.get(`${REVIEW_API}/detail?reviewId=${id}`, {
+      timeout: 10000 // 10초 타임아웃
+    });
+    
     console.log("리뷰 상세 조회 응답:", response.data);
-    return response.data; // Map<String, Object> 직접 반환
+    
+    // 에러 응답 체크
+    if (response.data.error) {
+      throw new Error(response.data.error);
+    }
+    
+    return response.data;
+    
   } catch (error) {
-    console.error("백엔드 연결 실패, LocalStorage 폴백 사용:", error);
+    console.error("백엔드 연결 실패, 상세 에러:", {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method,
+      timeout: error.code === 'ECONNABORTED' ? '타임아웃' : '연결 실패',
+      fullError: error
+    });
     
     // 백엔드 연결 실패 시 LocalStorage에서 데이터 로드
     try {
@@ -100,7 +177,9 @@ const getReviewByIdFromLocalStorage = (id) => {
       reviewId: id,
       rating: 1,
       content: "너무 졸려요......죽고싶어요",
+      reason: "너무 졸려요......죽고싶어요",
       status: "HIDDEN",
+      stateEnum: "HIDDEN",
       regDate: "2025-08-18T01:01:00.000Z",
       assignedId: 2,
       deliveryStatus: "COMPLETED"
@@ -112,7 +191,9 @@ const getReviewByIdFromLocalStorage = (id) => {
       reviewId: id,
       rating: 1,
       content: "데이터 로드 중 오류가 발생했습니다.",
+      reason: "데이터 로드 중 오류가 발생했습니다.",
       status: "ERROR",
+      stateEnum: "ERROR",
       regDate: new Date().toISOString(),
       assignedId: 0,
       deliveryStatus: "UNKNOWN"

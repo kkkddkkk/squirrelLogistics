@@ -26,5 +26,4 @@ public class BannerResponseDTO {
     
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime modiDate; //수정일.
-
 }

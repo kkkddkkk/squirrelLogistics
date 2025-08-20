@@ -41,6 +41,13 @@ public class ReviewController {
 		return reviewService.readReview(assignedId);
 	}
     
+    // 리뷰 상세 조회 (새로운 메서드)
+    @GetMapping("/detail")
+	@TimedEndpoint("readReviewDetail")
+	public Map<String, Object> readReviewDetail(@RequestParam("reviewId") String reviewId){
+		return reviewService.readReviewDetail(reviewId);
+	}
+    
     @GetMapping("/list")
     @TimedEndpoint("reviewList")
 	public List<Map<String, Object>> reviewList(){
@@ -67,5 +74,27 @@ public class ReviewController {
     public Map<String, Long> delReview(@PathVariable(name="reviewId") Long reviewId){
     	reviewService.delete(reviewId);
     	return Map.of("reviewId", reviewId);
+    }
+    
+    // 리뷰 승인
+    @PutMapping("/{reviewId}/approve")
+    public Map<String, String> approveReview(@PathVariable(name="reviewId") Long reviewId) {
+    	reviewService.approveReview(reviewId);
+    	return Map.of("message", "리뷰가 승인되었습니다.");
+    }
+    
+    // 리뷰 숨김 처리
+    @PutMapping("/{reviewId}/hide")
+    public Map<String, String> hideReview(@PathVariable(name="reviewId") Long reviewId) {
+    	reviewService.hideReview(reviewId);
+    	return Map.of("message", "리뷰가 숨김 처리되었습니다.");
+    }
+    
+    // 리뷰 반려
+    @PutMapping("/{reviewId}/reject")
+    public Map<String, String> rejectReview(@PathVariable(name="reviewId") Long reviewId, @RequestBody Map<String, String> request) {
+    	String reason = request.getOrDefault("reason", "사유 없음");
+    	reviewService.rejectReview(reviewId, reason);
+    	return Map.of("message", "리뷰가 반려되었습니다.");
     }
 }

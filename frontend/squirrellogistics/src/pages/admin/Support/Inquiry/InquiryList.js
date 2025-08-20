@@ -107,7 +107,7 @@ const InquiryList = () => {
   return (
     <Box p={4}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
-        신고/문의 현황
+        Company Report 관리
       </Typography>
       
       {/* 에러 알림 */}
@@ -130,7 +130,7 @@ const InquiryList = () => {
       <Paper elevation={3} sx={{ p: 3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" sx={{ color: '#2A2A2A', fontWeight: 600 }}>
-            검색 및 필터
+            Company Report 검색 및 필터
           </Typography>
           <Button 
             variant="outlined"

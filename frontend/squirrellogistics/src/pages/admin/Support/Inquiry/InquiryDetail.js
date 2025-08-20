@@ -282,7 +282,7 @@ const InquiryDetail = () => {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" fontWeight={700}>
-          신고/문의 상세보기
+          Company Report 상세보기
         </Typography>
       </Stack>
 

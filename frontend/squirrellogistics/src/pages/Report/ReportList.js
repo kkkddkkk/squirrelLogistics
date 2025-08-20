@@ -9,6 +9,10 @@ const ReportList = () => {
     const [reportList, setReportList] = useState([]);
     const [dates, setDates] = useState([]);
 
+    // 디버깅: title prop 확인
+    const pageTitle = "내 신고목록";
+    console.log("ReportList 렌더링, title:", pageTitle);
+
     useEffect(() => {
         axios.get(`http://localhost:8080/api/public/report/list`)
             .then(res => {
@@ -19,7 +23,7 @@ const ReportList = () => {
     }, [])
 
     return (
-        <Layout title={"내 신고목록"}>
+        <Layout title={pageTitle}>
             <Grid container width={"100%"}>
                 <Grid size={3} />
                 <Grid size={6}>
