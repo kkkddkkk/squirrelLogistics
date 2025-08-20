@@ -33,8 +33,11 @@ const driverRouter = () => {
 
   const Profile = lazy(() => import("../../pages/Driver/DriverProfile"));
   const EditProfile = lazy(() => import("../../pages/Driver/EditProfile"));
-  const RegisterVehicle = lazy(() =>
-    import("../../pages/Driver/RegisterVehicles")
+  const VerificationPage = lazy(() =>
+    import("../../pages/Driver/VerificationPage")
+  );
+  const ManageVehicles = lazy(() =>
+    import("../../pages/Driver/ManageVehicles")
   );
   const DeliveredList = lazy(() => import("../../pages/Driver/DeliveredList"));
   const DeliveredDetail = lazy(() =>
@@ -115,10 +118,18 @@ const driverRouter = () => {
       ),
     },
     {
-      path: "registervehicle",
+      path: "verification",
       element: (
         <Suspense fallback={Loading}>
-          <RegisterVehicle />
+          <VerificationPage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "managevehicles",
+      element: (
+        <Suspense fallback={Loading}>
+          <ManageVehicles />
         </Suspense>
       ),
     },

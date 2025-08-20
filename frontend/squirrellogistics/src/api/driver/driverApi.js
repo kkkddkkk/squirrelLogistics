@@ -40,10 +40,10 @@ driverApi.interceptors.response.use(
   }
 );
 
-// 기사 프로필 조회
-export const getDriverProfile = async (driverId) => {
+// 기사 프로필 조회 (accessToken 사용)
+export const getDriverProfile = async () => {
   try {
-    const response = await driverApi.get(`/profile?driverId=${driverId}`);
+    const response = await driverApi.get(`/profile`);
     return response.data;
   } catch (error) {
     console.error("기사 프로필 조회 실패:", error);
@@ -52,12 +52,9 @@ export const getDriverProfile = async (driverId) => {
 };
 
 // 기사 프로필 수정
-export const updateDriverProfile = async (driverId, profileData) => {
+export const updateDriverProfile = async (profileData) => {
   try {
-    const response = await driverApi.put(
-      `/profile?driverId=${driverId}`,
-      profileData
-    );
+    const response = await driverApi.put(`/profile`, profileData);
     return response.data;
   } catch (error) {
     console.error("기사 프로필 수정 실패:", error);
@@ -66,10 +63,10 @@ export const updateDriverProfile = async (driverId, profileData) => {
 };
 
 // 비밀번호 확인
-export const verifyPassword = async (driverId, password) => {
+export const verifyPassword = async (password) => {
   try {
     const response = await driverApi.post(
-      `/auth/verify-password?driverId=${driverId}&password=${password}`
+      `/auth/verify-password?password=${password}`
     );
     return response.data;
   } catch (error) {
@@ -79,14 +76,10 @@ export const verifyPassword = async (driverId, password) => {
 };
 
 // 비밀번호 변경
-export const changePassword = async (
-  driverId,
-  currentPassword,
-  newPassword
-) => {
+export const changePassword = async (currentPassword, newPassword) => {
   try {
     const response = await driverApi.put(
-      `/auth/password?driverId=${driverId}&currentPassword=${currentPassword}&newPassword=${newPassword}`
+      `/auth/password?currentPassword=${currentPassword}&newPassword=${newPassword}`
     );
     return response.data;
   } catch (error) {
@@ -96,11 +89,9 @@ export const changePassword = async (
 };
 
 // 회원 탈퇴
-export const deleteAccount = async (driverId) => {
+export const deleteAccount = async () => {
   try {
-    const response = await driverApi.delete(
-      `/auth/account?driverId=${driverId}`
-    );
+    const response = await driverApi.delete(`/auth/account`);
     return response.data;
   } catch (error) {
     console.error("회원 탈퇴 실패:", error);
@@ -108,21 +99,61 @@ export const deleteAccount = async (driverId) => {
   }
 };
 
+// 기사 차량 목록 조회
+export const getDriverCars = async () => {
+  try {
+    const response = await driverApi.get(`/cars`);
+    return response.data;
+  } catch (error) {
+    console.error("기사 차량 목록 조회 실패:", error);
+    throw error;
+  }
+};
+
+// 차량 추가
+export const addCar = async (carData) => {
+  try {
+    const response = await driverApi.post(`/cars`, carData);
+    return response.data;
+  } catch (error) {
+    console.error("차량 추가 실패:", error);
+    throw error;
+  }
+};
+
+// 차량 수정
+export const updateCar = async (carId, carData) => {
+  try {
+    const response = await driverApi.put(`/cars/${carId}`, carData);
+    return response.data;
+  } catch (error) {
+    console.error("차량 수정 실패:", error);
+    throw error;
+  }
+};
+
+// 차량 삭제
+export const deleteCar = async (carId) => {
+  try {
+    const response = await driverApi.delete(`/cars/${carId}`);
+    return response.data;
+  } catch (error) {
+    console.error("차량 삭제 실패:", error);
+    throw error;
+  }
+};
+
 // 프로필 이미지 업로드
-export const uploadProfileImage = async (driverId, imageFile) => {
+export const uploadProfileImage = async (imageFile) => {
   try {
     const formData = new FormData();
     formData.append("image", imageFile);
 
-    const response = await driverApi.post(
-      `/profile/image?driverId=${driverId}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await driverApi.post(`/profile/image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("프로필 이미지 업로드 실패:", error);

@@ -35,10 +35,11 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional(readOnly = true)
-    public DriverResponseDTO getDriverProfile(Long driverId) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
+    public DriverResponseDTO getDriverProfile(Long userId) {
+        log.info("DriverProfile 조회 시작 - userId: {}", userId);
         
+        // findDriverByUserId 메서드 사용
+        Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
         // UserDTO 생성
@@ -70,10 +71,8 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional
-    public DriverResponseDTO updateDriverProfile(Long driverId, RegisterDriverRequest request) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
-        
+    public DriverResponseDTO updateDriverProfile(Long userId, RegisterDriverRequest request) {
+        Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
         // User 정보 업데이트 (아이디는 변경 불가)
@@ -94,15 +93,13 @@ public class DriverServiceImpl implements DriverService {
         userRepository.save(user);
         driverRepository.save(driver);
         
-        return getDriverProfile(driverId);
+        return getDriverProfile(userId);
     }
 
     @Override
     @Transactional
-    public void changePassword(Long driverId, String currentPassword, String newPassword) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
-        
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
         // 현재 비밀번호 확인
@@ -117,10 +114,8 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional
-    public void deleteAccount(Long driverId) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
-        
+    public void deleteAccount(Long userId) {
+        Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
         // Driver 먼저 삭제 (외래키 제약조건)
@@ -132,19 +127,16 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean verifyPassword(Long driverId, String password) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
-        
+    public boolean verifyPassword(Long userId, String password) {
+        Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         return passwordEncoder.matches(password, user.getPassword());
     }
 
     @Override
     @Transactional
-    public String uploadProfileImage(Long driverId, MultipartFile image) {
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new IllegalArgumentException("기사를 찾을 수 없습니다."));
+    public String uploadProfileImage(Long userId, MultipartFile image) {
+        Driver driver = findDriverByUserId(userId);
         
         try {
             // 파일 저장 경로 설정 (절대 경로 사용)
@@ -175,6 +167,31 @@ public class DriverServiceImpl implements DriverService {
             log.error("프로필 이미지 업로드 실패", e);
             throw new RuntimeException("이미지 업로드에 실패했습니다.", e);
         }
+    }
+
+    // 공통 메서드: userId로 Driver 찾기
+    @Transactional(readOnly = true)
+    private Driver findDriverByUserId(Long userId) {
+        log.info("findDriverByUserId 호출 - userId: {}", userId);
+        
+        // 먼저 User가 존재하는지 확인
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            log.error("userId {}에 해당하는 User가 존재하지 않습니다.", userId);
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다. userId: " + userId);
+        }
+        
+        log.info("User 찾음: User ID {}, Name: {}", user.getUserId(), user.getName());
+        
+        // User의 Driver 정보 직접 접근 (양방향 관계 활용)
+        Driver driver = user.getDriver();
+        if (driver == null) {
+            log.error("User {}에 연결된 Driver가 없습니다.", userId);
+            throw new IllegalArgumentException("기사를 찾을 수 없습니다. userId: " + userId);
+        }
+        
+        log.info("Driver 찾음: Driver ID {}, User ID {}", driver.getDriverId(), userId);
+        return driver;
     }
 
     // 테스트용 더미 데이터 생성 메서드
@@ -213,4 +230,5 @@ public class DriverServiceImpl implements DriverService {
 
         driverRepository.save(driver);
     }
-} 
+
+}

@@ -73,22 +73,18 @@ const EditProfile = () => {
         const userLoginId =
           localStorage.getItem("userLoginId") ||
           sessionStorage.getItem("userLoginId");
-        const driverId =
-          localStorage.getItem("driverId") ||
-          sessionStorage.getItem("driverId") ||
-          "1";
+        const accessToken = localStorage.getItem("accessToken");
 
-        if (!userLoginId) {
+        if (!accessToken) {
           setError("로그인이 필요합니다.");
           setLoading(false);
           return;
         }
 
-        console.log("사용자 로그인 ID:", userLoginId);
-        console.log("기사 ID:", driverId);
+        console.log("accessToken 확인됨");
 
         // API를 통해 사용자 프로필 정보 가져오기
-        const profileData = await getDriverProfile(driverId);
+        const profileData = await getDriverProfile();
 
         console.log("가져온 프로필 데이터:", profileData);
 
@@ -112,6 +108,15 @@ const EditProfile = () => {
         // 프로필 이미지 설정
         if (profileData.profileImageUrl) {
           setProfileImageUrl(profileData.profileImageUrl);
+        } else {
+          // 저장된 프로필 이미지 로드
+          const savedImageUrl = localStorage.getItem("profileImageUrl");
+          if (savedImageUrl) {
+            setProfileImageUrl(savedImageUrl);
+          } else {
+            // 프로필 이미지가 없으면 빈 문자열로 설정 (기본 Person 아이콘 표시)
+            setProfileImageUrl("");
+          }
         }
 
         // 활동 지역 설정
@@ -551,8 +556,7 @@ const EditProfile = () => {
         localStorage.setItem("profileImageUrl", imageUrl);
 
         // 실제 API 호출하여 이미지 업로드
-        const driverId = localStorage.getItem("driverId") || "1";
-        const uploadedImageUrl = await uploadProfileImage(driverId, file);
+        const uploadedImageUrl = await uploadProfileImage(file);
 
         // 업로드된 이미지 URL로 업데이트
         setProfileImageUrl(uploadedImageUrl);
@@ -590,13 +594,20 @@ const EditProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.password || form.password.trim() === "") {
-      alert("비밀번호를 입력해주세요.");
-      return;
-    }
-    if (!form.confirmPassword || form.confirmPassword.trim() === "") {
-      alert("비밀번호를 입력해주세요.");
-      return;
+    // SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 비밀번호 검증 건너뛰기
+    const isSnsUserWithoutPassword =
+      (loginType === "GOOGLE" || loginType === "KAKAO") && !hasSetPassword;
+
+    if (!isSnsUserWithoutPassword) {
+      // 일반 로그인 사용자 또는 SNS 로그인에서 비밀번호를 설정한 사용자는 비밀번호 검증 필요
+      if (!form.password || form.password.trim() === "") {
+        alert("비밀번호를 입력해주세요.");
+        return;
+      }
+      if (!form.confirmPassword || form.confirmPassword.trim() === "") {
+        alert("비밀번호를 입력해주세요.");
+        return;
+      }
     }
 
     if (emailError) {
@@ -613,8 +624,6 @@ const EditProfile = () => {
     }
 
     try {
-      const driverId = localStorage.getItem("driverId") || "1";
-
       // API 요청 데이터 구성
       const profileData = {
         name: form.name,
@@ -627,7 +636,7 @@ const EditProfile = () => {
       };
 
       // 프로필 정보 업데이트
-      await updateDriverProfile(driverId, profileData);
+      await updateDriverProfile(profileData);
 
       // SNS 로그인 사용자가 비밀번호를 설정한 경우 저장
       if (
@@ -778,48 +787,73 @@ const EditProfile = () => {
                 },
               }}
             />
-            <Box display="flex" gap={2}>
-              <Box flex={1}>
-                <TextField
-                  label="비밀번호"
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  error={!!passwordError}
-                  fullWidth
-                />
-                {passwordError && (
-                  <Typography
-                    variant="body2"
-                    color="error"
-                    sx={{ mt: 0.5, fontSize: "0.75rem" }}
-                  >
-                    {passwordError}
-                  </Typography>
-                )}
+            {/* SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 비밀번호 필드 숨김 */}
+            {!(
+              (loginType === "GOOGLE" || loginType === "KAKAO") &&
+              !hasSetPassword
+            ) && (
+              <Box display="flex" gap={2}>
+                <Box flex={1}>
+                  <TextField
+                    label="비밀번호"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    error={!!passwordError}
+                    fullWidth
+                  />
+                  {passwordError && (
+                    <Typography
+                      variant="body2"
+                      color="error"
+                      sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                    >
+                      {passwordError}
+                    </Typography>
+                  )}
+                </Box>
+                <Box flex={1}>
+                  <TextField
+                    label="비밀번호 확인"
+                    name="confirmPassword"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    error={!!passwordConfirmError}
+                    fullWidth
+                  />
+                  {passwordConfirmError && (
+                    <Typography
+                      variant="body2"
+                      color="error"
+                      sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                    >
+                      {passwordConfirmError}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-              <Box flex={1}>
-                <TextField
-                  label="비밀번호 확인"
-                  name="confirmPassword"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  error={!!passwordConfirmError}
-                  fullWidth
-                />
-                {passwordConfirmError && (
-                  <Typography
-                    variant="body2"
-                    color="error"
-                    sx={{ mt: 0.5, fontSize: "0.75rem" }}
-                  >
-                    {passwordConfirmError}
+            )}
+
+            {/* SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 안내 메시지 */}
+            {(loginType === "GOOGLE" || loginType === "KAKAO") &&
+              !hasSetPassword && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: "#f5f5f5",
+                    borderRadius: 1,
+                    border: "1px solid #e0e0e0",
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    SNS 로그인 사용자입니다. 비밀번호 설정 없이 정보를 수정할 수
+                    있습니다.
                   </Typography>
-                )}
-              </Box>
-            </Box>
+                </Box>
+              )}
 
             <TextField
               label="이름"

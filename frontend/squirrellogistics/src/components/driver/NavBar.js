@@ -14,7 +14,7 @@ export default function NavBar() {
     { path: `/driver/detail/${requestId}`, label: "요청상세" },
     { path: `/driver/ongoing/${driverId}`, label: "진행중운송" },
     { path: `/driver/deliveredlist`, label: "운송목록" },
-    { path: "/driver/registervehicle", label: "차량등록" },
+    { path: "/driver/managevehicles", label: "차량관리" },
     // { path: "/driver/calendar", label: "캘린더" },
     { path: "/driver/profile", label: "나의정보" },
     // { path: "/driver/support", label: "고객지원" },
