@@ -8,17 +8,17 @@ const usePaymentMove=()=>{
     const moveToHistory = ()=>{//임시
         navigate({pathname: `/company/history`});
     }
-    const moveToPayment=()=>{
-        navigate({pathname: `/company/payment`});
+    const moveToSecondPayment=(state)=>{
+        navigate({pathname: `/company/payment`, search: `?prepaidId=${state}`});
     }
-    const moveToSuccess = (state)=>{
-        navigate({pathname: `/company/paymentSuccess`, search: `?success=${state}`});
+    const moveToSuccess = ({state, paymentId})=>{
+        navigate({pathname: `/company/paymentSuccess`, search: `?paymentId=${paymentId}&success=${state}`});
     }
     const moveBack = ()=>{
         navigate(-1);
     }
 
-    return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToPayment}
+    return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToSecondPayment}
 }
 export default usePaymentMove;
 

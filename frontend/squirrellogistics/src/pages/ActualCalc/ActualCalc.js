@@ -5,23 +5,90 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import { Buttons } from "../../components/history/HistoryList";
 import HelpIcon from '@mui/icons-material/Help';
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { useState } from "react";
-import { Layout, Title } from "../../components/common/CommonForCompany";
+import { useEffect, useState } from "react";
+import { Layout, paymentFormat, Title } from "../../components/common/CommonForCompany";
+import { actualCalc, getActualCalc, getEstimateCalc, trySecondPayment } from "../../api/company/actualCalcApi";
+import { useSearchParams } from "react-router-dom";
 
 const ActualCalc = () => {
-    const { moveToPayment } = usePaymentMove();
-
+    const { moveToSecondPayment } = usePaymentMove();
+    const [params] = useSearchParams();
+    const assignedId = params.get("assignedId");
     const showTransactionStatement = () => {
         window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
     }
 
     const [modal, setModal] = useState(false);
+    const [actualCalc, setActualCalc] = useState(null);
+    const [baseRate, setBaseRate] = useState(0)
+    const [additionalRate, setAdditionalRate] = useState(0);
+    const [estimateCalc, setEstimateCalc] = useState(null);
+    const [baseRateEstimate, setBaseRateEstimate] = useState(null);
+    const [additionalRateEstimate, setAdditionalRateEstimate] = useState(null);
+    const [requestId, setRequestId] = useState(null);
+    const [paymentId, setPaymentId] = useState(0);
+
+    useEffect(() => {
+        if (assignedId != 0) {
+            getActualCalc({ assignedId })
+                .then(data => {
+                    setActualCalc(data);
+                })
+                .catch(err => {
+                    console.error("데이터 가져오기 실패", err);
+                });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!actualCalc) return;
+        let addThisRate = 0;
+        if (actualCalc.dropOrder1) addThisRate += 50000;
+        if (actualCalc.dropOrder2) addThisRate += 50000;
+        if (actualCalc.dropOrder3) addThisRate += 50000;
+        if (actualCalc.caution) addThisRate += 50000;
+        if (actualCalc.mountainous) addThisRate += 50000;
+        setAdditionalRate(addThisRate)
+        setBaseRate(100000 + (3000 * (actualCalc.distance / 1000)) + (Math.ceil(actualCalc.weight / 1000)) * 30000);
+        setRequestId(actualCalc.requestId);
+        setPaymentId(actualCalc.paymentId);
+    }, [actualCalc])
+
+    useEffect(() => {
+        if (assignedId != 0) {
+            if (!modal) return;
+            getEstimateCalc({ requestId })
+                .then(data => {
+                    setEstimateCalc(data);
+                })
+                .catch(err => {
+                    console.error("데이터 가져오기 실패", err);
+                });
+        }
+    }, [modal])
+
+    useEffect(() => {
+        if (!estimateCalc) return; // 값 없으면 계산 안 함
+
+        setAdditionalRateEstimate((estimateCalc.dropOrderNum ?? 0) * 50000);
+        setBaseRateEstimate(
+            100000
+            + (3000 * ((estimateCalc.distance ?? 0) / 1000))
+            + (Math.ceil((estimateCalc.weight ?? 0) / 1000)) * 30000
+        );
+    }, [estimateCalc]);
+
+    const handlePayment = () => {
+        if (assignedId != 0)
+            moveToSecondPayment(paymentId);
+    }
+
 
     return (
         <Layout title={"실 계산"}>
             <Box
                 sx={{
-                    width: "90%",
+                    width: "70%",
                     display: "flex",
                     justifyContent: "space-between",
                     alignContent: "center"
@@ -30,16 +97,17 @@ const ActualCalc = () => {
                 <Box sx={{ width: "40%" }}>
                     <ActualMap></ActualMap>
                 </Box>
-                <Box sx={{ width: "45%", aspectRatio: "1/1", overflow: "auto"}}>
+                <Box sx={{ width: "45%", aspectRatio: "1/1", overflow: "auto" }}>
                     <PayBox
-                        mileage={'45'}
-                        weight={'8,000'}
-                        baseRate={400000}
-                        stopOver1={30000}
-                        stopOver2={20000}
-                        stopOver3={10000}
-                        caution={true}
-                        mountainous={false}
+                        mileage={actualCalc ? actualCalc.distance / 1000 : 0}
+                        weight={actualCalc ? actualCalc.weight : 0}
+                        baseRate={actualCalc ? baseRate : 0}
+                        stopOver1={actualCalc ? actualCalc.dropOrder1 : false}
+                        stopOver2={actualCalc ? actualCalc.dropOrder2 : false}
+                        stopOver3={actualCalc ? actualCalc.dropOrder3 : false}
+                        caution={actualCalc ? actualCalc.caution : false}
+                        mountainous={actualCalc ? actualCalc.mountainous : false}
+                        additionalRate={actualCalc ? additionalRate : 0}
                     />
                     <Box
                         sx={{
@@ -73,21 +141,23 @@ const ActualCalc = () => {
                                 }}>
                                     <Title>예상금액</Title>
                                     <Box sx={{ width: "90%" }}>
-                                        <PayBox
-                                            mileage={'45'}
-                                            weight={'7,500'}
-                                            baseRate={350000}
-                                            stopOver1={30000}
-                                            stopOver2={20000}
-                                            stopOver3={10000}
-                                            caution={true}
-                                            mountainous={false}
-                                        />
+                                        {estimateCalc && (
+                                            <PayBox
+                                                mileage={estimateCalc.distance / 1000}
+                                                weight={estimateCalc.weight}
+                                                baseRate={baseRateEstimate}
+                                                stopOver1={!!estimateCalc.dropOrderNum}
+                                                stopOver2={estimateCalc.dropOrderNum === 2}
+                                                stopOver3={estimateCalc.dropOrderNum === 3}
+                                                caution={estimateCalc.handlingId === 11 || estimateCalc.handlingId === 13}
+                                                mountainous={estimateCalc.handlingId === 12 || estimateCalc.handlingId === 13}
+                                                additionalRate={estimateCalc.dropOrderNum * 50000}
+                                            />
+                                        )}
                                     </Box>
                                 </Box>
                             </Modal>
-                            460000원
-
+                            {paymentFormat(actualCalc ? actualCalc.estimateFee : 0)}원
                         </Typography>
 
                     </Box>
@@ -107,14 +177,13 @@ const ActualCalc = () => {
                                 marginRight: '2%'
                             }}
                         >
-                            총 50000원
+                            총 {paymentFormat(actualCalc ? (baseRate + additionalRate) - actualCalc.estimateFee : 0)}원
                         </Typography>
-
                     </Box>
                     <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5% 0" }}>
                         <Buttons>신고</Buttons>
                         <Buttons func={showTransactionStatement}>명세서</Buttons>
-                        <Buttons func={moveToPayment}>정 산</Buttons>
+                        <Buttons func={handlePayment}>정 산</Buttons>
                     </Box>
                 </Box>
 

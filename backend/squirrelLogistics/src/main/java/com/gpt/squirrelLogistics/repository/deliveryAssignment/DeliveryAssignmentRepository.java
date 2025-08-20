@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
+import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.entity.actualDelivery.ActualDelivery;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gpt.squirrelLogistics.dto.actualDelivery.ActualDeliveryDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentProposalListDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
@@ -62,6 +66,11 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	@Query("SELECT ad.mountainous, ad.caution, ad.actualFee FROM DeliveryAssignment d "
 			+ "JOIN d.actualDelivery ad WHERE d.assignedId = :assignedId")
 	List<Object[]> findActualDeliveryById(@Param("assignedId") String assignedId);
+	
+	//ID로 실제운송기록(ActualDelivery 전체)
+	@Query("SELECT ad FROM DeliveryAssignment d "
+			+ "JOIN d.actualDelivery ad WHERE d.assignedId = :assignedId")
+	ActualDelivery findAllActualDeliveyById(@Param("assignedId") String assignedId);
 
 	//ID로 user(기사이름), vehicleType(차량이름)
 	@Query("SELECT us.name, vt.name FROM DeliveryAssignment d " + 
@@ -71,6 +80,35 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			"JOIN dri.user us " + 
 			"WHERE d.assignedId = :assignedId")
 	List<Object[]> findDriverById(@Param("assignedId") String assignedId);
+	
+	//ID로 requestId 찾기
+	@Query("SELECT dr.requestId FROM DeliveryAssignment d JOIN d.deliveryRequest dr WHERE d.assignedId = :assignedId")
+	Long findRequestIdById(@Param("assignedId") Long assignedId);
+	
+	//ID로 1차 paymentId 찾기
+	@Query("SELECT p.paymentId "+
+			"FROM DeliveryAssignment d "+
+			"JOIN d.deliveryRequest dr "+
+			"JOIN dr.payment p "+
+			"WHERE d.assignedId = :assignedId")
+	Long findFirstPaymentIdById(@Param("assignedId") Long assignedId);
+	
+    //prepaidId로 실제운송 찾기
+    @Query("SELECT ad FROM DeliveryAssignment da "+
+    		"JOIN da.payment p "+
+    		"JOIN da.actualDelivery ad "+
+    		"WHERE p.prepaidId =:prepaidId")
+    ActualDeliveryDTO findActualDeliveryByPrepaidId(@Param("prepaidId")Long prepaidId);
+    
+    //paymentId로 deliveryAssignment 찾기
+    @Query("SELECT da FROM DeliveryAssignment da " +
+    	       "JOIN da.payment p " +
+    	       "WHERE p.paymentId = :paymentId")
+    	DeliveryAssignment findDeliveryAssignmentById(@Param("paymentId") Long paymentId);
+    
+	
+	
+	
     // 작성자: 고은설.
     // 기능: 드라이버 아이디로 모든 기사의 운송 할당 내역을 조회, 이미 예약이 잡힌 일자에 새로운 요청을 수락하는 것을 방지하기 위함.
     @Query("""

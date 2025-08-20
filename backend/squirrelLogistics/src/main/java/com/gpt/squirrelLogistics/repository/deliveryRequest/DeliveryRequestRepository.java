@@ -71,4 +71,7 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
             """)
     Page<DeliveryRequest> findActiveRegistered(Pageable pageable);
     
+    @Query("SELECT r.estimatedFee FROM DeliveryRequest r WHERE r.requestId = :requestId")
+    Long findEstimatedFeeById(@Param("requestId") Long requestId);
+    
 }

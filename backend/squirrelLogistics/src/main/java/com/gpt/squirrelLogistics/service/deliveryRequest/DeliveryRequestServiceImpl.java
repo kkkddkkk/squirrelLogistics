@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.dto.actualCalc.EstimateCalcDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -32,8 +34,10 @@ import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoLocalClient;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoRouteClient;
 import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepository;
+import com.gpt.squirrelLogistics.repository.cargoType.CargoTypeRepository;
 import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
+import com.gpt.squirrelLogistics.repository.deliveryCargo.DeliveryCargoRepository;
 import com.gpt.squirrelLogistics.repository.vehicleType.VehicleTypeRepository;
 import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
 import com.gpt.squirrelLogistics.service.deliveryCargo.DelilveryCargoService;
@@ -60,6 +64,8 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	private final DeliveryWaypointService waypointService;
 	private final KakaoLocalClient localClient;
 	private final KakaoRouteClient routeClient;
+	
+	private final DeliveryCargoRepository deliveryCargoRepository;
 
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -321,5 +327,12 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	@Transactional(readOnly = true)
 	public Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable) {
 		return repository.findAll(pageable).map(this::entityToSlimDto);
+	}
+
+	//김도경
+	//repository 는 deliveryRequest꺼
+	@Override
+	public List<Object[]> getEstimateCalc(Long requestId) {
+		return deliveryCargoRepository.findEstimatedCalcByRequestId(requestId);
 	}
 }
