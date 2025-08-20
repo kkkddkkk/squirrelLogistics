@@ -55,4 +55,42 @@ public class Report {
 	private LocalDateTime regDate; //신고일.
 	private LocalDateTime modiDate; //수정일.
 
+	// 수동으로 setter 메서드 추가
+	public void setRStatus(ReportStatusEnum rStatus) {
+		this.rStatus = rStatus;
+	}
+	
+	public void setModiDate(LocalDateTime modiDate) {
+		this.modiDate = modiDate;
+	}
+	
+	// 기타 필요한 setter 메서드들
+	public void setRTitle(String rTitle) {
+		this.rTitle = rTitle;
+	}
+	
+	public void setRContent(String rContent) {
+		this.rContent = rContent;
+	}
+	
+	public void setPlace(String place) {
+		this.place = place;
+	}
+	
+	public void setRegDate(LocalDateTime regDate) {
+		this.regDate = regDate;
+	}
+	
+	public void setReporter(ReportReporterEnum reporter) {
+		this.reporter = reporter;
+	}
+	
+	public void setRCate(ReportCategoryEnum rCate) {
+		this.rCate = rCate;
+	}
+
+	
+	public void setDeliveryAssignment(DeliveryAssignment deliveryAssignment) {
+		this.deliveryAssignment = deliveryAssignment;
+	}
 }
