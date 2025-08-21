@@ -37,6 +37,11 @@ public interface DriverService {
     String uploadProfileImage(Long userId, MultipartFile image);
     
     /**
+     * 프로필 이미지 삭제
+     */
+    void deleteProfileImage(Long userId);
+    
+    /**
      * 테스트용 더미 데이터 생성
      */
     void createDummyDriver();

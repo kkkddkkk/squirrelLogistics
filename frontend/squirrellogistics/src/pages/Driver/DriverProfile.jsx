@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -59,6 +59,7 @@ const DriverProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 페이지 로드 시 데이터 가져오기
   useEffect(() => {
@@ -100,12 +101,13 @@ const DriverProfile = () => {
         const driverData = await getDriverProfile();
 
         console.log("가져온 기사 프로필 데이터:", driverData);
+        console.log("userDTO 데이터:", driverData.userDTO);
 
         // API 응답 데이터를 컴포넌트 상태에 맞게 변환
         setDriver({
           name: driverData.userDTO?.name || "",
           birth: driverData.userDTO?.birthday || "",
-          phone: driverData.userDTO?.Pnumber || "",
+          phone: driverData.userDTO?.pnumber || "",
           email: driverData.userDTO?.email || "",
           bankAccount: driverData.userDTO?.account || "",
           businessId: driverData.userDTO?.businessN || "",
@@ -113,6 +115,12 @@ const DriverProfile = () => {
           unavailableEnd: "", // API에 없는 필드
           deliveryArea: driverData.mainLoca || "",
           rating: 0, // API에 없는 필드
+        });
+
+        console.log("설정된 driver 상태:", {
+          name: driverData.userDTO?.name || "",
+          phone: driverData.userDTO?.pnumber || "",
+          email: driverData.userDTO?.email || "",
         });
 
         // 프로필 이미지 설정
@@ -144,40 +152,7 @@ const DriverProfile = () => {
         }
 
         // 실제 차량 데이터 가져오기
-        try {
-          const carsData = await getDriverCars();
-          console.log("가져온 차량 데이터:", carsData);
-
-          const formattedVehicles = carsData.map((car, index) => ({
-            id: car.carId,
-            registrationDate: car.regDate
-              ? new Date(car.regDate).toLocaleDateString("ko-KR")
-              : "등록일 없음",
-            vehicleNumber: car.carNum || "차량번호 없음",
-            vehicleType: car.vehicleType?.name || "차종 정보 없음",
-            loadCapacity: car.vehicleType?.maxWeight
-              ? `${car.vehicleType.maxWeight}kg`
-              : "적재량 정보 없음",
-            vehicleStatus: car.carStatus || "상태 정보 없음",
-            insuranceStatus: car.insurance ? "유" : "무",
-            currentDistance: car.Mileage
-              ? `${car.Mileage.toLocaleString()} km`
-              : "주행거리 정보 없음",
-            lastInspection: car.inspection
-              ? new Date(car.inspection).toLocaleDateString("ko-KR")
-              : "점검일 정보 없음",
-            nextInspection: car.inspection
-              ? new Date(car.inspection).toLocaleDateString("ko-KR")
-              : "점검일 정보 없음",
-            icon: "🚛", // 기본 아이콘
-          }));
-
-          setVehicles(formattedVehicles);
-        } catch (carError) {
-          console.error("차량 정보 조회 실패:", carError);
-          // 차량 정보 조회 실패 시 빈 배열로 설정
-          setVehicles([]);
-        }
+        await fetchVehicles();
       } catch (error) {
         console.error("기사 프로필 조회 실패:", error);
         setError("기사 정보를 불러오는데 실패했습니다.");
@@ -201,58 +176,91 @@ const DriverProfile = () => {
     };
 
     fetchDriverProfile();
-  }, [navigate]);
+  }, []);
 
-  // 페이지 포커스 시 차량 정보 새로고침 (차량 정보 변경 후 돌아왔을 때 최신 정보 반영)
+  // 차량 정보만 가져오는 함수
+  const fetchVehicles = async () => {
+    try {
+      const carsData = await getDriverCars();
+      console.log("가져온 차량 데이터:", carsData);
+
+      const formattedVehicles = carsData.map((car, index) => ({
+        id: car.carId,
+        registrationDate: car.regDate
+          ? new Date(car.regDate).toLocaleDateString("ko-KR")
+          : "등록일 없음",
+        vehicleNumber: car.carNum || "차량번호 없음",
+        vehicleType: car.vehicleType?.name || "차종 정보 없음",
+        loadCapacity: car.vehicleType?.maxWeight
+          ? `${car.vehicleType.maxWeight}kg`
+          : "적재량 정보 없음",
+        vehicleStatus: car.carStatus || "상태 정보 없음",
+        insuranceStatus: car.insurance ? "유" : "무",
+        currentDistance: car.Mileage
+          ? `${car.Mileage.toLocaleString()} km`
+          : "",
+        lastInspection: car.inspection
+          ? new Date(car.inspection).toLocaleDateString("ko-KR")
+          : "점검일 정보 없음",
+        nextInspection: car.inspection
+          ? new Date(car.inspection).toLocaleDateString("ko-KR")
+          : "점검일 정보 없음",
+        icon: "🚛", // 기본 아이콘
+      }));
+
+      setVehicles(formattedVehicles);
+    } catch (carError) {
+      console.error("차량 정보 조회 실패:", carError);
+      // 차량 정보 조회 실패 시 빈 배열로 설정
+      setVehicles([]);
+    }
+  };
+
+  // 페이지 포커스 시 차량 정보 새로고침
   useEffect(() => {
     const handleFocus = () => {
-      // 차량 정보만 새로고침 (전체 프로필은 그대로 유지)
-      const refreshVehicleData = async () => {
-        try {
-          const carsData = await getDriverCars();
-          console.log("차량 정보 새로고침:", carsData);
-
-          const formattedVehicles = carsData.map((car, index) => ({
-            id: car.carId,
-            registrationDate: car.regDate
-              ? new Date(car.regDate).toLocaleDateString("ko-KR")
-              : "등록일 없음",
-            vehicleNumber: car.carNum || "차량번호 없음",
-            vehicleType: car.vehicleType?.name || "차종 정보 없음",
-            loadCapacity: car.vehicleType?.maxWeight
-              ? `${car.vehicleType.maxWeight}kg`
-              : "적재량 정보 없음",
-            vehicleStatus: car.carStatus || "상태 정보 없음",
-            insuranceStatus: car.insurance ? "유" : "무",
-            currentDistance: car.Mileage
-              ? `${car.Mileage.toLocaleString()} km`
-              : "주행거리 정보 없음",
-            lastInspection: car.inspection
-              ? new Date(car.inspection).toLocaleDateString("ko-KR")
-              : "점검일 정보 없음",
-            nextInspection: car.inspection
-              ? new Date(car.inspection).toLocaleDateString("ko-KR")
-              : "점검일 정보 없음",
-            icon: "🚛", // 기본 아이콘
-          }));
-
-          setVehicles(formattedVehicles);
-        } catch (carError) {
-          console.error("차량 정보 새로고침 실패:", carError);
-        }
-      };
-
-      refreshVehicleData();
+      console.log("페이지 포커스됨 - 차량 정보 새로고침");
+      fetchVehicles();
     };
 
-    // 페이지 포커스 이벤트 리스너 추가
-    window.addEventListener("focus", handleFocus);
+    // 페이지가 보일 때마다 차량 정보 새로고침
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("페이지가 보임 - 차량 정보 새로고침");
+        fetchVehicles();
+      }
+    };
 
-    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  // 주기적으로 차량 정보 새로고침 (5분마다)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("주기적 차량 정보 새로고침");
+      fetchVehicles();
+    }, 5 * 60 * 1000); // 5분
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 차량 관리 페이지에서 돌아올 때 차량 정보 새로고침
+  useEffect(() => {
+    // 차량 관리 페이지에서 돌아왔는지 확인
+    if (
+      location.pathname === "/driver/profile" &&
+      location.state?.fromVehicleManagement
+    ) {
+      console.log("차량 관리 페이지에서 돌아옴 - 차량 정보 새로고침");
+      fetchVehicles();
+    }
+  }, [location]);
 
   const nextVehicle = () => {
     setSlideDirection("next");
@@ -700,7 +708,11 @@ const DriverProfile = () => {
                                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                               },
                             }}
-                            onClick={() => navigate("/driver/registervehicle")}
+                            onClick={() =>
+                              navigate("/driver/managevehicles", {
+                                state: { fromProfile: true },
+                              })
+                            }
                           >
                             <Box
                               display="flex"
