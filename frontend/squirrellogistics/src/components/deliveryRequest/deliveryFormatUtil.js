@@ -3,7 +3,7 @@ import { Typography } from '@mui/material';
 
 
 export function formatAddress(address) {
-  return address.length > 12 ? address.slice(0, 12) + '...' : address;
+  return address.length > 15 ? address.slice(0, 15) + '...' : address;
 }
 
 function formatCreatedAt(createdAt) {
@@ -27,12 +27,29 @@ const HANDLING_COLORS = {
 
 };
 
+export function renderSingleTag(handlingId,handlingTags) {
+  const tagSet = new Map();
+  const color = HANDLING_COLORS[handlingId];
+  if (color && !tagSet.has(handlingId)) {
+    tagSet.set(handlingId, color);
+  }
+
+  return (
+    <Typography
+      component="span"
+      sx={{ color, fontWeight: 'bold', fontSize: '0.8rem' }}
+    >
+      [{handlingTags}]
+    </Typography>
+  );
+}
+
 export function renderWarningTags(waypoints) {
   if (!waypoints || waypoints.length === 0) {
     return (
       <Typography
         component="span"
-        sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: "gray"}}
+        sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: "gray" }}
       >
         [없음]
       </Typography>

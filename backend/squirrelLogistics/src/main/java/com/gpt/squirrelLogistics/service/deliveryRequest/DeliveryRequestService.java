@@ -5,8 +5,7 @@ import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
-
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -31,7 +30,7 @@ public interface DeliveryRequestService {
     void delete(Long requestId);
     
  // 목록 - 커스텀 페이지 DTO
-    PageResponseDTO<DeliveryRequestSlimResponseDTO> list(PageRequestDTO pageReq);
+    PageResponseDTO<DeliveryRequestCardSlimDTO> list(PageRequestDTO pageReq);
 
     // 목록 - Spring 표준 Page<T>
     Page<DeliveryRequestSlimResponseDTO> getPage(Pageable pageable);

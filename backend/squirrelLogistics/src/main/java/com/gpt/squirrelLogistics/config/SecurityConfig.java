@@ -60,7 +60,7 @@ public class SecurityConfig {
 						).permitAll()
 						// 드라이버 측 요청 확인.
 						.requestMatchers("/api/delivery/requests/**","/api/delivery/assignments/**", "/api/delivery/proposals/**").permitAll()
-
+						.requestMatchers("/ws/**", "/api/route/live").permitAll()
 						// 그 외는 인증 필요
 						.anyRequest().authenticated())
 				// 401/403 명확히 구분해서 응답

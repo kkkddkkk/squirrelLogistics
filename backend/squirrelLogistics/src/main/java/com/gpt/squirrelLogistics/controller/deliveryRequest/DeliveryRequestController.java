@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -89,9 +90,9 @@ public class DeliveryRequestController {
 	// 목록 (슬림 응답 + 커스텀 페이지 DTO)
 	@GetMapping
 	@TimedEndpoint("request_list")
-	public ResponseEntity<PageResponseDTO<DeliveryRequestSlimResponseDTO>> list(
+	public ResponseEntity<PageResponseDTO<DeliveryRequestCardSlimDTO>> list(
 			@ModelAttribute PageRequestDTO pageReq) {
-		PageResponseDTO<DeliveryRequestSlimResponseDTO> page = requestService.list(pageReq);
+		PageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.list(pageReq);
 		return ResponseEntity.ok(page);
 	}
 

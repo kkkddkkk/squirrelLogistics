@@ -1,39 +1,33 @@
 import {
     Typography, Button, Box, Grid, Paper, Select, MenuItem,
-    TextField, InputLabel, FormControl, Pagination, Divider
+    TextField, InputLabel, FormControl, Pagination, Divider,
+    Snackbar,
+    Alert,
+    IconButton
 } from '@mui/material';
+import CloseIcon from "@mui/icons-material/Close"
 
 import DeliveryCard from './DeliveryCard';
 import { fetchDeliveryRequests } from '../../api/deliveryRequest/deliveryRequestAPI';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { fetchDeliveryProposals } from '../../api/deliveryRequest/deliveryProposalAPI';
+import { useParams } from 'react-router-dom';
+import DriverProposalComponent from './DriverProposalComponent';
+import LoadingComponent from '../common/LoadingComponent';
 
-const dataDTOs = Array(7).fill({
-    request_id: 2025072500123,
-    company_id: 177,
-    company_name: "(주) 광진물산",
-    estimated_fee: 98000,
-    total_cargo_count: 17,
-    total_cargo_weight: 480,
-    estimated_start_at: "2025-08-05",
-    estimated_end_at: "2025-08-05",
-    created_at: new Date(new Date() - 15 * 60 * 1000), // 15분 전
-    start_address: "서울특별시 강남구 테헤란로 212",
-    end_address: "경기 하남시 위례대로 200",
-    distance: 47,
-    duration: 214,
-    waypoints: [
-        { address: "서울특별시 중구 세종대로 110", order: 1, handling_id: 1 },
-        { address: "서울특별시 용산구 이태원로 177", order: 2, handling_id: 2 },
-        { address: "서울특별시 마포구 월드컵북로 396", order: 3, handling_id: 3 },
-    ]
-});
 const ListComponent = () => {
 
+    const { driverId } = useParams();
 
     const [pageData, setPageData] = useState(null);
     const [pageReq, setPageReq] = useState({ page: 1, size: 10, sort: "createAt", dir: "DESC" });
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState(null);
+
+    // proposals (토스트용)
+    const [proposals, setProposals] = useState([]);
+    const [openToast, setOpenToast] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         setLoading(true);
@@ -46,15 +40,40 @@ const ListComponent = () => {
             .finally(() => setLoading(false));
     }, [pageReq]);
 
+    // 지명 제안 조회 + 토스트 열기
+    useEffect(() => {
+        const idNum = Number(driverId);
+        if (!driverId || Number.isNaN(idNum)) {
+            return;
+        }
+        const ctrl = new AbortController();
+        fetchDeliveryProposals(driverId, { signal: ctrl.signal })
+            .then((list) => {
+                const arr = Array.isArray(list) ? list : [];
+                setProposals(arr);
 
-    if (loading) return <div>로딩...</div>;
+                if (arr.length > 0) {
+                    setOpenToast(true);
+                }
+            })
+            .catch();
+
+        return () => ctrl.abort();
+    }, [driverId]);
+
     if (err) return <div>에러: {String(err)}</div>;
     if (!pageData) return null;
 
     const { dtoList, pageNumList, current, prev, next, prevPage, nextPage, totalCount, totalPage, pageRequestDTO } = pageData;
 
-    console.log(pageData);
-    console.log(dtoList);
+    const openProposalDialog = () => {
+        setDialogOpen(true);
+    };
+
+    const closeProposalDialog = () => {
+        setDialogOpen(false);
+    };
+
     return (
         <Box width={"100%"}>
             <Box width={"100%"}>
@@ -72,6 +91,7 @@ const ListComponent = () => {
                         }}>배송 요청</Typography>
 
                     <Grid container spacing={10} justifyContent="center" width={"100%"} p={4}>
+
                         <Grid item width={"20%"} >
                             <FormControl fullWidth
                                 sx={{
@@ -156,6 +176,39 @@ const ListComponent = () => {
                             </FormControl>
                         </Box>
 
+                        {/* 운전자 지명 제안 도착 */}
+                        {openToast ?
+                            <Paper
+                                onClick={openProposalDialog}
+                                sx={{
+                                    p: 1,
+                                    pl: 2,
+                                    mb: 2,
+                                    border: '1px solid #2a2a2a5d',
+                                    boxShadow: '0px 5px 8px rgba(0, 0, 0, 0.1)',
+                                    borderRadius: 1.5,
+                                    fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
+                                    bgcolor: '#113F67'
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
+                                        color: '#e3effcff',
+                                        fontSize: 'clamp(12px, 1.5vw, 14px)',
+                                    }}
+                                >
+                                    <Box component="span" sx={{ color: '#ff2121ff', fontWeight: 700, mr:1}}>
+                                        [알림]
+                                    </Box>{' '}
+                                    기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!  
+                                    
+                                     <Box component="span" sx={{ ml:1, color: '#e3effcff', fontWeight: 700 }}>
+                                        (클릭하여 확인하기)
+                                    </Box>{' '}
+                                </Typography>
+                            </Paper>
+                            : <></>}
                         {dtoList.map((item, idx) => (
                             <DeliveryCard key={item.requestId} item={item} />
                         ))}
@@ -180,6 +233,16 @@ const ListComponent = () => {
                     </Grid>
                 </Grid>
             </Box>
+            {dialogOpen && (
+                <DriverProposalComponent
+                    open={dialogOpen}
+                    proposals={proposals}
+                    onClose={closeProposalDialog}
+                />
+            )}
+
+            <LoadingComponent open={loading} text="요청 목록을 불러오는 중..." />
+
         </Box>
     );
 };

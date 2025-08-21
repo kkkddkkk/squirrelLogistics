@@ -34,7 +34,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	implementation 'mysql:mysql-connector-java:8.0.33'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -46,13 +45,15 @@ dependencies {
 	runtimeOnly "io.jsonwebtoken:jjwt-gson:${JJWT_VERSION}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-	
+	implementation 'com.google.api-client:google-api-client:2.6.0'
+    implementation 'com.google.http-client:google-http-client-jackson2:1.43.3'
+    implementation 'com.google.http-client:google-http-client-apache-v2:1.43.3'
 	//AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	
-    implementation 'com.google.api-client:google-api-client:2.6.0'
-    implementation 'com.google.http-client:google-http-client-jackson2:1.43.3'
-    implementation 'com.google.http-client:google-http-client-apache-v2:1.43.3'
+	//WEBSOKET
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	
 }
 
 tasks.named('test') {

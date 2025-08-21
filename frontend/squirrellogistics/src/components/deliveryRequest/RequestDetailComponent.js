@@ -10,6 +10,7 @@ import DeliveryWaypointPopupComponent from "./DeliveryWaypointPopupComponent";
 import { formatRemaining } from "./DriverProposalComponent";
 import { acceptDeliveryProposal, declineDeliveryProposal } from "../../api/deliveryRequest/deliveryProposalAPI";
 import TwoButtonPopupComponent from "./TwoButtonPopupComponent";
+import LoadingComponent from "../common/LoadingComponent";
 
 const RequestDetailComponent = () => {
     const navigate = useNavigate();
@@ -127,7 +128,7 @@ const RequestDetailComponent = () => {
                 if (res.SUCCESS) {
                     setPopupTitle("운송 요청 수락");
                     setPopupContent("운송 요청이 성공적으로 수락되었습니다.");
-                    
+
                     setPathMoveOpen(true);
                 } else if (res.FAILED) {
                     alert("실패: " + res.FAILED);
@@ -220,8 +221,10 @@ const RequestDetailComponent = () => {
                                     <Typography
                                         variant="body2"
                                         sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#e3effcff', fontSize: 'clamp(12px, 1.5vw, 14px)' }}
-                                    >
-                                        운전자님께 지명된 운송 요청입니다.
+                                    ><Box component="span" sx={{ color: '#ff2121ff', fontWeight: 700, mr: 1 }}>
+                                            [알림]
+                                        </Box>{' '}
+                                        기사님께 지명된 운송 요청입니다.
                                     </Typography>
                                 </Grid>
                                 <Grid item>
@@ -287,7 +290,7 @@ const RequestDetailComponent = () => {
                         <Grid item width={"100%"}>
                             <Box mt={2}>
                                 <Typography fontWeight="bold">안내 및 주의 사항</Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" mt={1}>
                                     {deliveryData.memo_to_driver}
                                 </Typography>
                             </Box>
@@ -368,14 +371,14 @@ const RequestDetailComponent = () => {
                                     </Typography>
                                     <Typography variant="body2" mb={1}
                                         sx={textSx}
-                                    ><strong>출발지:</strong> {deliveryData.start_address}</Typography>
-                                    <Typography variant="body2" mb={1} sx={textSx}><strong>도착지:</strong> {deliveryData.end_address}</Typography>
+                                    ><strong>상차지:</strong> {deliveryData.start_address}</Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}><strong>최종 하차지:</strong> {deliveryData.end_address}</Typography>
                                     <Grid container justifyContent="space-between" direction="row">
                                         <Grid item>
-                                            <Typography variant="body2" mb={1} sx={textSx}><strong>경유지 수: </strong>
-                                                {(!deliveryData.waypoints || deliveryData.waypoints.length === 0)
-                                                    ? "경유지 없음"
-                                                    : `${deliveryData.waypoints.length}곳`}
+                                            <Typography variant="body2" mb={1} sx={textSx}><strong>하차지 수: </strong>
+                                                {(!deliveryData.waypoints || (deliveryData.waypoints.length -1) === 0)
+                                                    ? "하차지 없음"
+                                                    : `${deliveryData.waypoints.length-1}곳`}
                                             </Typography>
                                         </Grid>
                                         {deliveryData.waypoints.length > 0 &&
@@ -388,7 +391,7 @@ const RequestDetailComponent = () => {
                                                         padding: '2px 8px',
                                                         fontSize: '11px',
                                                         lineHeight: 1.2, color: "#113F67", backgroundColor: "white", borderColor: "#113F67"
-                                                    }}><strong>경유지 정보</strong></Button>
+                                                    }}><strong>하차지 정보</strong></Button>
                                             </Grid>
                                         }
 
@@ -443,7 +446,7 @@ const RequestDetailComponent = () => {
                                     <Typography fontWeight="bold" gutterBottom>
                                         운송 수익 정보
                                     </Typography>
-                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                    {/* <Typography variant="body2" mb={1} sx={textSx}>
                                         <strong>기본 운임:</strong> {formatWon(deliveryData.estimated_fee)}
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
@@ -451,14 +454,14 @@ const RequestDetailComponent = () => {
                                     </Typography>
                                     <Typography variant="body2" mb={1} sx={textSx}>
                                         <strong>신선화물 가산금:</strong> {formatWon(20000)}
-                                    </Typography>
+                                    </Typography> */}
                                     <Divider sx={{ my: 1 }} />
                                     <Typography
                                         variant="body1"
                                         fontWeight="bold"
                                         sx={textSx}
                                     >
-                                        <strong>총 수익:</strong> {formatWon(190000)} (VAT 별도)
+                                        <strong>예상 수익:</strong> {formatWon(deliveryData?.estimated_fee)} (VAT 별도)
                                     </Typography>
                                 </Paper>
                             </Grid>
@@ -486,6 +489,7 @@ const RequestDetailComponent = () => {
                     children={popupContent}
                 />
             )}
+            <LoadingComponent open={loading} text="상세 정보를 불러오는 중..." />
 
         </Box>
 

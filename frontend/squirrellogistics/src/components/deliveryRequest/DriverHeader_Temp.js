@@ -1,9 +1,9 @@
 import { AppBar, Box, Button, Toolbar } from "@mui/material";
 import logo from '../../pages/Driver/images/logo.jpg'
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 const DriverHeader_Temp = () => {
+    const { driverId } = useParams();
 
-    const driverId = 17;
     const year = 2025;
     const month = 8;
 

@@ -43,6 +43,7 @@ public class KakaoRouteClient {
 		ResponseEntity<KakaoRouteResponseDTO> response = restTemplate.exchange(url, HttpMethod.GET, entity,
 				KakaoRouteResponseDTO.class);
 
+		
 		KakaoRouteResponseDTO body = response.getBody();
 		if (body == null || body.getRoutes() == null || body.getRoutes().isEmpty()) {
 			throw new IllegalStateException("카카오 경로 응답 없음");
@@ -56,26 +57,33 @@ public class KakaoRouteClient {
 	}
 
 	// 경유지 포함 버전 (구간 합산).
-	public RouteInfoDTO requestRoute(LatLng start, LatLng end, List<LatLng> waypoints) {
-		List<LatLng> pts = new ArrayList<>();
-		long totalDist = 0;
-		long totalDur = 0;
-		LatLng cur = start;
-		if (waypoints != null) {
-			for (LatLng wp : waypoints) {
-				RouteInfoDTO leg = requestRoute(cur, wp);
-				pts.addAll(leg.getPolyline());
-				totalDist += leg.getDistance();
-				totalDur += leg.getDuration();
-				cur = wp;
-			}
-		}
-		RouteInfoDTO last = requestRoute(cur, end);
-		pts.addAll(last.getPolyline());
-		totalDist += last.getDistance();
-		totalDur += last.getDuration();
+	public RouteInfoDTO requestRoute(List<LatLng> waypoints) {
+	    if (waypoints == null || waypoints.size() < 2) {
+	        throw new IllegalArgumentException("경로 계산을 위해서는 최소 2개 이상의 좌표가 필요합니다.");
+	    }
 
-		return RouteInfoDTO.builder().polyline(pts).distance(totalDist).duration(totalDur).build();
+	    List<LatLng> pts = new ArrayList<>();
+	    long totalDist = 0;
+	    long totalDur = 0;
+
+	    // 연속된 두 지점씩 끊어서 경로를 요청
+	    for (int i = 0; i < waypoints.size() - 1; i++) {
+	        LatLng from = waypoints.get(i);
+	        LatLng to = waypoints.get(i + 1);
+
+	        RouteInfoDTO leg = requestRoute(from, to);
+	        if (leg != null) {
+	            pts.addAll(leg.getPolyline());
+	            totalDist += leg.getDistance();
+	            totalDur += leg.getDuration();
+	        }
+	    }
+
+	    return RouteInfoDTO.builder()
+	            .polyline(pts)
+	            .distance(totalDist)
+	            .duration(totalDur)
+	            .build();
 	}
 
 	public String toJsonRoute(List<LatLng> points) {

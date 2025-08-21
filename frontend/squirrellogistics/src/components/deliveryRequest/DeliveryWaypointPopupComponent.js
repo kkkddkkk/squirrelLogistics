@@ -1,70 +1,95 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Typography } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close"
-import { useState } from "react";
+import {
+    Box,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    IconButton,
+    Paper,
+    Typography,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
-export default function DeliveryWaypointPopupComponent({ waypoints, open, onClose }) {
-
-    const [waypointsData, setWaypointsData] = useState(waypoints);
-
+export default function DeliveryWaypointPopupComponent({ waypoints = [], open, onClose }) {
+    // 0번(상차지) 제외한 하차지들만 사용
+    const drops = waypoints.slice(1); // [1..N]
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-            <DialogTitle mb={2}>
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 1.5, pt: 2 } }}>
+            <DialogTitle pt={4} mb={2}>
                 <Box display="flex" alignItems="center">
-                    {/* 가운데 제목 */}
                     <Typography
                         sx={{
                             flexGrow: 1,
-                            textAlign: 'center',
-                            fontFamily: 'inherit',
-                            fontSize: '1.5rem',
-                            fontWeight: 'bold',
-                            color: '#2A2A2A',
+                            textAlign: "center",
+                            fontFamily: "inherit",
+                            fontSize: "1.5rem",
+                            fontWeight: "bold",
+                            color: "#2A2A2A",
                         }}
                     >
-                        경유지 정보
+                        하차지 정보
                     </Typography>
-
-                    {/* 우측 닫기 버튼 */}
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
-                        sx={{
-                            position: 'absolute',
-                            right: 8,
-                            top: 8,
-                            color: '#888',
-                        }}
+                        sx={{ position: "absolute", right: 20, top: 28, color: "#888" }}
                     >
                         <CloseIcon />
                     </IconButton>
                 </Box>
             </DialogTitle>
-            <DialogContent >
-                <Grid container direction={"column"} justifyContent={"center"} spacing={1} mb={4}>
 
-                    {waypointsData.map((item, idx) => (
-                        <Grid item>
-                            <Paper variant="outlined" sx={{ p: 1, borderColor: "#bbc5d0" }}>
-                                <Grid container direction={"row"} justifyContent={"space-between"}>
-                                    <Box variant="outlined"
+            <DialogContent>
+                {drops.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" textAlign="center" mb={2}>
+                        하차지가 없습니다.
+                    </Typography>
+                ) : (
+                    <Grid container direction="column" spacing={1} mb={1}>
+                        {drops.map((item, i) => {
+                            const number = i + 1; // 1부터 시작
+                            const isFinal = i === drops.length - 1;
+                            return (
+                                <Grid item key={item.waypointId ?? `${item.address}-${i}`}>
+                                    <Paper variant="outlined"
                                         sx={{
-                                            backgroundColor: "#bbc5d0", 
-                                            textAlign:"center",
-                                            borderRadius: 1,
-                                            width:"20px"
-                                        }}
-                                    ><strong>{idx + 1}</strong></Box>
-                                    <Typography variant="body2">{item.address}</Typography>
+                                            p: 1,
+                                            mb: 1,
+                                            border: '1px solid #2a2a2a5d',
+                                            boxShadow: '0px 5px 8px rgba(0, 0, 0, 0.1)',
+                                            borderRadius: 1.5,
+                                            fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif'
+                                        }}>
+                                        <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
+                                            <Box
+                                                sx={{
+                                                    textAlign: "center",
+                                                    lineHeight: "28px",
+                                                    fontWeight: 700,
+                                                    ml: 1,
+                                                    mr: 1.2,
+                                                    color: "#2A2A2A"
+                                                }}
+                                            >
+                                                {number}
+                                            </Box>
+                                            <Typography variant="body2" sx={{ color: "#2A2A2A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                {item.address}{" "}
+                                                {isFinal && (
+                                                    <Box component="span" sx={{ color: "#2A2A2A", fontWeight: "bold" }}>
+                                                        · 최종
+                                                    </Box>
+                                                )}
+                                            </Typography>
+                                        </Grid>
+                                    </Paper>
                                 </Grid>
-                            </Paper>
-                        </Grid>
-
-                    ))}
-                </Grid>
+                            );
+                        })}
+                    </Grid>
+                )}
             </DialogContent>
-
-
         </Dialog>
     );
 }

@@ -13,203 +13,219 @@ const API_SERVER_HOST = "http://localhost:8080";
 
 //---------- 공용 카카오 SDK 로드 함수 ----------.
 function loadKakaoSdk({ libraries } = {}) {
-    return new Promise((resolve, reject) => {
-        if (window.kakao && window.kakao.maps) {
-            resolve(window.kakao);
-            return;
-        }
-        //카카오 SDK스크립트 후주입.
-        const script = document.createElement("script");
-        const libs = libraries ? `&libraries=${libraries}` : "";
-        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false${libs}`;
-        script.async = true;
-        script.onerror = reject;
-        script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
-        document.head.appendChild(script);
-    });
+  return new Promise((resolve, reject) => {
+    if (window.kakao && window.kakao.maps) {
+      resolve(window.kakao);
+      return;
+    }
+    //카카오 SDK스크립트 후주입.
+    const script = document.createElement("script");
+    const libs = libraries ? `&libraries=${libraries}` : "";
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false${libs}`;
+    script.async = true;
+    script.onerror = reject;
+    script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
+    document.head.appendChild(script);
+  });
 }
 
 //---------- 스프링부트 더미 운전자 출발 시작 ----------.
 export const useStartDummyRoute = () => {
-    const startDummyRoute = useCallback(async ({ driverId, startLat, startLng, endLat, endLng }) => {
-        try {
-            const res = await axios.get(`${API_SERVER_HOST}/api/route/start`, {
-                params: {
-                    driverId,
-                    startLat,
-                    startLng,
-                    endLat,
-                    endLng,
-                },
-            });
-            console.log("Dummy route started:", res.data);
-            return res.data;
-        } catch (err) {
-            console.error("Dummy route start failed:", err);
-            throw err;
-        }
-    }, []);
+  const startDummyRoute = useCallback(async ({ driverId, startLat, startLng, endLat, endLng }) => {
+    try {
+      const res = await axios.get(`${API_SERVER_HOST}/api/route/start`, {
+        params: {
+          driverId,
+          startLat,
+          startLng,
+          endLat,
+          endLng,
+        },
+      });
+      console.log("Dummy route started:", res.data);
+      return res.data;
+    } catch (err) {
+      console.error("Dummy route start failed:", err);
+      throw err;
+    }
+  }, []);
 
-    return startDummyRoute;
+  return startDummyRoute;
 };
 
 //---------- <실시간 이동> 지도 훅 ----------.
-export const useKakaoRouteMap = (mapContainerRef, driverId, onRouteUpdate) => {
+/* {visited, expected, currentPosition, distance, duration} */
+export const useKakaoRouteMap = (mapContainerRef, route) => {
 
-    //카카오 객체,지도,도형,마커 등등 관리용 ref.
-    const mapRef = useRef(null);
-    const visitedPolylineRef = useRef(null);
-    const expectedPolylineRef = useRef(null);
-    const currentMarkerRef = useRef(null);
-    const endMarkerRef = useRef(null);
-    const pulseOverlayRef = useRef(null);
-    const pulseElRef = useRef(null);
-    const markerImageRef = useRef(null);
-    const truckImageRef = useRef(null);
-    const intervalRef = useRef(null);
-    const firstFitBoundsRef = useRef(true);
+  //카카오 객체,지도,도형,마커 등등 관리용 ref.
+  const mapRef = useRef(null);
+  const visitedPolylineRef = useRef(null);
+  const expectedPolylineRef = useRef(null);
+  const currentMarkerRef = useRef(null);
+  const endMarkerRef = useRef(null);
+  const pulseOverlayRef = useRef(null);
+  const pulseElRef = useRef(null);
+  const markerImageRef = useRef(null);
+  const truckImageRef = useRef(null);
+  const firstFitBoundsRef = useRef(true);
+  const kakaoRef = useRef(null);
+  useEffect(() => {
+    let canceled = false;
 
-    useEffect(() => {
+    (async () => {
+      if (!mapContainerRef.current) return;
+      const kakao = await loadKakaoSdk().catch((e) => { console.error(e); return null; });
+      if (!kakao || canceled) return;
+      kakaoRef.current = kakao;
 
-        if (!mapContainerRef.current) return;
+      // 초기 맵 1회 생성
+      if (!mapRef.current) {
+        mapRef.current = new kakao.maps.Map(mapContainerRef.current, {
+          center: new kakao.maps.LatLng(37.5665, 126.9780), // 임시(서울 시청)
+          level: 5,
+        });
 
-        //지도, 라인, 마커 렌더링.
-        const fetchRouteAndRender = async (kakao) => {
-            try {
-                const { data } = await axios.get(`${API_SERVER_HOST}/api/route/live`, { params: { driverId } });
-                const { visited, expected, currentPosition, distance, duration } = data || {};
-                if (!visited || !expected || !currentPosition) return;
+        // 필요 시 커스텀 마커 이미지
+        // markerImageRef.current = new kakao.maps.MarkerImage(markerImg, new kakao.maps.Size(32, 46));
+        // truckImageRef.current = new kakao.maps.MarkerImage(truckImg, new kakao.maps.Size(45, 25));
+      }
+    })();
 
-                //컴포넌트로 갈 외부 콜백 연결 => 거리, 시간 갱신.
-                if (typeof onRouteUpdate === "function") onRouteUpdate(distance, duration);
+    return () => { canceled = true; };
+  }, [mapContainerRef]);
 
-                const LatLng = kakao.maps.LatLng;
+  // route 변경 시마다 라인/마커 업데이트
+  useEffect(() => {
+    const kakao = kakaoRef.current;
+    if (!kakao || !mapRef.current) return;
+    if (!route) return;
 
-                const currentLatLng = new LatLng(currentPosition.lat, currentPosition.lng);
-                const finalPt = expected[expected.length - 1] || visited[visited.length - 1];
-                const endLatLng = new LatLng(finalPt.lat, finalPt.lng);
+    const { visited = [], expected = [], currentPosition } = route;
+    if (!currentPosition || currentPosition.lat == null || currentPosition.lng == null) return; // ⭐
 
-                //지도 인스턴스 생성.
-                if (!mapRef.current) {
-                    mapRef.current = new kakao.maps.Map(mapContainerRef.current, {
-                        center: currentLatLng,
-                        level: 5,
-                    });
+    const LatLng = kakao.maps.LatLng;
 
-                    //마커 이미지 생성, 등록 경로의 이미지로 크기 설정.
-                    markerImageRef.current = new kakao.maps.MarkerImage(
-                        markerImg,
-                        new kakao.maps.Size(32, 46)
-                    );
-                    truckImageRef.current = new kakao.maps.MarkerImage(
-                        truckImg,
-                        new kakao.maps.Size(45, 25)
-                    );
-                }
+    // 좌표 정제: 숫자인 것만 남기기  // ⭐
+    const toLL = (p) =>
+      p && Number.isFinite(p.lat) && Number.isFinite(p.lng) ? new LatLng(p.lat, p.lng) : null;
 
-                //이미 지나온 경로 표시 => 회색(임시).
-                if (!visitedPolylineRef.current) {
-                    visitedPolylineRef.current = new kakao.maps.Polyline({
-                        map: mapRef.current,
-                        path: visited.map((p) => new LatLng(p.lat, p.lng)),
-                        strokeWeight: 4,
-                        strokeColor: "#999",
-                        strokeOpacity: 0.8,
-                        strokeStyle: "solid",
-                    });
-                } else {
-                    visitedPolylineRef.current.setPath(visited.map((p) => new LatLng(p.lat, p.lng)));
-                }
+    const visitedPath = visited.map(toLL).filter(Boolean);   // ⭐
+    const expectedPath = expected.map(toLL).filter(Boolean); // ⭐
+    const currentLatLng = toLL(currentPosition);
+    if (!currentLatLng) return; // ⭐
 
-                //앞으로 진행할 경로 표시 => 진한 군청색(임시).
-                if (!expectedPolylineRef.current) {
-                    expectedPolylineRef.current = new kakao.maps.Polyline({
-                        map: mapRef.current,
-                        path: expected.map((p) => new LatLng(p.lat, p.lng)),
-                        strokeWeight: 4,
-                        strokeColor: "#113F67",
-                        strokeOpacity: 0.8,
-                        strokeStyle: "solid",
-                    });
-                } else {
-                    expectedPolylineRef.current.setPath(expected.map((p) => new LatLng(p.lat, p.lng)));
-                }
+    // 경로가 하나도 없을 수 있음 → endPt 만들기 전에 체크  // ⭐
+    const endPt = expectedPath[expectedPath.length - 1] || visitedPath[visitedPath.length - 1] || null;
 
-                //전체 경로가 보이도록 영역 bounds 수정(계속 변경되면 정신 없어서 1회). 
-                if (firstFitBoundsRef.current) {
-                    const bounds = new kakao.maps.LatLngBounds();
-                    [...visited, ...expected].forEach((p) => bounds.extend(new LatLng(p.lat, p.lng)));
-                    mapRef.current.setBounds(bounds);
-                    firstFitBoundsRef.current = false;
-                }
+    // visited polyline
+    if (!visitedPolylineRef.current) {
+      visitedPolylineRef.current = new kakao.maps.Polyline({
+        map: mapRef.current,
+        path: visitedPath,
+        strokeWeight: 4,
+        strokeColor: "#999",
+        strokeOpacity: 0.8,
+        strokeStyle: "solid",
+      });
+    } else {
+      visitedPolylineRef.current.setPath(visitedPath);
+    }
 
-                //도착 목적지 마커 표시.
-                if (!endMarkerRef.current) {
-                    endMarkerRef.current = new kakao.maps.Marker({
-                        map: mapRef.current,
-                        position: endLatLng,
-                        image: markerImageRef.current || undefined,
-                    });
-                } else {
-                    endMarkerRef.current.setPosition(endLatLng);
-                }
+    // expected polyline
+    if (!expectedPolylineRef.current) {
+      expectedPolylineRef.current = new kakao.maps.Polyline({
+        map: mapRef.current,
+        path: expectedPath,
+        strokeWeight: 4,
+        strokeColor: "#113F67",
+        strokeOpacity: 0.8,
+        strokeStyle: "solid",
+      });
+    } else {
+      expectedPolylineRef.current.setPath(expectedPath);
+    }
 
-                //현재 위치 연출용 커스텀 오버레이.
-                if (!pulseElRef.current) {
-                    const div = document.createElement("div");
-                    div.className = "live-map-pulse-circle";
-                    pulseElRef.current = div;
-                }
-                if (!pulseOverlayRef.current) {
-                    pulseOverlayRef.current = new kakao.maps.CustomOverlay({
-                        map: mapRef.current,
-                        position: currentLatLng,
-                        content: pulseElRef.current,
-                        yAnchor: 1.0,
-                        xAnchor: 0.5,
-                    });
-                } else {
-                    pulseOverlayRef.current.setPosition(currentLatLng);
-                }
+    // 마커 이미지: 소스가 있을 때만 생성  // ⭐
+    if (typeof markerImg === "string" && markerImg) {
+      markerImageRef.current = new kakao.maps.MarkerImage(markerImg, new kakao.maps.Size(32, 46));
+    } else {
+      markerImageRef.current = null;
+    }
+    if (typeof truckImg === "string" && truckImg) {
+      truckImageRef.current = new kakao.maps.MarkerImage(truckImg, new kakao.maps.Size(45, 25));
+    } else {
+      truckImageRef.current = null;
+    }
 
-                //기사 현재 위치 마커 표시.
-                if (!currentMarkerRef.current) {
-                    currentMarkerRef.current = new kakao.maps.Marker({
-                        map: mapRef.current,
-                        position: currentLatLng,
-                        image: truckImageRef.current || undefined,
-                    });
-                } else {
-                    currentMarkerRef.current.setPosition(currentLatLng);
-                }
-            } catch (err) {
-                console.error("경로 요청 실패:", err);
-            }
-        };
+    // fitBounds: 경로가 1개 이상 있을 때만  // ⭐
+    if (firstFitBoundsRef.current && (visitedPath.length + expectedPath.length) > 0) {
+      const bounds = new kakao.maps.LatLngBounds();
+      [...visitedPath, ...expectedPath].forEach(p => bounds.extend(p));
+      mapRef.current.setBounds(bounds);
+      firstFitBoundsRef.current = false;
+    }
 
-        //(임시) 3초 폴링 구조 => 추후 websocket 구독 구조로 수정 예정.
-        loadKakaoSdk()
-            .then((kakao) => {
-                fetchRouteAndRender(kakao);
-                //3초마다 갱신.
-                intervalRef.current = setInterval(() => fetchRouteAndRender(kakao), 3000);
-            })
-            .catch((e) => console.error("카카오맵 SDK 로딩 실패:", e));
+    // end marker: endPt가 있을 때만  // ⭐
+    if (endPt) {
+      if (!endMarkerRef.current) {
+        endMarkerRef.current = new kakao.maps.Marker({
+          map: mapRef.current,
+          position: endPt,
+          ...(markerImageRef.current ? { image: markerImageRef.current } : {}), // ⭐
+        });
+      } else {
+        endMarkerRef.current.setPosition(endPt);
+        if (markerImageRef.current) endMarkerRef.current.setImage(markerImageRef.current);
+      }
+    } else if (endMarkerRef.current) {
+      endMarkerRef.current.setMap(null);
+      endMarkerRef.current = null;
+    }
 
-        //인터벌 제거, 마커 정리.
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
+    // pulse overlay
+    if (!pulseElRef.current) {
+      const div = document.createElement("div");
+      div.className = "live-map-pulse-circle";
+      pulseElRef.current = div;
+    }
+    if (!pulseOverlayRef.current) {
+      pulseOverlayRef.current = new kakao.maps.CustomOverlay({
+        map: mapRef.current,
+        position: currentLatLng,
+        content: pulseElRef.current,
+        yAnchor: 1.0,
+        xAnchor: 0.5,
+      });
+    } else {
+      pulseOverlayRef.current.setPosition(currentLatLng);
+    }
 
-            const items = [
-                visitedPolylineRef.current,
-                expectedPolylineRef.current,
-                currentMarkerRef.current,
-                endMarkerRef.current,
-                pulseOverlayRef.current,
-            ];
-            items.forEach((it) => it && it.setMap && it.setMap(null));
-        };
-    }, [mapContainerRef, driverId, onRouteUpdate]);
+    // current marker
+    if (!currentMarkerRef.current) {
+      currentMarkerRef.current = new kakao.maps.Marker({
+        map: mapRef.current,
+        position: currentLatLng,
+        ...(truckImageRef.current ? { image: truckImageRef.current } : {}), // ⭐
+      });
+    } else {
+      currentMarkerRef.current.setPosition(currentLatLng);
+      if (truckImageRef.current) currentMarkerRef.current.setImage(truckImageRef.current);
+    }
+  }, [route]);
+
+  // 언마운트 정리
+  useEffect(() => {
+    return () => {
+      const items = [
+        visitedPolylineRef.current,
+        expectedPolylineRef.current,
+        currentMarkerRef.current,
+        endMarkerRef.current,
+        pulseOverlayRef.current,
+      ];
+      items.forEach(it => it && it.setMap && it.setMap(null));
+    };
+  }, []);
 };
 
 //---------- <정적/고정> 지도 훅 ----------.
@@ -413,6 +429,6 @@ export const useStaticRouteMap = ({
       .catch(e => console.error("카카오맵 SDK 로딩 실패:", e));
 
     return () => clearMapObjects();
-  // deps: 주요 입력이 바뀔 때만 재렌더
+    // deps: 주요 입력이 바뀔 때만 재렌더
   }, [mapContainerRef, encodedPolyline, routePointsJSON, JSON.stringify(waypoints || [])]);
 };

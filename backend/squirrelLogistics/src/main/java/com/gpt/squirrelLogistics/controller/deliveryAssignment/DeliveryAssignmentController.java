@@ -4,11 +4,15 @@ package com.gpt.squirrelLogistics.controller.deliveryAssignment;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
+import com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingDTO;
+import com.gpt.squirrelLogistics.enums.driverAction.DriverActionEnum;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
 
@@ -25,11 +29,20 @@ public class DeliveryAssignmentController {
 	private final DeliveryAssignmentService assignmentService;
 
 	@GetMapping("/today")
-	public ResponseEntity<DeliveryAssignmentSlimResponseDTO> getTodayAssignment(
+	public ResponseEntity<DeliveryAssignmentTrackingDTO> getTodayAssignment(
 			@RequestParam("driverId") Long driverId) {
-		DeliveryAssignmentSlimResponseDTO result = assignmentService.getTodayAssignments(driverId);
+		DeliveryAssignmentTrackingDTO result = assignmentService.getTodayAssignments(driverId);
 
 		return ResponseEntity.ok(result);
+	}
+	
+	@PostMapping("/{assignedId}/action")
+	public DeliveryAssignmentTrackingDTO applyDriverAction(
+	        @PathVariable("assignedId") Long assignedId,
+	        @RequestParam("action") DriverActionEnum action
+	) {
+		DeliveryAssignmentTrackingDTO thisTrack =  assignmentService.applyAction(assignedId, action);
+	    return thisTrack;
 	}
 
 }
