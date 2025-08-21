@@ -12,5 +12,6 @@ import com.gpt.squirrelLogistics.entity.cargoType.CargoType;
 
 public interface CargoTypeRepository extends JpaRepository<CargoType, Long> {
 
-	
+	// 2025.08.21 정윤진 추가
+	Optional<CargoType> findByHandlingTags(String handlingTags);
 }

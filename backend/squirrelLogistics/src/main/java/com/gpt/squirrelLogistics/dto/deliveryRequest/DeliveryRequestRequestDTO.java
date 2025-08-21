@@ -46,4 +46,8 @@ public class DeliveryRequestRequestDTO {
 
 	// 경유지 목록 추가 (고은설 08.13)
 	private List<DeliveryWaypointRequestDTO> waypoints;
+	
+	
+	// 추가: 요청 단위의 화물 취급유형들(문자열 태그 리스트 정윤진 08.21)
+    private List<String> cargoTypes;
 }

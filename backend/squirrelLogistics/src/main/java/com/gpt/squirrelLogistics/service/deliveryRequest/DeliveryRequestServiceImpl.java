@@ -26,8 +26,11 @@ import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimRespon
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.entity.cargoType.CargoType;
 import com.gpt.squirrelLogistics.entity.company.Company;
+import com.gpt.squirrelLogistics.entity.deliveryCargo.DeliveryCargo;
 import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
+import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.payment.Payment;
 import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
@@ -64,6 +67,11 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	private final DeliveryWaypointService waypointService;
 	private final KakaoLocalClient localClient;
 	private final KakaoRouteClient routeClient;
+
+	
+	/* ✅ 추가 주입(0821 정윤진) */
+	private final CargoTypeRepository cargoTypeRepository;
+	
 	
 	private final DeliveryCargoRepository deliveryCargoRepository;
 
@@ -230,6 +238,9 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		entity.setRequestId(null);
 		DeliveryRequest saved_request = repository.save(entity);
 
+		// ✅ 생성된 waypoint id들을 수집(08.21정윤진)
+		List<Long> waypointIds = new ArrayList<>();
+
 		if (requestDTO.getWaypoints() != null) {
 			for (DeliveryWaypointRequestDTO wpdto : requestDTO.getWaypoints()) {
 				Long wpId = waypointService.create(saved_request, wpdto);
@@ -239,6 +250,39 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 			}
 		}
 
+		// 08.21 정윤진
+		// ✅ 경유지가 하나도 없으면, cargoTypes를 매핑할 수 있도록 도착지 기준으로 waypoint 1건 자동 생성
+		if (waypointIds.isEmpty()) {
+			DeliveryWaypointRequestDTO autoWp = new DeliveryWaypointRequestDTO();
+			autoWp.setAddress(requestDTO.getEndAddress());
+			autoWp.setDropOrder(1);
+			Long autoWpId = waypointService.create(saved_request, autoWp);
+			waypointIds.add(autoWpId);
+		}
+
+		/* ✅ cargoTypes → cargo_type 업서트 + delivery_cargo(waypoint 연동) 저장 */
+		if (requestDTO.getCargoTypes() != null && !requestDTO.getCargoTypes().isEmpty()) {
+			for (String tag : requestDTO.getCargoTypes()) {
+				if (tag == null || tag.isBlank())
+					continue;
+
+				// cargo_type upsert by handlingTags
+				CargoType ct = cargoTypeRepository.findByHandlingTags(tag.trim()).orElseGet(() -> cargoTypeRepository
+						.save(CargoType.builder().handlingTags(tag.trim()).extraFee(0L).build()));
+
+				// 모든 waypoint에 동일 cargoType 매핑 (요건에 맞게 필요시 조정)
+				for (Long wpId : waypointIds) {
+					DeliveryWaypoint wpRef = entityManager.getReference(DeliveryWaypoint.class, wpId);
+
+					DeliveryCargo dc = DeliveryCargo.builder().deliveryWaypoint(wpRef) // ✅ DeliveryCargo 필드명에 맞게 저장
+							.cargoType(ct).description(null).build();
+
+					deliveryCargoRepository.save(dc);
+				}
+			}
+		}
+		
+		
 		return saved_request.getRequestId();
 	}
 
@@ -258,11 +302,10 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		return entityToFullDto(entity);
 	}
 
-	
 	@Transactional(readOnly = true)
 	public DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId) throws NotFoundException {
-		DeliveryRequest req = repository.findById(requestId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
+		DeliveryRequest req = repository.findById(requestId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		switch (req.getStatus()) {
 		case REGISTERED:
@@ -270,7 +313,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 			break;
 
 		case PROPOSED:
-		
+
 			if (driverId != null && assignmentRepository.existsByRequestAndDriverAndStatus(requestId, driverId,
 					com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.UNKNOWN))
 				break;
@@ -280,7 +323,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		case FAILED:
 		case RETRACTED:
 		case UNKNOWN:
-			//열람 가능 상태가 아닌 게시글 차단.
+			// 열람 가능 상태가 아닌 게시글 차단.
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
 		default:
@@ -290,7 +333,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 
 		return entityToFullDto(req);
 	}
-	
+
 	@Override
 	public void update(Long requestId, DeliveryRequestRequestDTO dto) {
 		DeliveryRequest entity = repository.findById(requestId)
@@ -314,7 +357,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	@Override
 	@Transactional(readOnly = true)
 	public PageResponseDTO<DeliveryRequestSlimResponseDTO> list(PageRequestDTO pageReq) {
-        Page<DeliveryRequest> page = repository.findActiveRegistered(pageReq.toPageable());
+		Page<DeliveryRequest> page = repository.findActiveRegistered(pageReq.toPageable());
 		List<DeliveryRequestSlimResponseDTO> dtoList = page.getContent().stream().map(this::entityToSlimDto)
 				.collect(Collectors.toList());
 
@@ -329,8 +372,8 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		return repository.findAll(pageable).map(this::entityToSlimDto);
 	}
 
-	//김도경
-	//repository 는 deliveryRequest꺼
+	// 김도경
+	// repository 는 deliveryRequest꺼
 	@Override
 	public List<Object[]> getEstimateCalc(Long requestId) {
 		return deliveryCargoRepository.findEstimatedCalcByRequestId(requestId);

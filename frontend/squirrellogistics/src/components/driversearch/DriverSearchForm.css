@@ -1,3 +1,45 @@
+/* 예상금액 데이터 표시 */
+.estimate-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.estimate-summary h3 {
+  margin: 0 0 15px 0;
+  color: #495057;
+}
+
+.estimate-summary .data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  font-size: 14px;
+}
+
+.estimate-summary .data-item strong {
+  color: #495057;
+}
+
+.estimate-summary .price-highlight {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.estimate-summary .memo-section {
+  margin-top: 15px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.estimate-summary .memo-section strong {
+  color: #495057;
+}
+
 /* 컨테이너 */
 .driversearch-form {
   max-width: 900px;
