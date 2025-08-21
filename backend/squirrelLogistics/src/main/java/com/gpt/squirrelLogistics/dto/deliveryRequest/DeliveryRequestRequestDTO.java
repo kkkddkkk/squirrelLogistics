@@ -49,5 +49,5 @@ public class DeliveryRequestRequestDTO {
 	
 	
 	// 추가: 요청 단위의 화물 취급유형들(문자열 태그 리스트 정윤진 08.21)
-    private List<String> cargoTypes;
+    private List<String> cargoTypes; 
 }
