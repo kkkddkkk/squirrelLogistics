@@ -66,7 +66,7 @@ export const updateDriverProfile = async (profileData) => {
 export const verifyPassword = async (password) => {
   try {
     const response = await driverApi.post(
-      `/auth/verify-password?password=${password}`
+      `/auth/verify-password?password=${encodeURIComponent(password)}`
     );
     return response.data;
   } catch (error) {
@@ -157,6 +157,17 @@ export const uploadProfileImage = async (imageFile) => {
     return response.data;
   } catch (error) {
     console.error("프로필 이미지 업로드 실패:", error);
+    throw error;
+  }
+};
+
+// 프로필 이미지 삭제
+export const deleteProfileImage = async () => {
+  try {
+    const response = await driverApi.delete(`/profile/image`);
+    return response.data;
+  } catch (error) {
+    console.error("프로필 이미지 삭제 실패:", error);
     throw error;
   }
 };
