@@ -58,6 +58,8 @@ public class DriverServiceImpl implements DriverService {
                 .role(user.getRole())
                 .build();
         
+        log.info("UserDTO 생성 완료 - Pnumber: {}", userDTO.getPnumber());
+        
         return DriverResponseDTO.builder()
                 .driverId(driver.getDriverId())
                 .mainLoca(driver.getMainLoca())
@@ -128,9 +130,19 @@ public class DriverServiceImpl implements DriverService {
     @Override
     @Transactional(readOnly = true)
     public boolean verifyPassword(Long userId, String password) {
+        log.info("비밀번호 확인 시작 - userId: {}", userId);
+        
         Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
-        return passwordEncoder.matches(password, user.getPassword());
+        
+        log.info("사용자 정보 - loginId: {}, name: {}", user.getLoginId(), user.getName());
+        log.info("입력된 비밀번호: {}", password);
+        log.info("저장된 비밀번호 해시: {}", user.getPassword());
+        
+        boolean isValid = passwordEncoder.matches(password, user.getPassword());
+        log.info("비밀번호 확인 결과: {}", isValid);
+        
+        return isValid;
     }
 
     @Override
@@ -167,6 +179,32 @@ public class DriverServiceImpl implements DriverService {
             log.error("프로필 이미지 업로드 실패", e);
             throw new RuntimeException("이미지 업로드에 실패했습니다.", e);
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        Driver driver = findDriverByUserId(userId);
+        String existingImageUrl = driver.getProfileImageUrl();
+        
+        if (existingImageUrl != null && !existingImageUrl.isEmpty()) {
+            try {
+                String uploadDir = System.getProperty("user.dir") + "/uploads/profile/";
+                String filename = existingImageUrl.substring(existingImageUrl.lastIndexOf("/") + 1);
+                Path filePath = Paths.get(uploadDir, filename);
+                
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    log.info("기존 프로필 이미지 파일 삭제: {}", filename);
+                }
+            } catch (IOException e) {
+                log.error("기존 프로필 이미지 파일 삭제 실패", e);
+            }
+        }
+        
+        driver.setProfileImageUrl(null);
+        driverRepository.save(driver);
+        log.info("프로필 이미지 삭제 완료 - userId: {}", userId);
     }
 
     // 공통 메서드: userId로 Driver 찾기
