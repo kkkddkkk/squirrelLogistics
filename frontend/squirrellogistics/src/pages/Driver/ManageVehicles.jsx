@@ -172,7 +172,7 @@ const ManageVehicles = () => {
       }
 
       const carData = {
-        carNum: newVehicle.vehiclePlateNumber.trim(),
+        carNum: newVehicle.vehiclePlateNumber,
         vehicleTypeId: null, // 차량 종류 ID는 별도로 관리 필요
         insurance: newVehicle.insuranceStatus === "유",
         Mileage: newVehicle.currentDistance
@@ -182,7 +182,7 @@ const ManageVehicles = () => {
         inspection: newVehicle.lastInspectionDate
           ? newVehicle.lastInspectionDate.toDate()
           : null,
-        carStatus: newVehicle.vehicleStatus,
+        carStatus: "temporary", // CarStatusEnum에 temporary만 있음
       };
 
       const addedCar = await addCar(carData);
@@ -217,10 +217,14 @@ const ManageVehicles = () => {
       closeAddForm();
       alert("차량이 성공적으로 추가되었습니다.");
       // 차량 추가 후 DriverProfile로 돌아가기
-      navigate("/driver/profile");
+      navigate("/driver/profile", {
+        state: { fromVehicleManagement: true },
+      });
     } catch (error) {
       console.error("차량 추가 실패:", error);
-      alert("차량 추가에 실패했습니다.");
+      alert(
+        "차량 추가에 실패했습니다: " + (error.response?.data || error.message)
+      );
     }
   };
 
@@ -234,10 +238,14 @@ const ManageVehicles = () => {
         setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
         alert("차량이 성공적으로 삭제되었습니다.");
         // 차량 삭제 후 DriverProfile로 돌아가기
-        navigate("/driver/profile");
+        navigate("/driver/profile", {
+          state: { fromVehicleManagement: true },
+        });
       } catch (error) {
         console.error("차량 삭제 실패:", error);
-        alert("차량 삭제에 실패했습니다.");
+        alert(
+          "차량 삭제에 실패했습니다: " + (error.response?.data || error.message)
+        );
       }
     }
   };
@@ -257,18 +265,24 @@ const ManageVehicles = () => {
           inspection: vehicle.lastInspectionDate
             ? vehicle.lastInspectionDate.toDate()
             : null,
-          carStatus: vehicle.vehicleStatus,
+          carStatus: "temporary", // CarStatusEnum에 temporary만 있음
         };
 
+        console.log("차량 수정 요청 데이터:", carData);
         await updateCar(vehicle.id, carData);
       }
 
       console.log("저장된 차량 정보:", vehicles);
       alert("차량 정보가 성공적으로 저장되었습니다.");
-      navigate("/driver/profile");
+      navigate("/driver/profile", {
+        state: { fromVehicleManagement: true },
+      });
     } catch (error) {
       console.error("차량 정보 저장 실패:", error);
-      alert("차량 정보 저장에 실패했습니다.");
+      alert(
+        "차량 정보 저장에 실패했습니다: " +
+          (error.response?.data || error.message)
+      );
     }
   };
 

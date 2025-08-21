@@ -45,7 +45,20 @@ import {
 } from "../../api/driver/driverApi";
 
 const DriverProfile = () => {
-  const [driver, setDriver] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [driver, setDriver] = useState({
+    name: "",
+    birth: "",
+    phone: "",
+    email: "",
+    bankAccount: "",
+    businessId: "",
+    unavailableStart: "",
+    unavailableEnd: "",
+    deliveryArea: "",
+    rating: 0,
+  });
   const [vehicles, setVehicles] = useState([]);
   const [currentVehicleIndex, setCurrentVehicleIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState("");
@@ -58,8 +71,30 @@ const DriverProfile = () => {
   const [hasSetPassword, setHasSetPassword] = useState(false); // SNS 로그인 사용자의 비밀번호 설정 여부
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+
+  // EditProfile에서 전달받은 state 처리
+  useEffect(() => {
+    if (
+      location.state?.fromEditProfile &&
+      location.state?.updatedProfileImage
+    ) {
+      console.log(
+        "EditProfile에서 전달받은 프로필 이미지:",
+        location.state.updatedProfileImage.substring(0, 50) + "..."
+      );
+      console.log("타임스탬프:", location.state.timestamp);
+
+      // 즉시 이미지 URL 설정
+      setProfileImageUrl(location.state.updatedProfileImage);
+      localStorage.setItem(
+        "profileImageUrl",
+        location.state.updatedProfileImage
+      );
+
+      // state 초기화 (중복 처리 방지)
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // 페이지 로드 시 데이터 가져오기
   useEffect(() => {
@@ -125,14 +160,43 @@ const DriverProfile = () => {
 
         // 프로필 이미지 설정
         if (driverData.profileImageUrl) {
-          setProfileImageUrl(driverData.profileImageUrl);
+          console.log(
+            "백엔드에서 받은 프로필 이미지 URL:",
+            driverData.profileImageUrl
+          );
+          // 백엔드 URL이 data URL인 경우에만 사용
+          if (driverData.profileImageUrl.startsWith("data:image")) {
+            setProfileImageUrl(driverData.profileImageUrl);
+            localStorage.setItem("profileImageUrl", driverData.profileImageUrl);
+          } else {
+            // 백엔드 URL이 data URL이 아닌 경우 localStorage에서 data URL 확인
+            const savedDataUrl = localStorage.getItem("profileImageUrl");
+            if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
+              console.log(
+                "localStorage에서 data URL 사용:",
+                savedDataUrl.substring(0, 50) + "..."
+              );
+              setProfileImageUrl(savedDataUrl);
+            } else {
+              setProfileImageUrl(driverData.profileImageUrl);
+              localStorage.setItem(
+                "profileImageUrl",
+                driverData.profileImageUrl
+              );
+            }
+          }
         } else {
           // 저장된 프로필 이미지 로드
           const savedImageUrl = localStorage.getItem("profileImageUrl");
           if (savedImageUrl) {
+            console.log(
+              "localStorage에서 로드한 프로필 이미지 URL:",
+              savedImageUrl.substring(0, 50) + "..."
+            );
             setProfileImageUrl(savedImageUrl);
           } else {
             // 프로필 이미지가 없으면 빈 문자열로 설정 (기본 Person 아이콘 표시)
+            console.log("프로필 이미지 없음, 기본 아이콘 표시");
             setProfileImageUrl("");
           }
         }
@@ -453,28 +517,18 @@ const DriverProfile = () => {
             >
               {/* 프로필 사진 */}
               <Box display="flex" justifyContent="center" mb={4}>
-                {profileImageUrl ? (
-                  <Avatar
-                    src={profileImageUrl}
-                    sx={{
-                      width: 150,
-                      height: 150,
+                <ProfileImage
+                  imageUrl={profileImageUrl}
+                  alt="프로필 이미지"
+                  size={150}
+                  editable={false}
+                  showEditIcon={false}
+                  sx={{
+                    "& .MuiAvatar-root": {
                       boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                    }}
-                  />
-                ) : (
-                  <Avatar
-                    sx={{
-                      width: 150,
-                      height: 150,
-                      bgcolor: "white",
-                      color: "#113F67",
-                      boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                    }}
-                  >
-                    <PersonIcon sx={{ fontSize: 80 }} />
-                  </Avatar>
-                )}
+                    },
+                  }}
+                />
               </Box>
 
               {/* 이름 */}

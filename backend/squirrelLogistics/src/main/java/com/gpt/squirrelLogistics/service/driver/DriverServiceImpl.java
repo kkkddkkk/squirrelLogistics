@@ -77,23 +77,49 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
-        // User 정보 업데이트 (아이디는 변경 불가)
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPnumber(request.getPhone());
-        user.setAccount(request.getAccount());
-        user.setBusinessN(request.getBusinessN());
+         log.info("프로필 수정 시작 - userId: {}, request: {}", userId, request);
         
-        // Driver 정보 업데이트
-        driver.setMainLoca(request.getMainLoca());
-        driver.setLicenseNum(request.getLicenseNum());
-        driver.setLicenseDT(request.getLicenseDT());
-        driver.setDrivable(Boolean.TRUE.equals(request.getDrivable()));
-        driver.setPreferred_start_time(request.getPreferred_start_time());
-        driver.setPreferred_end_time(request.getPreferred_end_time());
+        // User 정보 업데이트 (null이 아닌 경우에만 업데이트)
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPhone() != null) {
+            user.setPnumber(request.getPhone());
+        }
+        if (request.getAccount() != null) {
+            user.setAccount(request.getAccount());
+        }
+        if (request.getBusinessN() != null) {
+            user.setBusinessN(request.getBusinessN());
+        }
+        
+        // Driver 정보 업데이트 (null이 아닌 경우에만 업데이트)
+        if (request.getMainLoca() != null) {
+            driver.setMainLoca(request.getMainLoca());
+        }
+        if (request.getLicenseNum() != null) {
+            driver.setLicenseNum(request.getLicenseNum());
+        }
+        if (request.getLicenseDT() != null) {
+            driver.setLicenseDT(request.getLicenseDT());
+        }
+        if (request.getDrivable() != null) {
+            driver.setDrivable(request.getDrivable());
+        }
+        if (request.getPreferred_start_time() != null) {
+            driver.setPreferred_start_time(request.getPreferred_start_time());
+        }
+        if (request.getPreferred_end_time() != null) {
+            driver.setPreferred_end_time(request.getPreferred_end_time());
+        }
         
         userRepository.save(user);
         driverRepository.save(driver);
+        
+        log.info("프로필 수정 완료 - userId: {}", userId);
         
         return getDriverProfile(userId);
     }

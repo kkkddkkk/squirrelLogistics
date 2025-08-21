@@ -1,11 +1,6 @@
-import React, { useState } from "react";
-import { Avatar, Box, IconButton, Typography } from "@mui/material";
-import { PhotoCamera, Edit, Person } from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
-
-const Input = styled("input")({
-  display: "none",
-});
+import React, { useState, useEffect, useRef } from "react";
+import { Box } from "@mui/material";
+import { Edit, Person } from "@mui/icons-material";
 
 const ProfileImage = ({
   imageUrl,
@@ -16,62 +11,123 @@ const ProfileImage = ({
   showEditIcon = true,
   sx = {},
 }) => {
-  const [previewUrl, setPreviewUrl] = useState(imageUrl);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const fileInputRef = useRef(null);
+
+  // imageUrl prop이 변경될 때 previewUrl 업데이트
+  useEffect(() => {
+    console.log(
+      "ProfileImage: imageUrl prop 변경됨:",
+      imageUrl ? imageUrl.substring(0, 50) + "..." : "empty"
+    );
+
+    // imageUrl이 data URL이나 http URL인 경우에만 previewUrl 업데이트
+    if (
+      imageUrl &&
+      imageUrl.trim() !== "" &&
+      (imageUrl.startsWith("data:image") || imageUrl.startsWith("http"))
+    ) {
+      console.log("ProfileImage: previewUrl 업데이트됨");
+      setPreviewUrl(imageUrl);
+    } else {
+      console.log("ProfileImage: previewUrl 빈 값으로 설정");
+      setPreviewUrl("");
+    }
+  }, [imageUrl]);
 
   const handleImageChange = (event) => {
+    console.log("handleImageChange 호출됨:", event);
+    console.log("event.target.files:", event.target.files);
+
     const file = event.target.files[0];
     if (file) {
-      // 미리보기 URL 생성
+      console.log("파일 선택됨:", file.name, file.type, file.size);
+
+      // FileReader를 사용하여 data URL 생성
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPreviewUrl(e.target.result);
+        console.log("FileReader onload 실행됨:", e.target.result);
+        const dataUrl = e.target.result;
+        setPreviewUrl(dataUrl);
+
+        // 부모 컴포넌트에 파일 전달
+        if (onImageChange) {
+          console.log("부모 컴포넌트에 파일 전달:", file);
+          onImageChange(file);
+        } else {
+          console.log("onImageChange 함수가 없음");
+        }
+      };
+      reader.onerror = (e) => {
+        console.error("FileReader 에러:", e);
+        alert("이미지 로드에 실패했습니다.");
       };
       reader.readAsDataURL(file);
-
-      // 부모 컴포넌트에 파일 전달
-      if (onImageChange) {
-        onImageChange(file);
-      }
+    } else {
+      console.log("선택된 파일이 없음");
     }
+
+    // 파일 재선택을 위해 value 초기화
+    event.target.value = null;
   };
 
-  // 이미지 URL이 있는지 확인 (빈 문자열도 체크)
-  const hasValidImage =
-    (previewUrl &&
-      previewUrl.trim() !== "" &&
-      previewUrl !== "undefined" &&
-      previewUrl !== "null" &&
-      previewUrl.length > 0) ||
-    (imageUrl &&
-      imageUrl.trim() !== "" &&
-      imageUrl !== "undefined" &&
-      imageUrl !== "null" &&
-      imageUrl.length > 0);
+  // 이미지 URL이 유효한지 확인하는 함수
+  const isValidImageUrl = (url) => {
+    if (!url || typeof url !== "string") return false;
+
+    const trimmedUrl = url.trim();
+    if (
+      trimmedUrl === "" ||
+      trimmedUrl === "undefined" ||
+      trimmedUrl === "null" ||
+      trimmedUrl === "data:,"
+    ) {
+      return false;
+    }
+
+    // data:image로 시작하거나 http로 시작하는 경우만 유효 (blob 제외)
+    return trimmedUrl.startsWith("data:image") || trimmedUrl.startsWith("http");
+  };
+
+  const hasValidImage = isValidImageUrl(previewUrl);
 
   // 디버깅용 로그
   console.log("ProfileImage Debug:", {
-    previewUrl,
-    imageUrl,
+    previewUrl: previewUrl ? previewUrl.substring(0, 50) + "..." : "empty",
+    imageUrl: imageUrl ? imageUrl.substring(0, 50) + "..." : "empty",
     hasValidImage,
-    previewUrlTrimmed: previewUrl?.trim(),
-    imageUrlTrimmed: imageUrl?.trim(),
+    editable,
+    showEditIcon,
   });
 
-  // 강제로 Box 컴포넌트 사용 (임시 테스트)
-  const forceUseBox = true;
+  // 파일 선택을 위한 함수
+  const handleFileSelect = () => {
+    console.log("파일 선택 버튼 클릭됨");
+    if (fileInputRef.current) {
+      console.log("fileInputRef.current 찾음, 클릭 시도");
+      fileInputRef.current.click();
+    } else {
+      console.log("fileInputRef.current이 null임");
+    }
+  };
 
   return (
     <Box sx={{ position: "relative", display: "inline-block", ...sx }}>
-      {hasValidImage && !forceUseBox ? (
-        <Avatar
-          src={previewUrl || imageUrl}
+      {/* 프로필 이미지 표시 */}
+      {hasValidImage ? (
+        <Box
+          component="img"
+          src={previewUrl}
           alt={alt}
           sx={{
             width: size,
             height: size,
+            borderRadius: "50%",
             border: "3px solid #E0E6ED",
             boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
             cursor: editable ? "pointer" : "default",
+            objectFit: "cover",
+            ...sx,
           }}
         />
       ) : (
@@ -88,31 +144,60 @@ const ProfileImage = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            ...sx,
           }}
         >
           <Person sx={{ fontSize: size * 0.6 }} />
         </Box>
       )}
 
+      {/* 편집 아이콘 */}
       {editable && showEditIcon && (
-        <IconButton
-          component="label"
+        <Box
+          onClick={handleFileSelect}
           sx={{
             position: "absolute",
             bottom: 0,
             right: 0,
-            backgroundColor: "primary.main",
+            backgroundColor: "#113F67",
             color: "white",
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            border: "2px solid white",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 10,
+            transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: "primary.dark",
+              backgroundColor: "#0d2d4a",
+              transform: "scale(1.1)",
             },
-            width: 32,
-            height: 32,
           }}
         >
-          <Edit sx={{ fontSize: 16 }} />
-          <Input accept="image/*" type="file" onChange={handleImageChange} />
-        </IconButton>
+          <Edit sx={{ fontSize: 18 }} />
+        </Box>
+      )}
+
+      {/* 숨겨진 파일 입력 */}
+      {editable && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          style={{
+            position: "absolute",
+            top: "-9999px",
+            left: "-9999px",
+            opacity: 0,
+            width: "1px",
+            height: "1px",
+          }}
+        />
       )}
     </Box>
   );
