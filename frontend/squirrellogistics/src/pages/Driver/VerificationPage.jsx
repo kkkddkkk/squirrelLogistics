@@ -38,7 +38,11 @@ const VerificationPage = () => {
       if (isValid) {
         setSuccess("인증이 완료되었습니다.");
         setTimeout(() => {
-          navigate("/driver/editprofile");
+          navigate("/driver/editprofile", {
+            state: {
+              verifiedPassword: password,
+            },
+          });
         }, 1000);
       } else {
         setError("비밀번호가 일치하지 않습니다. 다시 확인해 주세요.");

@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import {
   getDriverProfile,
   updateDriverProfile,
   uploadProfileImage,
+  deleteProfileImage,
+  changePassword,
 } from "../../api/driver/driverApi";
 import {
   Box,
@@ -30,18 +32,17 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 인증 상태 확인 (비밀번호 확인으로 대체)
-  /*
-  React.useEffect(() => {
-    const verificationStatus = localStorage.getItem("verificationStatus");
-    if (verificationStatus !== "verified") {
-      alert("본인인증이 필요합니다.");
-      navigate("/driver/verification");
-      return;
-    }
-  }, [navigate]);
-  */
+  const [verificationStatus, setVerificationStatus] = useState(
+    localStorage.getItem("verificationStatus") === "true"
+  );
+
+  // VerificationPage에서 전달받은 현재 비밀번호
+  const [currentPassword, setCurrentPassword] = useState(
+    location.state?.verifiedPassword || ""
+  );
 
   const [form, setForm] = useState({
     id: "", // 회원가입 시 입력한 아이디가 들어올 예정
@@ -106,17 +107,26 @@ const EditProfile = () => {
         });
 
         // 프로필 이미지 설정
-        if (profileData.profileImageUrl) {
+        // localStorage에서 먼저 확인 (data URL 우선)
+        const savedImageUrl = localStorage.getItem("profileImageUrl");
+        if (savedImageUrl && savedImageUrl.startsWith("data:image")) {
+          console.log(
+            "localStorage에서 data URL 로드:",
+            savedImageUrl.substring(0, 50) + "..."
+          );
+          setProfileImageUrl(savedImageUrl);
+        } else if (profileData.profileImageUrl) {
+          console.log(
+            "백엔드에서 프로필 이미지 URL 로드:",
+            profileData.profileImageUrl
+          );
           setProfileImageUrl(profileData.profileImageUrl);
+          // 백엔드 URL을 localStorage에 저장
+          localStorage.setItem("profileImageUrl", profileData.profileImageUrl);
         } else {
-          // 저장된 프로필 이미지 로드
-          const savedImageUrl = localStorage.getItem("profileImageUrl");
-          if (savedImageUrl) {
-            setProfileImageUrl(savedImageUrl);
-          } else {
-            // 프로필 이미지가 없으면 빈 문자열로 설정 (기본 Person 아이콘 표시)
-            setProfileImageUrl("");
-          }
+          // 프로필 이미지가 없으면 빈 문자열로 설정 (기본 Person 아이콘 표시)
+          console.log("프로필 이미지 없음, 기본 아이콘 표시");
+          setProfileImageUrl("");
         }
 
         // 활동 지역 설정
@@ -534,6 +544,8 @@ const EditProfile = () => {
 
   // 프로필 사진 업로드 처리
   const handleImageUpload = async (file) => {
+    console.log("handleImageUpload 호출됨:", file);
+
     if (file) {
       // 파일 크기 검증 (5MB 이하)
       if (file.size > 5 * 1024 * 1024) {
@@ -548,31 +560,68 @@ const EditProfile = () => {
       }
 
       try {
+        console.log("이미지 업로드 시작:", file.name);
+
+        // 먼저 로컬 미리보기 설정 (data URL 사용)
         setProfileImage(file);
-        const imageUrl = URL.createObjectURL(file);
-        setProfileImageUrl(imageUrl);
 
-        // 로컬 스토리지에 이미지 URL 저장
-        localStorage.setItem("profileImageUrl", imageUrl);
+        // FileReader를 사용하여 data URL 생성
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          console.log("생성된 data URL:", dataUrl.substring(0, 50) + "...");
+          setProfileImageUrl(dataUrl);
+          localStorage.setItem("profileImageUrl", dataUrl);
+        };
+        reader.readAsDataURL(file);
 
-        // 실제 API 호출하여 이미지 업로드
-        const uploadedImageUrl = await uploadProfileImage(file);
+        // 백엔드 API 호출은 별도로 처리 (성공/실패와 관계없이 미리보기는 유지)
+        try {
+          console.log("API 호출 시작...");
+          const uploadedImageUrl = await uploadProfileImage(file);
+          console.log("API 응답:", uploadedImageUrl);
 
-        // 업로드된 이미지 URL로 업데이트
-        setProfileImageUrl(uploadedImageUrl);
-        localStorage.setItem("profileImageUrl", uploadedImageUrl);
+          // API 성공 시 백엔드 URL도 저장 (선택사항)
+          if (uploadedImageUrl) {
+            localStorage.setItem("backendProfileImageUrl", uploadedImageUrl);
+          }
+        } catch (apiError) {
+          console.error("백엔드 업로드 실패 (미리보기는 유지):", apiError);
+          // 백엔드 업로드 실패해도 미리보기는 유지
+        }
+
+        console.log("이미지 업로드 완료");
       } catch (error) {
         console.error("이미지 업로드 실패:", error);
-        alert("이미지 업로드에 실패했습니다.");
+        alert("이미지 업로드에 실패했습니다: " + error.message);
+
+        // 업로드 실패 시 로컬 미리보기도 제거
+        setProfileImage(null);
+        setProfileImageUrl("");
+        localStorage.removeItem("profileImageUrl");
       }
     }
   };
 
   // 프로필 사진 삭제
-  const handleImageDelete = () => {
-    setProfileImage(null);
-    setProfileImageUrl("");
-    localStorage.removeItem("profileImageUrl");
+  const handleImageDelete = async () => {
+    try {
+      // 로컬 상태 초기화
+      setProfileImage(null);
+      setProfileImageUrl("");
+      localStorage.removeItem("profileImageUrl");
+
+      // 백엔드에 빈 이미지 URL로 업데이트 요청
+      const emptyImageFile = new File([""], "empty.jpg", {
+        type: "image/jpeg",
+      });
+      await deleteProfileImage(); // 새로 추가된 API 호출
+
+      console.log("프로필 이미지 삭제 완료");
+    } catch (error) {
+      console.error("프로필 이미지 삭제 실패:", error);
+      alert("프로필 이미지 삭제에 실패했습니다.");
+    }
   };
 
   // 컴포넌트 마운트 시 저장된 프로필 이미지 로드 및 사용자 정보 로드
@@ -628,15 +677,46 @@ const EditProfile = () => {
       const profileData = {
         name: form.name,
         email: form.email,
-        phone: form.phone,
+        phone: form.phone, // 백엔드에서 Pnumber로 매핑됨
         account: form.bankAccount,
         businessN: form.businessId,
         mainLoca: form.deliveryArea,
-        // 비밀번호는 별도 API로 처리해야 함
+        // 기존 데이터 유지를 위한 필드들 (null로 설정하여 기존 값 유지)
+        loginId: null, // 기존 값 유지
+        password: null, // 기존 값 유지 (별도 API로 처리)
+        birthday: null, // 기존 값 유지
+        licenseNum: null, // 기존 값 유지
+        licenseDT: null, // 기존 값 유지
+        drivable: null, // 기존 값 유지
+        preferred_start_time: null, // 기존 값 유지
+        preferred_end_time: null, // 기존 값 유지
+        vehicleTypeId: null, // 기존 값 유지
+        carNum: null, // 기존 값 유지
+        agreeTerms: null, // 기존 값 유지
       };
+
+      console.log("프로필 수정 요청 데이터:", profileData);
 
       // 프로필 정보 업데이트
       await updateDriverProfile(profileData);
+
+      // 비밀번호 수정 처리
+      if (form.password && form.password.trim() !== "") {
+        console.log("비밀번호 수정 시작");
+        try {
+          // 현재 비밀번호는 인증 페이지에서 이미 확인했으므로,
+          // 새로운 비밀번호만 전달 (백엔드에서 현재 비밀번호 확인 로직 필요)
+          await changePassword(currentPassword, form.password); // 현재 비밀번호는 빈 문자열로 전달
+          console.log("비밀번호 수정 성공");
+        } catch (passwordError) {
+          console.error("비밀번호 수정 실패:", passwordError);
+          alert(
+            "비밀번호 수정에 실패했습니다: " +
+              (passwordError.response?.data || passwordError.message)
+          );
+          return;
+        }
+      }
 
       // SNS 로그인 사용자가 비밀번호를 설정한 경우 저장
       if (
@@ -655,10 +735,20 @@ const EditProfile = () => {
       localStorage.removeItem("verifiedPhone");
       localStorage.removeItem("verificationMethod");
 
-      navigate("/driver/profile");
+      // Profile 페이지로 이동할 때 최신 프로필 이미지가 반영되도록 state 전달
+      console.log("Profile 페이지로 이동, 전달할 이미지 URL:", profileImageUrl);
+      navigate("/driver/profile", {
+        state: {
+          fromEditProfile: true,
+          updatedProfileImage: profileImageUrl,
+          timestamp: Date.now(), // 강제 리렌더링을 위한 타임스탬프
+        },
+      });
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert("프로필 수정에 실패했습니다.");
+      alert(
+        "프로필 수정에 실패했습니다: " + (error.response?.data || error.message)
+      );
     }
   };
 
@@ -745,33 +835,64 @@ const EditProfile = () => {
                 alt="프로필 편집"
                 size={120}
                 editable={true}
+                showEditIcon={false}
                 onImageChange={handleImageUpload}
-                sx={{
-                  "& .MuiAvatar-root": {
-                    bgcolor: profileImageUrl ? "transparent" : "white",
-                    border: "3px solid #E0E6ED",
-                  },
-                }}
               />
-              {profileImageUrl && (
+              <Box display="flex" gap={2} sx={{ mt: 2 }}>
                 <Button
                   variant="outlined"
-                  color="error"
-                  onClick={handleImageDelete}
+                  color="primary"
+                  onClick={() => {
+                    // 가장 간단하고 확실한 방법
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = "image/*";
+                    input.style.display = "none";
+
+                    input.onchange = (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        handleImageUpload(file);
+                      }
+                      // 메모리 정리
+                      document.body.removeChild(input);
+                    };
+
+                    // DOM에 추가하고 클릭
+                    document.body.appendChild(input);
+                    input.click();
+                  }}
                   sx={{
-                    mt: 2,
-                    borderColor: "#A20025",
-                    color: "#A20025",
+                    borderColor: "#113F67",
+                    color: "#113F67",
                     "&:hover": {
-                      borderColor: "#8B001F",
-                      bgcolor: "#A20025",
+                      borderColor: "#0d2d4a",
+                      bgcolor: "#113F67",
                       color: "white",
                     },
                   }}
                 >
-                  삭제
+                  사진 선택
                 </Button>
-              )}
+                {profileImageUrl && (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleImageDelete}
+                    sx={{
+                      borderColor: "#A20025",
+                      color: "#A20025",
+                      "&:hover": {
+                        borderColor: "#8B001F",
+                        bgcolor: "#A20025",
+                        color: "white",
+                      },
+                    }}
+                  >
+                    삭제
+                  </Button>
+                )}
+              </Box>
             </Box>
 
             <TextField
