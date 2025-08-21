@@ -34,14 +34,13 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 	private final KakaoLocalClient localClient;
 
 	// 요청 DTO => 엔티티 전환.
-    private DeliveryWaypoint reqDtoToEntity(DeliveryRequest parent, DeliveryWaypointRequestDTO request) {
-        if(parent == null || request == null) {
-            return null;
+	private DeliveryWaypoint reqDtoToEntity(DeliveryRequest parent, DeliveryWaypointRequestDTO request) {
+		if (parent == null || request == null) {
+			return null;
 		}
 
-
 		return DeliveryWaypoint.builder().address(request.getAddress()).dropOrder(request.getDropOrder())
-                .status(request.getStatus()).deliveryRequest(parent).build();
+				.status(request.getStatus()).deliveryRequest(parent).build();
 
 	}
 
@@ -58,7 +57,8 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 			throw new NoSuchElementException("DeliveryCargo not found: " + entity.getWaypointId());
 		}
 
-		DeliveryCargo cargoRef = cargoRepository.findByDeliveryWaypoint_WaypointId(entity.getWaypointId());
+		var opt = cargoRepository.findByDeliveryWaypoint_WaypointId(entity.getWaypointId());
+		DeliveryCargo cargoRef = opt.orElse(null);
 
 		return DeliveryWaypointSlimResponseDTO.builder().waypointId(entity.getWaypointId()).address(entity.getAddress())
 				.dropOrder(entity.getDropOrder()).arriveAt(entity.getArriveAt()).droppedAt(entity.getDroppedAt())
@@ -66,16 +66,16 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 				.deliveryRequestId(
 						entity.getDeliveryRequest() != null ? entity.getDeliveryRequest().getRequestId() : null)
 				.handlingId(cargoRef.getCargoType().getHandlingId())
-				.handlingTags(cargoRef.getCargoType().getHandlingTags())
-				.lat(latLng.getLat()).lng(latLng.getLng()).build();
+				.handlingTags(cargoRef.getCargoType().getHandlingTags()).lat(latLng.getLat()).lng(latLng.getLng())
+				.build();
 
 	}
 
 	// 경유지 엔티티 추가.
 	@Override
-    public Long create(DeliveryRequest parent, DeliveryWaypointRequestDTO dto) {
-        DeliveryWaypoint resultEntity = reqDtoToEntity(parent, dto);		
-        waypointrepo.save(resultEntity);
+	public Long create(DeliveryRequest parent, DeliveryWaypointRequestDTO dto) {
+		DeliveryWaypoint resultEntity = reqDtoToEntity(parent, dto);
+		waypointrepo.save(resultEntity);
 		return resultEntity.getWaypointId();
 	}
 
@@ -121,17 +121,16 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 	}
 
 	@Override
-    public void createBatch(DeliveryRequest parent, List<DeliveryWaypointRequestDTO> dtos) {
-        if (dtos == null || dtos.isEmpty() || parent == null)
+	public void createBatch(DeliveryRequest parent, List<DeliveryWaypointRequestDTO> dtos) {
+		if (dtos == null || dtos.isEmpty() || parent == null)
 			return;
 
-
-        List<DeliveryWaypoint> entities = dtos.stream()
-                .sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder))
-                .map(w -> DeliveryWaypoint.builder().address(w.getAddress()).dropOrder(w.getDropOrder())
-                        .arriveAt(w.getArriveAt()).droppedAt(w.getDroppedAt()).status(w.getStatus())
-                        .deliveryRequest(parent).build())
-                .toList();
+		List<DeliveryWaypoint> entities = dtos.stream()
+				.sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder))
+				.map(w -> DeliveryWaypoint.builder().address(w.getAddress()).dropOrder(w.getDropOrder())
+						.arriveAt(w.getArriveAt()).droppedAt(w.getDroppedAt()).status(w.getStatus())
+						.deliveryRequest(parent).build())
+				.toList();
 
 		waypointrepo.saveAll(entities);
 

@@ -17,7 +17,7 @@ export function formatRemaining(isoString) {
     const hours = Math.floor((minutes % (60 * 24)) / 60);
     const mins = minutes % 60;
 
-    const parts = ["지명 자동 취소까지: "];
+    const parts = ["자동 취소까지: "];
     if (days > 0) parts.push(`${days}일`);
     if (hours > 0) parts.push(`${hours}시간`);
     if (mins > 0) parts.push(`${mins}분`);
@@ -41,9 +41,9 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
             fullWidth
             maxWidth="sm"
             scroll="paper"
-            PaperProps={{ sx: { borderRadius: 3, maxHeight: '60vh', pr: 1 } }}
+            PaperProps={{ sx: { borderRadius: 2, borderColor:"black", maxHeight: '60vh', pr: 1 } }}
         >
-            <DialogTitle mb={2}>
+            <DialogTitle >
                 <Box display="flex" alignItems="center" pt={2}>
                     {/* 가운데 제목 */}
                     <Typography
@@ -65,20 +65,32 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
                         onClick={onClose}
                         sx={{
                             position: 'absolute',
-                            right: 15,
-                            top: 20,
+                            right: 25,
+                            top: 28,
                             color: '#888',
                         }}
                     >
                         <CloseIcon />
+                        
                     </IconButton>
                 </Box>
             </DialogTitle>
             <DialogContent >
-                <Grid container direction={"column"} justifyContent={"center"} spacing={1} mb={4}
+                <Grid container direction={"column"} justifyContent={"center"} spacing={1} mb={2}
                 >
+                      <Typography
+                        sx={{
+                            flexGrow: 1,
+                            textAlign: 'center',
+                            fontFamily: 'inherit',
+                            fontSize: 'clamp(12px, 1.5vw, 14px)',
+                            color: '#909095',
+                        }}
+                    >
+                        [안내] 기사님께서 수락을 거절하거나, 무응답으로<br/>지명 취소 기일을 넘긴 지명 요청은 공개 요청으로 자동 전환됩니다.
+                    </Typography>
                     {proposals.map((item, idx) => (
-                        <Grid item>
+                        <Grid item mt={2}>
                             <Paper
                                 onClick={() => handleClick(item.requestId, item.refundDate)}
                                 sx={{

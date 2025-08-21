@@ -5,7 +5,7 @@ public enum ReportCategoryEnum {
 	SERVICE,//서비스
 	VEEROFCOURSE,//경로이탈
 	DAMAGE,//물품 파손
-	
+	UNEXECUTED,//운송 미실행
 	//FORDRIVER
 	REVIEW,//리뷰 신고
 	INAPPROPRIATE,//부적절 운송

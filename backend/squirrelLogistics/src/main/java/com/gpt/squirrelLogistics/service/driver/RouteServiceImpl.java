@@ -23,6 +23,6 @@ public class RouteServiceImpl implements RouteService {
 	
 	@Override
 	public void startDummy(String driverId, LatLng start, LatLng end) {
-	    dummyTracker.startTracking(driverId, start, end);
+//	    dummyTracker.startTracking(driverId, start, end);
 	}
 }

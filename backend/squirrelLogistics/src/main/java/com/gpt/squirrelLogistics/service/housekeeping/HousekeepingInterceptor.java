@@ -15,13 +15,32 @@ public class HousekeepingInterceptor implements HandlerInterceptor {
 
 	private final HousekeepingService housekeepingService;
 
-	// 작성자: 고은설.
-	// 기능: 운송 요청 및 운송 할당 정보 CRUD 관련 요청 엔드포인트 본 로직 수행 전 호출되는 인터셉터.
+	private static final java.util.concurrent.locks.ReentrantLock LOCK = new java.util.concurrent.locks.ReentrantLock();
+	private static final long MIN_INTERVAL_MS = 15_000; // 15초에 한 번만
+	private static volatile long lastRun = 0L;
+
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-			throws Exception {
-		log.info("start housekeepingService");
-		housekeepingService.sweep();
+	public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+		// 읽기 요청은 스킵 => 하려다가 필요해서 일단 다시 넣음.
+//		if ("GET".equalsIgnoreCase(req.getMethod()))
+//			return true;
+
+		long now = System.currentTimeMillis();
+		if (now - lastRun < MIN_INTERVAL_MS)
+			return true;
+		if (!LOCK.tryLock())
+			return true;
+
+		try {
+			if (System.currentTimeMillis() - lastRun < MIN_INTERVAL_MS)
+				return true;
+			lastRun = now;
+
+			// 비동기 실행: 요청 처리와 분리
+			java.util.concurrent.CompletableFuture.runAsync(housekeepingService::sweep);
+		} finally {
+			LOCK.unlock();
+		}
 		return true;
 	}
 
