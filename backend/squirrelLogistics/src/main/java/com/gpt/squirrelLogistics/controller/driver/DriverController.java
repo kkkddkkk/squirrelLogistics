@@ -131,6 +131,21 @@ public class DriverController {
         }
     }
 
+    // 프로필 이미지 삭제
+    @DeleteMapping("/profile/image")
+    public ResponseEntity<Void> deleteProfileImage(@RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = extractUserIdFromToken(authHeader);
+            driverService.deleteProfileImage(userId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("프로필 이미지 삭제 실패", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     // 비밀번호 확인 (프로필 수정 전)
     @PostMapping("/auth/verify-password")
     public ResponseEntity<Boolean> verifyPassword(
@@ -138,6 +153,7 @@ public class DriverController {
             @RequestParam("password") String password) {
         try {
             log.info("비밀번호 확인 요청 - Authorization: {}", authHeader);
+            log.info("요청된 비밀번호: {}", password);
             Long userId = extractUserIdFromToken(authHeader);
             log.info("추출된 userId: {}", userId);
             
