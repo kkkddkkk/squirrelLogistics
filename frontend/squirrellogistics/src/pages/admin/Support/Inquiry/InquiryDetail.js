@@ -61,19 +61,25 @@ const InquiryDetail = () => {
       console.log("로드된 신고/문의 데이터:", inquiryData);
       
       if (inquiryData) {
-        // 백엔드 데이터 구조에 맞게 매핑
+        // 🎯 백엔드에서 완전히 처리된 데이터를 단순 매핑
         const mappedInquiry = {
           id: inquiryData.reportId || inquiryData.id,
-          userName: inquiryData.reporter || "사용자",
+          userName: inquiryData.reporterDisplay || inquiryData.reporterName || inquiryData.reporter || "사용자",
           title: inquiryData.rTitle || inquiryData.title || "",
           content: inquiryData.rContent || inquiryData.content || "",
-          status: inquiryData.rStatus || "미처리",
+          status: inquiryData.rStatus || "상태 없음", // 🎯 백엔드에서 한국어로 완전 처리됨
           createdAt: inquiryData.regDate || inquiryData.createdAt || "",
-          category: inquiryData.rCategory || inquiryData.category || "",
-          reporterType: inquiryData.reporterType || inquiryData.reporterType || ""
+          category: inquiryData.rCate || inquiryData.category || "기타", // 🎯 백엔드에서 한국어로 완전 처리됨
+          place: inquiryData.place || "",
+          deliveryAssignmentId: inquiryData.deliveryAssignmentId || null,
+          reporterType: inquiryData.reporterType || "",
+          startAddress: inquiryData.startAddress || "주소 정보 없음",
+          endAddress: inquiryData.endAddress || "주소 정보 없음"
         };
         
-        console.log("매핑된 신고/문의 데이터:", mappedInquiry);
+        console.log("✅ 매핑된 신고/문의 데이터:", mappedInquiry);
+        console.log("🔍 상태값 확인: rStatus =", inquiryData.rStatus, "→ status =", mappedInquiry.status);
+        
         setInquiry(mappedInquiry);
         
         // 답변 데이터도 함께 로드
@@ -96,8 +102,21 @@ const InquiryDetail = () => {
       const answerData = await getAnswerByReportId(reportId);
       console.log("로드된 답변 데이터:", answerData);
       
-      if (answerData) {
-        // 백엔드 데이터 구조에 맞게 매핑
+      if (answerData && Array.isArray(answerData) && answerData.length > 0) {
+        // 🎯 배열 형태의 답변 데이터에서 첫 번째 답변 사용
+        const firstAnswer = answerData[0];
+        const mappedAnswer = {
+          id: firstAnswer.answerId || firstAnswer.id,
+          content: firstAnswer.content || "",
+          createdAt: firstAnswer.regDate || firstAnswer.createdAt || "",
+          updatedAt: firstAnswer.modiDate || firstAnswer.updatedAt || ""
+        };
+        
+        console.log("✅ 매핑된 답변 데이터:", mappedAnswer);
+        setAnswer(mappedAnswer);
+        setHasAnswer(true);
+      } else if (answerData && !Array.isArray(answerData)) {
+        // 🎯 단일 답변 데이터인 경우
         const mappedAnswer = {
           id: answerData.answerId || answerData.id,
           content: answerData.content || "",
@@ -105,7 +124,7 @@ const InquiryDetail = () => {
           updatedAt: answerData.modiDate || answerData.updatedAt || ""
         };
         
-        console.log("매핑된 답변 데이터:", mappedAnswer);
+        console.log("✅ 매핑된 답변 데이터 (단일):", mappedAnswer);
         setAnswer(mappedAnswer);
         setHasAnswer(true);
       } else {
@@ -115,6 +134,11 @@ const InquiryDetail = () => {
       }
     } catch (e) {
       console.error("답변 데이터 로드 실패:", e);
+      console.error("🔍 에러 상세 정보:", {
+        message: e.message,
+        status: e.response?.status,
+        data: e.response?.data
+      });
       // 답변이 없는 경우는 에러가 아님
       setAnswer(null);
       setHasAnswer(false);
@@ -222,11 +246,20 @@ const InquiryDetail = () => {
     switch (status) {
       case "답변 완료":
         return "success";
-      case "처리중":
+      case "조치 완료":
+        return "success";
+      case "완료":
+        return "success";
+      case "처리 중":
         return "warning";
-      case "미처리":
-      default:
+      case "검토 중":
+        return "info";
+      case "대기 중":
         return "error";
+      case "미처리":
+        return "error";
+      default:
+        return "default";
     }
   };
 
@@ -334,6 +367,16 @@ const InquiryDetail = () => {
               <Typography variant="body1" color="text.secondary">
                 작성일: {dayjs(inquiry.createdAt).format("YYYY.MM.DD HH:mm")}
               </Typography>
+              {inquiry.place && (
+                <Typography variant="body1" color="text.secondary">
+                  장소: {inquiry.place}
+                </Typography>
+              )}
+              {inquiry.deliveryAssignmentId && (
+                <Typography variant="body1" color="text.secondary">
+                  배송ID: {inquiry.deliveryAssignmentId}
+                </Typography>
+              )}
             </Stack>
             <Stack direction="row" spacing={1}>
               <Chip 
@@ -350,7 +393,9 @@ const InquiryDetail = () => {
               )}
               {inquiry.reporterType && (
                 <Chip 
-                  label={inquiry.reporterType === 'DRIVER' ? '기사' : '업체'} 
+                  label={inquiry.reporterType === 'DRIVER' ? '기사' : 
+                         inquiry.reporterType === 'COMPANY' ? '업체' : 
+                         inquiry.reporterType === 'SYSTEM' ? '시스템' : inquiry.reporterType} 
                   color={getReporterTypeColor(inquiry.reporterType)}
                   size="small"
                 />

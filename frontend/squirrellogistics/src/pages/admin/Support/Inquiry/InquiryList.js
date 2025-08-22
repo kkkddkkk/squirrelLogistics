@@ -89,18 +89,26 @@ const InquiryList = () => {
   // 상태별 칩 렌더링
   const renderStatusChip = (status) => {
     switch (status) {
-      case 'PENDING':
-        return <Chip label="신고 접수 대기" color="warning" size="small" />;
-      case 'IN_REVIEW':
+      case '대기 중':
+        return <Chip label="대기 중" color="error" size="small" />;
+      case '검토 중':
         return <Chip label="검토 중" color="info" size="small" />;
-      case 'ACTION_TAKEN':
+      case '조치 완료':
         return <Chip label="조치 완료" color="success" size="small" />;
-      case 'REJECTED':
-        return <Chip label="신고 반려" color="error" size="small" />;
-      case 'CLOSED':
-        return <Chip label="상황종료" color="default" size="small" />;
+      case '답변 완료':
+        return <Chip label="답변 완료" color="success" size="small" />;
+      case '완료':
+        return <Chip label="완료" color="success" size="small" />;
+      case '거부됨':
+        return <Chip label="거부됨" color="error" size="small" />;
+      case '미실행':
+        return <Chip label="미실행" color="warning" size="small" />;
+      case '처리 중':
+        return <Chip label="처리 중" color="warning" size="small" />;
+      case '오류':
+        return <Chip label="오류" color="error" size="small" />;
       default:
-        return <Chip label="상태 없음" color="default" size="small" />;
+        return <Chip label={status || "상태 없음"} color="default" size="small" />;
     }
   };
 
