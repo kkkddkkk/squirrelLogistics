@@ -2,15 +2,15 @@
 import axios from "axios";
 
 const API_SERVER_HOST = "http://localhost:8080";
-const BASE_URL = `${API_SERVER_HOST}/api/company/drivers`;
+const BASE_URL = `${API_SERVER_HOST}/api/search-drivers`;
 
-// 🔍 기사 리스트 가져오기 (필터 조건 포함)
-export const fetchDriverList = async (filters) => {
+// 🔍 기사 검색 (필터 조건 포함)
+export const searchDrivers = async (searchParams) => {
   try {
-    const response = await axios.get(BASE_URL, { params: filters });
+    const response = await axios.post(`${BASE_URL}/search`, searchParams);
     return response.data; // 기사 리스트 배열
   } catch (error) {
-    console.error("기사 리스트 불러오기 실패:", error);
+    console.error("기사 검색 실패:", error);
     return [];
   }
 };
@@ -36,6 +36,17 @@ export const sendDriverRequest = async (driverId) => {
     return response.data;
   } catch (error) {
     console.error("기사 요청 실패:", error);
+    return null;
+  }
+};
+
+// 🧪 API 테스트
+export const testDriverSearchAPI = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/test`);
+    return response.data;
+  } catch (error) {
+    console.error("API 테스트 실패:", error);
     return null;
   }
 };

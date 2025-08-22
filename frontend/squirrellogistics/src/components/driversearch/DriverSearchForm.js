@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DriverCard from "./DriverCard";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,6 +15,7 @@ import {
 import {
   createDeliveryRequest, // 결제 플로우: 기사 지명 시 바로 생성
 } from "../../api/estimate/estimateApi";
+import { searchDrivers } from "../../api/driversearch/driverSearchApi";
 import "./DriverSearchForm.css";
 
 const STORAGE_KEY = "deliveryFlow";
@@ -55,6 +56,7 @@ const DriverSearchForm = () => {
     vehicleType,
     sortOption,
     drivers,
+    myLocation,
   } = useSelector((state) => state.driverSearch);
 
   const handleAddressSearch = () => {
@@ -68,14 +70,48 @@ const DriverSearchForm = () => {
     }).open();
   };
 
-  // 임시 mock 검색
-  const handleSearchClick = () => {
-    const mockDrivers = [
-      { id: 1, name: "김기사", rating: 4.8, maxWeight: "3톤", vehicleType: "윙바디", region: "서울, 경기", insurance: true, profileUrl: null, lat: 37.5665, lng: 126.978 },
-      { id: 2, name: "이기사", rating: 5.0, maxWeight: "5톤", vehicleType: "탑차", region: "부산, 대구", insurance: false, profileUrl: null, lat: 35.1796, lng: 129.0756 },
-    ];
-    dispatch(setDrivers(mockDrivers));
+  // 실제 백엔드 API 호출로 검색
+  const handleSearchClick = async () => {
+    try {
+      const searchParams = {
+        keyword: keyword || "",
+        isImmediate: isImmediate || false,
+        maxWeight: maxWeight ? parseInt(maxWeight) : null,
+        vehicleTypeId: vehicleType ? parseInt(vehicleType) : null,
+        sortOption: sortOption || "",
+        latitude: myLocation?.lat || null,
+        longitude: myLocation?.lng || null,
+        region: region || "",
+      };
+
+      const results = await searchDrivers(searchParams);
+      dispatch(setDrivers(results));
+    } catch (error) {
+      console.error("기사 검색 실패:", error);
+      alert("기사 검색에 실패했습니다. 다시 시도해주세요.");
+    }
   };
+
+  // 차량 종류와 최대 적재량 옵션을 동적으로 생성
+  const vehicleTypeOptions = [
+    { id: 1, name: "1톤 트럭", maxWeight: 1000 },
+    { id: 2, name: "2.5톤 트럭", maxWeight: 2500 },
+    { id: 3, name: "5톤 트럭", maxWeight: 5000 },
+    { id: 4, name: "8톤 트럭", maxWeight: 8000 },
+    { id: 5, name: "11톤 트럭", maxWeight: 11000 },
+    { id: 6, name: "15톤 트럭", maxWeight: 15000 },
+    { id: 7, name: "25톤 트럭", maxWeight: 25000 },
+  ];
+
+  const maxWeightOptions = [
+    { value: 1000, label: "1톤" },
+    { value: 2500, label: "2.5톤" },
+    { value: 5000, label: "5톤" },
+    { value: 8000, label: "8톤" },
+    { value: 11000, label: "11톤" },
+    { value: 15000, label: "15톤" },
+    { value: 25000, label: "25톤" },
+  ];
 
   // ✅ 기사 지명 → 서버에 요청/결제 레코드 생성 → 결제 페이지로 이동 (모든 DTO 포함)
   const handlePickDriverById = async (id) => {
@@ -83,13 +119,19 @@ const DriverSearchForm = () => {
       alert("이전 페이지 정보가 없습니다. 예상 금액 페이지에서 다시 시도해주세요.");
       return;
     }
-    const picked = (drivers || []).find((d) => String(d.id) === String(id)) || null;
+    const picked = (drivers || []).find((d) => String(d.driverId) === String(id)) || null;
 
     const nextFlow = {
       ...flow,
-      selectedDriver: picked
-        ? { id: picked.id, name: picked.name, rating: picked.rating, maxWeight: picked.maxWeight, vehicleType: picked.vehicleType }
-        : null,
+              selectedDriver: picked
+          ? { 
+              id: picked.driverId, 
+              name: `기사 #${picked.driverId}`, 
+              rating: picked.averageRating, 
+              maxWeight: picked.maxWeight, 
+              vehicleType: picked.vehicleTypeName 
+            }
+          : null,
     };
 
     // 세션에 저장
@@ -174,24 +216,22 @@ const DriverSearchForm = () => {
         <div className="select-wrapper">
           <select value={maxWeight} onChange={(e) => dispatch(setMaxWeight(e.target.value))}>
             <option value="">최대 적재량</option>
-            <option value="1">1톤</option>
-            <option value="3">1~3톤</option>
-            <option value="5">3~5톤</option>
-            <option value="10">5~10톤</option>
-            <option value="15">10~15톤</option>
-            <option value="20">15~20톤</option>
-            <option value="21">20톤 이상</option>
+            {maxWeightOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="select-wrapper">
           <select value={vehicleType} onChange={(e) => dispatch(setVehicleType(e.target.value))}>
             <option value="">차량 종류</option>
-            <option value="일반 카고">일반 카고</option>
-            <option value="윙바디">윙바디</option>
-            <option value="냉장/냉동">냉장/냉동</option>
-            <option value="탑차">탑차</option>
-            <option value="리프트">리프트</option>
+            {vehicleTypeOptions.map(option => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -211,7 +251,7 @@ const DriverSearchForm = () => {
         ) : (
           drivers.map((driver) => (
             <DriverCard
-              key={driver.id}
+              key={driver.driverId}
               driver={driver}
               onRequest={(id) => handlePickDriverById(id)}
             />
