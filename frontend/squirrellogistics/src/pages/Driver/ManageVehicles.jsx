@@ -3,38 +3,30 @@ import {
   Box,
   Typography,
   TextField,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
-  Select,
-  MenuItem,
-  FormControl,
   Container,
   Alert,
   CircularProgress,
-  Grid,
+  MenuItem,
   FormControlLabel,
   Checkbox,
+  Chip,
+  Select,
+  FormControl,
   InputLabel,
+  OutlinedInput,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {
-  getDriverCars,
-  addCar,
-  updateCar,
-  deleteCar,
-} from "../../api/driver/driverApi";
+import { fetchCars, createCar, updateCar, deleteCar } from "../../api/cars";
+
+const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 
 const ManageVehicles = () => {
   const navigate = useNavigate();
@@ -44,11 +36,12 @@ const ManageVehicles = () => {
 
   // 차량 추가 상태
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isManualAdd, setIsManualAdd] = useState(false); // 수동 추가 여부
+  const [additionalForms, setAdditionalForms] = useState([]); // 추가된 폼들
   const [newVehicle, setNewVehicle] = useState({
-    id: "new",
     vehiclePlateNumber: "",
     vehicleType: "",
-    firstRegistrationDate: dayjs().format("YYYY.MM.DD"),
+    firstRegistrationDate: dayjs().format("YYYY-MM-DD"),
     loadCapacity: "",
     currentDistance: "",
     vehicleStatus: "운행 가능",
@@ -57,7 +50,17 @@ const ManageVehicles = () => {
     insuranceStatus: "무",
     insuranceStartDate: null,
     insuranceEndDate: null,
+    licenseNum: "",
+    licenseDT: null,
+    startTime: dayjs().hour(7).minute(0),
+    endTime: dayjs().hour(18).minute(0),
+    preferredAreas: "",
   });
+
+  // showAddForm 상태 디버깅
+  useEffect(() => {
+    console.log("showAddForm 상태 변경:", showAddForm);
+  }, [showAddForm]);
 
   // 차량 목록 조회
   useEffect(() => {
@@ -66,40 +69,63 @@ const ManageVehicles = () => {
         setLoading(true);
         setError("");
 
-        const carsData = await getDriverCars();
+        const carsData = await fetchCars(); // 변경: getDriverCars -> fetchCars
         console.log("조회된 차량 데이터:", carsData);
 
         // 백엔드 데이터를 프론트엔드 형식으로 변환
-        const formattedVehicles = carsData.map((car) => ({
-          id: car.carId,
-          vehicleNumber: car.carNum || "",
-          vehiclePlateNumber: car.carNum || "",
-          firstRegistrationDate: car.regDate
-            ? dayjs(car.regDate).format("YYYY.MM.DD")
-            : dayjs().format("YYYY.MM.DD"),
-          vehicleType: car.vehicleType?.name || "",
-          loadCapacity: car.vehicleType?.maxWeight
-            ? `${car.vehicleType.maxWeight}kg`
-            : "",
-          vehicleStatus: car.carStatus || "운행 가능",
-          currentDistance: car.Mileage
-            ? `${car.Mileage.toLocaleString()} km`
-            : "",
-          lastInspectionDate: car.inspection ? dayjs(car.inspection) : null,
-          nextMaintenanceDate: car.inspection ? dayjs(car.inspection) : null,
-          operationStatus: car.carStatus || "운행중",
-          insuranceStatus: car.insurance ? "유" : "무",
-          insuranceStartDate: null,
-          insuranceEndDate: null,
-        }));
+        const formattedVehicles = (carsData || []).map((car) => {
+          console.log("개별 차량 데이터 (ManageVehicles):", car);
+
+          return {
+            id: car.carId,
+            vehicleNumber: car.carNum || "",
+            vehiclePlateNumber: car.carNum || "",
+            firstRegistrationDate: car.regDate
+              ? dayjs(car.regDate).format("YYYY-MM-DD")
+              : dayjs().format("YYYY-MM-DD"),
+            vehicleType: car.vehicleType?.name || "",
+            loadCapacity: car.vehicleType?.maxWeight
+              ? `${car.vehicleType.maxWeight}kg`
+              : "",
+            vehicleStatus: car.carStatus || "운행 가능",
+            currentDistance: car.Mileage
+              ? `${car.Mileage.toLocaleString()}`
+              : "0",
+            lastInspectionDate: car.inspection ? dayjs(car.inspection) : null,
+            nextMaintenanceDate: car.inspection ? dayjs(car.inspection) : null,
+            operationStatus: car.carStatus || "운행중",
+            insuranceStatus: car.insurance ? "유" : "무",
+            insuranceStartDate: null,
+            insuranceEndDate: null,
+            licenseNum: car.driver?.licenseNum || "",
+            licenseDT: car.driver?.licenseDT
+              ? dayjs(car.driver.licenseDT)
+              : null,
+            startTime: car.driver?.preferred_start_time
+              ? dayjs(car.driver.preferred_start_time, "HH:mm:ss")
+              : dayjs().hour(7).minute(0),
+            endTime: car.driver?.preferred_end_time
+              ? dayjs(car.driver.preferred_end_time, "HH:mm:ss")
+              : dayjs().hour(18).minute(0),
+            preferredAreas: car.driver?.mainLoca || "",
+          };
+        });
 
         setVehicles(formattedVehicles);
+
+        // 차량이 없으면 자동으로 추가 폼 표시 (수동 추가가 아닐 때만)
+        if (formattedVehicles.length === 0 && !isManualAdd) {
+          setShowAddForm(true);
+        }
       } catch (error) {
         console.error("차량 목록 조회 실패:", error);
         setError("차량 정보를 불러오는데 실패했습니다.");
 
-        // 에러 시 빈 배열로 설정
+        // 에러 시 빈 배열로 설정하고 추가 폼 표시 (수동 추가가 아닐 때만)
         setVehicles([]);
+        if (!isManualAdd) {
+          setShowAddForm(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -140,20 +166,50 @@ const ManageVehicles = () => {
   };
 
   const openAddForm = () => {
-    setNewVehicle({
-      carNum: "",
-      vehicleTypeId: null,
-      insurance: false,
-      Mileage: "",
-      etc: "",
-      inspection: null,
-      carStatus: "운행 가능",
-    });
-    setShowAddForm(true);
+    console.log("차량 추가하기 버튼 클릭됨");
+    setIsManualAdd(true); // 수동 추가 플래그 설정
+
+    // 새로운 폼 데이터 생성
+    const newFormData = {
+      id: Date.now(), // 고유 ID 생성
+      vehiclePlateNumber: "",
+      vehicleType: "",
+      firstRegistrationDate: dayjs().format("YYYY-MM-DD"),
+      loadCapacity: "",
+      currentDistance: "",
+      vehicleStatus: "운행 가능",
+      lastInspectionDate: null,
+      nextMaintenanceDate: null,
+      insuranceStatus: "무",
+      insuranceStartDate: null,
+      insuranceEndDate: null,
+      licenseNum: "",
+      licenseDT: null,
+      startTime: dayjs().hour(7).minute(0),
+      endTime: dayjs().hour(18).minute(0),
+      preferredAreas: "",
+    };
+
+    // 추가 폼 목록에 새 폼 추가
+    setAdditionalForms((prev) => [...prev, newFormData]);
+    console.log("새 차량 추가 폼이 생성됨");
   };
 
   const closeAddForm = () => {
     setShowAddForm(false);
+    setIsManualAdd(false); // 수동 추가 플래그 초기화
+  };
+
+  const removeAdditionalForm = (formId) => {
+    setAdditionalForms((prev) => prev.filter((form) => form.id !== formId));
+  };
+
+  const handleAdditionalFormChange = (formId, field, value) => {
+    setAdditionalForms((prev) =>
+      prev.map((form) =>
+        form.id === formId ? { ...form, [field]: value } : form
+      )
+    );
   };
 
   const handleNewVehicleChange = (field, value) => {
@@ -173,7 +229,7 @@ const ManageVehicles = () => {
 
       const carData = {
         carNum: newVehicle.vehiclePlateNumber,
-        vehicleTypeId: null, // 차량 종류 ID는 별도로 관리 필요
+        vehicleTypeId: 1, // 기본값으로 1 설정 (일반카고)
         insurance: newVehicle.insuranceStatus === "유",
         Mileage: newVehicle.currentDistance
           ? parseInt(newVehicle.currentDistance.replace(/[^\d]/g, ""))
@@ -182,44 +238,48 @@ const ManageVehicles = () => {
         inspection: newVehicle.lastInspectionDate
           ? newVehicle.lastInspectionDate.toDate()
           : null,
-        carStatus: "temporary", // CarStatusEnum에 temporary만 있음
+        carStatus: "temporary", // CarStatusEnum에 맞는 값으로 수정
       };
 
-      const addedCar = await addCar(carData);
+      const addedCar = await createCar(carData);
       console.log("추가된 차량:", addedCar);
 
       // 차량 목록 다시 조회
-      const carsData = await getDriverCars();
+      const carsData = await fetchCars(); // 변경: getDriverCars -> fetchCars
       const formattedVehicles = carsData.map((car) => ({
         id: car.carId,
         vehicleNumber: car.carNum || "",
         vehiclePlateNumber: car.carNum || "",
         firstRegistrationDate: car.regDate
-          ? dayjs(car.regDate).format("YYYY.MM.DD")
-          : dayjs().format("YYYY.MM.DD"),
+          ? dayjs(car.regDate).format("YYYY-MM-DD")
+          : dayjs().format("YYYY-MM-DD"),
         vehicleType: car.vehicleType?.name || "",
         loadCapacity: car.vehicleType?.maxWeight
           ? `${car.vehicleType.maxWeight}kg`
           : "",
         vehicleStatus: car.carStatus || "운행 가능",
-        currentDistance: car.Mileage
-          ? `${car.Mileage.toLocaleString()} km`
-          : "",
+        currentDistance: car.Mileage ? `${car.Mileage.toLocaleString()}` : "0",
         lastInspectionDate: car.inspection ? dayjs(car.inspection) : null,
         nextMaintenanceDate: car.inspection ? dayjs(car.inspection) : null,
         operationStatus: car.carStatus || "운행중",
         insuranceStatus: car.insurance ? "유" : "무",
         insuranceStartDate: null,
         insuranceEndDate: null,
+        licenseNum: car.driver?.licenseNum || "",
+        licenseDT: car.driver?.licenseDT ? dayjs(car.driver.licenseDT) : null,
+        startTime: car.driver?.preferred_start_time
+          ? dayjs(car.driver.preferred_start_time, "HH:mm:ss")
+          : dayjs().hour(7).minute(0),
+        endTime: car.driver?.preferred_end_time
+          ? dayjs(car.driver.preferred_end_time, "HH:mm:ss")
+          : dayjs().hour(18).minute(0),
+        preferredAreas: car.driver?.mainLoca || "",
       }));
 
       setVehicles(formattedVehicles);
       closeAddForm();
+      setIsManualAdd(false); // 수동 추가 플래그 초기화
       alert("차량이 성공적으로 추가되었습니다.");
-      // 차량 추가 후 DriverProfile로 돌아가기
-      navigate("/driver/profile", {
-        state: { fromVehicleManagement: true },
-      });
     } catch (error) {
       console.error("차량 추가 실패:", error);
       alert(
@@ -237,26 +297,26 @@ const ManageVehicles = () => {
         // 차량 목록에서 제거
         setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
         alert("차량이 성공적으로 삭제되었습니다.");
-        // 차량 삭제 후 DriverProfile로 돌아가기
-        navigate("/driver/profile", {
-          state: { fromVehicleManagement: true },
-        });
       } catch (error) {
         console.error("차량 삭제 실패:", error);
         alert(
           "차량 삭제에 실패했습니다: " + (error.response?.data || error.message)
         );
       }
+    } else {
+      alert("최소 1대의 차량은 유지해야 합니다.");
     }
   };
 
   const handleSave = async () => {
     try {
+      console.log("저장할 차량 정보:", vehicles);
+
       // 각 차량 정보를 백엔드 형식으로 변환하여 저장
       for (const vehicle of vehicles) {
         const carData = {
           carNum: vehicle.vehiclePlateNumber,
-          vehicleTypeId: null, // 차량 종류 ID는 별도로 관리 필요
+          vehicleTypeId: 1, // 기본값으로 1 설정 (일반카고)
           insurance: vehicle.insuranceStatus === "유",
           Mileage: vehicle.currentDistance
             ? parseInt(vehicle.currentDistance.replace(/[^\d]/g, ""))
@@ -265,24 +325,63 @@ const ManageVehicles = () => {
           inspection: vehicle.lastInspectionDate
             ? vehicle.lastInspectionDate.toDate()
             : null,
-          carStatus: "temporary", // CarStatusEnum에 temporary만 있음
+          carStatus: "temporary", // CarStatusEnum에 맞는 값으로 수정
         };
 
         console.log("차량 수정 요청 데이터:", carData);
-        await updateCar(vehicle.id, carData);
+
+        try {
+          await updateCar(vehicle.id, carData);
+          console.log(`차량 ${vehicle.id} 수정 성공`);
+        } catch (updateError) {
+          console.error(`차량 ${vehicle.id} 수정 실패:`, updateError);
+          console.error("에러 응답:", updateError.response?.data);
+          console.error("에러 상태:", updateError.response?.status);
+
+          // 구체적인 에러 메시지 생성
+          let errorMessage = "차량 정보 저장에 실패했습니다.";
+          if (updateError.response?.data) {
+            if (typeof updateError.response.data === "string") {
+              errorMessage += ` ${updateError.response.data}`;
+            } else if (updateError.response.data.message) {
+              errorMessage += ` ${updateError.response.data.message}`;
+            } else {
+              errorMessage += ` ${JSON.stringify(updateError.response.data)}`;
+            }
+          } else if (updateError.message) {
+            errorMessage += ` ${updateError.message}`;
+          }
+
+          alert(errorMessage);
+          return; // 첫 번째 에러에서 중단
+        }
       }
 
-      console.log("저장된 차량 정보:", vehicles);
+      console.log("모든 차량 정보 저장 완료");
       alert("차량 정보가 성공적으로 저장되었습니다.");
       navigate("/driver/profile", {
         state: { fromVehicleManagement: true },
       });
     } catch (error) {
       console.error("차량 정보 저장 실패:", error);
-      alert(
-        "차량 정보 저장에 실패했습니다: " +
-          (error.response?.data || error.message)
-      );
+      console.error("에러 응답:", error.response?.data);
+      console.error("에러 상태:", error.response?.status);
+
+      // 구체적인 에러 메시지 생성
+      let errorMessage = "차량 정보 저장에 실패했습니다.";
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage += ` ${error.response.data}`;
+        } else if (error.response.data.message) {
+          errorMessage += ` ${error.response.data.message}`;
+        } else {
+          errorMessage += ` ${JSON.stringify(error.response.data)}`;
+        }
+      } else if (error.message) {
+        errorMessage += ` ${error.message}`;
+      }
+
+      alert(errorMessage);
     }
   };
 
@@ -295,1501 +394,1233 @@ const ManageVehicles = () => {
     "10~15톤",
     "25톤 초과",
   ];
-  const vehicleStatuses = ["운행가능", "수리중", "운행불가"]; // 현재는 비활성 표시용
+  const vehicleStatuses = ["운행가능", "수리중", "운행불가"];
   const operationStatuses = ["운행중", "대기중", "정비중", "휴식중"];
   const insuranceStatuses = ["유", "무"];
 
-  const getVehicleInfoFields = (vehicle) => {
-    const baseFields = [
-      ["차량번호", "vehiclePlateNumber", "차종", "vehicleType"],
-      ["최초등록일자", "firstRegistrationDate", "최대 적재량", "loadCapacity"],
-      ["현재 주행거리", "currentDistance", "차량상태", "vehicleStatus"],
-      [
-        "마지막 점검일",
-        "lastInspectionDate",
-        "다음 정비 예정일",
-        "nextMaintenanceDate",
-      ],
-      ["보험유무", "insuranceStatus", "", ""],
-    ];
-
-    // 보험유무가 "유"인 경우에만 보험 관련 필드 추가
-    if (vehicle.insuranceStatus === "유") {
-      baseFields.push([
-        "보험시작일",
-        "insuranceStartDate",
-        "보험만료일",
-        "insuranceEndDate",
-      ]);
-    }
-
-    return baseFields;
-  };
-
-  const renderField = (
-    label,
-    name,
-    vehicle,
-    isDate = false,
-    isSelect = false,
-    options = [],
-    unit = "",
-    disabled = false
-  ) => {
-    if (isDate) {
-      return (
-        <Box sx={{ width: "25%", height: "100%" }}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              value={vehicle[name]}
-              onChange={(newValue) => handleChange(vehicle.id, name, newValue)}
-              disabled={disabled}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  fullWidth: true,
-                  sx: {
-                    height: "100%",
-                    "& .MuiOutlinedInput-root": {
-                      height: "100%",
-                      backgroundColor: disabled ? "#f5f5f5" : "white",
-                      borderRadius: 0,
-                      border: "none",
-                      "& fieldset": {
-                        borderColor: "transparent",
-                        borderRadius: 0,
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "transparent",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "transparent",
-                      },
-                    },
-                    "& input": {
-                      padding: "16px 14px",
-                      fontSize: "0.9rem",
-                      color: "#333",
-                    },
-                  },
-                },
-              }}
-            />
-          </LocalizationProvider>
-        </Box>
-      );
-    }
-
-    if (isSelect) {
-      return (
-        <FormControl size="small" sx={{ width: "25%", height: "100%" }}>
-          <Select
-            value={vehicle[name] || ""}
-            onChange={(e) => handleChange(vehicle.id, name, e.target.value)}
-            disabled={disabled}
-            displayEmpty
-            sx={{
-              height: "100%",
-              backgroundColor: disabled ? "#f5f5f5" : "white",
-              borderRadius: 0,
-              border: "none",
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "transparent",
-                borderRadius: 0,
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "transparent",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "transparent",
-              },
-              "& .MuiSelect-select": {
-                display: "flex",
-                alignItems: "center",
-                padding: "16px 14px",
-                fontSize: "0.9rem",
-                color: "#333",
-              },
-            }}
-          >
-            <MenuItem
-              value=""
-              disabled
-              sx={{ color: "#999", fontSize: "0.9rem" }}
-            >
-              {name === "vehicleType"
-                ? "차량 종류를 선택해주세요."
-                : name === "loadCapacity"
-                ? "최대 적재량을 선택해주세요."
-                : name === "insuranceStatus"
-                ? "보험 유무를 선택해주세요."
-                : "선택해주세요."}
-            </MenuItem>
-            {options.map((option) => (
-              <MenuItem key={option} value={option} sx={{ fontSize: "0.9rem" }}>
-                {option}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      );
-    }
-
+  // 로딩 상태
+  if (loading) {
     return (
-      <TextField
-        size="small"
-        value={vehicle[name] || ""}
-        onChange={(e) => handleChange(vehicle.id, name, e.target.value)}
-        disabled={disabled}
-        placeholder={unit}
-        sx={{
-          width: "25%",
-          height: "100%",
-          "& .MuiOutlinedInput-root": {
-            height: "100%",
-            backgroundColor: disabled ? "#f5f5f5" : "white",
-            borderRadius: 0,
-            border: "none",
-            "& fieldset": {
-              borderColor: "transparent",
-              borderRadius: 0,
-            },
-            "&:hover fieldset": {
-              borderColor: "transparent",
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "transparent",
-            },
-            "& input": {
-              textAlign: unit ? "right" : "left",
-              padding: "16px 14px",
-              fontSize: "0.9rem",
-              color: "#333",
-              display: "flex",
-              alignItems: "center",
-              minHeight: "100%",
-            },
-            "& .MuiInputBase-input": {
-              color: disabled ? "#113F67" : "#333",
-              fontWeight: disabled ? "bold" : "normal",
-            },
-            "& .MuiOutlinedInput-input": {
-              color: disabled ? "#113F67" : "#333",
-              fontWeight: disabled ? "bold" : "normal",
-            },
-          },
-        }}
-        variant="outlined"
-      />
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress />
+      </Box>
     );
-  };
+  }
 
   return (
-    <Box sx={{ p: 4, backgroundColor: "#f8fafc", minHeight: "100vh" }}>
-      <Container maxWidth="lg">
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          color="#113F67"
-          sx={{
-            mb: 4,
-            textAlign: "center",
-            fontSize: { xs: "1.8rem", md: "2.2rem" },
-          }}
-        ></Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography
+        variant="h4"
+        sx={{ mb: 3, color: "#113F67", fontWeight: "bold" }}
+      >
+        차량 관리
+      </Typography>
 
-        {/* 로딩 상태 */}
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress />
+      {/* 에러 메시지 */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* 차량 목록 표시 */}
+      {vehicles.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2, color: "#113F67" }}>
+            등록된 차량 ({vehicles.length}대)
+          </Typography>
+          <Box
+            sx={{
+              border: "1px solid #e1e5e9",
+              borderRadius: 2,
+              backgroundColor: "white",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "auto 1fr 1fr",
+                borderBottom: "1px solid #e1e5e9",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <Box
+                sx={{
+                  p: 2,
+                  fontWeight: "bold",
+                  borderRight: "1px solid #e1e5e9",
+                }}
+              >
+                차량
+              </Box>
+              <Box
+                sx={{
+                  p: 2,
+                  fontWeight: "bold",
+                  borderRight: "1px solid #e1e5e9",
+                }}
+              >
+                차량 번호
+              </Box>
+              <Box sx={{ p: 2, fontWeight: "bold" }}>차량상태</Box>
+            </Box>
+            {vehicles.map((vehicle, index) => (
+              <Box
+                key={vehicle.id}
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr 1fr",
+                  borderBottom:
+                    index < vehicles.length - 1 ? "1px solid #e1e5e9" : "none",
+                }}
+              >
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRight: "1px solid #e1e5e9",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {index + 1}
+                </Box>
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRight: "1px solid #e1e5e9",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {vehicle.vehiclePlateNumber || "차량번호 없음"}
+                </Box>
+                <Box
+                  sx={{
+                    p: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  {vehicle.vehicleStatus || "운행 가능"}
+                  {vehicles.length > 1 && (
+                    <Button
+                      onClick={() => deleteVehicle(vehicle.id)}
+                      size="small"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                    >
+                      삭제
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            ))}
           </Box>
-        )}
+        </Box>
+      )}
 
-        {/* 에러 메시지 */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* 차량 목록 */}
-        <Paper
-          elevation={0}
+      {/* 차량 추가 버튼 */}
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
+        <Button
+          variant="contained"
+          onClick={openAddForm}
+          startIcon={<AddIcon />}
           sx={{
-            mb: 4,
-            backgroundColor: "white",
+            backgroundColor: "#113F67",
             borderRadius: 2,
-            border: "1px solid #e1e5e9",
+            px: 3,
+            py: 1.5,
+            fontSize: "1rem",
+            fontWeight: "bold",
+            boxShadow: "0 2px 8px rgba(17, 63, 103, 0.3)",
+            "&:hover": {
+              backgroundColor: "#0d2d4a",
+              boxShadow: "0 4px 12px rgba(17, 63, 103, 0.4)",
+            },
           }}
         >
-          <Box sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#113F67",
-                  mr: 2,
-                }}
-              />
-              <Typography variant="h6" fontWeight="bold" color="#113F67">
-                차량 목록
-              </Typography>
-            </Box>
+          차량 추가하기
+        </Button>
+      </Box>
 
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f8fafc" }}>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#113F67",
-                        borderBottom: "2px solid #e1e5e9",
-                      }}
-                    >
-                      번호
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#113F67",
-                        borderBottom: "2px solid #e1e5e9",
-                      }}
-                    >
-                      차량번호
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#113F67",
-                        borderBottom: "2px solid #e1e5e9",
-                      }}
-                    >
-                      차량 상태
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {vehicles.map((vehicle, index) => (
-                    <TableRow
-                      key={vehicle.id}
-                      sx={{ "&:hover": { backgroundColor: "#f8fafc" } }}
-                    >
-                      <TableCell sx={{ borderBottom: "1px solid #e1e5e9" }}>
-                        {index + 1}
-                      </TableCell>
-                      <TableCell sx={{ borderBottom: "1px solid #e1e5e9" }}>
-                        {vehicle.vehiclePlateNumber || "-"}
-                      </TableCell>
-                      <TableCell sx={{ borderBottom: "1px solid #e1e5e9" }}>
-                        {vehicle.vehicleStatus || "운행 가능"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Paper>
+      {/* 차량 정보 입력 폼 */}
+      <Box
+        component="form"
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
+        <Typography variant="h6">차량 등록</Typography>
 
-        {/* 차량 추가 버튼 */}
-        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="contained"
-            onClick={openAddForm}
-            startIcon={<AddIcon />}
-            sx={{
-              backgroundColor: "#113F67",
-              borderRadius: 2,
-              px: 3,
-              py: 1.5,
-              fontSize: "1rem",
-              fontWeight: "bold",
-              boxShadow: "0 2px 8px rgba(17, 63, 103, 0.3)",
-              "&:hover": {
-                backgroundColor: "#0d2d4a",
-                boxShadow: "0 4px 12px rgba(17, 63, 103, 0.4)",
-              },
-            }}
-          >
-            차량 추가하기
-          </Button>
-        </Box>
-
-        {/* 각 차량 정보 섹션 */}
+        {/* 기존 차량 정보 수정 */}
         {vehicles.map((vehicle, vehicleIndex) => (
-          <Paper
+          <Box
             key={vehicle.id}
-            elevation={0}
             sx={{
-              mb: 4,
-              backgroundColor: "white",
-              borderRadius: 2,
-              border: "1px solid #e1e5e9",
-              overflow: "hidden",
+              border: "2px solid #e1e5e9",
+              borderRadius: 3,
+              p: 3,
+              backgroundColor: "#fafbfc",
+              mb: 3,
             }}
           >
-            <Box sx={{ p: 4 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: 4,
-                  pb: 2,
-                  borderBottom: "2px solid #f1f3f4",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box key={vehicle.id} sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "#113F67" }}>
+                자동차 기본 정보 {vehicleIndex + 1}
+              </Typography>
+
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                {/* 1행: 차량번호, 최초등록일자 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="차량 번호"
+                    fullWidth
+                    value={vehicle.vehiclePlateNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        vehicle.id,
+                        "vehiclePlateNumber",
+                        e.target.value
+                      )
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  />
+                </div>
+
+                <div style={{ flex: "1 1 48%" }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="최초등록일자"
+                      value={
+                        vehicle.firstRegistrationDate
+                          ? dayjs(vehicle.firstRegistrationDate)
+                          : null
+                      }
+                      onChange={(newValue) =>
+                        handleChange(
+                          vehicle.id,
+                          "firstRegistrationDate",
+                          newValue
+                        )
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          helperText: " ",
+                          FormHelperTextProps: helperProps,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
+
+                {/* 2행: 차종, 최대 적재량 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="차종"
+                    select
+                    fullWidth
+                    value={vehicle.vehicleType}
+                    onChange={(e) =>
+                      handleChange(vehicle.id, "vehicleType", e.target.value)
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  >
+                    {vehicleTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </div>
+
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="최대 적재량"
+                    select
+                    fullWidth
+                    value={vehicle.loadCapacity}
+                    onChange={(e) =>
+                      handleChange(vehicle.id, "loadCapacity", e.target.value)
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  >
+                    {loadCapacities.map((capacity) => (
+                      <MenuItem key={capacity} value={capacity}>
+                        {capacity}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </div>
+
+                {/* 3행: 현재 주행거리, 차량상태 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="현재 주행거리"
+                    fullWidth
+                    value={vehicle.currentDistance}
+                    onChange={(e) =>
+                      handleChange(
+                        vehicle.id,
+                        "currentDistance",
+                        e.target.value
+                      )
+                    }
+                    InputProps={{
+                      endAdornment: <span>km</span>,
+                    }}
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  />
+                </div>
+
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="차량상태"
+                    select
+                    fullWidth
+                    value={vehicle.vehicleStatus}
+                    onChange={(e) =>
+                      handleChange(vehicle.id, "vehicleStatus", e.target.value)
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  >
+                    {vehicleStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </div>
+
+                {/* 4행: 차량 마지막 점검일, 다음 정비 예정일 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="차량 마지막 점검일"
+                      value={vehicle.lastInspectionDate}
+                      onChange={(newValue) =>
+                        handleChange(vehicle.id, "lastInspectionDate", newValue)
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          helperText: " ",
+                          FormHelperTextProps: helperProps,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
+
+                <div style={{ flex: "1 1 48%" }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="다음 정비 예정일"
+                      value={vehicle.nextMaintenanceDate}
+                      onChange={(newValue) =>
+                        handleChange(
+                          vehicle.id,
+                          "nextMaintenanceDate",
+                          newValue
+                        )
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          helperText: " ",
+                          FormHelperTextProps: helperProps,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
+
+                {/* 5행: 보험 유무 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="보험 유무"
+                    select
+                    fullWidth
+                    value={vehicle.insuranceStatus}
+                    onChange={(e) =>
+                      handleChange(
+                        vehicle.id,
+                        "insuranceStatus",
+                        e.target.value
+                      )
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  >
+                    {insuranceStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </div>
+
+                {/* 6행: 보험 시작일, 보험 만료일 (보험 유무가 "유"일 때만) */}
+                {vehicle.insuranceStatus === "유" && (
+                  <>
+                    <div style={{ flex: "1 1 48%" }}>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                          label="보험시작일"
+                          value={vehicle.insuranceStartDate}
+                          onChange={(newValue) =>
+                            handleChange(
+                              vehicle.id,
+                              "insuranceStartDate",
+                              newValue
+                            )
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              helperText: " ",
+                              FormHelperTextProps: helperProps,
+                            },
+                          }}
+                        />
+                      </LocalizationProvider>
+                    </div>
+
+                    <div style={{ flex: "1 1 48%" }}>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                          label="보험만료일"
+                          value={vehicle.insuranceEndDate}
+                          onChange={(newValue) =>
+                            handleChange(
+                              vehicle.id,
+                              "insuranceEndDate",
+                              newValue
+                            )
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              helperText: " ",
+                              FormHelperTextProps: helperProps,
+                            },
+                          }}
+                        />
+                      </LocalizationProvider>
+                    </div>
+                  </>
+                )}
+
+                {/* 7행: 운전면허증 번호, 운전면허 만료일 */}
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="운전면허증 번호"
+                    fullWidth
+                    value={vehicle.licenseNum || ""}
+                    onChange={(e) =>
+                      handleChange(vehicle.id, "licenseNum", e.target.value)
+                    }
+                    helperText=" "
+                    FormHelperTextProps={helperProps}
+                  />
+                </div>
+
+                <div style={{ flex: "1 1 48%" }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="운전면허 만료일"
+                      value={vehicle.licenseDT}
+                      onChange={(newValue) =>
+                        handleChange(vehicle.id, "licenseDT", newValue)
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          helperText: " ",
+                          FormHelperTextProps: helperProps,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
+
+                <Button
+                  variant="outlined"
+                  type="button"
+                  onClick={() => alert("진위확인 연동 예정")}
+                  sx={{ height: 56 }}
+                >
+                  운전면허 진위확인
+                </Button>
+
+                {/* 선호 시간대 */}
+                <div style={{ flex: "1 1 100%" }}>
                   <Box
                     sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      backgroundColor: "#113F67",
-                      mr: 2,
+                      border: "1px solid #e1e5e9",
+                      borderRadius: 1,
+                      p: 2,
+                      backgroundColor: "#f8fafc",
                     }}
-                  />
-                  <Typography variant="h6" fontWeight="bold" color="#113F67">
-                    자동차 기본 정보 {vehicleIndex + 1}
-                  </Typography>
-                </Box>
-                {vehicles.length > 1 && (
-                  <Button
-                    onClick={() => deleteVehicle(vehicle.id)}
-                    startIcon={<DeleteIcon />}
-                    sx={{
-                      color: "#d32f2f",
-                      border: "1px solid #d32f2f",
-                      borderRadius: 2,
-                      px: 2,
-                      "&:hover": {
-                        backgroundColor: "rgba(211, 47, 47, 0.1)",
-                        borderColor: "#b71c1c",
-                      },
-                    }}
-                    variant="outlined"
-                    size="small"
                   >
-                    삭제하기
-                  </Button>
-                )}
-              </Box>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {getVehicleInfoFields(vehicle).map(
-                  ([label1, name1, label2, name2], idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        display: "flex",
-                        height: 60,
-                        borderRadius: 1,
-                        overflow: "hidden",
-                        border: "1px solid #e1e5e9",
-                      }}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 2, color: "#113F67" }}
                     >
-                      {/* 라벨 1 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          width: "25%",
-                          height: "100%",
-                          p: 2,
-                          backgroundColor: "#f8fafc",
-                          borderRight: "1px solid #e1e5e9",
-                          minHeight: 60,
-                        }}
-                      >
-                        <Typography
-                          fontWeight="bold"
-                          color="#113F67"
-                          fontSize="0.9rem"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            height: "100%",
-                            textAlign: "left",
-                            lineHeight: 1,
+                      선호 시간대
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <TimePicker
+                          label="시작 시간"
+                          value={vehicle.startTime || dayjs().hour(7).minute(0)}
+                          onChange={(newValue) =>
+                            handleChange(vehicle.id, "startTime", newValue)
+                          }
+                          slotProps={{
+                            textField: { size: "small" },
                           }}
-                        >
-                          {label1}
-                        </Typography>
-                      </Box>
-
-                      {/* 필드 1 */}
-                      {name1 === "vehicleType"
-                        ? renderField(
-                            label1,
-                            name1,
-                            vehicle,
-                            false,
-                            true,
-                            vehicleTypes
-                          )
-                        : name1 === "loadCapacity"
-                        ? renderField(
-                            label1,
-                            name1,
-                            vehicle,
-                            false,
-                            true,
-                            loadCapacities
-                          )
-                        : name1 === "lastInspectionDate" ||
-                          name1 === "nextMaintenanceDate"
-                        ? renderField(label1, name1, vehicle, true)
-                        : name1 === "currentDistance"
-                        ? renderField(
-                            label1,
-                            name1,
-                            vehicle,
-                            false,
-                            false,
-                            [],
-                            "km"
-                          )
-                        : name1 === "vehicleStatus"
-                        ? renderField(
-                            label1,
-                            name1,
-                            vehicle,
-                            false,
-                            false,
-                            [],
-                            "",
-                            true
-                          )
-                        : name1 === "insuranceStatus"
-                        ? renderField(
-                            label1,
-                            name1,
-                            vehicle,
-                            false,
-                            true,
-                            insuranceStatuses
-                          )
-                        : name1 === "insuranceStartDate" ||
-                          name1 === "insuranceEndDate"
-                        ? renderField(label1, name1, vehicle, true)
-                        : renderField(label1, name1, vehicle)}
-
-                      {/* 라벨 2 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          width: "25%",
-                          height: "100%",
-                          p: 2,
-                          backgroundColor: "#f8fafc",
-                          borderLeft: "1px solid #e1e5e9",
-                          borderRight: "1px solid #e1e5e9",
-                          minHeight: 60,
-                        }}
-                      >
-                        <Typography
-                          fontWeight="bold"
-                          color="#113F67"
-                          fontSize="0.9rem"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            height: "100%",
-                            textAlign: "left",
-                            lineHeight: 1,
+                        />
+                        <Typography>~</Typography>
+                        <TimePicker
+                          label="종료 시간"
+                          value={vehicle.endTime || dayjs().hour(18).minute(0)}
+                          onChange={(newValue) =>
+                            handleChange(vehicle.id, "endTime", newValue)
+                          }
+                          slotProps={{
+                            textField: { size: "small" },
                           }}
-                        >
-                          {label2}
-                        </Typography>
-                      </Box>
-
-                      {/* 필드 2 */}
-                      {name2 === "vehicleType"
-                        ? renderField(
-                            label2,
-                            name2,
-                            vehicle,
-                            false,
-                            true,
-                            vehicleTypes
-                          )
-                        : name2 === "loadCapacity"
-                        ? renderField(
-                            label2,
-                            name2,
-                            vehicle,
-                            false,
-                            true,
-                            loadCapacities
-                          )
-                        : name2 === "lastInspectionDate" ||
-                          name2 === "nextMaintenanceDate"
-                        ? renderField(label2, name2, vehicle, true)
-                        : name2 === "vehicleStatus"
-                        ? renderField(
-                            label2,
-                            name2,
-                            vehicle,
-                            false,
-                            false,
-                            [],
-                            "",
-                            true
-                          )
-                        : name2 === "insuranceStatus"
-                        ? renderField(
-                            label2,
-                            name2,
-                            vehicle,
-                            false,
-                            true,
-                            insuranceStatuses
-                          )
-                        : name2 === "insuranceStartDate" ||
-                          name2 === "insuranceEndDate"
-                        ? renderField(label2, name2, vehicle, true)
-                        : renderField(label2, name2, vehicle)}
+                        />
+                      </LocalizationProvider>
                     </Box>
-                  )
-                )}
+                    <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          handleChange(
+                            vehicle.id,
+                            "startTime",
+                            dayjs().hour(7).minute(0)
+                          );
+                          handleChange(
+                            vehicle.id,
+                            "endTime",
+                            dayjs().hour(18).minute(0)
+                          );
+                        }}
+                      >
+                        주간(07:00~18:00)
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          handleChange(
+                            vehicle.id,
+                            "startTime",
+                            dayjs().hour(18).minute(0)
+                          );
+                          handleChange(
+                            vehicle.id,
+                            "endTime",
+                            dayjs().hour(1).minute(0)
+                          );
+                        }}
+                      >
+                        야간(18:00~01:00)
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          handleChange(
+                            vehicle.id,
+                            "startTime",
+                            dayjs().hour(22).minute(0)
+                          );
+                          handleChange(
+                            vehicle.id,
+                            "endTime",
+                            dayjs().hour(6).minute(0)
+                          );
+                        }}
+                      >
+                        심야(22:00~06:00)
+                      </Button>
+                    </Box>
+                  </Box>
+                </div>
+
+                <div style={{ flex: "1 1 100%" }}>
+                  <FormControl fullWidth>
+                    <InputLabel>운행 선호 지역 (복수 선택)</InputLabel>
+                    <Select
+                      multiple
+                      value={
+                        vehicle.preferredAreas
+                          ? vehicle.preferredAreas.split(",")
+                          : []
+                      }
+                      onChange={(e) => {
+                        const selectedAreas = e.target.value;
+                        handleChange(
+                          vehicle.id,
+                          "preferredAreas",
+                          selectedAreas.join(",")
+                        );
+                      }}
+                      input={
+                        <OutlinedInput label="운행 선호 지역 (복수 선택)" />
+                      }
+                      renderValue={(selected) => (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {selected.map((value) => (
+                            <Chip
+                              key={value}
+                              label={value}
+                              onDelete={(e) => {
+                                e.stopPropagation(); // 이벤트 버블링 방지
+                                const currentAreas = vehicle.preferredAreas
+                                  ? vehicle.preferredAreas.split(",")
+                                  : [];
+                                const updatedAreas = currentAreas.filter(
+                                  (area) => area !== value
+                                );
+                                handleChange(
+                                  vehicle.id,
+                                  "preferredAreas",
+                                  updatedAreas.join(",")
+                                );
+                              }}
+                              deleteIcon={
+                                <span
+                                  style={{
+                                    fontSize: "16px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  ×
+                                </span>
+                              }
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    >
+                      {[
+                        "서울",
+                        "부산",
+                        "대구",
+                        "인천",
+                        "광주",
+                        "대전",
+                        "울산",
+                        "세종",
+                        "경기",
+                        "강원",
+                        "충북",
+                        "충남",
+                        "전북",
+                        "전남",
+                        "경북",
+                        "경남",
+                        "제주",
+                      ].map((area) => (
+                        <MenuItem key={area} value={area}>
+                          {area}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </div>
               </Box>
             </Box>
-          </Paper>
+          </Box>
         ))}
 
-        {/* 차량 추가 폼 */}
-        {showAddForm && (
-          <Paper
-            elevation={0}
+        {/* 추가된 차량 폼들 */}
+        {additionalForms.map((form, formIndex) => (
+          <Box
+            key={form.id}
             sx={{
-              mb: 4,
-              backgroundColor: "white",
-              borderRadius: 2,
-              border: "1px solid #e1e5e9",
-              overflow: "hidden",
+              border: "2px solid #113F67",
+              borderRadius: 3,
+              p: 3,
+              backgroundColor: "#f0f8ff",
+              mb: 3,
+              position: "relative",
             }}
           >
-            <Box sx={{ p: 4 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: 4,
-                  pb: 2,
-                  borderBottom: "2px solid #f1f3f4",
-                }}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6" sx={{ color: "#113F67" }}>
+                새 차량 추가 {formIndex + 1}
+              </Typography>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => removeAdditionalForm(form.id)}
+                startIcon={<DeleteIcon />}
               >
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      backgroundColor: "#113F67",
-                      mr: 2,
+                폼 삭제
+              </Button>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              {/* 1행: 차량번호, 최초등록일자 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량 번호"
+                  fullWidth
+                  value={form.vehiclePlateNumber}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "vehiclePlateNumber",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+
+              <div style={{ flex: "1 1 48%" }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="최초등록일자"
+                    value={
+                      form.firstRegistrationDate
+                        ? dayjs(form.firstRegistrationDate)
+                        : null
+                    }
+                    onChange={(newValue) =>
+                      handleAdditionalFormChange(
+                        form.id,
+                        "firstRegistrationDate",
+                        newValue
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        helperText: " ",
+                        FormHelperTextProps: helperProps,
+                      },
                     }}
                   />
-                  <Typography variant="h6" fontWeight="bold" color="#113F67">
-                    새 차량 추가
-                  </Typography>
-                </Box>
-                <Button
-                  onClick={closeAddForm}
-                  variant="outlined"
-                  size="small"
+                </LocalizationProvider>
+              </div>
+
+              {/* 2행: 차종, 최대 적재량 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차종"
+                  select
+                  fullWidth
+                  value={form.vehicleType}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "vehicleType",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                >
+                  {vehicleTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="최대 적재량"
+                  select
+                  fullWidth
+                  value={form.loadCapacity}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "loadCapacity",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                >
+                  {loadCapacities.map((capacity) => (
+                    <MenuItem key={capacity} value={capacity}>
+                      {capacity}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+
+              {/* 3행: 현재 주행거리, 차량상태 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="현재 주행거리"
+                  fullWidth
+                  value={form.currentDistance}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "currentDistance",
+                      e.target.value
+                    )
+                  }
+                  InputProps={{
+                    endAdornment: <span>km</span>,
+                  }}
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량상태"
+                  select
+                  fullWidth
+                  value={form.vehicleStatus}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "vehicleStatus",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                >
+                  {vehicleStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+
+              {/* 4행: 차량 마지막 점검일, 다음 정비 예정일 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="차량 마지막 점검일"
+                    value={form.lastInspectionDate}
+                    onChange={(newValue) =>
+                      handleAdditionalFormChange(
+                        form.id,
+                        "lastInspectionDate",
+                        newValue
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        helperText: " ",
+                        FormHelperTextProps: helperProps,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
+
+              <div style={{ flex: "1 1 48%" }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="다음 정비 예정일"
+                    value={form.nextMaintenanceDate}
+                    onChange={(newValue) =>
+                      handleAdditionalFormChange(
+                        form.id,
+                        "nextMaintenanceDate",
+                        newValue
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        helperText: " ",
+                        FormHelperTextProps: helperProps,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
+
+              {/* 5행: 보험 유무 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="보험 유무"
+                  select
+                  fullWidth
+                  value={form.insuranceStatus}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "insuranceStatus",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                >
+                  {insuranceStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+
+              {/* 6행: 보험 시작일, 보험 만료일 (보험 유무가 "유"일 때만) */}
+              {form.insuranceStatus === "유" && (
+                <>
+                  <div style={{ flex: "1 1 48%" }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        label="보험시작일"
+                        value={form.insuranceStartDate}
+                        onChange={(newValue) =>
+                          handleAdditionalFormChange(
+                            form.id,
+                            "insuranceStartDate",
+                            newValue
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            helperText: " ",
+                            FormHelperTextProps: helperProps,
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+
+                  <div style={{ flex: "1 1 48%" }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        label="보험만료일"
+                        value={form.insuranceEndDate}
+                        onChange={(newValue) =>
+                          handleAdditionalFormChange(
+                            form.id,
+                            "insuranceEndDate",
+                            newValue
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            helperText: " ",
+                            FormHelperTextProps: helperProps,
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </>
+              )}
+
+              {/* 7행: 운전면허증 번호, 운전면허 만료일 */}
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="운전면허증 번호"
+                  fullWidth
+                  value={form.licenseNum || ""}
+                  onChange={(e) =>
+                    handleAdditionalFormChange(
+                      form.id,
+                      "licenseNum",
+                      e.target.value
+                    )
+                  }
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+
+              <div style={{ flex: "1 1 48%" }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="운전면허 만료일"
+                    value={form.licenseDT}
+                    onChange={(newValue) =>
+                      handleAdditionalFormChange(form.id, "licenseDT", newValue)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        helperText: " ",
+                        FormHelperTextProps: helperProps,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
+
+              <Button
+                variant="outlined"
+                type="button"
+                onClick={() => alert("진위확인 연동 예정")}
+                sx={{ height: 56 }}
+              >
+                운전면허 진위확인
+              </Button>
+
+              {/* 선호 시간대 */}
+              <div style={{ flex: "1 1 100%" }}>
+                <Box
                   sx={{
-                    color: "#d32f2f",
-                    border: "1px solid #d32f2f",
-                    borderRadius: 2,
-                    px: 2,
-                    "&:hover": {
-                      backgroundColor: "rgba(211, 47, 47, 0.1)",
-                      borderColor: "#b71c1c",
-                    },
+                    border: "1px solid #e1e5e9",
+                    borderRadius: 1,
+                    p: 2,
+                    backgroundColor: "#f8fafc",
                   }}
                 >
-                  취소
-                </Button>
-              </Box>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {getVehicleInfoFields(newVehicle).map(
-                  ([label1, name1, label2, name2], idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        display: "flex",
-                        height: 60,
-                        borderRadius: 1,
-                        overflow: "hidden",
-                        border: "1px solid #e1e5e9",
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 2, color: "#113F67" }}
+                  >
+                    선호 시간대
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        label="시작 시간"
+                        value={form.startTime}
+                        onChange={(newValue) =>
+                          handleAdditionalFormChange(
+                            form.id,
+                            "startTime",
+                            newValue
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            sx: { width: 150 },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                    <Typography>~</Typography>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        label="종료 시간"
+                        value={form.endTime}
+                        onChange={(newValue) =>
+                          handleAdditionalFormChange(
+                            form.id,
+                            "endTime",
+                            newValue
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            sx: { width: 150 },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        handleAdditionalFormChange(
+                          form.id,
+                          "startTime",
+                          dayjs().hour(7).minute(0)
+                        );
+                        handleAdditionalFormChange(
+                          form.id,
+                          "endTime",
+                          dayjs().hour(18).minute(0)
+                        );
                       }}
                     >
-                      {/* 라벨 1 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          width: "25%",
-                          height: "100%",
-                          p: 2,
-                          backgroundColor: "#f8fafc",
-                          borderRight: "1px solid #e1e5e9",
-                          minHeight: 60,
-                        }}
-                      >
-                        <Typography
-                          fontWeight="bold"
-                          color="#113F67"
-                          fontSize="0.9rem"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            height: "100%",
-                            textAlign: "left",
-                            lineHeight: 1,
-                          }}
-                        >
-                          {label1}
-                        </Typography>
-                      </Box>
+                      주간(07:00~18:00)
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        handleAdditionalFormChange(
+                          form.id,
+                          "startTime",
+                          dayjs().hour(18).minute(0)
+                        );
+                        handleAdditionalFormChange(
+                          form.id,
+                          "endTime",
+                          dayjs().hour(1).minute(0)
+                        );
+                      }}
+                    >
+                      야간(18:00~01:00)
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        handleAdditionalFormChange(
+                          form.id,
+                          "startTime",
+                          dayjs().hour(22).minute(0)
+                        );
+                        handleAdditionalFormChange(
+                          form.id,
+                          "endTime",
+                          dayjs().hour(6).minute(0)
+                        );
+                      }}
+                    >
+                      심야(22:00~06:00)
+                    </Button>
+                  </Box>
+                </Box>
+              </div>
 
-                      {/* 필드 1 */}
-                      <Box sx={{ width: "25%", height: "100%" }}>
-                        {name1 === "vehiclePlateNumber" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name1] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name1, e.target.value)
+              {/* 운행선호지역 */}
+              <div style={{ flex: "1 1 100%" }}>
+                <FormControl fullWidth>
+                  <InputLabel>운행 선호 지역 (복수 선택)</InputLabel>
+                  <Select
+                    multiple
+                    value={
+                      form.preferredAreas ? form.preferredAreas.split(",") : []
+                    }
+                    onChange={(e) => {
+                      const selectedAreas = e.target.value;
+                      handleAdditionalFormChange(
+                        form.id,
+                        "preferredAreas",
+                        selectedAreas.join(",")
+                      );
+                    }}
+                    input={<OutlinedInput label="운행 선호 지역 (복수 선택)" />}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip
+                            key={value}
+                            label={value}
+                            onDelete={(e) => {
+                              e.stopPropagation(); // 이벤트 버블링 방지
+                              const currentAreas = form.preferredAreas
+                                ? form.preferredAreas.split(",")
+                                : [];
+                              const updatedAreas = currentAreas.filter(
+                                (area) => area !== value
+                              );
+                              handleAdditionalFormChange(
+                                form.id,
+                                "preferredAreas",
+                                updatedAreas.join(",")
+                              );
+                            }}
+                            deleteIcon={
+                              <span
+                                style={{
+                                  fontSize: "16px",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                ×
+                              </span>
                             }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
                           />
-                        ) : name1 === "vehicleType" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name1] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name1, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              <MenuItem value="">
-                                차량 종류를 선택해주세요.
-                              </MenuItem>
-                              {vehicleTypes.map((type) => (
-                                <MenuItem key={type} value={type}>
-                                  {type}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name1 === "firstRegistrationDate" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name1] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name1, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name1 === "loadCapacity" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name1] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name1, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              <MenuItem value="">
-                                최대 적재량을 선택해주세요.
-                              </MenuItem>
-                              {loadCapacities.map((capacity) => (
-                                <MenuItem key={capacity} value={capacity}>
-                                  {capacity}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name1 === "currentDistance" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name1] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name1, e.target.value)
-                            }
-                            InputProps={{
-                              endAdornment: <span>km</span>,
-                            }}
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name1 === "vehicleStatus" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name1] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name1, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name1 === "lastInspectionDate" ||
-                          name1 === "nextMaintenanceDate" ? (
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DatePicker
-                              value={newVehicle[name1]}
-                              onChange={(newValue) =>
-                                handleNewVehicleChange(name1, newValue)
-                              }
-                              slotProps={{
-                                textField: {
-                                  size: "small",
-                                  fullWidth: true,
-                                  sx: {
-                                    height: "100%",
-                                    "& .MuiOutlinedInput-root": {
-                                      height: "100%",
-                                      backgroundColor: "white",
-                                      borderRadius: 0,
-                                      border: "none",
-                                      "& fieldset": {
-                                        borderColor: "transparent",
-                                        borderRadius: 0,
-                                      },
-                                      "&:hover fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                      "&.Mui-focused fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                    },
-                                    "& input": {
-                                      padding: "16px 14px",
-                                      fontSize: "0.9rem",
-                                      color: "#333",
-                                    },
-                                  },
-                                },
-                              }}
-                            />
-                          </LocalizationProvider>
-                        ) : name1 === "insuranceStatus" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name1] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name1, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              {insuranceStatuses.map((status) => (
-                                <MenuItem key={status} value={status}>
-                                  {status}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name1 === "insuranceStartDate" ||
-                          name1 === "insuranceEndDate" ? (
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DatePicker
-                              value={newVehicle[name1]}
-                              onChange={(newValue) =>
-                                handleNewVehicleChange(name1, newValue)
-                              }
-                              slotProps={{
-                                textField: {
-                                  size: "small",
-                                  fullWidth: true,
-                                  sx: {
-                                    height: "100%",
-                                    "& .MuiOutlinedInput-root": {
-                                      height: "100%",
-                                      backgroundColor: "white",
-                                      borderRadius: 0,
-                                      border: "none",
-                                      "& fieldset": {
-                                        borderColor: "transparent",
-                                        borderRadius: 0,
-                                      },
-                                      "&:hover fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                      "&.Mui-focused fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                    },
-                                    "& input": {
-                                      padding: "16px 14px",
-                                      fontSize: "0.9rem",
-                                      color: "#333",
-                                    },
-                                  },
-                                },
-                              }}
-                            />
-                          </LocalizationProvider>
-                        ) : (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name1] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name1, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        )}
+                        ))}
                       </Box>
-
-                      {/* 라벨 2 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          width: "25%",
-                          height: "100%",
-                          p: 2,
-                          backgroundColor: "#f8fafc",
-                          borderLeft: "1px solid #e1e5e9",
-                          borderRight: "1px solid #e1e5e9",
-                          minHeight: 60,
-                        }}
-                      >
-                        <Typography
-                          fontWeight="bold"
-                          color="#113F67"
-                          fontSize="0.9rem"
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            height: "100%",
-                            textAlign: "left",
-                            lineHeight: 1,
-                          }}
-                        >
-                          {label2}
-                        </Typography>
-                      </Box>
-
-                      {/* 필드 2 */}
-                      <Box sx={{ width: "25%", height: "100%" }}>
-                        {name2 === "vehiclePlateNumber" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name2] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name2, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name2 === "vehicleType" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name2] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name2, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              <MenuItem value="">
-                                차량 종류를 선택해주세요.
-                              </MenuItem>
-                              {vehicleTypes.map((type) => (
-                                <MenuItem key={type} value={type}>
-                                  {type}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name2 === "firstRegistrationDate" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name2] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name2, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name2 === "loadCapacity" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name2] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name2, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              <MenuItem value="">
-                                최대 적재량을 선택해주세요.
-                              </MenuItem>
-                              {loadCapacities.map((capacity) => (
-                                <MenuItem key={capacity} value={capacity}>
-                                  {capacity}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name2 === "currentDistance" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name2] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name2, e.target.value)
-                            }
-                            InputProps={{
-                              endAdornment: <span>km</span>,
-                            }}
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name2 === "vehicleStatus" ? (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name2] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name2, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        ) : name2 === "lastInspectionDate" ||
-                          name2 === "nextMaintenanceDate" ? (
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DatePicker
-                              value={newVehicle[name2]}
-                              onChange={(newValue) =>
-                                handleNewVehicleChange(name2, newValue)
-                              }
-                              slotProps={{
-                                textField: {
-                                  size: "small",
-                                  fullWidth: true,
-                                  sx: {
-                                    height: "100%",
-                                    "& .MuiOutlinedInput-root": {
-                                      height: "100%",
-                                      backgroundColor: "white",
-                                      borderRadius: 0,
-                                      border: "none",
-                                      "& fieldset": {
-                                        borderColor: "transparent",
-                                        borderRadius: 0,
-                                      },
-                                      "&:hover fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                      "&.Mui-focused fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                    },
-                                    "& input": {
-                                      padding: "16px 14px",
-                                      fontSize: "0.9rem",
-                                      color: "#333",
-                                    },
-                                  },
-                                },
-                              }}
-                            />
-                          </LocalizationProvider>
-                        ) : name2 === "insuranceStatus" ? (
-                          <FormControl
-                            size="small"
-                            sx={{ width: "100%", height: "100%" }}
-                          >
-                            <Select
-                              value={newVehicle[name2] || ""}
-                              onChange={(e) =>
-                                handleNewVehicleChange(name2, e.target.value)
-                              }
-                              displayEmpty
-                              sx={{
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                  {
-                                    borderColor: "transparent",
-                                  },
-                              }}
-                            >
-                              {insuranceStatuses.map((status) => (
-                                <MenuItem key={status} value={status}>
-                                  {status}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : name2 === "insuranceStartDate" ||
-                          name2 === "insuranceEndDate" ? (
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DatePicker
-                              value={newVehicle[name2]}
-                              onChange={(newValue) =>
-                                handleNewVehicleChange(name2, newValue)
-                              }
-                              slotProps={{
-                                textField: {
-                                  size: "small",
-                                  fullWidth: true,
-                                  sx: {
-                                    height: "100%",
-                                    "& .MuiOutlinedInput-root": {
-                                      height: "100%",
-                                      backgroundColor: "white",
-                                      borderRadius: 0,
-                                      border: "none",
-                                      "& fieldset": {
-                                        borderColor: "transparent",
-                                        borderRadius: 0,
-                                      },
-                                      "&:hover fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                      "&.Mui-focused fieldset": {
-                                        borderColor: "transparent",
-                                      },
-                                    },
-                                    "& input": {
-                                      padding: "16px 14px",
-                                      fontSize: "0.9rem",
-                                      color: "#333",
-                                    },
-                                  },
-                                },
-                              }}
-                            />
-                          </LocalizationProvider>
-                        ) : (
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={newVehicle[name2] || ""}
-                            onChange={(e) =>
-                              handleNewVehicleChange(name2, e.target.value)
-                            }
-                            sx={{
-                              height: "100%",
-                              "& .MuiOutlinedInput-root": {
-                                height: "100%",
-                                backgroundColor: "white",
-                                borderRadius: 0,
-                                border: "none",
-                                "& fieldset": {
-                                  borderColor: "transparent",
-                                  borderRadius: 0,
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "transparent",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "transparent",
-                                },
-                              },
-                              "& input": {
-                                padding: "16px 14px",
-                                fontSize: "0.9rem",
-                                color: "#333",
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  )
-                )}
-              </Box>
-
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-                <Button
-                  onClick={addVehicle}
-                  variant="contained"
-                  sx={{
-                    backgroundColor: "#113F67",
-                    px: 4,
-                    py: 1.5,
-                    fontSize: "1rem",
-                    fontWeight: "bold",
-                    "&:hover": {
-                      backgroundColor: "#0d2d4a",
-                    },
-                  }}
-                >
-                  차량 추가
-                </Button>
-              </Box>
+                    )}
+                  >
+                    {[
+                      "서울",
+                      "부산",
+                      "대구",
+                      "인천",
+                      "광주",
+                      "대전",
+                      "울산",
+                      "세종",
+                      "경기",
+                      "강원",
+                      "충북",
+                      "충남",
+                      "전북",
+                      "전남",
+                      "경북",
+                      "경남",
+                      "제주",
+                    ].map((area) => (
+                      <MenuItem key={area} value={area}>
+                        {area}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
             </Box>
-          </Paper>
-        )}
+          </Box>
+        ))}
 
         {/* 저장 버튼 */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
           <Button
             variant="contained"
             onClick={handleSave}
             sx={{
               backgroundColor: "#113F67",
-              borderRadius: 2,
-              px: 6,
-              py: 2,
-              fontSize: "1.1rem",
+              px: 4,
+              py: 1.5,
+              fontSize: "1rem",
               fontWeight: "bold",
-              boxShadow: "0 4px 12px rgba(17, 63, 103, 0.3)",
               "&:hover": {
                 backgroundColor: "#0d2d4a",
-                boxShadow: "0 6px 16px rgba(17, 63, 103, 0.4)",
               },
             }}
           >
             저장하기
           </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/driver/profile")}
+            sx={{
+              px: 4,
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: "bold",
+            }}
+          >
+            취소
+          </Button>
         </Box>
-
-        <Box
-          sx={{
-            mt: 4,
-            pt: 3,
-            borderTop: "1px solid #e1e5e9",
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="caption" color="#666" fontSize="0.85rem">
-            별표(*)가 표시된 항목은 필수 입력 사항입니다.
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+      </Box>
+    </Container>
   );
 };
 

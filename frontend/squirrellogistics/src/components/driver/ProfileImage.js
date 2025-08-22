@@ -16,21 +16,14 @@ const ProfileImage = ({
 
   // imageUrl prop이 변경될 때 previewUrl 업데이트
   useEffect(() => {
-    console.log(
-      "ProfileImage: imageUrl prop 변경됨:",
-      imageUrl ? imageUrl.substring(0, 50) + "..." : "empty"
-    );
-
     // imageUrl이 data URL이나 http URL인 경우에만 previewUrl 업데이트
     if (
       imageUrl &&
       imageUrl.trim() !== "" &&
       (imageUrl.startsWith("data:image") || imageUrl.startsWith("http"))
     ) {
-      console.log("ProfileImage: previewUrl 업데이트됨");
       setPreviewUrl(imageUrl);
     } else {
-      console.log("ProfileImage: previewUrl 빈 값으로 설정");
       setPreviewUrl("");
     }
   }, [imageUrl]);

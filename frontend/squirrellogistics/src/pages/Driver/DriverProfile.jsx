@@ -41,8 +41,8 @@ import {
   getDriverProfile,
   deleteAccount,
   verifyPassword,
-  getDriverCars,
 } from "../../api/driver/driverApi";
+import { fetchCars } from "../../api/cars";
 
 const DriverProfile = () => {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ const DriverProfile = () => {
           return;
         }
 
-        if (userRole !== "DRIVER") {
+        if (userRole !== "DRIVER" && userRole !== "ETC") {
           setError("기사 계정으로 로그인해주세요.");
           setLoading(false);
           setTimeout(() => {
@@ -245,32 +245,38 @@ const DriverProfile = () => {
   // 차량 정보만 가져오는 함수
   const fetchVehicles = async () => {
     try {
-      const carsData = await getDriverCars();
+      const carsData = await fetchCars();
       console.log("가져온 차량 데이터:", carsData);
 
-      const formattedVehicles = carsData.map((car, index) => ({
-        id: car.carId,
-        registrationDate: car.regDate
-          ? new Date(car.regDate).toLocaleDateString("ko-KR")
-          : "등록일 없음",
-        vehicleNumber: car.carNum || "차량번호 없음",
-        vehicleType: car.vehicleType?.name || "차종 정보 없음",
-        loadCapacity: car.vehicleType?.maxWeight
-          ? `${car.vehicleType.maxWeight}kg`
-          : "적재량 정보 없음",
-        vehicleStatus: car.carStatus || "상태 정보 없음",
-        insuranceStatus: car.insurance ? "유" : "무",
-        currentDistance: car.Mileage
-          ? `${car.Mileage.toLocaleString()} km`
-          : "",
-        lastInspection: car.inspection
-          ? new Date(car.inspection).toLocaleDateString("ko-KR")
-          : "점검일 정보 없음",
-        nextInspection: car.inspection
-          ? new Date(car.inspection).toLocaleDateString("ko-KR")
-          : "점검일 정보 없음",
-        icon: "🚛", // 기본 아이콘
-      }));
+      const formattedVehicles = carsData.map((car, index) => {
+        console.log("개별 차량 데이터:", car);
+
+        return {
+          id: car.carId,
+          registrationDate: car.regDate
+            ? new Date(car.regDate).toLocaleDateString("ko-KR")
+            : "등록일 없음",
+          vehicleNumber: car.carNum || "차량번호 없음",
+          vehicleType: car.vehicleType?.name || "차종 정보 없음",
+          loadCapacity: car.vehicleType?.maxWeight
+            ? `${car.vehicleType.maxWeight}kg`
+            : "적재량 정보 없음",
+          vehicleStatus: car.carStatus || "운행 가능",
+          insuranceStatus: car.insurance ? "유" : "무",
+          currentDistance: car.Mileage
+            ? `${car.Mileage.toLocaleString()} km`
+            : "0 km",
+          lastInspection: car.inspection
+            ? new Date(car.inspection).toLocaleDateString("ko-KR")
+            : "점검일 정보 없음",
+          nextInspection: car.inspection
+            ? new Date(car.inspection).toLocaleDateString("ko-KR")
+            : "점검일 정보 없음",
+          icon: "🚛", // 기본 아이콘
+        };
+      });
+
+      console.log("변환된 차량 데이터:", formattedVehicles);
 
       setVehicles(formattedVehicles);
     } catch (carError) {

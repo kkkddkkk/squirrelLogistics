@@ -10,12 +10,11 @@ const driverApi = axios.create({
   },
 });
 
-// 요청 인터셉터 - 토큰 추가
+// 요청 인터셉터 - 토큰 자동 추가
 driverApi.interceptors.request.use(
   (config) => {
     const token =
-      localStorage.getItem("accessToken") ||
-      sessionStorage.getItem("accessToken");
+      localStorage.getItem("token") || localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,14 +25,17 @@ driverApi.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터 - 에러 처리
+// 응답 인터셉터 - 토큰 만료 시 자동 로그아웃
 driverApi.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
-      // 토큰 만료 시 로그인 페이지로 리다이렉트
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.log("토큰이 만료되었습니다. 로그인 페이지로 이동합니다.");
+      localStorage.removeItem("token");
       localStorage.removeItem("accessToken");
-      sessionStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
       window.location.href = "/login";
     }
     return Promise.reject(error);
@@ -95,50 +97,6 @@ export const deleteAccount = async () => {
     return response.data;
   } catch (error) {
     console.error("회원 탈퇴 실패:", error);
-    throw error;
-  }
-};
-
-// 기사 차량 목록 조회
-export const getDriverCars = async () => {
-  try {
-    const response = await driverApi.get(`/cars`);
-    return response.data;
-  } catch (error) {
-    console.error("기사 차량 목록 조회 실패:", error);
-    throw error;
-  }
-};
-
-// 차량 추가
-export const addCar = async (carData) => {
-  try {
-    const response = await driverApi.post(`/cars`, carData);
-    return response.data;
-  } catch (error) {
-    console.error("차량 추가 실패:", error);
-    throw error;
-  }
-};
-
-// 차량 수정
-export const updateCar = async (carId, carData) => {
-  try {
-    const response = await driverApi.put(`/cars/${carId}`, carData);
-    return response.data;
-  } catch (error) {
-    console.error("차량 수정 실패:", error);
-    throw error;
-  }
-};
-
-// 차량 삭제
-export const deleteCar = async (carId) => {
-  try {
-    const response = await driverApi.delete(`/cars/${carId}`);
-    return response.data;
-  } catch (error) {
-    console.error("차량 삭제 실패:", error);
     throw error;
   }
 };
