@@ -49,9 +49,8 @@ public class ReportController {
 		return reportService.reportList();
 	}
 	
-	@GetMapping
-	@TimedEndpoint("viewReport")
-	public ReportSlimResponseDTO viewReport(@RequestParam("reportId") Long reportId){
+	@GetMapping("/detail")
+	public Map<String, Object> viewReport(@RequestParam("reportId") Long reportId){
 		return reportService.viewReport(reportId);
 	}
 

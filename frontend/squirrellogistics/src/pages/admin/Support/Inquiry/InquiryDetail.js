@@ -67,9 +67,11 @@ const InquiryDetail = () => {
           userName: inquiryData.reporter || "사용자",
           title: inquiryData.rTitle || inquiryData.title || "",
           content: inquiryData.rContent || inquiryData.content || "",
-          status: inquiryData.rStatus || "미처리",
+          status: inquiryData.rStatus || "미처리", // rStatus가 undefined일 때 기본값
           createdAt: inquiryData.regDate || inquiryData.createdAt || "",
-          category: inquiryData.rCategory || inquiryData.category || "",
+          category: inquiryData.rCate || inquiryData.category || "",
+          place: inquiryData.place || "",
+          deliveryAssignmentId: inquiryData.deliveryAssignmentId || null,
           reporterType: inquiryData.reporterType || inquiryData.reporterType || ""
         };
         
@@ -222,11 +224,20 @@ const InquiryDetail = () => {
     switch (status) {
       case "답변 완료":
         return "success";
-      case "처리중":
+      case "조치 완료":
+        return "success";
+      case "완료":
+        return "success";
+      case "처리 중":
         return "warning";
-      case "미처리":
-      default:
+      case "검토 중":
+        return "info";
+      case "대기 중":
         return "error";
+      case "미처리":
+        return "error";
+      default:
+        return "default";
     }
   };
 
@@ -334,6 +345,16 @@ const InquiryDetail = () => {
               <Typography variant="body1" color="text.secondary">
                 작성일: {dayjs(inquiry.createdAt).format("YYYY.MM.DD HH:mm")}
               </Typography>
+              {inquiry.place && (
+                <Typography variant="body1" color="text.secondary">
+                  장소: {inquiry.place}
+                </Typography>
+              )}
+              {inquiry.deliveryAssignmentId && (
+                <Typography variant="body1" color="text.secondary">
+                  배송ID: {inquiry.deliveryAssignmentId}
+                </Typography>
+              )}
             </Stack>
             <Stack direction="row" spacing={1}>
               <Chip 
@@ -350,7 +371,9 @@ const InquiryDetail = () => {
               )}
               {inquiry.reporterType && (
                 <Chip 
-                  label={inquiry.reporterType === 'DRIVER' ? '기사' : '업체'} 
+                  label={inquiry.reporterType === 'DRIVER' ? '기사' : 
+                         inquiry.reporterType === 'COMPANY' ? '업체' : 
+                         inquiry.reporterType === 'SYSTEM' ? '시스템' : inquiry.reporterType} 
                   color={getReporterTypeColor(inquiry.reporterType)}
                   size="small"
                 />
