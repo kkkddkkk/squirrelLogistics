@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class DriverSearchResponseDTO {
     // Driver에서 가져올 정보
     private Long driverId;
+    private String driverName; // 기사 이름 (User 엔티티에서 가져옴)
     private String mainLoca; // 선호 지역
     private Boolean drivable; // 즉시 배차 가능 여부
     private String profileImageUrl;

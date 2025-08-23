@@ -89,6 +89,8 @@
   cursor: pointer;
 }
 
+
+
 /* 필터 바 */
 .filter-bar {
   display: flex;
@@ -148,4 +150,48 @@
   font-size: 1rem;
   cursor: pointer;
   font-weight: bold;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.page-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #495057;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-btn.active {
+  background: #E8A93F;
+  color: #fff;
+  border-color: #E8A93F;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 검색 결과 정보 */
+.search-info {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 1rem 0;
 }

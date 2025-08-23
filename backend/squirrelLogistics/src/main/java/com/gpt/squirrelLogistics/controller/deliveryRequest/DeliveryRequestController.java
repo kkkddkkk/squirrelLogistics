@@ -30,6 +30,7 @@ import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryOrchestrator.DeliveryOrchestrator;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -135,6 +136,44 @@ public class DeliveryRequestController {
 			};
 			return ResponseEntity.status(s).body(result);
 		}
+		return ResponseEntity.ok(result);
+	}
+	
+	// 특정 요청에 지명된 기사 정보 조회 (작성자: 정윤진)
+	@GetMapping("/{id}/driver-assignment")
+	public ResponseEntity<DriverAssignmentResponseDTO> getDriverAssignment(@PathVariable("id") Long requestId) {
+		DriverAssignmentResponseDTO result = requestService.getDriverAssignmentByRequestId(requestId);
+		if (result == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(result);
+	}
+	
+	// 모든 지명된 요청의 기사 정보 조회 (작성자: 정윤진)
+	@GetMapping("/driver-assignments")
+	public ResponseEntity<List<DriverAssignmentResponseDTO>> getAllDriverAssignments() {
+		List<DriverAssignmentResponseDTO> results = requestService.getAllAssignedDriverRequests();
+		return ResponseEntity.ok(results);
+	}
+	
+	// 기사 지명 제안 (작성자: 정윤진)
+	@PostMapping("/{id}/propose")
+	public ResponseEntity<Map<String, Object>> proposeToDriver(
+			@PathVariable("id") Long requestId,
+			@RequestParam("driverId") Long driverId) {
+		
+		Map<String, Object> result = assignmentService.propose(requestId, driverId);
+		
+		if (result.containsKey("FAILED")) {
+			String error = (String) result.get("FAILED");
+			HttpStatus status = switch (error) {
+				case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+				case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
+				default -> HttpStatus.BAD_REQUEST;
+			};
+			return ResponseEntity.status(status).body(result);
+		}
+		
 		return ResponseEntity.ok(result);
 	}
 

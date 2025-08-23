@@ -3,13 +3,15 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import {
-  calculateDistance,
-  createDeliveryRequest, // (requestDto, paymentDto) -> returns requestId
   fetchVehicleTypes,
-  fetchSavedAddresses,
+  fetchCargoTypes,
+  calculateDistance,
   saveSavedAddressesBulk,
   deleteSavedAddress,
+  fetchSavedAddresses,
+  createDeliveryRequest,
 } from "../../api/estimate/estimateApi";
+import { getCompanyByUserId } from "../../api/company/companyApi";
 import { useSelector, useDispatch } from "react-redux";
 import { setDistance, setMinWeight, setMaxWeight } from "../../slice/estimate/estimateSlice";
 import "./EstimateForm.css";
@@ -79,23 +81,60 @@ const EstimateForm = () => {
   const dispatch = useDispatch();
 
   const estimateState = useSelector((state) => state.estimate);
-  const auth = useSelector((s) => s.auth || s.user || {});
-  const companyStateCompanyId = useSelector((s) => s.company?.companyId);
-  const companyStateUserInfoCompanyId = useSelector((s) => s.company?.userInfo?.companyId);
   const { distance } = estimateState;
 
-  // 유저
-  const userFromStorage = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem("user") || "null"); }
-    catch { return null; }
+  // localStorage에서 companyId 가져오기
+  const [companyId, setCompanyId] = useState(null);
+
+  // Company 정보 조회
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      const storedCompanyId = localStorage.getItem("companyId");
+      console.log("=== Company 정보 조회 시작 ===");
+      console.log("localStorage companyId:", storedCompanyId);
+      
+      if (storedCompanyId) {
+        const parsedCompanyId = parseInt(storedCompanyId);
+        if (!isNaN(parsedCompanyId)) {
+          setCompanyId(parsedCompanyId);
+          console.log("저장된 companyId 사용:", parsedCompanyId);
+          return;
+        } else {
+          console.warn("localStorage companyId가 숫자가 아님:", storedCompanyId);
+        }
+      }
+      
+      // userId로 company 정보 조회 시도
+      const userId = localStorage.getItem("userId");
+      console.log("localStorage userId:", userId);
+      
+      if (userId) {
+        try {
+          // companyApi에서 getCompanyByUserId 호출
+          const companyInfo = await getCompanyByUserId(userId);
+          console.log("API 응답 companyInfo:", companyInfo);
+          
+          if (companyInfo && companyInfo.companyId) {
+            const newCompanyId = parseInt(companyInfo.companyId);
+            localStorage.setItem("companyId", newCompanyId.toString());
+            setCompanyId(newCompanyId);
+            console.log("새로 설정된 companyId:", newCompanyId);
+          } else {
+            console.warn("companyInfo 또는 companyId가 없음:", companyInfo);
+            setCompanyId(null);
+          }
+        } catch (error) {
+          console.error("Company 정보 조회 실패:", error);
+          setCompanyId(null);
+        }
+      } else {
+        console.warn("userId가 localStorage에 없음");
+        setCompanyId(null);
+      }
+    };
+
+    fetchCompanyInfo();
   }, []);
-  const mergedUser = auth?.user || userFromStorage || {};
-  const companyId =
-    companyStateCompanyId ??
-    companyStateUserInfoCompanyId ??
-    auth?.user?.companyId ??
-    mergedUser?.companyId ??
-    null;
 
   // ✅ draft로 초기화 (첫 렌더부터 값 유지)
   const draft = readDraft();
@@ -331,8 +370,6 @@ const EstimateForm = () => {
     }));
 
     const requestDto = {
-      // DeliveryRequestRequestDTO 주요 필드 - 백엔드와 정확히 일치
-      requestId: null,
       startAddress: departure,
       endAddress: arrival,
       memoToDriver: title,
@@ -354,6 +391,11 @@ const EstimateForm = () => {
       // 요청 단위 취급유형 태그(문자열 리스트). 서버에서 필요 시 handlingId로 매핑 가능.
       cargoTypes: cargoTypes,
     };
+
+    console.log("=== buildFlow 디버깅 ===");
+    console.log("현재 companyId 상태:", companyId);
+    console.log("requestDto.companyId:", requestDto.companyId);
+    console.log("전체 requestDto:", requestDto);
 
     const paymentDto = buildPaymentDTO(price);
 

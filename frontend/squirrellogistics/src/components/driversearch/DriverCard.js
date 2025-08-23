@@ -3,6 +3,9 @@ import React from "react";
 import "./DriverCard.css";
 
 const DriverCard = ({ driver, onRequest }) => {
+  // 디버깅: 받은 데이터 확인
+  console.log("DriverCard received driver data:", driver);
+  
   const handleClick = () => {
     const confirmed = window.confirm("요청을 하시겠습니까?");
     if (confirmed) {
@@ -45,10 +48,12 @@ const DriverCard = ({ driver, onRequest }) => {
 
   return (
     <div className="driver-card">
-      {renderProfileImage()}
+      <div className="driver-image">
+        {renderProfileImage()}
+      </div>
       <div className="driver-info">
         <div className="driver-name-rating">
-          <strong>기사 #{driver.driverId}</strong>
+          <strong>{driver.driverName || `기사 #${driver.driverId}`}</strong>
           <span className="driver-rating">{renderRating()}</span>
         </div>
         <div className="driver-detail">

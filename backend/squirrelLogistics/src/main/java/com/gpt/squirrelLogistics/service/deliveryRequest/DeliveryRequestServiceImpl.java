@@ -26,6 +26,7 @@ import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimRespon
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 import com.gpt.squirrelLogistics.entity.cargoType.CargoType;
 import com.gpt.squirrelLogistics.entity.company.Company;
 import com.gpt.squirrelLogistics.entity.deliveryCargo.DeliveryCargo;
@@ -377,5 +378,56 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	@Override
 	public List<Object[]> getEstimateCalc(Long requestId) {
 		return deliveryCargoRepository.findEstimatedCalcByRequestId(requestId);
+	}
+	
+	// 기사 지명 요청 정보 조회 (작성자: 정윤진)
+	@Override
+	@Transactional(readOnly = true)
+	public DriverAssignmentResponseDTO getDriverAssignmentByRequestId(Long requestId) {
+		Object[] result = repository.findDriverAssignmentByRequestId(requestId);
+		if (result == null || result.length == 0) {
+			return null; // 지명된 기사가 없는 경우
+		}
+		
+		// JPQL 결과를 DTO로 변환
+		return DriverAssignmentResponseDTO.builder()
+				.driverId((Long) result[0])
+				.mainLoca((String) result[1])
+				.drivable((Boolean) result[2])
+				.carId((Long) result[3])
+				.carNum((String) result[4])
+				.isInsurance((Boolean) result[5])
+				.vehicleTypeId((Long) result[6])
+				.vehicleTypeName((String) result[7])
+				.maxWeight((Integer) result[8])
+				.userId((Long) result[9])
+				.driverName((String) result[10])
+				.build();
+	}
+	
+	// 모든 지명된 요청의 기사 정보 조회 (작성자: 정윤진)
+	@Override
+	@Transactional(readOnly = true)
+	public List<DriverAssignmentResponseDTO> getAllAssignedDriverRequests() {
+		List<Object[]> results = repository.findAllAssignedDriverRequests();
+		return results.stream()
+				.map(result -> DriverAssignmentResponseDTO.builder()
+						.requestId((Long) result[0])
+						.startAddress((String) result[1])
+						.endAddress((String) result[2])
+						.estimatedFee((Long) result[3])
+						.driverId((Long) result[4])
+						.mainLoca((String) result[5])
+						.drivable((Boolean) result[6])
+						.carId((Long) result[7])
+						.carNum((String) result[8])
+						.isInsurance((Boolean) result[9])
+						.vehicleTypeId((Long) result[10])
+						.vehicleTypeName((String) result[11])
+						.maxWeight((Integer) result[12])
+						.userId((Long) result[13])
+						.driverName((String) result[14])
+						.build())
+				.collect(Collectors.toList());
 	}
 }

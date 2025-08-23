@@ -2,57 +2,112 @@ package com.gpt.squirrelLogistics.service.driverSearch;
 
 import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchRequestDTO;
 import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchResponseDTO;
+import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchPageResponseDTO;
+import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.car.Car;
 import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
 import com.gpt.squirrelLogistics.entity.review.Review;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
 import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
 import com.gpt.squirrelLogistics.repository.car.CarRepository;
 import com.gpt.squirrelLogistics.repository.vehicleType.VehicleTypeRepository;
 import com.gpt.squirrelLogistics.repository.review.ReviewRepository;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DriverSearchServiceImpl implements DriverSearchService {
     
+    private final UserRepository userRepository;
     private final DriverRepository driverRepository;
     private final CarRepository carRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
     private final ReviewRepository reviewRepository;
     
     @Override
-    public List<DriverSearchResponseDTO> searchDrivers(DriverSearchRequestDTO request) {
-        // 1. 기본 드라이버 목록 조회
-        List<Driver> drivers = driverRepository.findAll();
+    public DriverSearchPageResponseDTO searchDrivers(DriverSearchRequestDTO request) {
+        System.out.println("=== 기사 검색 시작 ===");
+        System.out.println("요청 파라미터: " + request);
         
-        // 2. 각 드라이버에 대한 상세 정보 조회 및 DTO 변환
-        List<DriverSearchResponseDTO> results = drivers.stream()
-            .map(driver -> buildDriverSearchResponse(driver, request))
-            .filter(dto -> dto != null) // null인 경우 필터링
+        // 1. 페이징 정보 설정
+        int page = request.getPage() != null ? request.getPage() : 0;
+        int size = request.getSize() != null ? request.getSize() : 10;
+        
+        // 2. 모든 Driver 역할 사용자 조회 (페이징 없이)
+        List<User> allDriverUsers = userRepository.findAllByRole(UserRoleEnum.DRIVER);
+        System.out.println("전체 Driver 역할 사용자: " + allDriverUsers.size() + "명");
+        
+        // 3. Driver 정보로 변환
+        List<DriverSearchResponseDTO> allResults = allDriverUsers.stream()
+            .map(user -> buildDriverSearchResponse(user, request))
+            .filter(dto -> dto != null)
             .collect(Collectors.toList());
+        System.out.println("Driver 정보 변환 후: " + allResults.size() + "명");
         
-        // 3. 키워드 검색 적용
-        results = applyKeywordSearch(results, request);
+        // 4. 키워드 검색 적용
+        allResults = applyKeywordSearch(allResults, request);
+        System.out.println("키워드 검색 후: " + allResults.size() + "명");
         
-        // 4. 필터링 적용
-        results = applyFilters(results, request);
+        // 5. 필터링 적용
+        allResults = applyFilters(allResults, request);
+        System.out.println("필터링 후: " + allResults.size() + "명");
         
-        // 5. 정렬 적용
-        results = applySorting(results, request);
+        // 6. 정렬 적용
+        allResults = applySorting(allResults, request);
         
-        return results;
+        // 7. 수동 페이징 적용
+        int totalElements = allResults.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        
+        List<DriverSearchResponseDTO> pageResults;
+        if (totalElements == 0) {
+            // 필터링 결과가 0개인 경우 빈 배열 반환
+            pageResults = new ArrayList<>();
+        } else {
+            int startIndex = page * size;
+            int endIndex = Math.min(startIndex + size, totalElements);
+            pageResults = allResults.subList(startIndex, endIndex);
+        }
+        
+        System.out.println("=== 최종 결과 ===");
+        System.out.println("현재 페이지 기사 수: " + pageResults.size());
+        System.out.println("필터링된 총 기사 수: " + totalElements);
+        System.out.println("필터링된 총 페이지 수: " + totalPages);
+        System.out.println("=== 기사 검색 완료 ===");
+        
+        return DriverSearchPageResponseDTO.builder()
+            .drivers(pageResults)
+            .currentPage(page)
+            .totalPages(totalPages)
+            .totalElements(totalElements)
+            .pageSize(size)
+            .hasNext(page < totalPages - 1)
+            .hasPrevious(page > 0)
+            .build();
     }
     
-    private DriverSearchResponseDTO buildDriverSearchResponse(Driver driver, DriverSearchRequestDTO request) {
+    private DriverSearchResponseDTO buildDriverSearchResponse(User user, DriverSearchRequestDTO request) {
         try {
-            // 드라이버의 차량 정보 조회 (List로 받아서 첫 번째 차량 사용)
+            // 사용자 ID로 Driver 엔티티 조회
+            Driver driver = driverRepository.findByUserId(user.getUserId());
+            if (driver == null) return null;
+            
+            // Driver의 차량 정보 조회 (List로 받아서 첫 번째 차량 사용)
             List<Car> cars = carRepository.findByDriverDriverId(driver.getDriverId());
             if (cars.isEmpty()) return null;
             
@@ -62,38 +117,57 @@ public class DriverSearchServiceImpl implements DriverSearchService {
             VehicleType vehicleType = car.getVehicleType();
             if (vehicleType == null) return null;
             
-            // 리뷰 평균 평점 계산
-            Double averageRating = calculateAverageRating(driver.getDriverId());
+            // 리뷰 평균 평점 계산 (캐시된 값 사용)
+            Double averageRating = getCachedAverageRating(driver.getDriverId());
+            
+            // drivable 값 디버깅
+            Boolean drivableValue = driver.isDrivable();
+            System.out.println("Driver " + driver.getDriverId() + " - DB에서 가져온 drivable: " + drivableValue + " (타입: " + (drivableValue != null ? drivableValue.getClass().getSimpleName() : "null") + ")");
             
             return DriverSearchResponseDTO.builder()
                 .driverId(driver.getDriverId())
-                .mainLoca(driver.getMainLoca())
-                .drivable(driver.isDrivable()) // boolean 필드는 is로 시작하는 메서드 사용
-                .profileImageUrl(driver.getProfileImageUrl())
+                .driverName(user.getName()) // User 엔티티에서 기사 이름 가져오기
+                .mainLoca(driver.getMainLoca()) // Driver 엔티티에서 선호 지역 가져오기
+                .drivable(drivableValue) // Driver 엔티티에서 즉시 배차 가능 여부 가져오기
+                .profileImageUrl(null) // User 엔티티에 profileImageUrl 필드가 없으므로 null로 설정
                 .vehicleTypeId(vehicleType.getVehicleTypeId())
                 .vehicleTypeName(vehicleType.getName())
                 .maxWeight(vehicleType.getMaxWeight())
-                .insurance(car.isInsurance()) // boolean 메서드 호출
+                .insurance(car.isInsurance()) // Car 엔티티에서 보험 여부 가져오기
                 .averageRating(averageRating)
-                .latitude(null) // Driver 엔티티에 좌표 필드가 없음
-                .longitude(null) // Driver 엔티티에 좌표 필드가 없음
+                .latitude(null) // 좌표 정보는 별도로 관리 필요
+                .longitude(null) // 좌표 정보는 별도로 관리 필요
                 .build();
                 
         } catch (Exception e) {
-            // 에러 발생 시 해당 드라이버는 제외
+            // 에러 발생 시 해당 사용자는 제외
+            System.out.println("Error building response for user " + user.getUserId() + ": " + e.getMessage());
             return null;
         }
     }
     
+    // 리뷰 평점 캐시 (메모리 기반)
+    private final Map<Long, Double> ratingCache = new ConcurrentHashMap<>();
+    
+    private Double getCachedAverageRating(Long driverId) {
+        return ratingCache.computeIfAbsent(driverId, this::calculateAverageRating);
+    }
+    
     private Double calculateAverageRating(Long driverId) {
         List<Review> reviews = reviewRepository.findByDriverId(driverId);
-        if (reviews.isEmpty()) return 0.0;
+        if (reviews.isEmpty()) {
+            System.out.println("Driver " + driverId + " - 리뷰 없음, 평점: 0.0");
+            return 0.0;
+        }
         
         double sum = reviews.stream()
             .mapToDouble(review -> review.getRating()) // int는 null이 될 수 없음
             .sum();
         
-        return sum / reviews.size();
+        double average = sum / reviews.size();
+        System.out.println("Driver " + driverId + " - 리뷰 " + reviews.size() + "개, 총점: " + sum + ", 평균: " + average);
+        
+        return average;
     }
     
     private List<DriverSearchResponseDTO> applyKeywordSearch(List<DriverSearchResponseDTO> results, DriverSearchRequestDTO request) {
@@ -121,11 +195,26 @@ public class DriverSearchServiceImpl implements DriverSearchService {
     }
     
     private List<DriverSearchResponseDTO> applyFilters(List<DriverSearchResponseDTO> results, DriverSearchRequestDTO request) {
-        return results.stream()
+        System.out.println("=== 필터링 시작 ===");
+        System.out.println("필터링 전 기사 수: " + results.size());
+        System.out.println("요청된 필터 조건:");
+        System.out.println("  - 즉시 배차: " + request.getDrivable());
+        System.out.println("  - 최대 적재량: " + request.getMaxWeight());
+        System.out.println("  - 차량 종류 ID: " + request.getVehicleTypeId());
+        
+        // 각 기사의 drivable 값 확인
+        System.out.println("=== 각 기사의 drivable 값 확인 ===");
+        results.forEach(dto -> {
+            System.out.println("기사 " + dto.getDriverId() + " - drivable: " + dto.getDrivable() + " (타입: " + (dto.getDrivable() != null ? dto.getDrivable().getClass().getSimpleName() : "null") + ")");
+        });
+        
+        List<DriverSearchResponseDTO> filteredResults = results.stream()
             .filter(dto -> {
-                // 즉시 배차 필터
-                if (request.getIsImmediate() != null && request.getIsImmediate()) {
-                    if (!Boolean.TRUE.equals(dto.getDrivable())) {
+                // 즉시 배차 필터 (MySQL의 1/0 값 처리)
+                if (request.getDrivable() != null && request.getDrivable()) {
+                    // drivable이 1(true)인 경우만 즉시 배차 가능
+                    if (dto.getDrivable() == null || !dto.getDrivable()) {
+                        System.out.println("기사 " + dto.getDriverId() + " 제외: 즉시 배차 불가 (drivable: " + dto.getDrivable() + ")");
                         return false;
                     }
                 }
@@ -133,6 +222,7 @@ public class DriverSearchServiceImpl implements DriverSearchService {
                 // 최대 적재량 필터
                 if (request.getMaxWeight() != null) {
                     if (dto.getMaxWeight() == null || dto.getMaxWeight() < request.getMaxWeight()) {
+                        System.out.println("기사 " + dto.getDriverId() + " 제외: 최대 적재량 부족 (기사: " + dto.getMaxWeight() + ", 요청: " + request.getMaxWeight() + ")");
                         return false;
                     }
                 }
@@ -140,13 +230,20 @@ public class DriverSearchServiceImpl implements DriverSearchService {
                 // 차량 종류 필터
                 if (request.getVehicleTypeId() != null) {
                     if (!request.getVehicleTypeId().equals(dto.getVehicleTypeId())) {
+                        System.out.println("기사 " + dto.getDriverId() + " 제외: 차량 종류 불일치 (기사: " + dto.getVehicleTypeId() + ", 요청: " + request.getVehicleTypeId() + ")");
                         return false;
                     }
                 }
                 
+                System.out.println("기사 " + dto.getDriverId() + " 포함: 모든 필터 조건 통과");
                 return true;
             })
             .collect(Collectors.toList());
+            
+        System.out.println("필터링 후 기사 수: " + filteredResults.size());
+        System.out.println("=== 필터링 완료 ===");
+        
+        return filteredResults;
     }
     
     private List<DriverSearchResponseDTO> applySorting(List<DriverSearchResponseDTO> results, DriverSearchRequestDTO request) {
@@ -163,7 +260,13 @@ public class DriverSearchServiceImpl implements DriverSearchService {
             });
         } else if ("rating".equals(request.getSortOption())) {
             // 별점순 정렬 (높은 순)
+            System.out.println("별점순 정렬 적용 - 정렬 전:");
+            results.forEach(dto -> System.out.println("Driver " + dto.getDriverId() + " - 평점: " + dto.getAverageRating()));
+            
             results.sort((a, b) -> Double.compare(b.getAverageRating(), a.getAverageRating()));
+            
+            System.out.println("별점순 정렬 적용 - 정렬 후:");
+            results.forEach(dto -> System.out.println("Driver " + dto.getDriverId() + " - 평점: " + dto.getAverageRating()));
         }
         
         return results;

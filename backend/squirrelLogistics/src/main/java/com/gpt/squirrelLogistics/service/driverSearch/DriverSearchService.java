@@ -1,14 +1,12 @@
 package com.gpt.squirrelLogistics.service.driverSearch;
 
 import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchRequestDTO;
-import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchResponseDTO;
-
-import java.util.List;
+import com.gpt.squirrelLogistics.dto.driverSearch.DriverSearchPageResponseDTO;
 
 public interface DriverSearchService {
     
     /**
-     * 기사 검색 (필터링, 정렬 포함)
+     * 기사 검색 (필터링, 정렬, 페이징 포함)
      */
-    List<DriverSearchResponseDTO> searchDrivers(DriverSearchRequestDTO request);
+    DriverSearchPageResponseDTO searchDrivers(DriverSearchRequestDTO request);
 }

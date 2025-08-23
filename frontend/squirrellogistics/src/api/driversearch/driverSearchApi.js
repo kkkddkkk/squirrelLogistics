@@ -4,14 +4,50 @@ import axios from "axios";
 const API_SERVER_HOST = "http://localhost:8080";
 const BASE_URL = `${API_SERVER_HOST}/api/search-drivers`;
 
-// 🔍 기사 검색 (필터 조건 포함)
+// 🔍 기사 검색 (필터 조건 포함, 페이징 지원)
 export const searchDrivers = async (searchParams) => {
   try {
-    const response = await axios.post(`${BASE_URL}/search`, searchParams);
-    return response.data; // 기사 리스트 배열
+    // 디버깅: 전송할 데이터 확인
+    console.log("API 호출 - searchParams:", searchParams);
+    
+    // 순환 참조 방지를 위해 JSON 변환 테스트
+    let cleanParams;
+    try {
+      JSON.stringify(searchParams);
+      cleanParams = searchParams;
+      console.log("API 호출 - searchParams JSON:", JSON.stringify(searchParams));
+    } catch (e) {
+      console.error("API 호출 - 순환 참조 발견, 기본값 사용:", e);
+      // 기본값으로 정리
+      cleanParams = {
+        keyword: "",           // String
+        drivable: false,       // Boolean
+        maxWeight: null,       // Number | null
+        vehicleTypeId: null,   // Number | null (Long 타입과 호환)
+        sortOption: "",        // String
+        latitude: null,        // Number | null
+        longitude: null,       // Number | null
+        region: "",            // String
+        page: 0,              // Number
+        size: 10,             // Number
+      };
+    }
+    
+    const response = await axios.post(`${BASE_URL}/search`, cleanParams);
+    console.log("API 응답 성공:", response.data);
+    return response.data; // 페이징된 응답 객체
   } catch (error) {
     console.error("기사 검색 실패:", error);
-    return [];
+    console.error("에러 상세:", error.response?.data || error.message);
+    return {
+      drivers: [],
+      currentPage: 0,
+      totalPages: 0,
+      totalElements: 0,
+      pageSize: 10,
+      hasNext: false,
+      hasPrevious: false
+    };
   }
 };
 
