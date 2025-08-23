@@ -1,35 +1,37 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
+  Container,
   Typography,
   TextField,
   Button,
-  Container,
   Alert,
   CircularProgress,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
   Chip,
-  Select,
+  IconButton,
   FormControl,
   InputLabel,
+  Select,
   OutlinedInput,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import {
+  LocalizationProvider,
+  DatePicker,
+  TimePicker,
+} from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { fetchCars, createCar, updateCar, deleteCar } from "../../api/cars";
+import { fetchCars, updateCar, deleteCar, createCar } from "../../api/cars";
 
 const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 
 const ManageVehicles = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,6 +40,7 @@ const ManageVehicles = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isManualAdd, setIsManualAdd] = useState(false); // 수동 추가 여부
   const [additionalForms, setAdditionalForms] = useState([]); // 추가된 폼들
+  const [deletedVehicleIds, setDeletedVehicleIds] = useState([]); // 삭제된 차량 ID들
   const [newVehicle, setNewVehicle] = useState({
     vehiclePlateNumber: "",
     vehicleType: "",
@@ -57,6 +60,263 @@ const ManageVehicles = () => {
     preferredAreas: "",
   });
 
+  // loadCapacity를 vehicleType 이름에 따라 매핑하는 함수
+  const getLoadCapacityFromVehicleType = (vehicleTypeName) => {
+    if (!vehicleTypeName) return "";
+
+    if (vehicleTypeName.includes("1톤")) return "1~3톤";
+    if (vehicleTypeName.includes("1.4톤")) return "1~3톤";
+    if (vehicleTypeName.includes("2.5톤")) return "1~3톤";
+    if (vehicleTypeName.includes("3.5톤")) return "3~5톤";
+    if (vehicleTypeName.includes("5톤")) return "5~10톤";
+    if (vehicleTypeName.includes("8톤")) return "5~10톤";
+    if (vehicleTypeName.includes("10톤")) return "10~15톤";
+    if (vehicleTypeName.includes("25톤")) return "25톤 초과";
+
+    return "1~3톤"; // 기본값
+  };
+
+  const fetchVehicles = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Profile 페이지와 같은 방식으로 기사 정보 조회
+      const driverData = await fetchCars({
+        page: 1,
+        size: 10,
+        keyword: "",
+        status: "",
+      });
+      console.log("가져온 기사 프로필 데이터:", driverData);
+
+      // 기사 프로필에서 차량 정보 추출
+      if (driverData && Array.isArray(driverData) && driverData.length > 0) {
+        // API에서 차량 정보를 성공적으로 가져온 경우
+        const formattedVehicles = driverData.map((car) => {
+          console.log("개별 차량 데이터 (ManageVehicles):", car);
+
+          return {
+            id: car.carId || car.id,
+            vehicleNumber: car.carNum || car.vehicleNumber || "",
+            vehiclePlateNumber: car.carNum || car.vehicleNumber || "",
+            firstRegistrationDate:
+              car.regDate || car.registrationDate
+                ? dayjs(car.regDate || car.registrationDate).format(
+                    "YYYY-MM-DD"
+                  )
+                : dayjs().format("YYYY-MM-DD"),
+            vehicleType: car.vehicleType?.name || car.vehicleType || "",
+            loadCapacity: getLoadCapacityFromVehicleType(car.vehicleType?.name), // 수정된 부분
+            vehicleStatus: car.carStatus || car.vehicleStatus || "운행 가능",
+            currentDistance:
+              car.Mileage || car.currentDistance
+                ? `${(car.Mileage || car.currentDistance).toLocaleString()}`
+                : "0",
+            lastInspectionDate:
+              car.inspection || car.lastInspection
+                ? dayjs(car.inspection || car.lastInspection)
+                : null,
+            nextMaintenanceDate:
+              car.inspection || car.nextInspection
+                ? dayjs(car.inspection || car.nextInspection)
+                : null,
+            operationStatus: car.carStatus || car.vehicleStatus || "운행중",
+            insuranceStatus: car.insurance ? "유" : "무",
+            insuranceStartDate: null,
+            insuranceEndDate: null,
+            licenseNum: car.driver?.licenseNum || car.licenseNum || "",
+            licenseDT:
+              car.driver?.licenseDT || car.licenseDT
+                ? dayjs(car.driver?.licenseDT || car.licenseDT)
+                : null,
+            startTime:
+              car.driver?.preferred_start_time || car.startTime
+                ? dayjs(
+                    car.driver?.preferred_start_time || car.startTime,
+                    "HH:mm:ss"
+                  )
+                : dayjs().hour(7).minute(0),
+            endTime:
+              car.driver?.preferred_end_time || car.endTime
+                ? dayjs(
+                    car.driver?.preferred_end_time || car.endTime,
+                    "HH:mm:ss"
+                  )
+                : dayjs().hour(18).minute(0),
+            preferredAreas: car.driver?.mainLoca || car.preferredAreas || "",
+          };
+        });
+
+        setVehicles(formattedVehicles);
+
+        // API에서 가져온 데이터를 localStorage에 저장 (캐싱용)
+        const localStorageVehicles = formattedVehicles.map((vehicle) => ({
+          id: vehicle.id,
+          registrationDate: vehicle.firstRegistrationDate
+            ? dayjs(vehicle.firstRegistrationDate).format("YYYY.M.D")
+            : new Date().toLocaleDateString("ko-KR"),
+          vehicleNumber: vehicle.vehicleNumber,
+          vehicleType: vehicle.vehicleType,
+          loadCapacity: vehicle.loadCapacity,
+          vehicleStatus: vehicle.vehicleStatus,
+          insuranceStatus: vehicle.insuranceStatus,
+          currentDistance: vehicle.currentDistance,
+          lastInspection: vehicle.lastInspectionDate
+            ? dayjs(vehicle.lastInspectionDate).format("YYYY.M.D")
+            : "점검일 정보 없음",
+          nextInspection: vehicle.nextMaintenanceDate
+            ? dayjs(vehicle.nextMaintenanceDate).format("YYYY.M.D")
+            : "점검일 정보 없음",
+          icon: "🚛",
+        }));
+
+        localStorage.setItem(
+          "driverVehicles",
+          JSON.stringify(localStorageVehicles)
+        );
+        console.log(
+          "API에서 가져온 차량 정보를 localStorage에 저장:",
+          localStorageVehicles
+        );
+
+        return;
+      }
+
+      // API에서 차량 정보가 없는 경우 localStorage 확인
+      console.log("API에서 차량 정보 없음 - localStorage 확인");
+      const savedVehicles = localStorage.getItem("driverVehicles");
+      console.log("localStorage에서 가져온 차량 정보:", savedVehicles);
+
+      if (savedVehicles) {
+        const parsedVehicles = JSON.parse(savedVehicles);
+        console.log("파싱된 차량 정보:", parsedVehicles);
+
+        // localStorage 데이터를 프론트엔드 형식으로 변환
+        const formattedVehicles = parsedVehicles.map((vehicle) => {
+          console.log("개별 차량 데이터 (ManageVehicles):", vehicle);
+
+          return {
+            id: vehicle.id,
+            vehicleNumber: vehicle.vehicleNumber || "",
+            vehiclePlateNumber: vehicle.vehicleNumber || "",
+            firstRegistrationDate: vehicle.registrationDate
+              ? dayjs(vehicle.registrationDate, "YYYY.M.D").format("YYYY-MM-DD")
+              : dayjs().format("YYYY-MM-DD"),
+            vehicleType: vehicle.vehicleType || "",
+            loadCapacity: vehicle.loadCapacity || "1~3톤", // 기본값 설정
+            vehicleStatus: vehicle.vehicleStatus || "운행 가능",
+            currentDistance: vehicle.currentDistance || "0",
+            lastInspectionDate:
+              vehicle.lastInspection &&
+              vehicle.lastInspection !== "점검일 정보 없음"
+                ? dayjs(vehicle.lastInspection, "YYYY.M.D")
+                : null,
+            nextMaintenanceDate:
+              vehicle.nextInspection &&
+              vehicle.nextInspection !== "점검일 정보 없음"
+                ? dayjs(vehicle.nextInspection, "YYYY.M.D")
+                : null,
+            operationStatus: vehicle.vehicleStatus || "운행중",
+            insuranceStatus: vehicle.insuranceStatus || "무",
+            insuranceStartDate: null,
+            insuranceEndDate: null,
+            licenseNum: "",
+            licenseDT: null,
+            startTime: dayjs().hour(7).minute(0),
+            endTime: dayjs().hour(18).minute(0),
+            preferredAreas: "",
+          };
+        });
+
+        setVehicles(formattedVehicles);
+        return;
+      }
+
+      // 에러 시 빈 배열로 설정하고 추가 폼 표시 (수동 추가가 아닐 때만)
+      setVehicles([]);
+      if (!isManualAdd) {
+        setShowAddForm(true);
+      }
+    } catch (error) {
+      console.error("차량 목록 조회 실패:", error);
+      setError("차량 정보를 불러오는데 실패했습니다.");
+
+      // API 호출 실패 시 localStorage 확인
+      console.log("API 호출 실패 - localStorage 확인");
+      const savedVehicles = localStorage.getItem("driverVehicles");
+
+      if (savedVehicles) {
+        try {
+          const parsedVehicles = JSON.parse(savedVehicles);
+          console.log(
+            "localStorage에서 가져온 차량 정보 (API 실패 후):",
+            parsedVehicles
+          );
+
+          // localStorage 데이터를 프론트엔드 형식으로 변환
+          const formattedVehicles = parsedVehicles.map((vehicle) => ({
+            id: vehicle.id,
+            vehicleNumber: vehicle.vehicleNumber || "",
+            vehiclePlateNumber: vehicle.vehicleNumber || "",
+            firstRegistrationDate: vehicle.registrationDate
+              ? dayjs(vehicle.registrationDate, "YYYY.M.D").format("YYYY-MM-DD")
+              : dayjs().format("YYYY-MM-DD"),
+            vehicleType: vehicle.vehicleType || "",
+            loadCapacity: vehicle.loadCapacity || "1~3톤", // 기본값 설정
+            vehicleStatus: vehicle.vehicleStatus || "운행 가능",
+            currentDistance: vehicle.currentDistance || "0",
+            lastInspectionDate:
+              vehicle.lastInspection &&
+              vehicle.lastInspection !== "점검일 정보 없음"
+                ? dayjs(vehicle.lastInspection, "YYYY.M.D")
+                : null,
+            nextMaintenanceDate:
+              vehicle.nextInspection &&
+              vehicle.nextInspection !== "점검일 정보 없음"
+                ? dayjs(vehicle.nextInspection, "YYYY.M.D")
+                : null,
+            operationStatus: vehicle.vehicleStatus || "운행중",
+            insuranceStatus: vehicle.insuranceStatus || "무",
+            insuranceStartDate: null,
+            insuranceEndDate: null,
+            licenseNum: "",
+            licenseDT: null,
+            startTime: dayjs().hour(7).minute(0),
+            endTime: dayjs().hour(18).minute(0),
+            preferredAreas: "",
+          }));
+
+          setVehicles(formattedVehicles);
+        } catch (parseError) {
+          console.error("localStorage 파싱 실패:", parseError);
+          setVehicles([]);
+          if (!isManualAdd) {
+            setShowAddForm(true);
+          }
+        }
+      } else {
+        setVehicles([]);
+        if (!isManualAdd) {
+          setShowAddForm(true);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [isManualAdd]);
+
+  // Profile에서 돌아온 경우 차량 정보 새로고침
+  useEffect(() => {
+    if (location.state?.fromProfile) {
+      console.log("Profile에서 돌아옴 - 차량 정보 새로고침");
+      // 차량 정보 새로고침
+      fetchVehicles();
+      // state 초기화
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, fetchVehicles]);
+
   // showAddForm 상태 디버깅
   useEffect(() => {
     console.log("showAddForm 상태 변경:", showAddForm);
@@ -64,62 +324,240 @@ const ManageVehicles = () => {
 
   // 차량 목록 조회
   useEffect(() => {
+    console.log("기사 프로필에서 차량 정보 조회 시도");
     const fetchVehicles = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const carsData = await fetchCars(); // 변경: getDriverCars -> fetchCars
-        console.log("조회된 차량 데이터:", carsData);
-
-        // 백엔드 데이터를 프론트엔드 형식으로 변환
-        const formattedVehicles = (carsData || []).map((car) => {
-          console.log("개별 차량 데이터 (ManageVehicles):", car);
-
-          return {
-            id: car.carId,
-            vehicleNumber: car.carNum || "",
-            vehiclePlateNumber: car.carNum || "",
-            firstRegistrationDate: car.regDate
-              ? dayjs(car.regDate).format("YYYY-MM-DD")
-              : dayjs().format("YYYY-MM-DD"),
-            vehicleType: car.vehicleType?.name || "",
-            loadCapacity: car.vehicleType?.maxWeight
-              ? `${car.vehicleType.maxWeight}kg`
-              : "",
-            vehicleStatus: car.carStatus || "운행 가능",
-            currentDistance: car.Mileage
-              ? `${car.Mileage.toLocaleString()}`
-              : "0",
-            lastInspectionDate: car.inspection ? dayjs(car.inspection) : null,
-            nextMaintenanceDate: car.inspection ? dayjs(car.inspection) : null,
-            operationStatus: car.carStatus || "운행중",
-            insuranceStatus: car.insurance ? "유" : "무",
-            insuranceStartDate: null,
-            insuranceEndDate: null,
-            licenseNum: car.driver?.licenseNum || "",
-            licenseDT: car.driver?.licenseDT
-              ? dayjs(car.driver.licenseDT)
-              : null,
-            startTime: car.driver?.preferred_start_time
-              ? dayjs(car.driver.preferred_start_time, "HH:mm:ss")
-              : dayjs().hour(7).minute(0),
-            endTime: car.driver?.preferred_end_time
-              ? dayjs(car.driver.preferred_end_time, "HH:mm:ss")
-              : dayjs().hour(18).minute(0),
-            preferredAreas: car.driver?.mainLoca || "",
-          };
+        // Profile 페이지와 같은 방식으로 기사 정보 조회
+        const driverData = await fetchCars({
+          page: 1,
+          size: 10,
+          keyword: "",
+          status: "",
         });
+        console.log("가져온 기사 프로필 데이터:", driverData);
 
-        setVehicles(formattedVehicles);
+        // 기사 프로필에서 차량 정보 추출
+        if (driverData && Array.isArray(driverData) && driverData.length > 0) {
+          // API에서 차량 정보를 성공적으로 가져온 경우
+          const formattedVehicles = driverData.map((car) => {
+            console.log("개별 차량 데이터 (ManageVehicles):", car);
 
-        // 차량이 없으면 자동으로 추가 폼 표시 (수동 추가가 아닐 때만)
-        if (formattedVehicles.length === 0 && !isManualAdd) {
+            return {
+              id: car.carId || car.id,
+              vehicleNumber: car.carNum || car.vehicleNumber || "",
+              vehiclePlateNumber: car.carNum || car.vehicleNumber || "",
+              firstRegistrationDate:
+                car.regDate || car.registrationDate
+                  ? dayjs(car.regDate || car.registrationDate).format(
+                      "YYYY-MM-DD"
+                    )
+                  : dayjs().format("YYYY-MM-DD"),
+              vehicleType: car.vehicleType?.name || car.vehicleType || "",
+              loadCapacity: getLoadCapacityFromVehicleType(
+                car.vehicleType?.name
+              ), // 수정된 부분
+              vehicleStatus: car.carStatus || car.vehicleStatus || "운행 가능",
+              currentDistance:
+                car.Mileage || car.currentDistance
+                  ? `${(car.Mileage || car.currentDistance).toLocaleString()}`
+                  : "0",
+              lastInspectionDate:
+                car.inspection || car.lastInspection
+                  ? dayjs(car.inspection || car.lastInspection)
+                  : null,
+              nextMaintenanceDate:
+                car.inspection || car.nextInspection
+                  ? dayjs(car.inspection || car.nextInspection)
+                  : null,
+              operationStatus: car.carStatus || car.vehicleStatus || "운행중",
+              insuranceStatus: car.insurance ? "유" : "무",
+              insuranceStartDate: null,
+              insuranceEndDate: null,
+              licenseNum: car.driver?.licenseNum || car.licenseNum || "",
+              licenseDT:
+                car.driver?.licenseDT || car.licenseDT
+                  ? dayjs(car.driver?.licenseDT || car.licenseDT)
+                  : null,
+              startTime:
+                car.driver?.preferred_start_time || car.startTime
+                  ? dayjs(
+                      car.driver?.preferred_start_time || car.startTime,
+                      "HH:mm:ss"
+                    )
+                  : dayjs().hour(7).minute(0),
+              endTime:
+                car.driver?.preferred_end_time || car.endTime
+                  ? dayjs(
+                      car.driver?.preferred_end_time || car.endTime,
+                      "HH:mm:ss"
+                    )
+                  : dayjs().hour(18).minute(0),
+              preferredAreas: car.driver?.mainLoca || car.preferredAreas || "",
+            };
+          });
+
+          setVehicles(formattedVehicles);
+
+          // API에서 가져온 데이터를 localStorage에 저장 (캐싱용)
+          const localStorageVehicles = formattedVehicles.map((vehicle) => ({
+            id: vehicle.id,
+            registrationDate: vehicle.firstRegistrationDate
+              ? dayjs(vehicle.firstRegistrationDate).format("YYYY.M.D")
+              : new Date().toLocaleDateString("ko-KR"),
+            vehicleNumber: vehicle.vehicleNumber,
+            vehicleType: vehicle.vehicleType,
+            loadCapacity: vehicle.loadCapacity,
+            vehicleStatus: vehicle.vehicleStatus,
+            insuranceStatus: vehicle.insuranceStatus,
+            currentDistance: vehicle.currentDistance,
+            lastInspection: vehicle.lastInspectionDate
+              ? dayjs(vehicle.lastInspectionDate).format("YYYY.M.D")
+              : "점검일 정보 없음",
+            nextInspection: vehicle.nextMaintenanceDate
+              ? dayjs(vehicle.nextMaintenanceDate).format("YYYY.M.D")
+              : "점검일 정보 없음",
+            icon: "🚛",
+          }));
+
+          localStorage.setItem(
+            "driverVehicles",
+            JSON.stringify(localStorageVehicles)
+          );
+          console.log(
+            "API에서 가져온 차량 정보를 localStorage에 저장:",
+            localStorageVehicles
+          );
+
+          // 차량이 없으면 자동으로 추가 폼 표시 (수동 추가가 아닐 때만)
+          if (formattedVehicles.length === 0 && !isManualAdd) {
+            setShowAddForm(true);
+          }
+          return;
+        }
+
+        // API에서 차량 정보가 없는 경우 localStorage 확인
+        console.log("API에서 차량 정보 없음 - localStorage 확인");
+        const savedVehicles = localStorage.getItem("driverVehicles");
+        console.log("localStorage에서 가져온 차량 정보:", savedVehicles);
+
+        if (savedVehicles) {
+          const parsedVehicles = JSON.parse(savedVehicles);
+          console.log("파싱된 차량 정보:", parsedVehicles);
+
+          // localStorage 데이터를 프론트엔드 형식으로 변환
+          const formattedVehicles = parsedVehicles.map((vehicle) => {
+            console.log("개별 차량 데이터 (ManageVehicles):", vehicle);
+
+            return {
+              id: vehicle.id,
+              vehicleNumber: vehicle.vehicleNumber || "",
+              vehiclePlateNumber: vehicle.vehicleNumber || "",
+              firstRegistrationDate: vehicle.registrationDate
+                ? dayjs(vehicle.registrationDate, "YYYY.M.D").format(
+                    "YYYY-MM-DD"
+                  )
+                : dayjs().format("YYYY-MM-DD"),
+              vehicleType: vehicle.vehicleType || "",
+              loadCapacity: vehicle.loadCapacity || "1~3톤", // 기본값 설정
+              vehicleStatus: vehicle.vehicleStatus || "운행 가능",
+              currentDistance: vehicle.currentDistance || "0",
+              lastInspectionDate:
+                vehicle.lastInspection &&
+                vehicle.lastInspection !== "점검일 정보 없음"
+                  ? dayjs(vehicle.lastInspection, "YYYY.M.D")
+                  : null,
+              nextMaintenanceDate:
+                vehicle.nextInspection &&
+                vehicle.nextInspection !== "점검일 정보 없음"
+                  ? dayjs(vehicle.nextInspection, "YYYY.M.D")
+                  : null,
+              operationStatus: vehicle.vehicleStatus || "운행중",
+              insuranceStatus: vehicle.insuranceStatus || "무",
+              insuranceStartDate: null,
+              insuranceEndDate: null,
+              licenseNum: "",
+              licenseDT: null,
+              startTime: dayjs().hour(7).minute(0),
+              endTime: dayjs().hour(18).minute(0),
+              preferredAreas: "",
+            };
+          });
+
+          setVehicles(formattedVehicles);
+
+          // 차량이 없으면 자동으로 추가 폼 표시 (수동 추가가 아닐 때만)
+          if (formattedVehicles.length === 0 && !isManualAdd) {
+            setShowAddForm(true);
+          }
+          return;
+        }
+
+        // API와 localStorage 모두에 차량 정보가 없는 경우
+        console.log("API와 localStorage 모두에 차량 정보 없음");
+        setVehicles([]);
+        if (!isManualAdd) {
           setShowAddForm(true);
         }
       } catch (error) {
         console.error("차량 목록 조회 실패:", error);
         setError("차량 정보를 불러오는데 실패했습니다.");
+
+        // API 호출 실패 시 localStorage 확인
+        console.log("API 호출 실패 - localStorage 확인");
+        const savedVehicles = localStorage.getItem("driverVehicles");
+
+        if (savedVehicles) {
+          try {
+            const parsedVehicles = JSON.parse(savedVehicles);
+            console.log(
+              "localStorage에서 가져온 차량 정보 (API 실패 후):",
+              parsedVehicles
+            );
+
+            // localStorage 데이터를 프론트엔드 형식으로 변환
+            const formattedVehicles = parsedVehicles.map((vehicle) => ({
+              id: vehicle.id,
+              vehicleNumber: vehicle.vehicleNumber || "",
+              vehiclePlateNumber: vehicle.vehicleNumber || "",
+              firstRegistrationDate: vehicle.registrationDate
+                ? dayjs(vehicle.registrationDate, "YYYY.M.D").format(
+                    "YYYY-MM-DD"
+                  )
+                : dayjs().format("YYYY-MM-DD"),
+              vehicleType: vehicle.vehicleType || "",
+              loadCapacity: vehicle.loadCapacity || "1~3톤", // 기본값 설정
+              vehicleStatus: vehicle.vehicleStatus || "운행 가능",
+              currentDistance: vehicle.currentDistance || "0",
+              lastInspectionDate:
+                vehicle.lastInspection &&
+                vehicle.lastInspection !== "점검일 정보 없음"
+                  ? dayjs(vehicle.lastInspection, "YYYY.M.D")
+                  : null,
+              nextMaintenanceDate:
+                vehicle.nextInspection &&
+                vehicle.nextInspection !== "점검일 정보 없음"
+                  ? dayjs(vehicle.nextInspection, "YYYY.M.D")
+                  : null,
+              operationStatus: vehicle.vehicleStatus || "운행중",
+              insuranceStatus: vehicle.insuranceStatus || "무",
+              insuranceStartDate: null,
+              insuranceEndDate: null,
+              licenseNum: "",
+              licenseDT: null,
+              startTime: dayjs().hour(7).minute(0),
+              endTime: dayjs().hour(18).minute(0),
+              preferredAreas: "",
+            }));
+
+            setVehicles(formattedVehicles);
+            return;
+          } catch (parseError) {
+            console.error("localStorage 파싱 실패:", parseError);
+          }
+        }
 
         // 에러 시 빈 배열로 설정하고 추가 폼 표시 (수동 추가가 아닐 때만)
         setVehicles([]);
@@ -147,8 +585,8 @@ const ManageVehicles = () => {
       processedValue = addCommasToNumber(value);
     }
 
-    setVehicles((prev) =>
-      prev.map((v) => {
+    setVehicles((prev) => {
+      const updatedVehicles = prev.map((v) => {
         if (v.id === vehicleId) {
           const updatedVehicle = { ...v, [name]: processedValue };
 
@@ -161,8 +599,40 @@ const ManageVehicles = () => {
           return updatedVehicle;
         }
         return v;
-      })
-    );
+      });
+
+      // localStorage 업데이트
+      const localStorageVehicles = updatedVehicles.map((vehicle) => ({
+        id: vehicle.id,
+        registrationDate: vehicle.firstRegistrationDate
+          ? dayjs(vehicle.firstRegistrationDate).format("YYYY.M.D")
+          : new Date().toLocaleDateString("ko-KR"),
+        vehicleNumber: vehicle.vehicleNumber,
+        vehicleType: vehicle.vehicleType,
+        loadCapacity: vehicle.loadCapacity,
+        vehicleStatus: vehicle.vehicleStatus,
+        insuranceStatus: vehicle.insuranceStatus,
+        currentDistance: vehicle.currentDistance,
+        lastInspection: vehicle.lastInspectionDate
+          ? dayjs(vehicle.lastInspectionDate).format("YYYY.M.D")
+          : "점검일 정보 없음",
+        nextInspection: vehicle.nextMaintenanceDate
+          ? dayjs(vehicle.nextMaintenanceDate).format("YYYY.M.D")
+          : "점검일 정보 없음",
+        icon: "🚛",
+      }));
+
+      localStorage.setItem(
+        "driverVehicles",
+        JSON.stringify(localStorageVehicles)
+      );
+      console.log(
+        "localStorage 업데이트 완료 (handleChange):",
+        localStorageVehicles
+      );
+
+      return updatedVehicles;
+    });
   };
 
   const openAddForm = () => {
@@ -227,165 +697,275 @@ const ManageVehicles = () => {
         return;
       }
 
-      const carData = {
-        carNum: newVehicle.vehiclePlateNumber,
-        vehicleTypeId: 1, // 기본값으로 1 설정 (일반카고)
-        insurance: newVehicle.insuranceStatus === "유",
-        Mileage: newVehicle.currentDistance
-          ? parseInt(newVehicle.currentDistance.replace(/[^\d]/g, ""))
-          : 0,
-        etc: "",
-        inspection: newVehicle.lastInspectionDate
-          ? newVehicle.lastInspectionDate.toDate()
-          : null,
-        carStatus: "temporary", // CarStatusEnum에 맞는 값으로 수정
+      // 로컬 상태에만 추가 (저장하기 버튼에서 API 호출)
+      const newVehicleData = {
+        id: Date.now(), // 임시 ID 생성
+        vehicleNumber: newVehicle.vehiclePlateNumber,
+        vehiclePlateNumber: newVehicle.vehiclePlateNumber,
+        firstRegistrationDate:
+          newVehicle.firstRegistrationDate || dayjs().format("YYYY-MM-DD"),
+        vehicleType: newVehicle.vehicleType || "1톤 카고",
+        loadCapacity: newVehicle.loadCapacity || "",
+        vehicleStatus: newVehicle.vehicleStatus || "운행 가능",
+        currentDistance: newVehicle.currentDistance || "0",
+        lastInspectionDate: newVehicle.lastInspectionDate,
+        nextMaintenanceDate: newVehicle.nextMaintenanceDate,
+        operationStatus: newVehicle.vehicleStatus || "운행중",
+        insuranceStatus: newVehicle.insuranceStatus || "무",
+        insuranceStartDate: newVehicle.insuranceStartDate,
+        insuranceEndDate: newVehicle.insuranceEndDate,
+        licenseNum: newVehicle.licenseNum || "",
+        licenseDT: newVehicle.licenseDT,
+        startTime: newVehicle.startTime || dayjs().hour(7).minute(0),
+        endTime: newVehicle.endTime || dayjs().hour(18).minute(0),
+        preferredAreas: newVehicle.preferredAreas || "",
       };
 
-      const addedCar = await createCar(carData);
-      console.log("추가된 차량:", addedCar);
+      // 차량 목록에 추가
+      const updatedVehicles = [...vehicles, newVehicleData];
+      setVehicles(updatedVehicles);
 
-      // 차량 목록 다시 조회
-      const carsData = await fetchCars(); // 변경: getDriverCars -> fetchCars
-      const formattedVehicles = carsData.map((car) => ({
-        id: car.carId,
-        vehicleNumber: car.carNum || "",
-        vehiclePlateNumber: car.carNum || "",
-        firstRegistrationDate: car.regDate
-          ? dayjs(car.regDate).format("YYYY-MM-DD")
-          : dayjs().format("YYYY-MM-DD"),
-        vehicleType: car.vehicleType?.name || "",
-        loadCapacity: car.vehicleType?.maxWeight
-          ? `${car.vehicleType.maxWeight}kg`
-          : "",
-        vehicleStatus: car.carStatus || "운행 가능",
-        currentDistance: car.Mileage ? `${car.Mileage.toLocaleString()}` : "0",
-        lastInspectionDate: car.inspection ? dayjs(car.inspection) : null,
-        nextMaintenanceDate: car.inspection ? dayjs(car.inspection) : null,
-        operationStatus: car.carStatus || "운행중",
-        insuranceStatus: car.insurance ? "유" : "무",
-        insuranceStartDate: null,
-        insuranceEndDate: null,
-        licenseNum: car.driver?.licenseNum || "",
-        licenseDT: car.driver?.licenseDT ? dayjs(car.driver.licenseDT) : null,
-        startTime: car.driver?.preferred_start_time
-          ? dayjs(car.driver.preferred_start_time, "HH:mm:ss")
-          : dayjs().hour(7).minute(0),
-        endTime: car.driver?.preferred_end_time
-          ? dayjs(car.driver.preferred_end_time, "HH:mm:ss")
-          : dayjs().hour(18).minute(0),
-        preferredAreas: car.driver?.mainLoca || "",
-      }));
+      console.log("새 차량이 로컬에 추가됨:", newVehicleData);
+      alert(
+        "차량이 추가되었습니다. 저장하기 버튼을 눌러 변경사항을 저장하세요."
+      );
 
-      setVehicles(formattedVehicles);
       closeAddForm();
-      setIsManualAdd(false); // 수동 추가 플래그 초기화
-      alert("차량이 성공적으로 추가되었습니다.");
+      setIsManualAdd(false);
     } catch (error) {
       console.error("차량 추가 실패:", error);
-      alert(
-        "차량 추가에 실패했습니다: " + (error.response?.data || error.message)
-      );
+      alert("차량 추가에 실패했습니다.");
     }
   };
 
   const deleteVehicle = async (vehicleId) => {
     if (vehicles.length > 1) {
       try {
-        await deleteCar(vehicleId);
-        console.log("삭제된 차량 ID:", vehicleId);
+        console.log("삭제할 차량 ID:", vehicleId);
 
-        // 차량 목록에서 제거
-        setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
-        alert("차량이 성공적으로 삭제되었습니다.");
-      } catch (error) {
-        console.error("차량 삭제 실패:", error);
+        // 로컬 상태에서만 제거 (저장하기 버튼에서 API 호출)
+        const updatedVehicles = vehicles.filter((v) => v.id !== vehicleId);
+        setVehicles(updatedVehicles);
+
+        // 삭제된 차량 ID를 추적
+        setDeletedVehicleIds((prev) => [...prev, vehicleId]);
+
+        console.log(`차량 ID ${vehicleId} 로컬에서 제거됨`);
         alert(
-          "차량 삭제에 실패했습니다: " + (error.response?.data || error.message)
+          "차량이 제거되었습니다. 저장하기 버튼을 눌러 변경사항을 저장하세요."
         );
+      } catch (error) {
+        console.error("차량 제거 실패:", error);
+        alert("차량 제거에 실패했습니다.");
       }
     } else {
       alert("최소 1대의 차량은 유지해야 합니다.");
     }
   };
 
+  // loadCapacity를 숫자로 변환하는 함수 제거 (더 이상 필요하지 않음)
+
   const handleSave = async () => {
     try {
       console.log("저장할 차량 정보:", vehicles);
+      console.log("추가된 폼 정보:", additionalForms);
 
-      // 각 차량 정보를 백엔드 형식으로 변환하여 저장
-      for (const vehicle of vehicles) {
-        const carData = {
-          carNum: vehicle.vehiclePlateNumber,
-          vehicleTypeId: 1, // 기본값으로 1 설정 (일반카고)
-          insurance: vehicle.insuranceStatus === "유",
-          Mileage: vehicle.currentDistance
-            ? parseInt(vehicle.currentDistance.replace(/[^\d]/g, ""))
-            : 0,
-          etc: "",
-          inspection: vehicle.lastInspectionDate
-            ? vehicle.lastInspectionDate.toDate()
-            : null,
-          carStatus: "temporary", // CarStatusEnum에 맞는 값으로 수정
-        };
-
-        console.log("차량 수정 요청 데이터:", carData);
-
+      // 1. 새로 추가된 차량들 생성
+      for (const form of additionalForms) {
         try {
-          await updateCar(vehicle.id, carData);
-          console.log(`차량 ${vehicle.id} 수정 성공`);
-        } catch (updateError) {
-          console.error(`차량 ${vehicle.id} 수정 실패:`, updateError);
-          console.error("에러 응답:", updateError.response?.data);
-          console.error("에러 상태:", updateError.response?.status);
+          // 필수 필드 검증
+          if (!form.vehiclePlateNumber?.trim()) {
+            alert("차량번호를 입력해주세요.");
+            return;
+          }
 
-          // 구체적인 에러 메시지 생성
-          let errorMessage = "차량 정보 저장에 실패했습니다.";
-          if (updateError.response?.data) {
-            if (typeof updateError.response.data === "string") {
-              errorMessage += ` ${updateError.response.data}`;
-            } else if (updateError.response.data.message) {
-              errorMessage += ` ${updateError.response.data.message}`;
-            } else {
-              errorMessage += ` ${JSON.stringify(updateError.response.data)}`;
+          if (!form.vehicleType) {
+            alert("차량 종류를 선택해주세요.");
+            return;
+          }
+
+          // vehicleType을 vehicleTypeId로 매핑
+          const getVehicleTypeId = (vehicleType) => {
+            switch (vehicleType) {
+              case "1톤 카고":
+                return 4;
+              case "1.4톤 카고":
+                return 5;
+              case "2.5톤 카고":
+                return 6;
+              case "3.5톤 카고":
+                return 7;
+              case "5톤 카고":
+                return 8;
+              case "5톤 탑차":
+                return 9;
+              case "8톤 윙바디":
+                return 10;
+              case "냉동 탑차":
+                return 11;
+              case "냉동 윙바디":
+                return 12;
+              case "트레일러":
+                return 13;
+              default:
+                return 4; // 기본값
             }
-          } else if (updateError.message) {
-            errorMessage += ` ${updateError.message}`;
+          };
+
+          const createData = {
+            carNum: form.vehiclePlateNumber.trim(),
+            Mileage: 0,
+            insurance: false,
+            inspection: new Date(),
+            carStatus: "OPERATIONAL",
+            etc: "",
+            vehicleTypeId: getVehicleTypeId(form.vehicleType),
+            driverId: null, // 백엔드에서 JWT 토큰으로 driverId를 추출하므로 null로 설정
+          };
+
+          console.log("새 차량 생성 시도 (최소 데이터):", createData);
+          const createdCar = await createCar(createData);
+          console.log("새 차량 생성 성공:", createdCar);
+        } catch (error) {
+          console.error("새 차량 생성 실패:", error);
+          let errorMessage = "새 차량 생성에 실패했습니다.";
+
+          if (error.response?.data) {
+            if (typeof error.response.data === "string") {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else {
+              errorMessage = JSON.stringify(error.response.data);
+            }
           }
 
           alert(errorMessage);
-          return; // 첫 번째 에러에서 중단
+          return;
         }
       }
 
-      console.log("모든 차량 정보 저장 완료");
+      // 2. 기존 차량들 업데이트
+      for (const vehicle of vehicles) {
+        try {
+          const updateData = {
+            carId: vehicle.id,
+            carNum: (
+              vehicle.vehicleNumber ||
+              vehicle.vehiclePlateNumber ||
+              ""
+            ).trim(),
+            Mileage: vehicle.currentDistance
+              ? parseInt(vehicle.currentDistance.replace(/[^\d]/g, ""))
+              : 0,
+            insurance: vehicle.insuranceStatus === "유",
+            inspection: vehicle.lastInspectionDate
+              ? dayjs(vehicle.lastInspectionDate).toDate()
+              : new Date(), // null 대신 현재 날짜 사용
+            carStatus: "OPERATIONAL", // 기본값으로 설정
+            etc: "", // 빈 문자열로 설정 (String 타입)
+            vehicleTypeId:
+              vehicle.vehicleType === "1톤 카고"
+                ? 4
+                : vehicle.vehicleType === "1.4톤 카고"
+                ? 5
+                : vehicle.vehicleType === "2.5톤 카고"
+                ? 6
+                : vehicle.vehicleType === "3.5톤 카고"
+                ? 7
+                : vehicle.vehicleType === "5톤 카고"
+                ? 8
+                : vehicle.vehicleType === "5톤 탑차"
+                ? 9
+                : vehicle.vehicleType === "8톤 윙바디"
+                ? 10
+                : vehicle.vehicleType === "냉동 탑차"
+                ? 11
+                : vehicle.vehicleType === "냉동 윙바디"
+                ? 12
+                : vehicle.vehicleType === "트레일러"
+                ? 13
+                : 4, // 기본값을 4로 설정 (1톤 카고)
+            driverId: null, // 백엔드에서 JWT 토큰으로 driverId를 추출하므로 null로 설정
+          };
+
+          console.log(`차량 ID ${vehicle.id} 업데이트 시도:`, updateData);
+          await updateCar(vehicle.id, updateData);
+          console.log(`차량 ID ${vehicle.id} 업데이트 성공`);
+        } catch (error) {
+          console.error(`차량 ID ${vehicle.id} 업데이트 실패:`, error);
+          let errorMessage = "차량 수정에 실패했습니다.";
+
+          if (error.response?.data) {
+            if (typeof error.response.data === "string") {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else {
+              errorMessage = JSON.stringify(error.response.data);
+            }
+          }
+
+          alert(errorMessage);
+          return;
+        }
+      }
+
+      // 3. 삭제된 차량들 처리
+      for (const deletedId of deletedVehicleIds) {
+        try {
+          console.log(`차량 ID ${deletedId} 삭제 시도`);
+          await deleteCar(deletedId);
+          console.log(`차량 ID ${deletedId} 삭제 성공`);
+        } catch (error) {
+          console.error(`차량 ID ${deletedId} 삭제 실패:`, error);
+          let errorMessage = "차량 삭제에 실패했습니다.";
+
+          if (error.response?.data) {
+            if (typeof error.response.data === "string") {
+              errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            } else {
+              errorMessage = JSON.stringify(error.response.data);
+            }
+          }
+
+          alert(errorMessage);
+          return;
+        }
+      }
+
+      // 4. 추가 폼 초기화 및 삭제된 차량 ID 초기화
+      setAdditionalForms([]);
+      setIsManualAdd(false);
+      setDeletedVehicleIds([]);
+
+      // 5. 성공 후 차량 목록 재조회
+      await fetchVehicles();
+
       alert("차량 정보가 성공적으로 저장되었습니다.");
       navigate("/driver/profile", {
         state: { fromVehicleManagement: true },
       });
     } catch (error) {
       console.error("차량 정보 저장 실패:", error);
-      console.error("에러 응답:", error.response?.data);
-      console.error("에러 상태:", error.response?.status);
-
-      // 구체적인 에러 메시지 생성
-      let errorMessage = "차량 정보 저장에 실패했습니다.";
-      if (error.response?.data) {
-        if (typeof error.response.data === "string") {
-          errorMessage += ` ${error.response.data}`;
-        } else if (error.response.data.message) {
-          errorMessage += ` ${error.response.data.message}`;
-        } else {
-          errorMessage += ` ${JSON.stringify(error.response.data)}`;
-        }
-      } else if (error.message) {
-        errorMessage += ` ${error.message}`;
-      }
-
-      alert(errorMessage);
+      alert("차량 정보 저장에 실패했습니다.");
     }
   };
 
-  const vehicleTypes = ["일반카고", "윙바디", "냉장/냉동", "탑차", "리프트"];
+  const vehicleTypes = [
+    "1톤 카고",
+    "1.4톤 카고",
+    "2.5톤 카고",
+    "3.5톤 카고",
+    "5톤 카고",
+    "5톤 탑차",
+    "8톤 윙바디",
+    "냉동 탑차",
+    "냉동 윙바디",
+    "트레일러",
+  ];
   const loadCapacities = [
     "1톤 미만",
     "1~3톤",
@@ -679,22 +1259,13 @@ const ManageVehicles = () => {
 
                 <div style={{ flex: "1 1 48%" }}>
                   <TextField
-                    label="차량상태"
-                    select
+                    label="차량상태 (관리자만 수정 가능)"
                     fullWidth
-                    value={vehicle.vehicleStatus}
-                    onChange={(e) =>
-                      handleChange(vehicle.id, "vehicleStatus", e.target.value)
-                    }
-                    helperText=" "
+                    value={vehicle.vehicleStatus || "운행 가능"}
+                    disabled
+                    helperText="차량 상태는 관리자만 수정할 수 있습니다"
                     FormHelperTextProps={helperProps}
-                  >
-                    {vehicleStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {status}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  />
                 </div>
 
                 {/* 4행: 차량 마지막 점검일, 다음 정비 예정일 */}
@@ -1052,10 +1623,10 @@ const ManageVehicles = () => {
           <Box
             key={form.id}
             sx={{
-              border: "2px solid #113F67",
+              border: "2px solid #e1e5e9",
               borderRadius: 3,
               p: 3,
-              backgroundColor: "#f0f8ff",
+              backgroundColor: "#fafbfc",
               mb: 3,
               position: "relative",
             }}
@@ -1078,7 +1649,7 @@ const ManageVehicles = () => {
                 onClick={() => removeAdditionalForm(form.id)}
                 startIcon={<DeleteIcon />}
               >
-                폼 삭제
+                차량 삭제
               </Button>
             </Box>
 
@@ -1200,26 +1771,13 @@ const ManageVehicles = () => {
 
               <div style={{ flex: "1 1 48%" }}>
                 <TextField
-                  label="차량상태"
-                  select
+                  label="차량상태 (관리자만 수정 가능)"
                   fullWidth
-                  value={form.vehicleStatus}
-                  onChange={(e) =>
-                    handleAdditionalFormChange(
-                      form.id,
-                      "vehicleStatus",
-                      e.target.value
-                    )
-                  }
-                  helperText=" "
+                  value={form.vehicleStatus || "운행 가능"}
+                  disabled
+                  helperText="차량 상태는 관리자만 수정할 수 있습니다"
                   FormHelperTextProps={helperProps}
-                >
-                  {vehicleStatuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                />
               </div>
 
               {/* 4행: 차량 마지막 점검일, 다음 정비 예정일 */}
