@@ -59,6 +59,7 @@ const DriverProfile = () => {
     deliveryArea: "",
     rating: 0,
   });
+  // 차량 정보 관련 상태 (ManageVehicles에서 관리)
   const [vehicles, setVehicles] = useState([]);
   const [currentVehicleIndex, setCurrentVehicleIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState("");
@@ -93,6 +94,13 @@ const DriverProfile = () => {
 
       // state 초기화 (중복 처리 방지)
       window.history.replaceState({}, document.title);
+    }
+
+    // ManageVehicles에서 돌아온 경우 차량 정보 새로고침
+    if (location.state?.fromVehicleManagement) {
+      console.log("ManageVehicles에서 돌아옴 - 차량 정보 새로고침");
+      // 페이지 새로고침으로 차량 정보 업데이트
+      window.location.reload();
     }
   }, [location.state]);
 
@@ -215,8 +223,55 @@ const DriverProfile = () => {
           setHasSetPassword(true); // 일반 로그인 사용자는 비밀번호가 있음
         }
 
-        // 실제 차량 데이터 가져오기
-        await fetchVehicles();
+        // 차량 정보 가져오기
+        try {
+          const carsData = await fetchCars({});
+          console.log("Profile에서 가져온 차량 정보:", carsData);
+
+          if (carsData && Array.isArray(carsData)) {
+            const formattedVehicles = carsData.map((car) => ({
+              id: car.carId,
+              vehicleNumber: car.carNum || "",
+              vehiclePlateNumber: car.carNum || "",
+              firstRegistrationDate: car.regDate
+                ? dayjs(car.regDate).format("YYYY-MM-DD")
+                : dayjs().format("YYYY-MM-DD"),
+              vehicleType: car.vehicleType?.name || "1톤 카고",
+              loadCapacity: car.etc || "",
+              vehicleStatus:
+                car.carStatus?.getDisplayName?.() ||
+                car.carStatus ||
+                "운행 가능",
+              currentDistance: car.Mileage ? String(car.Mileage) : "0",
+              lastInspectionDate: car.inspection
+                ? dayjs(car.inspection).format("YYYY-MM-DD")
+                : null,
+              nextMaintenanceDate: null,
+              operationStatus: car.carStatus?.getDisplayName?.() || "운행중",
+              insuranceStatus: car.insurance ? "유" : "무",
+              insuranceStartDate: null,
+              insuranceEndDate: null,
+              licenseNum: car.driver?.licenseNum || "",
+              licenseDT: car.driver?.LicenseDT
+                ? dayjs(car.driver.LicenseDT)
+                : null,
+              startTime: car.driver?.preferred_start_time
+                ? dayjs(car.driver.preferred_start_time, "HH:mm:ss")
+                : dayjs().hour(7).minute(0),
+              endTime: car.driver?.preferred_end_time
+                ? dayjs(car.driver.preferred_end_time, "HH:mm:ss")
+                : dayjs().hour(18).minute(0),
+              preferredAreas: car.driver?.mainLoca || "",
+            }));
+            setVehicles(formattedVehicles);
+          } else {
+            setVehicles([]);
+          }
+        } catch (carError) {
+          console.error("차량 정보 조회 실패:", carError);
+          setVehicles([]);
+          // 차량 정보 조회 실패 시에도 로딩 상태 해제
+        }
       } catch (error) {
         console.error("기사 프로필 조회 실패:", error);
         setError("기사 정보를 불러오는데 실패했습니다.");
@@ -242,112 +297,20 @@ const DriverProfile = () => {
     fetchDriverProfile();
   }, []);
 
-  // 차량 정보만 가져오는 함수
-  const fetchVehicles = async () => {
-    try {
-      const carsData = await fetchCars();
-      console.log("가져온 차량 데이터:", carsData);
-
-      const formattedVehicles = carsData.map((car, index) => {
-        console.log("개별 차량 데이터:", car);
-
-        return {
-          id: car.carId,
-          registrationDate: car.regDate
-            ? new Date(car.regDate).toLocaleDateString("ko-KR")
-            : "등록일 없음",
-          vehicleNumber: car.carNum || "차량번호 없음",
-          vehicleType: car.vehicleType?.name || "차종 정보 없음",
-          loadCapacity: car.vehicleType?.maxWeight
-            ? `${car.vehicleType.maxWeight}kg`
-            : "적재량 정보 없음",
-          vehicleStatus: car.carStatus || "운행 가능",
-          insuranceStatus: car.insurance ? "유" : "무",
-          currentDistance: car.Mileage
-            ? `${car.Mileage.toLocaleString()} km`
-            : "0 km",
-          lastInspection: car.inspection
-            ? new Date(car.inspection).toLocaleDateString("ko-KR")
-            : "점검일 정보 없음",
-          nextInspection: car.inspection
-            ? new Date(car.inspection).toLocaleDateString("ko-KR")
-            : "점검일 정보 없음",
-          icon: "🚛", // 기본 아이콘
-        };
-      });
-
-      console.log("변환된 차량 데이터:", formattedVehicles);
-
-      setVehicles(formattedVehicles);
-    } catch (carError) {
-      console.error("차량 정보 조회 실패:", carError);
-      // 차량 정보 조회 실패 시 빈 배열로 설정
-      setVehicles([]);
-    }
-  };
-
-  // 페이지 포커스 시 차량 정보 새로고침
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log("페이지 포커스됨 - 차량 정보 새로고침");
-      fetchVehicles();
-    };
-
-    // 페이지가 보일 때마다 차량 정보 새로고침
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log("페이지가 보임 - 차량 정보 새로고침");
-        fetchVehicles();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  // 주기적으로 차량 정보 새로고침 (5분마다)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log("주기적 차량 정보 새로고침");
-      fetchVehicles();
-    }, 5 * 60 * 1000); // 5분
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // 차량 관리 페이지에서 돌아올 때 차량 정보 새로고침
-  useEffect(() => {
-    // 차량 관리 페이지에서 돌아왔는지 확인
-    if (
-      location.pathname === "/driver/profile" &&
-      location.state?.fromVehicleManagement
-    ) {
-      console.log("차량 관리 페이지에서 돌아옴 - 차량 정보 새로고침");
-      fetchVehicles();
-    }
-  }, [location]);
-
+  // 차량 네비게이션 함수들
   const nextVehicle = () => {
-    setSlideDirection("next");
     setCurrentVehicleIndex((prev) =>
       prev === vehicles.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevVehicle = () => {
-    setSlideDirection("prev");
     setCurrentVehicleIndex((prev) =>
       prev === 0 ? vehicles.length - 1 : prev - 1
     );
   };
 
   const goToVehicle = (index) => {
-    setSlideDirection(index > currentVehicleIndex ? "next" : "prev");
     setCurrentVehicleIndex(index);
   };
 
@@ -719,224 +682,294 @@ const DriverProfile = () => {
                   등록 차량 정보
                 </Typography>
 
-                {/* 차량 슬라이더 */}
-                <Box position="relative" sx={{ mb: 5 }}>
-                  <IconButton
-                    onClick={prevVehicle}
+                {/* 차량 정보가 없을 때 */}
+                {vehicles.length === 0 ? (
+                  <Box
                     sx={{
-                      position: "absolute",
-                      left: -40,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      bgcolor: "white",
-                      boxShadow: 4,
+                      p: 4,
+                      bgcolor: "#F5F7FA",
+                      borderRadius: 3,
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
                       "&:hover": {
-                        bgcolor: "#f5f5f5",
-                        transform: "translateY(-50%) scale(1.1)",
+                        bgcolor: "#E8E8E8",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                       },
-                      zIndex: 10,
-                      width: 60,
-                      height: 60,
                     }}
+                    onClick={() =>
+                      navigate("/driver/managevehicles", {
+                        state: { fromProfile: true },
+                      })
+                    }
                   >
-                    <ArrowBackIcon sx={{ fontSize: 32 }} />
-                  </IconButton>
-
-                  <Box sx={{ overflow: "hidden" }}>
-                    <Box
+                    <Typography variant="h1" sx={{ mb: 2 }}>
+                      🚛
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      color="text.secondary"
+                      sx={{ mb: 2 }}
+                    >
+                      차량 정보 조회하기
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      차량 정보를 조회하고 관리할 수 있습니다
+                    </Typography>
+                  </Box>
+                ) : (
+                  /* 차량 정보가 있을 때 */
+                  <Box position="relative">
+                    <IconButton
+                      onClick={prevVehicle}
                       sx={{
-                        display: "flex",
-                        transition: "transform 0.5s ease-in-out",
-                        transform: `translateX(-${currentVehicleIndex * 100}%)`,
+                        position: "absolute",
+                        left: -40,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        bgcolor: "white",
+                        boxShadow: 4,
+                        "&:hover": {
+                          bgcolor: "#f5f5f5",
+                          transform: "translateY(-50%) scale(1.1)",
+                        },
+                        zIndex: 10,
+                        width: 60,
+                        height: 60,
                       }}
                     >
-                      {vehicles.map((vehicle, index) => (
-                        <Box
-                          key={vehicle.id}
-                          sx={{ minWidth: "100%", flexShrink: 0 }}
-                        >
+                      <ArrowBackIcon sx={{ fontSize: 32 }} />
+                    </IconButton>
+
+                    <Box sx={{ overflow: "hidden" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          transition: "transform 0.5s ease-in-out",
+                          transform: `translateX(-${
+                            currentVehicleIndex * 100
+                          }%)`,
+                        }}
+                      >
+                        {vehicles.map((vehicle, index) => (
                           <Box
-                            sx={{
-                              p: 4,
-                              bgcolor: "#F5F7FA",
-                              borderRadius: 3,
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                bgcolor: "#E8E8E8",
-                                transform: "translateY(-2px)",
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                              },
-                            }}
-                            onClick={() =>
-                              navigate("/driver/managevehicles", {
-                                state: { fromProfile: true },
-                              })
-                            }
+                            key={vehicle.id}
+                            sx={{ minWidth: "100%", flexShrink: 0 }}
                           >
                             <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={4}
-                              mb={4}
+                              sx={{
+                                p: 4,
+                                bgcolor: "#F5F7FA",
+                                borderRadius: 3,
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  bgcolor: "#E8E8E8",
+                                  transform: "translateY(-2px)",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                },
+                              }}
+                              onClick={() =>
+                                navigate("/driver/managevehicles", {
+                                  state: { fromProfile: true },
+                                })
+                              }
                             >
-                              <Typography variant="h1">
-                                {vehicle.icon}
-                              </Typography>
-                              <Box flex={1}>
-                                <Typography variant="h4" fontWeight="bold">
-                                  {vehicle.vehicleType}
+                              <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={4}
+                                mb={4}
+                              >
+                                <Typography variant="h1">
+                                  {vehicle.icon}
                                 </Typography>
-                                <Typography variant="h5" color="text.secondary">
-                                  {vehicle.vehicleNumber}
-                                </Typography>
+                                <Box flex={1}>
+                                  <Typography variant="h4" fontWeight="bold">
+                                    {vehicle.vehicleType}
+                                  </Typography>
+                                  <Typography
+                                    variant="h5"
+                                    color="text.secondary"
+                                  >
+                                    {vehicle.vehicleNumber}
+                                  </Typography>
+                                </Box>
+                                <Chip
+                                  label={vehicle.vehicleStatus}
+                                  color={getStatusColor(vehicle.vehicleStatus)}
+                                  size="large"
+                                  sx={{
+                                    fontSize: "1.1rem",
+                                    fontWeight: "500",
+                                    py: 1,
+                                  }}
+                                />
                               </Box>
-                              <Chip
-                                label={vehicle.vehicleStatus}
-                                color={getStatusColor(vehicle.vehicleStatus)}
-                                size="large"
-                                sx={{
-                                  fontSize: "1.1rem",
-                                  fontWeight: "500",
-                                  py: 1,
-                                }}
-                              />
+
+                              <Grid container spacing={4}>
+                                <Grid item xs={6}>
+                                  <Stack spacing={3}>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        등록일
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.registrationDate}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        주행거리
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.currentDistance}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        적재용량
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.loadCapacity}
+                                      </Typography>
+                                    </Box>
+                                  </Stack>
+                                </Grid>
+                                <Grid item xs={6}>
+                                  <Stack spacing={3}>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        마지막 정비
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.lastInspection}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        다음 정비일
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.nextInspection}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                      >
+                                        보험
+                                      </Typography>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                      >
+                                        {vehicle.insuranceStatus}
+                                      </Typography>
+                                    </Box>
+                                  </Stack>
+                                </Grid>
+                              </Grid>
                             </Box>
-
-                            <Grid container spacing={4}>
-                              <Grid item xs={6}>
-                                <Stack spacing={3}>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      등록일
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.registrationDate}
-                                    </Typography>
-                                  </Box>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      주행거리
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.currentDistance}
-                                    </Typography>
-                                  </Box>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      적재용량
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.loadCapacity}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Grid>
-                              <Grid item xs={6}>
-                                <Stack spacing={3}>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      마지막 정비
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.lastInspection}
-                                    </Typography>
-                                  </Box>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      다음 정비일
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.nextInspection}
-                                    </Typography>
-                                  </Box>
-                                  <Box>
-                                    <Typography
-                                      variant="body1"
-                                      color="text.secondary"
-                                      sx={{ mb: 1 }}
-                                    >
-                                      보험
-                                    </Typography>
-                                    <Typography variant="h6" fontWeight="bold">
-                                      {vehicle.insuranceStatus}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Grid>
-                            </Grid>
                           </Box>
-                        </Box>
-                      ))}
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
 
-                  <IconButton
-                    onClick={nextVehicle}
-                    sx={{
-                      position: "absolute",
-                      right: -40,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      bgcolor: "white",
-                      boxShadow: 4,
-                      "&:hover": {
-                        bgcolor: "#f5f5f5",
-                        transform: "translateY(-50%) scale(1.1)",
-                      },
-                      zIndex: 10,
-                      width: 60,
-                      height: 60,
-                    }}
-                  >
-                    <ArrowForwardIcon sx={{ fontSize: 32 }} />
-                  </IconButton>
-                </Box>
-
-                {/* 차량 인디케이터 */}
-                <Box display="flex" justifyContent="center" gap={3}>
-                  {vehicles.map((_, index) => (
-                    <Box
-                      key={index}
-                      onClick={() => goToVehicle(index)}
+                    <IconButton
+                      onClick={nextVehicle}
                       sx={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        bgcolor:
-                          index === currentVehicleIndex ? "#113F67" : "#E0E6ED",
-                        cursor: "pointer",
-                        transition: "background-color 0.3s",
+                        position: "absolute",
+                        right: -40,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        bgcolor: "white",
+                        boxShadow: 4,
                         "&:hover": {
+                          bgcolor: "#f5f5f5",
+                          transform: "translateY(-50%) scale(1.1)",
+                        },
+                        zIndex: 10,
+                        width: 60,
+                        height: 60,
+                      }}
+                    >
+                      <ArrowForwardIcon sx={{ fontSize: 32 }} />
+                    </IconButton>
+                  </Box>
+                )}
+
+                {/* 차량 인디케이터 - 차량이 있을 때만 표시 */}
+                {vehicles.length > 0 && (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    gap={3}
+                    sx={{ mt: 3 }}
+                  >
+                    {vehicles.map((_, index) => (
+                      <Box
+                        key={index}
+                        onClick={() => goToVehicle(index)}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
                           bgcolor:
                             index === currentVehicleIndex
-                              ? "#34699A"
-                              : "#C5C9D0",
-                        },
-                      }}
-                    />
-                  ))}
-                </Box>
+                              ? "#113F67"
+                              : "#E0E6ED",
+                          cursor: "pointer",
+                          transition: "background-color 0.3s",
+                          "&:hover": {
+                            bgcolor:
+                              index === currentVehicleIndex
+                                ? "#34699A"
+                                : "#C5C9D0",
+                          },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
               </Box>
 
               {/* 일정 관리 */}
@@ -965,7 +998,15 @@ const DriverProfile = () => {
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     },
                   }}
-                  onClick={() => navigate("/driver/driverid")}
+                  onClick={() => {
+                    const currentDate = new Date();
+                    const year = currentDate.getFullYear();
+                    const month = String(currentDate.getMonth() + 1).padStart(
+                      2,
+                      "0"
+                    );
+                    navigate(`/driver/calendar/${year}/${month}`);
+                  }}
                 >
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <StaticDatePicker

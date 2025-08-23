@@ -54,6 +54,8 @@ public class CarController {
                 userId = (Long) uidObj;
             } else if (uidObj instanceof String) {
                 userId = Long.parseLong((String) uidObj);
+            } else if (uidObj instanceof Double) {
+                userId = ((Double) uidObj).longValue();
             } else {
                 log.error("지원하지 않는 uid 타입: {}", uidObj != null ? uidObj.getClass().getSimpleName() : "null");
                 throw new IllegalArgumentException("JWT에서 uid를 추출할 수 없습니다.");
@@ -118,7 +120,7 @@ public class CarController {
 
     // 차량 상세 조회
     @GetMapping("/{carId}")
-    public ResponseEntity<CarResponseDTO> getCarById(@PathVariable Long carId) {
+    public ResponseEntity<CarResponseDTO> getCarById(@PathVariable("carId") Long carId) {
         try {
             CarResponseDTO car = carService.getCarById(carId);
             return ResponseEntity.ok(car);
@@ -139,7 +141,7 @@ public class CarController {
         try {
             Long userId = extractUserIdFromToken(authHeader);
             
-            // 모든 Driver를 가져와서 userId로 필터링
+            // Driver를 가져와서 userId로 필터링
             List<Driver> allDrivers = driverRepository.findAll();
             Driver driver = allDrivers.stream()
                     .filter(d -> d.getUser() != null && d.getUser().getUserId().equals(userId))
@@ -160,9 +162,19 @@ public class CarController {
     // 차량 수정
     @PutMapping("/{carId}")
     public ResponseEntity<CarResponseDTO> updateCar(
-            @PathVariable Long carId,
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("carId") Long carId,
             @RequestBody CarRequestDTO request) {
         try {
+            Long userId = extractUserIdFromToken(authHeader);
+            
+            // Driver를 가져와서 userId로 필터링
+            List<Driver> allDrivers = driverRepository.findAll();
+            Driver driver = allDrivers.stream()
+                    .filter(d -> d.getUser() != null && d.getUser().getUserId().equals(userId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("기사 정보를 찾을 수 없습니다."));
+            
             CarResponseDTO car = carService.updateCar(carId, request);
             return ResponseEntity.ok(car);
         } catch (IllegalArgumentException e) {
@@ -176,8 +188,19 @@ public class CarController {
 
     // 차량 삭제
     @DeleteMapping("/{carId}")
-    public ResponseEntity<Void> deleteCar(@PathVariable Long carId) {
+    public ResponseEntity<Void> deleteCar(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long carId) {
         try {
+            Long userId = extractUserIdFromToken(authHeader);
+            
+            // Driver를 가져와서 userId로 필터링
+            List<Driver> allDrivers = driverRepository.findAll();
+            Driver driver = allDrivers.stream()
+                    .filter(d -> d.getUser() != null && d.getUser().getUserId().equals(userId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("기사 정보를 찾을 수 없습니다."));
+            
             carService.deleteCar(carId);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {

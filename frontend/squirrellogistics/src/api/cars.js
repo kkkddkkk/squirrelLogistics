@@ -1,11 +1,11 @@
 // src/api/cars.js
 import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 // axios 인스턴스 생성
 const carsApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/cars`,
+  baseURL: `${API_BASE_URL}/api/driver`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -51,7 +51,7 @@ export async function fetchCars({
 }) {
   try {
     // 실제 API 호출
-    const response = await carsApi.get("/driver/cars", {
+    const response = await carsApi.get("/cars", {
       params: { page, size, keyword, status },
     });
     return response.data;
@@ -59,17 +59,14 @@ export async function fetchCars({
     console.error("차량 목록 조회 실패:", error);
     console.error("에러 응답:", error.response?.data);
     console.error("에러 상태:", error.response?.status);
-    // 에러 시 빈 데이터 반환
-    return {
-      items: [],
-      total: 0,
-    };
+    // 에러 시 빈 배열 반환 (DriverProfile에서 직접 사용)
+    return [];
   }
 }
 
 export async function fetchCarById(id) {
   try {
-    const response = await carsApi.get(`/driver/cars/${id}`);
+    const response = await carsApi.get(`/cars/${id}`);
     return response.data;
   } catch (error) {
     console.error("차량 상세 조회 실패:", error);
@@ -79,7 +76,7 @@ export async function fetchCarById(id) {
 
 export async function createCar(carData) {
   try {
-    const response = await carsApi.post("/driver/cars", carData);
+    const response = await carsApi.post("/cars", carData);
     return response.data;
   } catch (error) {
     console.error("차량 생성 실패:", error);
@@ -89,7 +86,7 @@ export async function createCar(carData) {
 
 export async function updateCar(id, carData) {
   try {
-    const response = await carsApi.put(`/driver/cars/${id}`, carData);
+    const response = await carsApi.put(`/cars/${id}`, carData);
     return response.data;
   } catch (error) {
     console.error("차량 수정 실패:", error);
@@ -99,7 +96,7 @@ export async function updateCar(id, carData) {
 
 export async function deleteCar(id) {
   try {
-    const response = await carsApi.delete(`/driver/cars/${id}`);
+    const response = await carsApi.delete(`/cars/${id}`);
     return response.data;
   } catch (error) {
     console.error("차량 삭제 실패:", error);

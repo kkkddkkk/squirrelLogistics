@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.service.car;
 import com.gpt.squirrelLogistics.dto.car.CarResponseDTO;
 import com.gpt.squirrelLogistics.dto.car.CarRequestDTO;
 import com.gpt.squirrelLogistics.entity.car.Car;
+import com.gpt.squirrelLogistics.enums.car.CarStatusEnum;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
 import com.gpt.squirrelLogistics.repository.car.CarRepository;
@@ -83,10 +84,10 @@ public class CarServiceImpl implements CarService {
                 .vehicleType(vehicleType)
                 .carNum(request.getCarNum())
                 .insurance(request.isInsurance())
-                .Mileage(request.getMileage())
-                .etc(request.getEtc())
-                .inspection(request.getInspection())
-                .carStatus(request.getCarStatus())
+                .Mileage(request.getMileage() != null ? request.getMileage() : 0L)
+                .etc(request.getEtc() != null ? request.getEtc() : "")
+                .inspection(request.getInspection() != null ? request.getInspection() : LocalDateTime.now())
+                .carStatus(request.getCarStatus() != null ? request.getCarStatus() : CarStatusEnum.OPERATIONAL)
                 .regDate(LocalDateTime.now())
                 .build();
 
@@ -116,10 +117,10 @@ public class CarServiceImpl implements CarService {
         car.setVehicleType(vehicleType);
         car.setCarNum(request.getCarNum());
         car.setInsurance(request.isInsurance());
-        car.setMileage(request.getMileage());
-        car.setEtc(request.getEtc());
-        car.setInspection(request.getInspection());
-        car.setCarStatus(request.getCarStatus());
+        car.setMileage(request.getMileage() != null ? request.getMileage() : car.getMileage());
+        car.setEtc(request.getEtc() != null ? request.getEtc() : car.getEtc());
+        car.setInspection(request.getInspection() != null ? request.getInspection() : car.getInspection());
+        car.setCarStatus(request.getCarStatus() != null ? request.getCarStatus() : car.getCarStatus());
         car.setModiDate(LocalDateTime.now());
 
         Car updatedCar = carRepository.save(car);
