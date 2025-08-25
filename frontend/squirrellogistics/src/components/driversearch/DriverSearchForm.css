@@ -1,3 +1,45 @@
+/* 예상금액 데이터 표시 */
+.estimate-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.estimate-summary h3 {
+  margin: 0 0 15px 0;
+  color: #495057;
+}
+
+.estimate-summary .data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  font-size: 14px;
+}
+
+.estimate-summary .data-item strong {
+  color: #495057;
+}
+
+.estimate-summary .price-highlight {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.estimate-summary .memo-section {
+  margin-top: 15px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.estimate-summary .memo-section strong {
+  color: #495057;
+}
+
 /* 컨테이너 */
 .driversearch-form {
   max-width: 900px;
@@ -8,6 +50,15 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   font-family: 'sans-serif';
   color: #2A2A2A;
+}
+
+/* 페이지 제목 - 맨 상단 가운데 */
+.page-title {
+  text-align: center;
+  margin: 0 0 2rem 0;
+  color: #2A2A2A;
+  font-size: 1.8rem;
+  font-weight: bold;
 }
 
 /* 상단 검색바 */
@@ -26,6 +77,7 @@
   font-weight: bold;
   cursor: pointer;
   min-width: 60px;
+  flex-shrink: 0;
 }
 
 .keyword-input {
@@ -40,12 +92,16 @@
   background-color: #E8A93F;
   border: none;
   border-radius: 6px;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.8rem;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   color: #2A2A2A;
   cursor: pointer;
+  min-width: 60px;
+  flex-shrink: 0;
 }
+
+
 
 /* 필터 바 */
 .filter-bar {
@@ -59,7 +115,7 @@
 
 /* 드롭다운 */
 .filter-bar select {
-  padding: 0.5rem 2rem 0.5rem 0.8rem;  /* 👉 오른쪽 패딩 추가 */
+  padding: 0.5rem 1.2rem 0.5rem 0.6rem;  /* 👉 오른쪽 패딩 더 줄임 */
   font-size: 0.95rem;
   background-color: transparent;
   border: none;
@@ -67,11 +123,10 @@
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='%232A2A2A' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 0.8rem center;  /* 👉 좀 더 오른쪽으로 */
+  background-position: right 0.3rem center;  /* 👉 화살표를 더 가깝게 */
   background-size: 12px;
   border-radius: 6px;
 }
-
 
 /* 체크박스 정렬 */
 .checkbox-label {
@@ -97,13 +152,59 @@
   font-size: 1rem;
 }
 
-
 .back-button {
-  padding: 0.8rem 2rem;
+  padding: 0.4rem 1rem;
   background: #E8A93F;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
-  font-size: 1rem;
+  font-size: 0.8rem;
   cursor: pointer;
   font-weight: bold;
+  margin: 2rem auto 0 auto;
+  display: block;
+  min-width: 150px;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.page-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #495057;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-btn.active {
+  background: #E8A93F;
+  color: #fff;
+  border-color: #E8A93F;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 검색 결과 정보 */
+.search-info {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 1rem 0;
 }

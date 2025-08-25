@@ -15,15 +15,13 @@ const KAKAO_REST_API_KEY = "KakaoAK c0e48ee321373e897ad48c8bf2d72460";
 const http = axios.create({
   baseURL: API_SERVER_HOST,
   headers: { "Content-Type": "application/json" },
-  // withCredentials: true, // 쿠키 세션 쓸 때만
 });
 
 // 🔐 로그인되어 있으면 토큰 자동 첨부
 http.interceptors.request.use((config) => {
   try {
     const token =
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("token");
+      localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -65,7 +63,6 @@ export const getCoordsFromAddress = async (address) => {
  * 거리 계산 (하버사인) - km
  * ========================= */
 
-/** 📏 여러 지점(출발/경유/도착) 총 거리 km 반환 */
 export const calculateDistance = async (addresses) => {
   const coordsList = await Promise.all(addresses.map(getCoordsFromAddress));
   const validCoords = coordsList.filter(Boolean);
@@ -95,10 +92,9 @@ export const calculateDistance = async (addresses) => {
 };
 
 /* =========================
- * 예상 금액 API (선택)
+ * 예상 금액 API
  * ========================= */
 
-/** 💰 예상 금액 계산 API (백엔드가 제공할 때 사용) */
 export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) => {
   try {
     const { data } = await http.post("/api/company/ExpectedPay", {
@@ -117,10 +113,22 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
  * 배송요청 저장
  * ========================= */
 
-/** 🚀 배송요청 저장 (POST /api/delivery/request → Long id) */
-export const createDeliveryRequest = async (payload) => {
+/**
+ * 🚀 배송요청 저장
+ * 백엔드 컨트롤러가 CreateProposeRequest(payment, request) 구조를 받으므로
+ * 프론트에서는 { payment, request } 로 감싸서 보내야 함
+ */
+export const createDeliveryRequest = async (requestPayload, paymentPayload = null) => {
   try {
+<<<<<<< HEAD
     const { data } = await http.post("/api/delivery/requests", payload);
+=======
+    const wrapped = {
+      payment: paymentPayload, // 결제 정보 (없으면 null)
+      request: requestPayload, // DeliveryRequestRequestDTO
+    };
+    const { data } = await http.post("/api/delivery/requests", wrapped);
+>>>>>>> GPT-45-검색-기능(즉시-배차,-필터링)
     return data;
   } catch (error) {
     if (error.response) {
@@ -136,21 +144,138 @@ export const createDeliveryRequest = async (payload) => {
   }
 };
 
+/**
+ * 🚛 기사 지명 요청 생성 (기존 createDeliveryRequest와 유사하지만 특정 기사에게만 요청)
+ * 
+ * @param {Object} requestDto - 배송 요청 정보
+ * @param {Object} paymentDto - 결제 정보  
+ * @param {number} driverId - 지명할 기사 ID
+ * @returns {Promise<number>} 생성된 요청 ID
+ */
+export const createDriverSpecificRequest = async (requestDto, paymentDto, driverId) => {
+  try {
+    console.log("=== 기사 지명 요청 생성 시작 ===");
+    console.log("requestDto:", requestDto);
+    console.log("paymentDto:", paymentDto);
+    console.log("driverId:", driverId);
+
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.post(`${API_SERVER_HOST}/api/delivery/requests/driver-requests`, {
+      paymentDto: paymentDto,
+      requestDto: requestDto,
+      driverId: driverId
+    }, { headers });
+
+    console.log("기사 지명 요청 생성 성공:", response.data);
+    
+    // 백엔드 응답 구조에 맞춰 requestId 추출
+    if (response.data.success && response.data.requestId) {
+      return response.data.requestId;
+    } else {
+      throw new Error(response.data.message || "요청 ID를 찾을 수 없습니다.");
+    }
+    
+  } catch (error) {
+    console.error("기사 지명 요청 생성 실패:", error);
+    const errorMessage = error.response?.data?.message || error.message;
+    throw new Error(`기사 지명 요청 생성에 실패했습니다: ${errorMessage}`);
+  }
+};
+
+/**
+ * 📱 결제 완료 후 기사 지명 요청 전송
+ * 
+ * @param {number} requestId - 배송 요청 ID
+ * @param {number} paymentId - 결제 ID
+ * @returns {Promise<Object>} 전송 결과
+ */
+export const sendDriverRequestAfterPayment = async (requestId, paymentId) => {
+  try {
+    console.log("=== 결제 완료 후 기사 지명 요청 전송 시작 ===");
+    console.log("requestId:", requestId);
+    console.log("paymentId:", paymentId);
+
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.post(`${API_SERVER_HOST}/api/delivery/requests/driver-requests/${requestId}/send`, {
+      paymentId
+    }, { headers });
+
+    console.log("기사 지명 요청 전송 성공:", response.data);
+    
+    // 백엔드 응답 구조에 맞춰 처리
+    if (response.data.success) {
+      return response.data;
+    } else {
+      throw new Error(response.data.message || "요청 전송에 실패했습니다.");
+    }
+    
+  } catch (error) {
+    console.error("기사 지명 요청 전송 실패:", error);
+    const errorMessage = error.response?.data?.message || error.message;
+    throw new Error(`기사 지명 요청 전송에 실패했습니다: ${errorMessage}`);
+  }
+};
+
+/**
+ * 🔄 일반 요청과 기사 지명 요청 구분
+ * 
+ * @param {number} requestId - 배송 요청 ID
+ * @returns {Promise<boolean>} true: 기사 지명 요청, false: 일반 요청
+ */
+export const checkIfDriverSpecificRequest = async (requestId) => {
+  try {
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.get(`${API_SERVER_HOST}/api/delivery/requests/requests/${requestId}/type`, { headers });
+    
+    // 백엔드 응답 구조에 맞춰 isDriverSpecific 추출
+    if (response.data.success) {
+      return response.data.isDriverSpecific;
+    } else {
+      console.error("요청 타입 확인 실패:", response.data.message);
+      return false;
+    }
+  } catch (error) {
+    console.error("요청 타입 확인 실패:", error);
+    return false;
+  }
+};
+
 /* =========================
  * 차량 종류
  * ========================= */
 
-/** 🚛 차량종류 목록 (GET /api/vehicle-types) */
 export const fetchVehicleTypes = async () => {
   const { data } = await http.get("/api/vehicle-types");
   return data || [];
 };
 
 /* =========================
+ * 화물 종류
+ * ========================= */
+
+export const fetchCargoTypes = async () => {
+  try {
+    const { data } = await http.get("/api/cargo-types");
+    return data || [];
+  } catch (error) {
+    console.error("화물 종류 로드 실패:", error);
+    return [];
+  }
+};
+
+/* =========================
  * 저장된 기본 주소 (DB)
  * ========================= */
 
-/** 🔎 리스트 조회 (GET) */
 export const fetchSavedAddresses = async (companyId) => {
   if (!companyId) return [];
   const { data } = await http.get("/api/saved-addresses", {
@@ -159,7 +284,6 @@ export const fetchSavedAddresses = async (companyId) => {
   return data || [];
 };
 
-/** 💾 일괄 저장 (POST) */
 export const saveSavedAddressesBulk = async (companyId, items) => {
   const { data } = await http.post("/api/saved-addresses/bulk", {
     companyId,
@@ -168,7 +292,6 @@ export const saveSavedAddressesBulk = async (companyId, items) => {
   return data;
 };
 
-/** 🗑️ 단건 삭제 (DELETE) */
 export const deleteSavedAddress = async (id) => {
   await http.delete(`/api/saved-addresses/${id}`);
 };

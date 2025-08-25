@@ -77,7 +77,7 @@ const root = createBrowserRouter([
                 children: driverRouter()
             },
             {
-                path: "/driversearch",
+                path: "/search-drivers",
                 element: (
                     <Suspense fallback={Loading}>
                         <DriverSearchPage></DriverSearchPage>

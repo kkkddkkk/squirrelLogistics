@@ -16,6 +16,7 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponse
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 
 public interface DeliveryRequestService {
 	
@@ -41,4 +42,38 @@ public interface DeliveryRequestService {
     
     //운송 요청 payment 명세서(작성자: 김도경)
     List<Object[]> getEstimateCalc(Long requestId);
+    
+    // 기사 지명 요청 정보 조회 (작성자: 정윤진)
+    DriverAssignmentResponseDTO getDriverAssignmentByRequestId(Long requestId);
+    
+    // 모든 지명된 요청의 기사 정보 조회 (작성자: 정윤진)
+    List<DriverAssignmentResponseDTO> getAllAssignedDriverRequests();
+
+	/* ============== 기사 지명 요청 관련 메서드들 ============== */
+	
+	/**
+	 * 🚛 기사 지명 요청 생성 (기존 create와 유사하지만 특정 기사에게만 요청)
+	 * 
+	 * @param paymentDTO 결제 정보
+	 * @param requestDTO 배송 요청 정보
+	 * @param driverId 지명할 기사 ID
+	 * @return 생성된 요청 ID
+	 */
+	Long createDriverRequest(PaymentDTO paymentDTO, DeliveryRequestRequestDTO requestDTO, Long driverId);
+	
+	/**
+	 * 📱 결제 완료 후 기사 지명 요청 전송
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param paymentId 결제 ID
+	 */
+	void sendDriverRequestAfterPayment(Long requestId, Long paymentId);
+	
+	/**
+	 * 🔄 일반 요청과 기사 지명 요청 구분
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @return true: 기사 지명 요청, false: 일반 요청
+	 */
+	boolean isDriverSpecificRequest(Long requestId);
 }

@@ -104,6 +104,20 @@ input, select {
   font-size: 0.95rem;
 }
 
+/* 경유지 삭제 버튼 */
+.delete-waypoint-btn.small {
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+
 /* 무게 슬라이더 */
 .weight-slider {
   margin-bottom: 1rem;

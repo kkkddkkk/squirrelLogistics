@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.controller.deliveryRequest;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,7 @@ import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryOrchestrator.DeliveryOrchestrator;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -138,5 +140,175 @@ public class DeliveryRequestController {
 		}
 		return ResponseEntity.ok(result);
 	}
+	
+	// 특정 요청에 지명된 기사 정보 조회 (작성자: 정윤진)
+	@GetMapping("/{id}/driver-assignment")
+	public ResponseEntity<DriverAssignmentResponseDTO> getDriverAssignment(@PathVariable("id") Long requestId) {
+		DriverAssignmentResponseDTO result = requestService.getDriverAssignmentByRequestId(requestId);
+		if (result == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(result);
+	}
+	
+	// 모든 지명된 요청의 기사 정보 조회 (작성자: 정윤진)
+	@GetMapping("/driver-assignments")
+	public ResponseEntity<List<DriverAssignmentResponseDTO>> getAllDriverAssignments() {
+		List<DriverAssignmentResponseDTO> results = requestService.getAllAssignedDriverRequests();
+		return ResponseEntity.ok(results);
+	}
+	
+	// 기사 지명 제안 (작성자: 정윤진)
+	@PostMapping("/{id}/propose")
+	public ResponseEntity<Map<String, Object>> proposeToDriver(
+			@PathVariable("id") Long requestId,
+			@RequestParam("driverId") Long driverId) {
+		
+		Map<String, Object> result = assignmentService.propose(requestId, driverId);
+		
+		if (result.containsKey("FAILED")) {
+			String error = (String) result.get("FAILED");
+			HttpStatus status = switch (error) {
+				case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+				case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
+				default -> HttpStatus.BAD_REQUEST;
+			};
+			return ResponseEntity.status(status).body(result);
+		}
+		
+		return ResponseEntity.ok(result);
+	}
 
+	/* ============== 기사 지명 요청 관련 엔드포인트들 ============== */
+	
+	/**
+	 * 🚛 기사 지명 요청 생성
+	 * 
+	 * @param request 기사 지명 요청 정보
+	 * @return 생성된 요청 ID
+	 */
+	@PostMapping("/driver-requests")
+	public ResponseEntity<Map<String, Object>> createDriverRequest(@RequestBody DriverSpecificRequestRequest request) {
+		try {
+			log.info("기사 지명 요청 생성 시작: driverId={}", request.getDriverId());
+			
+			Long requestId = requestService.createDriverRequest(
+				request.getPaymentDto(), 
+				request.getRequestDto(), 
+				request.getDriverId()
+			);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", true);
+			response.put("requestId", requestId);
+			response.put("message", "기사 지명 요청이 성공적으로 생성되었습니다.");
+			
+			log.info("기사 지명 요청 생성 완료: requestId={}", requestId);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			log.error("기사 지명 요청 생성 실패", e);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", false);
+			response.put("message", "기사 지명 요청 생성에 실패했습니다: " + e.getMessage());
+			
+			return ResponseEntity.badRequest().body(response);
+		}
+	}
+	
+	/**
+	 * 📱 결제 완료 후 기사 지명 요청 전송
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param request 결제 정보
+	 * @return 전송 결과
+	 */
+	@PostMapping("/driver-requests/{requestId}/send")
+	public ResponseEntity<Map<String, Object>> sendDriverRequestAfterPayment(
+			@PathVariable Long requestId,
+			@RequestBody PaymentCompletionRequest request) {
+		try {
+			log.info("기사 지명 요청 전송 시작: requestId={}, paymentId={}", requestId, request.getPaymentId());
+			
+			requestService.sendDriverRequestAfterPayment(requestId, request.getPaymentId());
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", true);
+			response.put("message", "기사 지명 요청이 성공적으로 전송되었습니다.");
+			
+			log.info("기사 지명 요청 전송 완료: requestId={}", requestId);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			log.error("기사 지명 요청 전송 실패: requestId={}", requestId, e);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", false);
+			response.put("message", "기사 지명 요청 전송에 실패했습니다: " + e.getMessage());
+			
+			return ResponseEntity.badRequest().body(response);
+		}
+	}
+	
+	/**
+	 * 🔄 일반 요청과 기사 지명 요청 구분
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @return 요청 타입 정보
+	 */
+	@GetMapping("/requests/{requestId}/type")
+	public ResponseEntity<Map<String, Object>> getRequestType(@PathVariable Long requestId) {
+		try {
+			boolean isDriverSpecific = requestService.isDriverSpecificRequest(requestId);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", true);
+			response.put("isDriverSpecific", isDriverSpecific);
+			response.put("requestType", isDriverSpecific ? "기사 지명 요청" : "일반 요청");
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			log.error("요청 타입 확인 실패: requestId={}", requestId, e);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", false);
+			response.put("message", "요청 타입 확인에 실패했습니다: " + e.getMessage());
+			
+			return ResponseEntity.badRequest().body(response);
+		}
+	}
+
+	/* ============== DTO 클래스들 ============== */
+	
+	/**
+	 * 기사 지명 요청 요청 DTO
+	 */
+	public static class DriverSpecificRequestRequest {
+		private PaymentDTO paymentDto;
+		private DeliveryRequestRequestDTO requestDto;
+		private Long driverId;
+		
+		// Getters and Setters
+		public PaymentDTO getPaymentDto() { return paymentDto; }
+		public void setPaymentDto(PaymentDTO paymentDto) { this.paymentDto = paymentDto; }
+		
+		public DeliveryRequestRequestDTO getRequestDto() { return requestDto; }
+		public void setRequestDto(DeliveryRequestRequestDTO requestDto) { this.requestDto = requestDto; }
+		
+		public Long getDriverId() { return driverId; }
+		public void setDriverId(Long driverId) { this.driverId = driverId; }
+	}
+	
+	/**
+	 * 결제 완료 요청 DTO
+	 */
+	public static class PaymentCompletionRequest {
+		private Long paymentId;
+		
+		// Getters and Setters
+		public Long getPaymentId() { return paymentId; }
+		public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
+	}
 }

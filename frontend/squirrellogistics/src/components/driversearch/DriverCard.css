@@ -9,26 +9,84 @@
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.driver-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
 }
 
 .driver-img-placeholder {
   width: 60px;
   height: 60px;
-  background: #ccc;
+  background: #f0f0f0;
   border-radius: 50%;
   text-align: center;
   line-height: 60px;
   font-weight: bold;
+  font-size: 24px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.driver-profile-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .driver-info {
   flex: 1;
   margin-left: 1rem;
+  min-width: 0;
 }
 
-.driver-name {
-  font-weight: bold;
-  margin-bottom: 0.4rem;
+.driver-name-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.driver-name-rating strong {
+  font-size: 1.1rem;
+  color: #2A2A2A;
+}
+
+.driver-rating {
+  color: #E8A93F;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.driver-detail {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.driver-detail strong {
+  color: #2A2A2A;
+  margin-right: 0.5rem;
+}
+
+.drivable-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  background: #4CAF50;
+  color: white;
+}
+
+.drivable-badge.unavailable {
+  background: #f44336;
 }
 
 .request-button {
@@ -39,4 +97,11 @@
   font-weight: bold;
   color: #2A2A2A;
   cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.request-button:hover {
+  background: #d1942f;
+  transform: scale(1.05);
 }

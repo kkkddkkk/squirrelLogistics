@@ -2,26 +2,78 @@
 import React from "react";
 import "./DriverCard.css";
 
+/**
+ * 기사 카드 컴포넌트
+ * 백엔드 DriverSearchResponseDTO의 데이터를 표시
+ * 
+ * @param {Object} driver - 기사 정보 (DriverSearchResponseDTO)
+ * @param {Function} onRequest - 요청 버튼 클릭 시 호출되는 함수
+ */
 const DriverCard = ({ driver, onRequest }) => {
+  // 디버깅: 받은 데이터 확인
+  console.log("DriverCard received driver data:", driver);
+  
   const handleClick = () => {
-    const confirmed = window.confirm("요청을 하시겠습니까?");
-    if (confirmed) {
-      onRequest(driver.id);
+    // 중복된 confirm 제거 - DriverSearchForm에서 처리
+    onRequest(driver.driverId);
+  };
+
+  // 프로필 이미지 표시
+  const renderProfileImage = () => {
+    if (driver.profileImageUrl) {
+      return <img src={driver.profileImageUrl} alt="프로필" className="driver-profile-img" />;
     }
+    return <div className="driver-img-placeholder">👤</div>;
+  };
+
+  // 평점 표시 (소수점 1자리까지, Double 타입)
+  const renderRating = () => {
+    if (driver.averageRating && driver.averageRating > 0) {
+      return `⭐ ${driver.averageRating.toFixed(1)}`;
+    }
+    return "⭐ 0.0";
+  };
+
+  // 최대 적재량 표시 (kg → 톤 변환, Integer 타입)
+  const renderMaxWeight = () => {
+    if (driver.maxWeight) {
+      const tons = Math.round(driver.maxWeight / 1000);
+      return `${tons}톤`;
+    }
+    return "정보 없음";
+  };
+
+  // 즉시 배차 가능 여부 표시 (Boolean 타입)
+  const renderDrivableStatus = () => {
+    if (driver.drivable) {
+      return <span className="drivable-badge">즉시 배차 가능</span>;
+    }
+    return <span className="drivable-badge unavailable">즉시 배차 불가</span>;
   };
 
   return (
     <div className="driver-card">
-      <div className="driver-img-placeholder">img</div>
+      <div className="driver-image">
+        {renderProfileImage()}
+      </div>
       <div className="driver-info">
         <div className="driver-name-rating">
-          <strong>{driver.name}</strong>
-          <span className="driver-rating">⭐ {driver.rating}</span>
+          <strong>{driver.driverName || `기사 #${driver.driverId}`}</strong>
+          <span className="driver-rating">{renderRating()}</span>
         </div>
-        <div className="driver-detail">최대 적재량: {driver.maxWeight}</div>
-        <div className="driver-detail">차량 종류: {driver.vehicleType}</div>
-        <div className="driver-detail">배송 가능 지역: {driver.availableRegions?.join(", ")}</div>
-        <div className="driver-detail">보험: {driver.insurance ? "가입" : "미가입"}</div>
+        <div className="driver-detail">
+          <strong>차량 종류:</strong> {driver.vehicleTypeName || "정보 없음"}
+        </div>
+        <div className="driver-detail">
+          <strong>최대 적재량:</strong> {renderMaxWeight()}
+        </div>
+        <div className="driver-detail">
+          <strong>선호 지역:</strong> {driver.mainLoca || "정보 없음"}
+        </div>
+        <div className="driver-detail">
+          <strong>보험:</strong> {driver.insurance ? "가입" : "미가입"}
+        </div>
+        {renderDrivableStatus()}
       </div>
       <button className="request-button" onClick={handleClick}>요청</button>
     </div>

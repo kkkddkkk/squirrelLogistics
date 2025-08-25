@@ -3,6 +3,52 @@ import axios from "axios";
 
 const API_SERVER_HOST = "http://localhost:8080";
 
+// axios 인스턴스 생성
+const companyApi = axios.create({
+  baseURL: `${API_SERVER_HOST}/api/company`,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// 요청 인터셉터 - 토큰 추가
+companyApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Company 정보 조회 (userId로)
+export const getCompanyByUserId = async (userId) => {
+  try {
+    const response = await companyApi.get(`/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Company 정보 조회 실패:", error);
+    throw error;
+  }
+};
+
+// Company 정보 조회 (companyId로)
+export const getCompanyById = async (companyId) => {
+  try {
+    const response = await companyApi.get(`/${companyId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Company 정보 조회 실패:", error);
+    throw error;
+  }
+};
+
+export default companyApi;
+
 // ✅ 0) 아이디/비밀번호로 본인인증
 export const verifyCredentials = async ({ loginId, password }) => {
   try {

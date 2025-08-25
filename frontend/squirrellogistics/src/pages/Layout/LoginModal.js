@@ -85,6 +85,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
       const { data } = await api.post("/api/auth/login", { loginId, password });
       // 서버 응답 예시: { accessToken, tokenType: "Bearer", userId, name, role }
       localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("userId", data.userId || ""); // userId 저장 추가
       localStorage.setItem("userName", data.name || "");
       localStorage.setItem("userRole", data.role || "");
       if (rememberId) localStorage.setItem("savedLoginId", loginId);
@@ -207,6 +208,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
 
                 // 우리 서버가 반환한 액세스 토큰/유저정보 저장 (기존 로컬 로그인과 동일한 포맷)
                 localStorage.setItem("accessToken", data.accessToken);
+                localStorage.setItem("userId", data.userId || ""); // userId 저장 추가
                 if (data.name) localStorage.setItem("userName", data.name);
                 if (data.role) localStorage.setItem("userRole", data.role);
 
