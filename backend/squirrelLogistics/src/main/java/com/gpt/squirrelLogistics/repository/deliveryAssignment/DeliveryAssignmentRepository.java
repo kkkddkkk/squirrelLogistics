@@ -288,6 +288,44 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
         LocalDateTime now1,      // now
         LocalDateTime now2       // now
     );
-    
+
+	/* ============== 기사 지명 요청 관련 메서드들 ============== */
 	
+	/**
+	 * 🔍 요청 ID로 기사 할당 정보 조회
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @return 기사 할당 정보 목록
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId")
+	List<DeliveryAssignment> findByRequestId(@Param("requestId") Long requestId);
+	
+	/**
+	 * 🗑️ 요청과 기사로 할당 정보 삭제 (중복 방지용)
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param driverId 기사 ID
+	 */
+	@Modifying
+	@Query("DELETE FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId AND da.driver.driverId = :driverId")
+	void deleteByRequestAndDriver(@Param("requestId") Long requestId, @Param("driverId") Long driverId);
+	
+	/**
+	 * 📋 기사 지명 요청 목록 조회 (UNKNOWN 상태 - 기존 상태값 활용)
+	 * 
+	 * @param driverId 기사 ID
+	 * @return 기사 지명 요청 목록
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.driver.driverId = :driverId AND da.status = :status ORDER BY da.assignedAt DESC")
+	List<DeliveryAssignment> findProposedRequestsByDriver(@Param("driverId") Long driverId, @Param("status") StatusEnum status);
+	
+	/**
+	 * 🔍 특정 요청의 기사 할당 상태 조회
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param status 할당 상태
+	 * @return 기사 할당 정보
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId AND da.status = :status")
+	Optional<DeliveryAssignment> findByRequestIdAndStatus(@Param("requestId") Long requestId, @Param("status") StatusEnum status);
 }

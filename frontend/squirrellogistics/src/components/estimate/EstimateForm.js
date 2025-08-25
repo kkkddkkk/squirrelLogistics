@@ -3,17 +3,16 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import {
-  fetchVehicleTypes,
-  fetchCargoTypes,
   calculateDistance,
+  createDeliveryRequest, // (requestDto, paymentDto) -> returns requestId
+  fetchVehicleTypes,
+  fetchSavedAddresses,
   saveSavedAddressesBulk,
   deleteSavedAddress,
-  fetchSavedAddresses,
-  createDeliveryRequest,
 } from "../../api/estimate/estimateApi";
-import { getCompanyByUserId } from "../../api/company/companyApi";
 import { useSelector, useDispatch } from "react-redux";
 import { setDistance, setMinWeight, setMaxWeight } from "../../slice/estimate/estimateSlice";
+import http from "../../api/user/api"; // http 인스턴스 import 추가
 import "./EstimateForm.css";
 
 // ===== 화물(취급유형) 옵션 =====
@@ -35,7 +34,7 @@ const WAYPOINT_FEE_PER_ITEM = 50000;
 const MOUNTAIN_FEE = 50000;
 const includesGangwon = (addr) => (addr || "").includes("강원");
 
-// 시간 포맷
+// 시간 포맷 함수
 const toYmdHms = (d) => {
   if (!d) return null;
   const pad = (n) => String(n).padStart(2, "0");
@@ -94,41 +93,55 @@ const EstimateForm = () => {
       console.log("localStorage companyId:", storedCompanyId);
       
       if (storedCompanyId) {
-        const parsedCompanyId = parseInt(storedCompanyId);
-        if (!isNaN(parsedCompanyId)) {
-          setCompanyId(parsedCompanyId);
-          console.log("저장된 companyId 사용:", parsedCompanyId);
-          return;
-        } else {
-          console.warn("localStorage companyId가 숫자가 아님:", storedCompanyId);
-        }
+        setCompanyId(parseInt(storedCompanyId));
+        console.log("저장된 companyId 사용:", parseInt(storedCompanyId));
+        return;
       }
       
-      // userId로 company 정보 조회 시도
-      const userId = localStorage.getItem("userId");
-      console.log("localStorage userId:", userId);
-      
-      if (userId) {
+      // localStorage에 companyId가 없으면 토큰 기반 API로 조회
+      try {
+        console.log("토큰 기반 API로 companyId 조회 시도...");
+        
+        // 먼저 테스트 API 호출
         try {
-          // companyApi에서 getCompanyByUserId 호출
-          const companyInfo = await getCompanyByUserId(userId);
-          console.log("API 응답 companyInfo:", companyInfo);
+          const testResponse = await http.get(`/api/company/test`);
+          console.log("테스트 API 성공:", testResponse.data);
+        } catch (testError) {
+          console.error("테스트 API 실패:", testError);
+        }
+        
+        // 새로운 토큰 기반 API 사용
+        // /api/company/current-user - Authorization 헤더 자동 포함
+        const response = await http.get(`/api/company/current-user`);
+        console.log("토큰 기반 API 조회 성공:", response.data);
+        
+        // 응답 데이터 안전성 검증
+        if (response.data && response.data.companyId !== null && response.data.companyId !== undefined) {
+          const companyId = response.data.companyId;
+          console.log("companyId 확인:", companyId);
           
-          if (companyInfo && companyInfo.companyId) {
-            const newCompanyId = parseInt(companyInfo.companyId);
-            localStorage.setItem("companyId", newCompanyId.toString());
-            setCompanyId(newCompanyId);
-            console.log("새로 설정된 companyId:", newCompanyId);
-          } else {
-            console.warn("companyInfo 또는 companyId가 없음:", companyInfo);
-            setCompanyId(null);
+          // localStorage에 저장
+          localStorage.setItem("companyId", companyId.toString());
+          setCompanyId(companyId);
+          
+          // 기본 주소가 있으면 로드
+          if (response.data.mainLoca && response.data.mainLoca.trim() !== "") {
+            console.log("기본 주소 발견:", response.data.mainLoca);
+            // TODO: 기본 주소를 UI에 표시
           }
-        } catch (error) {
-          console.error("Company 정보 조회 실패:", error);
+        } else {
+          console.warn("companyId가 응답에 없거나 null/undefined:", response.data);
           setCompanyId(null);
         }
-      } else {
-        console.warn("userId가 localStorage에 없음");
+      } catch (error) {
+        console.error("토큰 기반 API 호출 실패:", error);
+        console.error("오류 상세:", error.response?.data || error.message);
+        
+        // 에러 응답에서 더 자세한 정보 추출
+        if (error.response?.data?.error) {
+          console.error("서버 에러 메시지:", error.response.data.error);
+        }
+        
         setCompanyId(null);
       }
     };
@@ -197,15 +210,7 @@ const EstimateForm = () => {
 
   // 저장된 기본 주소
   useEffect(() => {
-    (async () => {
-      if (!companyId) return;
-      try {
-        const list = await fetchSavedAddresses(companyId);
-        setSavedAddresses(list);
-      } catch (e) {
-        console.error("기본 주소 로드 실패:", e);
-      }
-    })();
+    loadSavedAddresses();
   }, [companyId]);
 
   // 산간지역 여부
@@ -293,53 +298,103 @@ const EstimateForm = () => {
     dispatch(setDistance(0));
   };
 
+  // 저장된 주소 로드
+  const loadSavedAddresses = async () => {
+    if (!companyId) return;
+    
+    try {
+      const response = await http.get(`/api/company/get-address/${companyId}`);
+      console.log("저장된 주소 조회 응답:", response.data);
+      
+      // 응답 데이터 안전성 검증
+      if (response.data && response.data.mainLoca && response.data.mainLoca.trim() !== "") {
+        setSavedAddresses([{ id: 1, type: "START", value: response.data.mainLoca }]);
+        console.log("저장된 주소 로드 성공:", response.data.mainLoca);
+      } else {
+        setSavedAddresses([]);
+        console.log("저장된 주소가 없습니다");
+      }
+    } catch (e) {
+      console.error("저장된 주소 로드 실패:", e);
+      if (e.response?.data?.error) {
+        console.error("서버 에러:", e.response.data.error);
+      }
+      setSavedAddresses([]);
+    }
+  };
+  
   // 기본 주소 저장/삭제/적용
   const saveDefaultAddress = async () => {
     if (!companyId) {
       alert("로그인/회사 식별 정보가 없어 기본 주소를 저장할 수 없습니다.");
       return;
     }
-    const items = [];
-    if (departure) items.push({ type: LABEL_TO_TYPE["출발지"], value: departure });
-    if (arrival) items.push({ type: LABEL_TO_TYPE["도착지"], value: arrival });
-    nonEmptyWaypoints.forEach((w) => items.push({ type: LABEL_TO_TYPE["경유지"], value: w }));
-    if (items.length === 0) {
+    
+    // 출발지나 도착지가 있는 경우에만 저장
+    if (!departure && !arrival) {
       alert("저장할 주소가 없습니다.");
       return;
     }
+    
     try {
-      const saved = await saveSavedAddressesBulk(companyId, items);
-      setSavedAddresses(saved);
+      // 출발지 저장
+      if (departure && departure.trim() !== "") {
+        const startResponse = await http.post(`/api/company/save-address`, {
+          companyId: companyId,
+          address: departure.trim(),
+          type: "START"
+        });
+        console.log("출발지 저장 성공:", startResponse.data);
+      }
+      
+      // 도착지 저장 (출발지와 다른 경우)
+      if (arrival && arrival.trim() !== "" && arrival !== departure) {
+        const endResponse = await http.post(`/api/company/save-address`, {
+          companyId: companyId,
+          address: arrival.trim(),
+          type: "END"
+        });
+        console.log("도착지 저장 성공:", endResponse.data);
+      }
+      
       alert("기본 주소가 저장되었습니다.");
+      
+      // 저장된 주소 목록 새로고침
+      await loadSavedAddresses();
     } catch (e) {
-      console.error(e);
-      alert("기본 주소 저장에 실패했습니다.");
+      console.error("기본 주소 저장 실패:", e);
+      if (e.response?.data?.error) {
+        alert(`기본 주소 저장에 실패했습니다: ${e.response.data.error}`);
+      } else {
+        alert("기본 주소 저장에 실패했습니다.");
+      }
     }
   };
-  const removeDefaultAddress = async (addr) => {
+  
+  const removeDefaultAddress = async (address) => {
     try {
-      await deleteSavedAddress(addr.id);
-      setSavedAddresses((prev) => prev.filter((a) => a.id !== addr.id));
+      // 간단한 방식: mainLoca를 빈 문자열로 설정
+      await http.post(`/api/company/save-address`, {
+        companyId: companyId,
+        address: "",
+        type: "CLEAR"
+      });
+      
+      // 저장된 주소 목록 새로고침
+      await loadSavedAddresses();
+      alert("기본 주소가 삭제되었습니다.");
     } catch (e) {
-      console.error(e);
+      console.error("기본 주소 삭제 실패:", e);
       alert("삭제에 실패했습니다.");
     }
   };
-  const applySavedAddress = (addr) => {
-    const label = TYPE_TO_LABEL[addr.type] || "기타";
-    if (label === "출발지") setDeparture(addr.value);
-    else if (label === "도착지") setArrival(addr.value);
-    else if (label === "경유지") {
-      setWaypoints((prev) => {
-        const updated = [...prev];
-        const emptyIndex = updated.findIndex((v) => !v);
-        if (emptyIndex !== -1) updated[emptyIndex] = addr.value;
-        else if (updated.length < 3) updated.push(addr.value);
-        return updated;
-      });
-    }
+  
+  const applySavedAddress = async (address) => {
+    // 간단한 방식: 출발지로 설정
+    setDeparture(address);
+    alert(`출발지로 설정되었습니다: ${address}`);
   };
-
+  
   // 화물 선택 - 하드코딩 방식
   const handleCargoSelect = (value) => {
     if (value && !cargoTypes.includes(value)) {
@@ -364,12 +419,13 @@ const EstimateForm = () => {
         cargoId: null,
         description: title || "배송 화물",
         droppedAt: null,
-        handlingId: cargoTypes.length > 0 ? 1 : null, // 기본값 1 (일반화물)
+        handlingId: 1, // 기본값 1 (일반화물)
         waypointId: null,
       },
     }));
 
     const requestDto = {
+      requestId: null,
       startAddress: departure,
       endAddress: arrival,
       memoToDriver: title,
@@ -377,11 +433,11 @@ const EstimateForm = () => {
       totalCargoWeight: Math.round(Number(weight) * 1000), // 톤 → kg 단위로 변환
       estimatedFee: Math.round(Number(price)),
       distance: Math.round(Number(distance)),
-      createAt: null,
-      wantToStart: toYmdHms(startDate),
-      wantToEnd: toYmdHms(endDate),
-      expectedPolyline: null, // TODO: 실제 폴리라인 데이터
-      expectedRoute: null, // TODO: 실제 경로 데이터
+      createAt: toYmdHms(new Date()), // 현재 시간 설정
+      wantToStart: startDate ? startDate.toISOString().slice(0, 19).replace('T', ' ') : null,
+      wantToEnd: endDate ? endDate.toISOString().slice(0, 19).replace('T', ' ') : null,
+      expectedPolyline: `LINESTRING(${departure ? '0 0' : ''} ${arrival ? '0 0' : ''})`, // 기본 폴리라인 형식
+      expectedRoute: `${departure || ''} -> ${arrival || ''}`, // 기본 경로 문자열
       status: "REGISTERED",
       paymentId: null,
       companyId: companyId != null ? Number(companyId) : null,
@@ -411,8 +467,8 @@ const EstimateForm = () => {
         vehicleTypeId,
         cargoTypes,
         title,
-        startDate: toYmdHms(startDate),
-        endDate: toYmdHms(endDate),
+        startDate: startDate ? startDate.toISOString() : null,
+        endDate: endDate ? endDate.toISOString() : null,
         distance: Math.round(Number(distance)) || 0,
         totalPrice: Math.round(Number(price)) || 0,
       },
@@ -463,8 +519,21 @@ const EstimateForm = () => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(flow));
 
     try {
+      console.log("=== 배송 요청 생성 시작 ===");
+      console.log("전송할 데이터:", { payment: flow.paymentDto, request: flow.requestDto });
+      
+      // 백엔드 API 호출하여 데이터 저장
       const requestId = await createDeliveryRequest(flow.requestDto, flow.paymentDto);
-      navigate("/company/payment", { state: { flow: { ...flow, requestId } } });
+      console.log("배송 요청 생성 성공, requestId:", requestId);
+      
+      // 결제 페이지로 이동 (requestId 포함)
+      navigate("/company/payment", { 
+        state: { 
+          flow: { ...flow, requestId },
+          requestId: requestId,
+          paymentAmount: flow.paymentDto.payAmount
+        } 
+      });
     } catch (e) {
       const data = e?.response?.data;
       console.error("createDeliveryRequest error:", data || e);
@@ -516,7 +585,7 @@ const EstimateForm = () => {
             <div key={addr.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span>{TYPE_TO_LABEL[addr.type] || addr.type}: {addr.value}</span>
               <div>
-                <button onClick={() => applySavedAddress(addr)} style={{ marginRight: "8px" }}>선택</button>
+                <button onClick={() => applySavedAddress(addr.value)} style={{ marginRight: "8px" }}>선택</button>
                 <button onClick={() => removeDefaultAddress(addr)}>삭제</button>
               </div>
             </div>

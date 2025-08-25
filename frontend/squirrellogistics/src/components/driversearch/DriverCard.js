@@ -2,15 +2,20 @@
 import React from "react";
 import "./DriverCard.css";
 
+/**
+ * 기사 카드 컴포넌트
+ * 백엔드 DriverSearchResponseDTO의 데이터를 표시
+ * 
+ * @param {Object} driver - 기사 정보 (DriverSearchResponseDTO)
+ * @param {Function} onRequest - 요청 버튼 클릭 시 호출되는 함수
+ */
 const DriverCard = ({ driver, onRequest }) => {
   // 디버깅: 받은 데이터 확인
   console.log("DriverCard received driver data:", driver);
   
   const handleClick = () => {
-    const confirmed = window.confirm("요청을 하시겠습니까?");
-    if (confirmed) {
-      onRequest(driver.driverId);
-    }
+    // 중복된 confirm 제거 - DriverSearchForm에서 처리
+    onRequest(driver.driverId);
   };
 
   // 프로필 이미지 표시
@@ -21,7 +26,7 @@ const DriverCard = ({ driver, onRequest }) => {
     return <div className="driver-img-placeholder">👤</div>;
   };
 
-  // 평점 표시 (소수점 1자리까지)
+  // 평점 표시 (소수점 1자리까지, Double 타입)
   const renderRating = () => {
     if (driver.averageRating && driver.averageRating > 0) {
       return `⭐ ${driver.averageRating.toFixed(1)}`;
@@ -29,7 +34,7 @@ const DriverCard = ({ driver, onRequest }) => {
     return "⭐ 0.0";
   };
 
-  // 최대 적재량 표시 (kg → 톤 변환)
+  // 최대 적재량 표시 (kg → 톤 변환, Integer 타입)
   const renderMaxWeight = () => {
     if (driver.maxWeight) {
       const tons = Math.round(driver.maxWeight / 1000);
@@ -38,7 +43,7 @@ const DriverCard = ({ driver, onRequest }) => {
     return "정보 없음";
   };
 
-  // 즉시 배차 가능 여부 표시
+  // 즉시 배차 가능 여부 표시 (Boolean 타입)
   const renderDrivableStatus = () => {
     if (driver.drivable) {
       return <span className="drivable-badge">즉시 배차 가능</span>;

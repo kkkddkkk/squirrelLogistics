@@ -140,6 +140,111 @@ export const createDeliveryRequest = async (requestPayload, paymentPayload = nul
   }
 };
 
+/**
+ * 🚛 기사 지명 요청 생성 (기존 createDeliveryRequest와 유사하지만 특정 기사에게만 요청)
+ * 
+ * @param {Object} requestDto - 배송 요청 정보
+ * @param {Object} paymentDto - 결제 정보  
+ * @param {number} driverId - 지명할 기사 ID
+ * @returns {Promise<number>} 생성된 요청 ID
+ */
+export const createDriverSpecificRequest = async (requestDto, paymentDto, driverId) => {
+  try {
+    console.log("=== 기사 지명 요청 생성 시작 ===");
+    console.log("requestDto:", requestDto);
+    console.log("paymentDto:", paymentDto);
+    console.log("driverId:", driverId);
+
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.post(`${API_SERVER_HOST}/api/delivery/requests/driver-requests`, {
+      paymentDto: paymentDto,
+      requestDto: requestDto,
+      driverId: driverId
+    }, { headers });
+
+    console.log("기사 지명 요청 생성 성공:", response.data);
+    
+    // 백엔드 응답 구조에 맞춰 requestId 추출
+    if (response.data.success && response.data.requestId) {
+      return response.data.requestId;
+    } else {
+      throw new Error(response.data.message || "요청 ID를 찾을 수 없습니다.");
+    }
+    
+  } catch (error) {
+    console.error("기사 지명 요청 생성 실패:", error);
+    const errorMessage = error.response?.data?.message || error.message;
+    throw new Error(`기사 지명 요청 생성에 실패했습니다: ${errorMessage}`);
+  }
+};
+
+/**
+ * 📱 결제 완료 후 기사 지명 요청 전송
+ * 
+ * @param {number} requestId - 배송 요청 ID
+ * @param {number} paymentId - 결제 ID
+ * @returns {Promise<Object>} 전송 결과
+ */
+export const sendDriverRequestAfterPayment = async (requestId, paymentId) => {
+  try {
+    console.log("=== 결제 완료 후 기사 지명 요청 전송 시작 ===");
+    console.log("requestId:", requestId);
+    console.log("paymentId:", paymentId);
+
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.post(`${API_SERVER_HOST}/api/delivery/requests/driver-requests/${requestId}/send`, {
+      paymentId
+    }, { headers });
+
+    console.log("기사 지명 요청 전송 성공:", response.data);
+    
+    // 백엔드 응답 구조에 맞춰 처리
+    if (response.data.success) {
+      return response.data;
+    } else {
+      throw new Error(response.data.message || "요청 전송에 실패했습니다.");
+    }
+    
+  } catch (error) {
+    console.error("기사 지명 요청 전송 실패:", error);
+    const errorMessage = error.response?.data?.message || error.message;
+    throw new Error(`기사 지명 요청 전송에 실패했습니다: ${errorMessage}`);
+  }
+};
+
+/**
+ * 🔄 일반 요청과 기사 지명 요청 구분
+ * 
+ * @param {number} requestId - 배송 요청 ID
+ * @returns {Promise<boolean>} true: 기사 지명 요청, false: 일반 요청
+ */
+export const checkIfDriverSpecificRequest = async (requestId) => {
+  try {
+    // 인증 토큰 가져오기
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.get(`${API_SERVER_HOST}/api/delivery/requests/requests/${requestId}/type`, { headers });
+    
+    // 백엔드 응답 구조에 맞춰 isDriverSpecific 추출
+    if (response.data.success) {
+      return response.data.isDriverSpecific;
+    } else {
+      console.error("요청 타입 확인 실패:", response.data.message);
+      return false;
+    }
+  } catch (error) {
+    console.error("요청 타입 확인 실패:", error);
+    return false;
+  }
+};
+
 /* =========================
  * 차량 종류
  * ========================= */

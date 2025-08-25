@@ -79,12 +79,13 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
     // 기능: vehicleType, Car, Driver를 조인해서 특정 요청에 지명된 driver 정보 조회
     @Query("""
         SELECT d.driverId, d.mainLoca, d.drivable, 
-               c.carId, c.carNum, c.isInsurance,
+               c.carId, c.carNum, c.insurance,
                vt.vehicleTypeId, vt.name as vehicleTypeName, vt.maxWeight,
                u.userId, u.name as driverName
         FROM DeliveryRequest dr
-        JOIN VehicleType vt ON dr.vehicleTypeId = vt.vehicleTypeId
-        JOIN Car c ON c.vehicleType.vehicleTypeId = vt.vehicleTypeId
+        JOIN dr.vehicleType vt
+        JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+        JOIN Car c ON c.driver.driverId = da.driver.driverId
         JOIN Driver d ON c.driver.driverId = d.driverId
         JOIN User u ON d.user.userId = u.userId
         WHERE dr.requestId = :requestId
@@ -96,12 +97,13 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
     @Query("""
         SELECT dr.requestId, dr.startAddress, dr.endAddress, dr.estimatedFee,
                d.driverId, d.mainLoca, d.drivable,
-               c.carId, c.carNum, c.isInsurance,
+               c.carId, c.carNum, c.insurance,
                vt.vehicleTypeId, vt.name as vehicleTypeName, vt.maxWeight,
                u.userId, u.name as driverName
         FROM DeliveryRequest dr
-        JOIN VehicleType vt ON dr.vehicleTypeId = vt.vehicleTypeId
-        JOIN Car c ON c.vehicleType.vehicleTypeId = vt.vehicleTypeId
+        JOIN dr.vehicleType vt
+        JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+        JOIN Car c ON c.driver.driverId = da.driver.driverId
         JOIN Driver d ON c.driver.driverId = d.driverId
         JOIN User u ON d.user.userId = u.userId
         WHERE dr.status = 'ASSIGNED' OR dr.status = 'IN_PROGRESS'

@@ -52,6 +52,15 @@
   color: #2A2A2A;
 }
 
+/* 페이지 제목 - 맨 상단 가운데 */
+.page-title {
+  text-align: center;
+  margin: 0 0 2rem 0;
+  color: #2A2A2A;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
 /* 상단 검색바 */
 .search-bar {
   display: flex;
@@ -68,6 +77,7 @@
   font-weight: bold;
   cursor: pointer;
   min-width: 60px;
+  flex-shrink: 0;
 }
 
 .keyword-input {
@@ -82,11 +92,13 @@
   background-color: #E8A93F;
   border: none;
   border-radius: 6px;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.8rem;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   color: #2A2A2A;
   cursor: pointer;
+  min-width: 60px;
+  flex-shrink: 0;
 }
 
 
@@ -103,7 +115,7 @@
 
 /* 드롭다운 */
 .filter-bar select {
-  padding: 0.5rem 2rem 0.5rem 0.8rem;  /* 👉 오른쪽 패딩 추가 */
+  padding: 0.5rem 1.2rem 0.5rem 0.6rem;  /* 👉 오른쪽 패딩 더 줄임 */
   font-size: 0.95rem;
   background-color: transparent;
   border: none;
@@ -111,11 +123,10 @@
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='%232A2A2A' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 0.8rem center;  /* 👉 좀 더 오른쪽으로 */
+  background-position: right 0.3rem center;  /* 👉 화살표를 더 가깝게 */
   background-size: 12px;
   border-radius: 6px;
 }
-
 
 /* 체크박스 정렬 */
 .checkbox-label {
@@ -141,15 +152,17 @@
   font-size: 1rem;
 }
 
-
 .back-button {
-  padding: 0.8rem 2rem;
+  padding: 0.4rem 1rem;
   background: #E8A93F;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
-  font-size: 1rem;
+  font-size: 0.8rem;
   cursor: pointer;
   font-weight: bold;
+  margin: 2rem auto 0 auto;
+  display: block;
+  min-width: 150px;
 }
 
 /* 페이지네이션 */
