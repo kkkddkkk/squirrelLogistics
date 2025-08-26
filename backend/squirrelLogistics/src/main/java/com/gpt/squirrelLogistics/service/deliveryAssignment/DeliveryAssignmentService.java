@@ -97,7 +97,6 @@ public class DeliveryAssignmentService {
 		return dates;
 	}
 
-
 	// 작성자: 김도경
 	// 기능: 완수일자 별 출발지, 도착지
 	public List<Object[]> getTodayList(LocalDate wantToStart, Long companyId) {
@@ -120,8 +119,7 @@ public class DeliveryAssignmentService {
 				.caution(actualDelivery.isCaution()).distance(actualDelivery.getDistance())
 				.weight(actualDelivery.getWeight())
 				.requestId(deliveryAssignmentRepository.findRequestIdById(assignedId)).estimateFee(estimatedFee)
-				.actualPolyline(actualDelivery.getActualPolyline())
-				.build();
+				.actualPolyline(actualDelivery.getActualPolyline()).build();
 		return actualCalcDTO;
 	}
 
@@ -133,14 +131,14 @@ public class DeliveryAssignmentService {
 
 		List<String> dropOrders = new ArrayList<>();
 		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
-		    dropOrders = waypointList.subList(1, waypointList.size() - 1);
+			dropOrders = waypointList.subList(1, waypointList.size() - 1);
 		}
 
 		// 실운전(산간주의, 취급주의, 실제금액)
 		List<Object[]> actualDelivery = deliveryAssignmentRepository.findActualDeliveryById(assignedId);
 		Object[] actualDeliveryList = actualDelivery != null && !actualDelivery.isEmpty() ? actualDelivery.get(0)
 				: new Object[] { 0, 0, 0 };
-		
+
 		Object mountainousObj = actualDeliveryList[0];
 		Object cautionObj = actualDeliveryList[1];
 
@@ -148,19 +146,19 @@ public class DeliveryAssignmentService {
 		boolean caution = false;
 		long actualFee = actualDeliveryList[2] != null ? ((Number) actualDeliveryList[2]).longValue() : 0L;
 
-		if(mountainousObj != null) {
-		    if(mountainousObj instanceof Integer) {
-		        mountainous = ((Integer) mountainousObj) == 1;
-		    } else if(mountainousObj instanceof Boolean) {
-		        mountainous = (Boolean) mountainousObj;
-		    }
+		if (mountainousObj != null) {
+			if (mountainousObj instanceof Integer) {
+				mountainous = ((Integer) mountainousObj) == 1;
+			} else if (mountainousObj instanceof Boolean) {
+				mountainous = (Boolean) mountainousObj;
+			}
 		}
-		if(cautionObj != null) {
-		    if(cautionObj instanceof Integer) {
-		        caution = ((Integer) cautionObj) == 1;
-		    } else if(cautionObj instanceof Boolean) {
-		        caution = (Boolean) cautionObj;
-		    }
+		if (cautionObj != null) {
+			if (cautionObj instanceof Integer) {
+				caution = ((Integer) cautionObj) == 1;
+			} else if (cautionObj instanceof Boolean) {
+				caution = (Boolean) cautionObj;
+			}
 		}
 
 		// 운전자 정보(운전자 이름, 차 이름)
@@ -176,67 +174,49 @@ public class DeliveryAssignmentService {
 		List<Object[]> reportList = reportRepository.findReportById(assignedId);
 		Object[] reportListArr = reportList != null && !reportList.isEmpty() ? reportList.get(0) : new Object[] { 0 };
 
-		if(status=="COMPLETED" || status=="PAYMENTCOMPLETED") {
-			return CompanyHistoryContentDTO.builder()
-					.dropOrder1(dropOrders.size()>0?dropOrders.get(0):"")
-					.dropOrder2(dropOrders.size()>1?dropOrders.get(1):"")
-					.dropOrder3(dropOrders.size()>2?dropOrders.get(2):"")
-					.mountainous(mountainous)
-					.caution(caution)
-					.actualFee(actualFee)
+		if (status == "COMPLETED" || status == "PAYMENTCOMPLETED") {
+			return CompanyHistoryContentDTO.builder().dropOrder1(dropOrders.size() > 0 ? dropOrders.get(0) : "")
+					.dropOrder2(dropOrders.size() > 1 ? dropOrders.get(1) : "")
+					.dropOrder3(dropOrders.size() > 2 ? dropOrders.get(2) : "").mountainous(mountainous)
+					.caution(caution).actualFee(actualFee)
 					.estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
-					.reviewId(((Number)reviewListArr[0]).longValue())
-					.rating(((Number)reviewListArr[1]).intValue())
-					.reason((String) reviewListArr[2])
-					.driverName((String) driverList[0])
-					.carName((String) driverList[1])
-					.reportId(((Number)reportListArr[0]).longValue())
+					.reviewId(((Number) reviewListArr[0]).longValue()).rating(((Number) reviewListArr[1]).intValue())
+					.reason((String) reviewListArr[2]).driverName((String) driverList[0])
+					.carName((String) driverList[1]).reportId(((Number) reportListArr[0]).longValue())
 					.paymentId(deliveryAssignmentRepository.findSecondPaymentIdById(assignedId))
-					.prepaidId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId))
-					.build();
-		}else {
-			return CompanyHistoryContentDTO.builder()
-					.dropOrder1(dropOrders.size()>0?dropOrders.get(0):"")
-					.dropOrder2(dropOrders.size()>1?dropOrders.get(1):"")
-					.dropOrder3(dropOrders.size()>2?dropOrders.get(2):"")
-					.mountainous(mountainous)
-					.caution(caution)
-					.estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
-					.driverName((String) driverList[0])
-					.carName((String) driverList[1])
-					.reportId(((Number)reportListArr[0]).longValue())
-					.paymentId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId))
-					.build();
+					.prepaidId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId)).build();
+		} else {
+			return CompanyHistoryContentDTO.builder().dropOrder1(dropOrders.size() > 0 ? dropOrders.get(0) : "")
+					.dropOrder2(dropOrders.size() > 1 ? dropOrders.get(1) : "")
+					.dropOrder3(dropOrders.size() > 2 ? dropOrders.get(2) : "").mountainous(mountainous)
+					.caution(caution).estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
+					.driverName((String) driverList[0]).carName((String) driverList[1])
+					.reportId(((Number) reportListArr[0]).longValue())
+					.paymentId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId)).build();
 		}
 	}
-	
-	//작성자: 김도경
-		//기능: detailHistory(예약, 운송중 세부내역 확인)
-		public DetailHistoryDTO getDetailHistory(Long assignedId) {
-			List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
 
-			List<String> dropOrders = new ArrayList<>();
-			if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
-			    dropOrders = waypointList.subList(1, waypointList.size() - 1);
-			}
-			
-			Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
-			
-			LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
-			
-			DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder()
-					.assignedId(assignedId)
-					.dropOrder1(dropOrders.get(0))
-					.dropOrder2(dropOrders.get(1))
-					.dropOrder3(dropOrders.get(2))
-					.startAddress(startEnd[0].toString())
-					.endAddress(startEnd[1].toString())
-					.wantToStart(startDate)
-					.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0))
-					.build();
-			
-			return detailHistoryDTO;
+	// 작성자: 김도경
+	// 기능: detailHistory(예약, 운송중 세부내역 확인)
+	public DetailHistoryDTO getDetailHistory(Long assignedId) {
+		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
+
+		List<String> dropOrders = new ArrayList<>();
+		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
+			dropOrders = waypointList.subList(1, waypointList.size() - 1);
 		}
+
+		Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
+
+		LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
+
+		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
+				.dropOrder1(dropOrders.get(0)).dropOrder2(dropOrders.get(1)).dropOrder3(dropOrders.get(2))
+				.startAddress(startEnd[0].toString()).endAddress(startEnd[1].toString()).wantToStart(startDate)
+				.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0)).build();
+
+		return detailHistoryDTO;
+	}
 
 	// 작성자: 고은설.
 	// 기능: 운송 요청 수락에 따흔 운송 할당 엔티티 생성.
@@ -578,7 +558,8 @@ public class DeliveryAssignmentService {
 	}
 
 	@Transactional
-	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action) {
+	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action, boolean mountainous,
+			boolean caution) {
 		var assignment = deliveryAssignmentRepository.findById(assignedId)
 				.orElseThrow(() -> new IllegalArgumentException("배차 없음: " + assignedId));
 
@@ -653,7 +634,7 @@ public class DeliveryAssignmentService {
 			require((status == DeliveryStatusEnum.ARRIVED_AT_WAYPOINT
 					|| status == DeliveryStatusEnum.DROPPED_AT_WAYPOINT) && lastVisited == lastIdx, "완료 가능한 상태/위치가 아님");
 			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
-			completeAssignment(assignment, now);
+			completeAssignment(assignment, now, mountainous, caution);
 			dummyTracker.setMode(assignment.getDriver().getDriverId().toString(), DummyDriver.Mode.MANUAL);
 		}
 		case PAUSE -> {
@@ -696,8 +677,9 @@ public class DeliveryAssignmentService {
 
 	// 운송 완료 처리
 	@Transactional
-	private void completeAssignment(DeliveryAssignment a, LocalDateTime now) {
-		if(a == null) {
+	private void completeAssignment(DeliveryAssignment a, LocalDateTime now,
+			boolean mountainous, boolean caution) {
+		if (a == null) {
 			return;
 		}
 
@@ -717,12 +699,9 @@ public class DeliveryAssignmentService {
 		Long weight = (long) a.getDeliveryRequest().getTotalCargoWeight();
 
 		// 2) ActualDelivery 생성/저장 → 즉시 할당
-		ActualDelivery ad = ActualDelivery.builder()
-				.distance(summary.getDistance())
-				.actualPolyline(summary.getEncodedPolyline())
-				.weight(weight)
-				.mountainous(false)
-				.caution(false).build();
+		ActualDelivery ad = ActualDelivery.builder().distance(summary.getDistance())
+				.actualPolyline(summary.getEncodedPolyline()).weight(weight)
+				.mountainous(mountainous).caution(caution).build();
 		ad = actualDeliveryRepository.save(ad);
 		a.setActualDelivery(ad);
 

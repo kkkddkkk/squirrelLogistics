@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 
 import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.actualCalc.EstimateCalcDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.CreatedRequestPaymentInfoDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
@@ -212,7 +213,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 
 	/* ============== CRUD ============== */
 	@Override
-	public Long create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO requestDTO) {
+	public CreatedRequestPaymentInfoDTO create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO requestDTO) {
 
 		if (paymentDTO == null || requestDTO == null) {
 			return null;
@@ -244,7 +245,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	        }
 	    }
 	    
-		return saved.getRequestId();
+	    return new CreatedRequestPaymentInfoDTO(saved.getRequestId(), paymentId);
 	}
 
 	@Override

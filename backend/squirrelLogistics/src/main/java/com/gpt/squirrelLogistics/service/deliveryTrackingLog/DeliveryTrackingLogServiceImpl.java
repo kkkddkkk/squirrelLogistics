@@ -17,8 +17,10 @@ import com.gpt.squirrelLogistics.repository.deliveryTrackingLog.DeliveryTracking
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class DeliveryTrackingLogServiceImpl implements DeliveryTrackingLogService {
 
@@ -32,6 +34,7 @@ public class DeliveryTrackingLogServiceImpl implements DeliveryTrackingLogServic
 		var ref = assignRepo.getReferenceById(assignedId);
 		var log = DeliveryTrackingLog.builder().deliveryAssignment(ref).lat(pos.getLat())
 				.lng(pos.getLng()).createdAt(LocalDateTime.now()).build();
+		DeliveryTrackingLogServiceImpl.log.info("lat + lng: " + pos.getLat() + pos.getLng());
 		trackRepo.save(log);
 	}
 

@@ -10,9 +10,12 @@ export async function fetchTodayDelivery(driverId, options = {}) {
   return res.data;
 }
 
-// 진행 중 운송 상태값 변경 액션 호출 (FSM 입력 필요).
-export async function postDriverAction(assignedId, action) {
-  const res = await axios.post(`${BASE}/${assignedId}/action?action=${action}`);
+// 진행 중 운송 상태값 변경 액션 호출 (FSM 입력 필요 + 완료 시점에는 산간 지역 및 취급주의 여부 함께 전달 필요).
+export async function postDriverAction(assignedId, action, extras = {}) {
+  const res = await axios.post(
+    `${BASE}/${assignedId}/action?action=${action}`,
+    extras 
+  );
   return res.data;
 }
 

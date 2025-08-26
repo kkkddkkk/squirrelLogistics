@@ -1,23 +1,45 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, MenuItem
+    TextField, Button, MenuItem, FormHelperText
 } from "@mui/material";
 
-export default function CargoDialog({ open, onClose, onSave }) {
+export default function CargoDialog({ open, onClose, onSave, options = [], initialCargo }) {
     const [description, setDescription] = useState("");
-    const [handlingId, setHandlingId] = useState("");
-    const [weightTon, setWeightTon] = useState(1); // 톤 단위 선택 (1~26)
+    const [handlingId, setHandlingId] = useState("");  // "" = 없음
+    const [weightTon, setWeightTon] = useState(1);
+
+    useEffect(() => {
+        if (initialCargo) {
+            setDescription(initialCargo.description ?? "");
+            setHandlingId(
+                initialCargo.handlingId === null || initialCargo.handlingId === undefined
+                    ? ""
+                    : String(initialCargo.handlingId)
+            );
+            const ton = Math.max(1, Math.min(26, Math.round((initialCargo.weightKg ?? 1000) / 1000)));
+            setWeightTon(ton);
+        } else {
+            setDescription("");
+            setHandlingId("");
+            setWeightTon(1);
+        }
+    }, [initialCargo, open]);
+
+    const selectedOption = useMemo(
+        () => options.find(o => String(o.handlingId) === handlingId),
+        [options, handlingId]
+    );
 
     const handleApply = () => {
-        if (!description || !handlingId || !weightTon) {
-            alert("모든 항목을 입력하세요");
+        if (!description || !weightTon) {
+            alert("제품명과 무게는 필수입니다.");
             return;
         }
         onSave({
             description,
-            handlingId: Number(handlingId),
-            weightKg: weightTon * 1000, // 톤 → kg 변환
+            handlingId: handlingId === "" ? null : Number(handlingId),
+            weightKg: weightTon * 1000,
         });
         onClose();
     };
@@ -26,7 +48,6 @@ export default function CargoDialog({ open, onClose, onSave }) {
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>화물 정보 입력</DialogTitle>
             <DialogContent>
-                {/* 제품명 */}
                 <TextField
                     fullWidth
                     label="제품명"
@@ -35,7 +56,6 @@ export default function CargoDialog({ open, onClose, onSave }) {
                     margin="normal"
                 />
 
-                {/* 취급 종류 */}
                 <TextField
                     fullWidth
                     select
@@ -44,12 +64,21 @@ export default function CargoDialog({ open, onClose, onSave }) {
                     onChange={(e) => setHandlingId(e.target.value)}
                     margin="normal"
                 >
-                    <MenuItem value={1}>일반</MenuItem>
-                    <MenuItem value={2}>위험물</MenuItem>
-                    <MenuItem value={3}>냉장식품</MenuItem>
+                    <MenuItem value="">없음</MenuItem>
+                    {options.map(opt => (
+                        <MenuItem key={opt.handlingId} value={String(opt.handlingId)}>
+                            {opt.handlingTags} {opt.extraFee ? `(+${Number(opt.extraFee).toLocaleString()}원)` : ""}
+                        </MenuItem>
+                    ))}
                 </TextField>
 
-                {/* 무게 선택 (슬라이더) */}
+                {selectedOption && (
+                    <FormHelperText sx={{ mb: 1 }}>
+                        선택된 태그: {selectedOption.handlingTags}
+                        {selectedOption.extraFee ? `, 추가요금: ${Number(selectedOption.extraFee).toLocaleString()}원` : ""}
+                    </FormHelperText>
+                )}
+
                 <div style={{ margin: "20px 0" }}>
                     <label>📦 무게 선택 (1톤 ~ 26톤)</label>
                     <input
@@ -58,22 +87,9 @@ export default function CargoDialog({ open, onClose, onSave }) {
                         max="26"
                         value={weightTon}
                         onChange={(e) => setWeightTon(Number(e.target.value))}
-                        style={{
-                            width: "92%",        // ✅ 다이얼로그 안쪽에 맞추기
-                            margin: "0 auto",    // 가운데 정렬
-                            display: "block",    // 블록화
-                            boxSizing: "border-box"
-                        }}
+                        style={{ width: "92%", margin: "0 auto", display: "block", boxSizing: "border-box" }}
                     />
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            marginTop: "8px",
-                            width: "92%",       // ✅ 라벨도 같은 폭에 맞춤
-                            margin: "0 auto"
-                        }}
-                    >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, width: "92%", margin: "0 auto" }}>
                         <span>1톤</span>
                         <span>{weightTon}톤</span>
                         <span>26톤</span>

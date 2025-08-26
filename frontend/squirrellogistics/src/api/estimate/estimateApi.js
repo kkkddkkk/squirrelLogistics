@@ -120,21 +120,13 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
  */
 export const createDeliveryRequest = async (requestPayload, paymentPayload = null) => {
   try {
-
-    const wrapped = {
-      payment: paymentPayload, // 결제 정보 (없으면 null)
-      request: requestPayload, // DeliveryRequestRequestDTO
-    };
-    console.log(wrapped);
+    const wrapped = { payment: paymentPayload, request: requestPayload };
     const { data } = await http.post("/api/delivery/requests", wrapped);
+
     return data;
   } catch (error) {
     if (error.response) {
-      console.error(
-        "[createDeliveryRequest 실패]",
-        error.response.status,
-        error.response.data
-      );
+      console.error("[createDeliveryRequest 실패]", error.response.status, error.response.data);
     } else {
       console.error("[createDeliveryRequest 실패]", error.message);
     }

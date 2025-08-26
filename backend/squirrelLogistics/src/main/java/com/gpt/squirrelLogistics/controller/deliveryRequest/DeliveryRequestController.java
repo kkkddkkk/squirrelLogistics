@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gpt.squirrelLogistics.dto.deliveryRequest.CreatedRequestPaymentInfoDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
@@ -54,7 +55,7 @@ public class DeliveryRequestController {
 
 	// 생성
 	@PostMapping
-	public Long create(@Valid @RequestBody CreateProposeRequest payload) {
+	public CreatedRequestPaymentInfoDTO create(@Valid @RequestBody CreateProposeRequest payload) {
 
 		return requestService.create(payload.payment(), payload.request());
 	}
