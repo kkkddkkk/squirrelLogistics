@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 
 import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.actualCalc.EstimateCalcDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
@@ -633,12 +634,12 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	// 커스텀 페이지 DTO
 	@Override
 	@Transactional(readOnly = true)
-	public PageResponseDTO<DeliveryRequestSlimResponseDTO> list(PageRequestDTO pageReq) {
+	public PageResponseDTO<DeliveryRequestCardSlimDTO> list(PageRequestDTO pageReq) {
 		Page<DeliveryRequest> page = repository.findActiveRegistered(pageReq.toPageable());
-		List<DeliveryRequestSlimResponseDTO> dtoList = page.getContent().stream().map(this::entityToSlimDto)
+		List<DeliveryRequestCardSlimDTO> dtoList = page.getContent().stream().map(this::entityToSlimDto)
 				.collect(Collectors.toList());
 
-		return PageResponseDTO.<DeliveryRequestSlimResponseDTO>withAll().dtoList(dtoList).pageRequestDTO(pageReq)
+		return PageResponseDTO.<DeliveryRequestCardSlimDTO>withAll().dtoList(dtoList).pageRequestDTO(pageReq)
 				.totalCount(page.getTotalElements()).build();
 	}
 
