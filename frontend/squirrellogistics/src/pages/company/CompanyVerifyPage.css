@@ -4,6 +4,7 @@
   margin: 3rem auto;
   padding: 0 1rem;
 }
+
 .verify-title {
   text-align: center;
   font-size: 1.8rem;
@@ -11,28 +12,33 @@
   color: #113F67;
   font-weight: 800;
 }
+
 .verify-card {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,.06);
   padding: 1.5rem;
 }
+
 .section-title {
   font-size: 1.1rem;
   margin-bottom: 1rem;
   color: #2A2A2A;
   font-weight: 700;
 }
+
 .field {
   display: flex;
   flex-direction: column;
   gap: .4rem;
   margin-bottom: .9rem;
 }
+
 .field > span {
   font-weight: 600;
   color: #2A2A2A;
 }
+
 .field input {
   height: 44px;
   border: 1px solid #ddd;
@@ -40,11 +46,13 @@
   padding: 0 .8rem;
   background: #eee;
 }
+
 .row-between {
   display: flex;
   justify-content: flex-start;
   margin-top: .5rem;
 }
+
 .ghost-btn {
   background: #d9d9d9;
   border: none;
@@ -52,11 +60,13 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 .error-text {
   color: #e74c3c;
   font-size: .9rem;
   margin-top: .6rem;
 }
+
 .social-box {
   background: #f7f7f7;
   border: 1px solid #eee;
@@ -64,11 +74,13 @@
   padding: 1rem;
   margin-bottom: 1rem;
 }
+
 .social-row {
   display: flex;
   gap: .8rem;
   margin-top: .6rem;
 }
+
 .social-btn {
   flex: 1;
   background: #d9d9d9;
@@ -77,12 +89,14 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
 .action-row {
   display: flex;
   gap: .8rem;
   justify-content: flex-end;
   margin-top: 1rem;
 }
+
 .primary {
   background: #E8A93F;
   color: #2A2A2A;
@@ -92,6 +106,7 @@
   font-weight: 700;
   cursor: pointer;
 }
+
 .secondary {
   background: #E0E6ED;
   color: #2A2A2A;
@@ -99,4 +114,202 @@
   padding: .7rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
+}
+
+/* 기존 스타일 유지하면서 새로운 스타일 추가 */
+
+.verify-description {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 인증 방법 정보 */
+.auth-method-info {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.method-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
+  font-weight: 500;
+  justify-content: center;
+}
+
+.method-icon {
+  font-size: 1.2rem;
+}
+
+/* 소셜 재인증 버튼 스타일 개선 */
+.social-btn:first-child {
+  background-color: #4285f4;
+  color: white;
+}
+
+.social-btn:first-child:hover:not(:disabled) {
+  background-color: #3367d6;
+}
+
+.social-btn:last-child {
+  background-color: #fee500;
+  color: #000;
+}
+
+.social-btn:last-child:hover:not(:disabled) {
+  background-color: #fdd835;
+}
+
+.social-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 비밀번호 찾기 섹션 */
+.password-reset-section {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+
+.forgot-password-link:hover {
+  color: #5a6fd8;
+  text-decoration: none;
+}
+
+.forgot-password-link:focus {
+  outline: none;
+  color: #5a6fd8;
+}
+
+/* 비밀번호 재설정 폼 */
+.reset-form {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  animation: slideDown 0.3s ease;
+}
+
+.reset-form .field {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.reset-form .field span {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.reset-form .field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.reset-form .field input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.reset-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 100%;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.reset-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.7;
+}
+
+/* 성공 메시지 */
+.success-text {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border: 1px solid #c3e6cb;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(21, 87, 36, 0.15);
+  animation: fadeIn 0.5s ease;
+}
+
+/* 애니메이션 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 반응형 개선 */
+@media (max-width: 768px) {
+  .social-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .social-btn {
+    width: 100%;
+  }
 }

@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getUserInfo,
+  getMyPageInfo,
   getDeliveryList,
   verifyCredentials as apiVerifyCredentials,
   // ⬇️ 임시비번 대신 단발성 토큰 링크 요청 API 사용
@@ -22,6 +23,12 @@ export const fetchUserInfo = createAsyncThunk(
 export const fetchDeliveryList = createAsyncThunk(
   "company/fetchDeliveryList",
   async () => await getDeliveryList()
+);
+
+// 2-1) 마이페이지 회원정보 (CompanyMyPageResponseDTO)
+export const fetchCompanyMyPageInfo = createAsyncThunk(
+  "company/fetchCompanyMyPageInfo",
+  async () => await getMyPageInfo()
 );
 
 // 3) 아이디/비번 본인인증
@@ -59,7 +66,7 @@ const initialState = {
   userInfo: null,
   deliveryList: [],
   filteredList: [],
-
+  myPageInfo: null, // 마이페이지 회원정보 추가
   loading: false,
   error: null,
 
@@ -86,16 +93,24 @@ const companySlice = createSlice({
       state.userInfo = null;
       state.deliveryList = [];
       state.filteredList = [];
+      state.myPageInfo = null; // 마이페이지 정보도 초기화
       state.loading = false;
       state.error = null;
       state.verifyOk = false;
     },
+    clearError: (state) => {
+      state.error = null;
+    },
+    setVerifyOk: (state, action) => {
+      state.verifyOk = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-      // ✅ 유저 정보
+      // 1) 마이페이지 유저 정보
       .addCase(fetchUserInfo.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         state.loading = false;
@@ -106,42 +121,71 @@ const companySlice = createSlice({
         state.error = action.error.message;
       })
 
-      // ✅ 배송 리스트
+      // 2) 배송 리스트
       .addCase(fetchDeliveryList.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchDeliveryList.fulfilled, (state, action) => {
         state.loading = false;
-        state.deliveryList = action.payload || [];
+        state.deliveryList = action.payload;
+        state.filteredList = action.payload; // 초기에는 전체 리스트
       })
       .addCase(fetchDeliveryList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })
 
-      // ✅ 본인인증
-      .addCase(verifyByCredential.fulfilled, (state, action) => {
-        state.verifyOk = action.payload === true;
+      // 2-1) 마이페이지 회원정보
+      .addCase(fetchCompanyMyPageInfo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCompanyMyPageInfo.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myPageInfo = action.payload;
+      })
+      .addCase(fetchCompanyMyPageInfo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       })
 
-      // ✅ 비번 재설정 링크 요청(이전 sendTempPassword 자리)
+      // 3) 아이디/비번 본인인증
+      .addCase(verifyByCredential.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyByCredential.fulfilled, (state, action) => {
+        state.loading = false;
+        state.verifyOk = action.payload;
+      })
+      .addCase(verifyByCredential.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+
+      // 4) 비밀번호 재설정 링크 요청
       .addCase(sendTempPassword.pending, (state) => {
         state.sendingTemp = true;
+        state.error = null;
       })
-      .addCase(sendTempPassword.fulfilled, (state) => {
+      .addCase(sendTempPassword.fulfilled, (state, action) => {
         state.sendingTemp = false;
+        // 성공/실패 여부는 action.payload로 확인 가능
       })
-      .addCase(sendTempPassword.rejected, (state) => {
+      .addCase(sendTempPassword.rejected, (state, action) => {
         state.sendingTemp = false;
+        state.error = action.error.message;
       })
 
-      // ✅ 프로필 업데이트
+      // 5) 프로필 업데이트
       .addCase(updateProfile.pending, (state) => {
         state.updating = true;
+        state.error = null;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.updating = false;
-        if (action.payload) state.userInfo = action.payload;
+        state.userInfo = action.payload; // 업데이트된 정보로 교체
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.updating = false;
@@ -150,14 +194,14 @@ const companySlice = createSlice({
   },
 });
 
-export const { setFilteredList, resetFilteredList, logout } = companySlice.actions;
-export default companySlice.reducer;
+export const {
+  setFilteredList,
+  resetFilteredList,
+  logout,
+  clearError,
+  setVerifyOk,
+} = companySlice.actions;
 
-/* -----------------------------
- * Selectors
- * --------------------------- */
-export const selectCompanyUser = (s) => s.company.userInfo;
-export const selectDeliveries = (s) => s.company.deliveryList;
-export const selectFiltered = (s) => s.company.filteredList;
-export const selectVerifyOk = (s) => s.company.verifyOk;
-export const selectCompanyLoading = (s) => s.company.loading || s.company.updating;
+// 모든 Thunk 함수들이 이미 export const로 선언되어 있으므로 추가 export 불필요
+
+export default companySlice.reducer;

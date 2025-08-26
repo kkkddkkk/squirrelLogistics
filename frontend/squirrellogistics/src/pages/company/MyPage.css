@@ -20,10 +20,29 @@
   color: #113F67;
 }
 
+/* 로딩 및 에러 메시지 */
+.loading-message {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #dc3545;
+  font-size: 1.1rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+}
+
 /* 회원정보 섹션 */
 .info-section {
   background-color: #E0E6ED;
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: 10px;
   margin-bottom: 2rem;
   border: 1px solid #cdd7e0;
@@ -33,37 +52,51 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .info-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #2A2A2A;
   margin: 0;
 }
 
-.edit-icon {
-  width: 20px;
-  height: 20px;
+.edit-images {
+  width: 24px;
+  height: 24px;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.edit-images:hover {
+  transform: scale(1.1);
 }
 
 .info-item {
   display: flex;
   justify-content: space-between;
-  padding: 0.6rem 0;
+  align-items: center;
+  padding: 0.8rem 0;
   border-bottom: 1px solid #d3dbe2;
   font-size: 1rem;
+}
+
+.info-item:last-child {
+  border-bottom: none;
 }
 
 .info-label {
   font-weight: bold;
   color: #2A2A2A;
+  min-width: 120px;
 }
 
 .info-value {
   color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
 }
 
 .mask-toggle {
@@ -71,11 +104,17 @@
   background-color: #e8a93f;
   border: none;
   border-radius: 6px;
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
   font-weight: bold;
   color: #2A2A2A;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mask-toggle:hover {
+  background-color: #d1942f;
+  transform: translateY(-1px);
 }
 
 /* 📌 배송 상태 드롭다운 스타일 */
@@ -92,98 +131,98 @@
   min-width: 140px;
 }
 
-/* .status-select:focus {
-  border-color: #2a2a2a;
-  box-shadow: 0 0 0 2px rgba(232, 169, 63, 0.2);
-} */
-
-
 .status-select option {
   padding: 0.4rem;
 }
-
 
 .delivery-filter {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-  align-items: center;
   margin-bottom: 1.5rem;
-}
-
-.delivery-filter input {
-  padding: 0.5rem 0.8rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  min-width: 140px;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 .filter-btn {
   background-color: #E8A93F;
-  color: #2A2A2A;
-  font-weight: bold;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  color: #2A2A2A;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+.filter-btn:hover {
+  background-color: #d1942f;
+  transform: translateY(-1px);
+}
+
+/* 배송 정보 섹션 */
 .delivery-section {
-  margin-top: 2rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+}
+
+.delivery-section h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2A2A2A;
+  margin: 0 0 1rem 0;
 }
 
 .delivery-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-}
-
-.delivery-table thead {
-  background-color: #E0E6ED;
+  font-size: 0.9rem;
 }
 
 .delivery-table th,
 .delivery-table td {
   padding: 0.8rem;
-  text-align: center;
-  border-bottom: 1px solid #eee;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .delivery-table th {
+  background-color: #f8f9fa;
   font-weight: bold;
-  color: #2A2A2A;
+  color: #495057;
 }
 
 .delivery-table td {
-  color: #444;
+  color: #333;
 }
 
 .no-delivery {
   text-align: center;
-  padding: 1rem;
-  color: #777;
+  color: #6c757d;
+  font-style: italic;
 }
 
 /* 하단 버튼 */
 .mypage-bottom-buttons {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
   margin-top: 2rem;
 }
 
 .bottom-btn {
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+  padding: 0.8rem 1.5rem;
   border: none;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .bottom-btn.review {
@@ -191,14 +230,24 @@
   color: #2A2A2A;
 }
 
-/* 회원탈퇴 링크 스타일 */
+.bottom-btn.review:hover {
+  background-color: #d1942f;
+  transform: translateY(-2px);
+}
+
 .withdraw-link {
-  background: none;
-  border: none;
-  color: gray;
-  text-decoration: underline;
+  background-color: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.withdraw-link:hover {
+  background-color: #dc3545;
+  color: #fff;
 }
 
