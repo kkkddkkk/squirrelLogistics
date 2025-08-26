@@ -8,11 +8,15 @@ import StarRateMemo from "./StarRate";
 
 const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged }) => {
 
+    const accesstoken = localStorage.getItem('accessToken');
+
     const regiReview = () => {//등록
-        axios.post(`http://localhost:8080/api/public/review`, review, {
+        axios.post(`http://localhost:8080/api/review`, review, {
             headers: {
-                "Content-Type": "application/json"
-            }
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
+
         })
             .then(res => {
                 console.log('등록 성공', res.data)
@@ -22,7 +26,11 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     }
 
     const modiReview = () => {//수정
-        axios.put(`http://localhost:8080/api/public/review/${review.reviewId}`, review)
+        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, review, {
+            headers: {
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
+        })
             .then(res => {
                 console.log('수정 성공', res.data)
                 setChanged(true);
@@ -31,7 +39,11 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     }
 
     const delReview = () => {//삭제
-        axios.delete(`http://localhost:8080/api/public/review/${review.reviewId}`)
+        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
+            headers: {
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
+        })
             .then(res => {
                 console.log('삭제 성공', res.data)
                 setChanged(true);

@@ -1,6 +1,11 @@
 import { Box, Button, Typography } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+
+
 
 export const Title = ({ children }) => {
     return (
@@ -58,7 +63,22 @@ export const Layout = ({ title, children }) => {
     )
 }
 
-export const ListBoxContainer = ({ children, header, id }) => {
+export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton }) => {
+
+    const handleExpand = () => {
+        if (!isExpand) setIsExpand(true);
+        else setIsExpand(false);
+    }
+
+    let color = '';
+    if (assignStatus === "예약") color = "#113F67";
+    if (assignStatus === "배송중") color = "#E8A93F";
+    if (assignStatus === "배송완료") color = "#31A04F";
+    if (assignStatus === "취소") color = "#A20025";
+    if (assignStatus === "미정산") color = "#A20025";
+    if (assignStatus === "") color = 0;
+
+
 
     return (
         <Box
@@ -70,15 +90,63 @@ export const ListBoxContainer = ({ children, header, id }) => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                flexWrap: "wrap",
-                marginBottom: "2%"
+                marginBottom: "2%",
+                flexWrap: "wrap"
+
             }}
             className="listBoxContainer"
         >
-            <input type="hidden" value={id}></input>
-            <Typography sx={{ margin: "2%" }}>{header}</Typography>
+            {/* 숨겨진 ID */}
+            <input type="hidden" value={id} />
+
+            {/* 왼쪽: 주소 */}
+            <Typography
+                sx={{
+                    flex: 1,
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    margin: "2% 0",
+                    display: "inline-block"
+                }}
+            >
+                {header}
+            </Typography>
+
+            {/* 오른쪽: 배송완료 + children */}
+            <Box
+                sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "6px"
+                }}
+            >
+                <Box sx={{ display: "flex", marginRight: "5%" }}>
+                    {useButton ?
+                        <Box
+                            sx={{
+                                borderRadius: "5px",
+                                border: `1px solid ${color}`,
+                                padding: "2px 6px",
+                                whiteSpace: "nowrap",
+                                marginRight: "5%",
+                                color: color
+                            }}
+                        >
+                            {assignStatus}
+                        </Box> : <></>
+                    }
+
+                    {isExpand ?
+                        <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} /> :
+                        <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
+                    }
+                </Box>
+            </Box>
+
             {children}
         </Box>
+
     )
 }
 
@@ -143,10 +211,40 @@ export const AddedImg = ({ preview, idx, func }) => {//추가된 사진
     )
 }
 
-export const paymentFormat = ((payment) => {
+export const paymentFormat = ((payment) => {//숫자 형식
     if (payment == null) return "0"
     return payment.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 });
+
+export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없을 때 표시화면
+
+    const { moveBack } = useHistoryMove();
+
+    return (
+        <>
+            <Box display={"flex"} justifyContent={"center"} flexWrap={"wrap"}>
+                <Box
+                    component="img"
+                    src={logoSrc}
+                    alt="로고"
+                    sx={{
+                        width: "100%",        // 원하는 높이
+                        width: "auto",     // 비율 유지
+                        margin: "15% 0"
+                    }}
+                />
+                <Typography width={"100%"} textAlign={"center"}
+                 fontSize={"25px"} fontWeight={"bold"}
+                 marginBottom={"10%"}
+                 >{children}</Typography>
+                <OneBigBtn func={() => moveBack()}>뒤로가기</OneBigBtn>
+
+            </Box>
+
+        </>
+
+    )
+}
 
 
 
@@ -178,6 +276,22 @@ export const OneBigBtn = ({ children, disabled, func, margin }) => {
                 type="submit"
                 variant="contained"
                 sx={{ width: "60%", height: "50px", margin: { margin }, fontSize: "25px" }}
+                onClick={func}
+                disabled={disabled}
+            >
+                {children}
+            </Button>
+        </Box>
+    )
+}
+
+export const OneBtnAtRight = ({ children, disabled, func, margin }) => {
+    return (
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "end" }}>
+            <Button
+                type="submit"
+                variant="contained"
+                sx={{ width: "30%", height: "50px", margin: { margin }, fontSize: "16px" }}
                 onClick={func}
                 disabled={disabled}
             >

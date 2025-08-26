@@ -33,6 +33,8 @@ public class PayBoxDTO {
 	private boolean caution;
 	private Long estimateFee;
 	
+	private String impUid;
+	
 
 
 

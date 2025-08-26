@@ -59,7 +59,7 @@ public class DeliveryRequest {//배송요청
 	private String expectedPolyline;//예상 폴리라인
 	
 	@Lob
-	@Column(columnDefinition = "TEXT")
+	@Column(columnDefinition = "MEDIUMTEXT")
 	private String expectedRoute;//예상 경로
 	
 	

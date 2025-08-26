@@ -17,8 +17,11 @@ const usePaymentMove=()=>{
     const moveBack = ()=>{
         navigate(-1);
     }
+    const moveToActualCalc=(assignedId)=>{
+        navigate(`/company/actualCalc?assignedId=${assignedId}`)
+    }
 
-    return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToSecondPayment}
+    return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToSecondPayment, moveToActualCalc}
 }
 export default usePaymentMove;
 

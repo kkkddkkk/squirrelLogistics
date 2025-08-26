@@ -16,14 +16,21 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentSuccessDTO {
-	private Long paymentId;// 결제 ID
-	private Long prepaidId;//사전결제 ID
-	private Long payAmount;//결제금액
-	private String payMethod;//결제방법
+public class RecieptDTO {
 
-	private PayStatusEnum payStatus;//결제상태
+	private Long paymentId;
+	private Long prepaidId;
 	
-	private String impUid;
+	private Long amount;
+	private Long prepaidAmount;
+	private String method;
+	private String prepaidMethod;
+	
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime paid;//결제완료 일시
+	
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime prepaidPaid;//결제완료 일시
+
 	
 }
