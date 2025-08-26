@@ -7,12 +7,17 @@ import StarRateMemo from "./StarRate";
 
 
 const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setChanged }) => {
+    const accesstoken = localStorage.getItem('accessToken');
 
     const modiReview = () => {//수정
         review.regDate = review.regDate.split('.')[0];
         review.regDate = review.regDate.replace('T', ' ');
         console.log(review);
-        axios.put(`http://localhost:8080/api/public/review/${review.reviewId}`, review)
+        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, review, {
+            headers: {
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
+        })
             .then(res => {
                 console.log('수정 성공', res.data)
                 setChanged(true);
@@ -21,7 +26,11 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
     }
 
     const delReview = () => {//삭제
-        axios.delete(`http://localhost:8080/api/public/review/${review.reviewId}`)
+        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
+            headers: {
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
+        })
             .then(res => {
                 console.log('삭제 성공', res.data)
                 setChanged(true);

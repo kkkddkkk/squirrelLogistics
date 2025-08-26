@@ -6,13 +6,15 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { Layout, paymentFormat, SubTitle, Title } from "../../components/common/CommonForCompany";
-import { getSecondPayBox, ModifySecondPayment } from "../../api/company/paymentApi";
+import { getFirstPayBox, getSecondPayBox, refund, successFirstPayment, successSecondPayment } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
-import ActualCalc from "../ActualCalc/ActualCalc";
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Buttons } from "../../components/history/HistoryList";
 import HelpIcon from '@mui/icons-material/Help';
 import { getEstimateCalc } from "../../api/company/actualCalcApi";
+import axios from "axios";
+import useCompanyMove from "../../hook/company/useCompanyMove";
+import { PaymentClient } from "@portone/server-sdk";
+
 
 
 export const Payment = () => {
@@ -86,6 +88,7 @@ export const Payment = () => {
     //#endregion
 
     const { moveToSuccess } = usePaymentMove();
+    const { moveBack } = useCompanyMove();
 
     //데이터 생성용 useState
     const [refundDate, setRefundDate] = useState('3');
@@ -96,11 +99,11 @@ export const Payment = () => {
     const [actualCalc, setActualCalc] = useState([]);
     const [baseRate, setBaseRate] = useState(0);
     const [additionalRate, setAdditionalRate] = useState(0);
-    const [estimateCalc, setEstimateCalc] = useState(null);
-    const [baseRateEstimate, setBaseRateEstimate] = useState(null);
-    const [additionalRateEstimate, setAdditionalRateEstimate] = useState(null);
+    const [estimateCalc, setEstimateCalc] = useState([]);
+    const [baseRateEstimate, setBaseRateEstimate] = useState(0);
+    const [additionalRateEstimate, setAdditionalRateEstimate] = useState(0);
     const [modal, setModal] = useState(false);
-    const [requestId, setRequestId] = useState(null);
+    const [requestId, setRequestId] = useState(0);
     const [paymentIdState, setPaymentIdState] = useState(0);
     const [totalRate, setTotalRate] = useState(0);
 
@@ -109,21 +112,22 @@ export const Payment = () => {
     const prepaidId = params.get("prepaidId");
     const paymentId = params.get("paymentId");
 
-    //DTO 생성용 useState
-    const [secondPayment, setSecondPayment] = useState({
-        paymentId: '',
-        prepaidId: prepaidId,
-        payAmount: '',
-        payMethod: '',
-        payStatus: 'PENDING',
-    })
-
     //랜더링용 useEffect
     useEffect(() => {
         if (prepaidId != 0 && prepaidId != null) {
             getSecondPayBox({ prepaidId })
                 .then(data => {
                     setActualCalc(data);
+                    console.log("second");
+                })
+                .catch(err => {
+                    console.error("데이터 가져오기 실패", err);
+                });
+        } else if (paymentId != 0 && paymentId != null) {
+            getFirstPayBox({ paymentId })
+                .then(data => {
+                    setActualCalc(data);
+                    console.log("first");
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
@@ -131,117 +135,166 @@ export const Payment = () => {
         }
     }, []);
 
+
     //기본요금 + 추가요금, 총 요금 계산
     useEffect(() => {
         if (!actualCalc) return;
-        setBaseRate(100000 + (actualCalc.distance / 1000) * 3000 + Math.ceil((actualCalc.weight / 1000)) * 30000);
         let addThisRate = 0;
         if (actualCalc.dropOrder1) addThisRate += 50000;
         if (actualCalc.dropOrder2) addThisRate += 50000;
         if (actualCalc.dropOrder3) addThisRate += 50000;
-        if (actualCalc.mountainous) addThisRate += 50000;
         if (actualCalc.caution) addThisRate += 50000;
-        setAdditionalRate(addThisRate);
+        if (actualCalc.mountainous) addThisRate += 50000;
+        setAdditionalRate(addThisRate)
+        setBaseRate(
+            100000
+            + (3000 * Math.ceil((actualCalc.distance) / 1000))
+            + Math.ceil(actualCalc.weight / 1000) * 30000);
 
         setRequestId(actualCalc.requestId);
-        setPaymentIdState(actualCalc.paymentId);
-    }, [actualCalc])
-    useEffect(() => {
-        setTotalRate((baseRate + additionalRate) - actualCalc.estimateFee);
-    }, [additionalRate])
 
-    //모달 클릭 시 예상금액 계산서 출력
+    }, [actualCalc])
+
+    useEffect(() => {
+        if (!baseRate || !additionalRate) return;
+        setTotalRate(baseRate + additionalRate);
+    }, [baseRate, additionalRate])
+
+
     useEffect(() => {
         if (prepaidId != null || paymentIdState != null) {
             if (!modal) return;
             getEstimateCalc({ requestId })
                 .then(data => {
                     setEstimateCalc(data);
+                    console.log(data);
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
                 });
         }
     }, [modal])
+
+
     useEffect(() => {
-        if (!estimateCalc) return;
-        setAdditionalRateEstimate((estimateCalc.dropOrderNum ?? 0) * 50000);
+        if (!actualCalc) return;
+        let additionalFee;
+        if (estimateCalc.dropOrderNum) additionalFee = estimateCalc.dropOrderNum * 50000;
+        if (estimateCalc.mountainous) additionalFee += 50000;
+        if (estimateCalc.caution) additionalFee += 50000;
+        setAdditionalRateEstimate(additionalFee);
         setBaseRateEstimate(
-            100000 + (3000 * ((estimateCalc.distance ?? 0) / 1000))
-            + (Math.ceil((estimateCalc.weight ?? 0) / 1000)) * 30000
+            100000
+            + (3000 * Math.ceil((estimateCalc.distance) / 1000))
+            + Math.ceil(estimateCalc.weight / 1000) * 30000
         );
+
     }, [estimateCalc]);
 
-    //결제 function
     function handleClickPayment() {
-        setMerchant_uid(actualCalc?.paymentId);
 
+        const merchant_uid = prepaidId ? actualCalc.paymentId : paymentId;
         const { IMP } = window;
         IMP.init("imp78074867");
+
         IMP.request_pay(
             {
-                pg: paymentMethod,// PG사
-                pay_method: paymentMethod,// 결제수단
-                merchant_uid: merchant_uid,// 주문번호
-                amount: prepaidId ? totalRate : 0,// 결제금액
-                name: '(주)다람쥑스프레스',// 주문명
-                buyer_name: '홍길동',// 구매자 이름
-                buyer_tel: '01012341234'// 구매자 전화번호 
+                pg: paymentMethod,
+                pay_method: paymentMethod,
+                merchant_uid: merchant_uid,
+                amount: totalRate || 0,
+                name: '(주)다람쥑스프레스',
+                buyer_name: localStorage.getItem("userName"),
+                buyer_tel: '01012341234'
             },
-            function (response) {
-                if (prepaidId != 0 && prepaidId != null) {
-                    let paymentId = actualCalc.paymentId;
+            async function (response) {
 
-                    const trySecondPayment = {
-                        ...secondPayment,
-                        paymentId: paymentId,
-                        payMethod: paymentMethod,
-                        payAmount: prepaidId ? totalRate : 0,
-                    };
-
-                    if (response.success) {
-                        ModifySecondPayment({ paymentId, secondPayment: trySecondPayment })
-                            .then(data => {
-                                console.log(data);
-                                moveToSuccess({ state: true, paymentId });
-                            })
-                            .catch(err => {
-                                console.error("수정 실패", err);
-                            });
-                    } else {
-                        ModifySecondPayment({ paymentId, secondPayment: trySecondPayment })
-                            .then(data => {
-                                console.log(data);
-                                moveToSuccess({ state: false, paymentId });
-                                console.error("결제 실패 메시지:", response.error_msg);
-                            })
-                            .catch(err => {
-                                console.error("수정 실패", err);
-                            });
+                if (!merchant_uid) {
+                    console.error("결제 ID가 없습니다.");
+                    return;
+                }
+                if (response.success) {
+                    if (prepaidId) { // 2차 결제
+                        const secondPaymentBody = {
+                            paymentId: actualCalc.paymentId,
+                            prepaidId: prepaidId,
+                            payAmount: totalRate,
+                            payMethod: paymentMethod,
+                            payStatus: "PROCESSING",
+                            impUid: response.imp_uid
+                        };
+                        await successSecondPayment({ paymentId: actualCalc.paymentId, successSecondPayment: secondPaymentBody });
+                        moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
+                    } else { // 1차 결제
+                        const firstPaymentBody = {
+                            paymentId: paymentId,
+                            payAmount: totalRate,
+                            payMethod: paymentMethod,
+                            payStatus: "PROCESSING",
+                            impUid: response.imp_uid
+                        };
+                        await successFirstPayment({ paymentId, successFirstPayment: firstPaymentBody });
+                        moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
                     }
+                } else {
+                    console.error("결제 실패 메시지:", response.error_msg);
+                    moveToSuccess({ state: false, paymentId: actualCalc.paymentId });
                 }
 
-            },
+            }
         );
+
     }
+
+    async function cancelPayment() {
+        if (!actualCalc?.impUid) {
+            console.error("impUid가 없습니다.");
+            return;
+        }
+
+        try {
+            const paymentClient = new PaymentClient({
+                secret: "XA4cfKZavvUUr261zjc6itgnoYvSqZaR2IohgfDzfbGkCr4AvJ1uWbnMUtXCZHPZHPjnWSLFHuLITCR7", // 여기에 실제 시크릿 넣기
+            });
+
+            // 2. 부분 환불 실행
+            const response = await paymentClient.cancelPayment({
+                paymentId: prepaidId, // getPaymentByImpUid 결과 사용
+                reason: "고객 요청",
+                currentCancellableAmount: 1000000000,
+                amount: actualCalc?.estimateFee
+                    ? totalRate - actualCalc.estimateFee
+                    : totalRate, // 반드시 양수
+            });
+
+            console.log("환불 성공:", response);
+            alert("환불이 완료되었습니다.");
+        } catch (error) {
+            console.error("환불 실패:", error);
+            alert("환불 중 오류가 발생했습니다.");
+        }
+    }
+    // cancelPayment("imp_123456789012");
 
     return (
         <Layout title={"결제"}>
             <Grid size={12} display={"flex"} justifyContent={"center"}>
                 <Box width={"90%"} minWidth={"600px"}>
-                    <SubTitle>결제금액</SubTitle>
-                    <PayBox
-                        mileage={actualCalc.distance / 1000}
-                        weight={actualCalc.weight}
-                        baseRate={baseRate}
-                        stopOver1={actualCalc?.dropOrder1 ? true : false}
-                        stopOver2={actualCalc?.dropOrder2 ? true : false}
-                        stopOver3={actualCalc?.dropOrder3 ? true : false}
-                        caution={actualCalc?.caution ? true : false}
-                        mountainous={actualCalc?.mountainous ? true : false}
-                        additionalRate={additionalRate}
-                    />
 
+                    <SubTitle>결제금액</SubTitle>
+                    {actualCalc &&
+                        <PayBox
+                            mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
+                            weight={actualCalc ? actualCalc.weight : 0}
+                            baseRate={actualCalc ? baseRate : 0}
+                            stopOver1={actualCalc ? actualCalc.dropOrder1 : false}
+                            stopOver2={actualCalc ? actualCalc.dropOrder2 : false}
+                            stopOver3={actualCalc ? actualCalc.dropOrder3 : false}
+                            caution={actualCalc ? actualCalc.caution : false}
+                            mountainous={actualCalc ? actualCalc.mountainous : false}
+                            additionalRate={actualCalc ? additionalRate : 0}
+                        />
+                    }
                     {prepaidId ? <>
                         <Box
                             sx={{
@@ -278,21 +331,21 @@ export const Payment = () => {
                                         <Box sx={{ width: "90%" }}>
                                             {estimateCalc && (
                                                 <PayBox
-                                                    mileage={estimateCalc.distance / 1000}
+                                                    mileage={Math.ceil(estimateCalc.distance / 1000)}
                                                     weight={estimateCalc.weight}
                                                     baseRate={baseRateEstimate}
-                                                    stopOver1={!!estimateCalc.dropOrderNum}
-                                                    stopOver2={estimateCalc.dropOrderNum === 2}
-                                                    stopOver3={estimateCalc.dropOrderNum === 3}
+                                                    stopOver1={estimateCalc.dropOrderNum >= 1}
+                                                    stopOver2={estimateCalc.dropOrderNum >= 2}
+                                                    stopOver3={estimateCalc.dropOrderNum >= 3}
                                                     caution={estimateCalc.handlingId === 11 || estimateCalc.handlingId === 13}
                                                     mountainous={estimateCalc.handlingId === 12 || estimateCalc.handlingId === 13}
-                                                    additionalRate={estimateCalc.dropOrderNum * 50000}
+                                                    additionalRate={additionalRateEstimate}
                                                 />
                                             )}
                                         </Box>
                                     </Box>
                                 </Modal>
-                                {paymentFormat(actualCalc ? actualCalc.estimateFee : 0)}원
+                                {paymentFormat(actualCalc?.estimateFee)}원
                             </Typography>
                         </Box>
                         <Box
@@ -311,31 +364,52 @@ export const Payment = () => {
                                     marginRight: '2%'
                                 }}
                             >
-                                총 {paymentFormat(actualCalc ? totalRate : 0)}원
+                                총 {paymentFormat(actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate)}원
                             </Typography>
                         </Box>
                     </> : <>
                         <SubTitle>환불일자</SubTitle>
                         <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} /></>
                     }
+                    {(paymentId != 0 && paymentId != null) || ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) > 0) ?
+                        <>
+                            <SubTitle>결제수단</SubTitle>
+                            <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
 
-                    <SubTitle>결제수단</SubTitle>
-                    <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
-
-                    <SubTitle><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitle>
-                    <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
-                    <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
+                            <SubTitle><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitle>
+                            <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
+                            <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
+                        </> : <></>}
 
                     <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
                         <Button
                             variant="contained"
-                            sx={{ width: "60%", height: "50px", margin: "5%", fontSize: "25px" }}
-                            onClick={handleClickPayment}
-                            disabled={!(checkedAll && (paymentMethod !== ''))}
+                            sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
+                            onClick={() => moveBack()}
                         >
-                            결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
+                            뒤로가기
                         </Button>
+                        {(paymentId != 0 && paymentId != null) || ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) > 0) ?
+                            <Button
+                                variant="contained"
+                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
+                                onClick={handleClickPayment}
+                                disabled={!(checkedAll && (paymentMethod !== ''))}
+                            >
+                                결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
+                            </Button> : <></>
+                        }
+                        {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) < 0) ?
+                            <Button
+                                variant="contained"
+                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
+                                onClick={cancelPayment}
+                            >
+                                환불신청
+                            </Button> : <></>
+                        }
                     </Box>
+
                 </Box>
             </Grid>
         </Layout>

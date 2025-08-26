@@ -1,8 +1,28 @@
 import { Box, Button, FormControl, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material"
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Buttons } from "../../components/history/HistoryList";
+import { getTransactionStatement } from "../../api/company/paymentApi";
+import { useSearchParams } from "react-router-dom";
+import { paymentFormat } from "../../components/common/CommonForCompany";
 
 const TransactionStatement = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const paymentId = searchParams.get?.("paymentId");
+
+    const [trans, setTrans] = useState();
+
+    useEffect(() => {
+        if (!paymentId) return;
+        getTransactionStatement({ paymentId })
+            .then(data => {
+                setTrans(data);
+            })
+            .catch(err => {
+                console.error("데이터 가져오기 실패", err);
+            });
+
+    }, [paymentId]);
+
     const StateInput = ({ children, name }) => {
         return (
             <TextField
@@ -58,9 +78,9 @@ const TransactionStatement = () => {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell rowSpan={4} width={"5%"} padding="0" align="center">발행인</TableCell>
+                                <TableCell rowSpan={4} width={"10%"} padding="0" align="center">발행인</TableCell>
                                 <TableCell width={"5%"} align="center">사업자<br />등록번호</TableCell>
-                                <TableCell colSpan={3} width={"35%"}>012-34-56789</TableCell>
+                                <TableCell colSpan={3} width={"30%"}>012-34-56789</TableCell>
                                 <TableCell rowSpan={4} width={"5%"} align="center">공급받는자</TableCell>
                                 <TableCell width={"5%"} align="center">사업자<br />등록번호</TableCell>
                                 <TableCell colSpan={3} width={"35%"} ><StateInput /></TableCell>
@@ -104,32 +124,49 @@ const TransactionStatement = () => {
                                 <TableCell width={"10%"} align="center"> 비고</TableCell>
                             </TableRow>
 
-                            <TableRow>
-                                <TableCell align="center">0000.00.00</TableCell>
-                                <TableCell colSpan={6} align="center">oooooooooo</TableCell>
-                                <TableCell align="center">00</TableCell>
-                                <TableCell align="center">000,000</TableCell>
-                                <TableCell></TableCell>
-                            </TableRow>
+                            {/* 이곳에 결제데이터 삽입! */}
+                            {trans?.paymentId ? <>
+
+                                {trans?.prepaidId ?
+                                    <TableRow>
+                                        <TableCell align="center">{trans.prepaidPaid?.slice(0, 10)}</TableCell>
+                                        <TableCell colSpan={6} align="center">다람쥑스프레스 사전결제</TableCell>
+                                        <TableCell align="center">1</TableCell>
+                                        <TableCell align="center">{paymentFormat(trans.prepaidAmount)}</TableCell>
+                                        <TableCell></TableCell>
+                                    </TableRow> : <></>
+                                }
+
+                                {trans?.paid ?
+                                    <TableRow>
+                                        <TableCell align="center">{trans.paid?.slice(0, 10)}</TableCell>
+                                        <TableCell colSpan={6} align="center">다람쥑스프레스 사후결제</TableCell>
+                                        <TableCell align="center">1</TableCell>
+                                        <TableCell align="center">{paymentFormat(trans.amount)}</TableCell>
+                                        <TableCell></TableCell>
+                                    </TableRow> : <></>
+                                }
+
+                            </> : <></>}
 
                             <TableRow>
                                 <TableCell colSpan={7} align="center">총 거래액 합계</TableCell>
                                 <TableCell></TableCell>
-                                <TableCell align="center">000,000</TableCell>
+                                <TableCell align="center">{trans ? paymentFormat(trans.amount + trans.prepaidAmount) : 0}</TableCell>
                                 <TableCell></TableCell>
                             </TableRow>
 
                             <TableRow>
                                 <TableCell colSpan={7} align="center">할인금액</TableCell>
                                 <TableCell></TableCell>
-                                <TableCell align="center">000,000</TableCell>
+                                <TableCell align="center">0</TableCell>
                                 <TableCell></TableCell>
                             </TableRow>
 
                             <TableRow>
                                 <TableCell colSpan={7} align="center" >총 결제금액</TableCell>
                                 <TableCell width={"10%"}></TableCell>
-                                <TableCell width={"10%"} align="center">000,000</TableCell>
+                                <TableCell width={"10%"} align="center">{trans ? paymentFormat(trans.amount + trans.prepaidAmount) : 0}</TableCell>
                                 <TableCell width={"10%"}></TableCell>
                             </TableRow>
                         </TableBody>

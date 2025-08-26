@@ -16,8 +16,11 @@ const useHistoryMove = () => {
     const moveToReviewList = () => {
         navigate({ pathname: `/company/reviewList` })
     }
+    const moveToDetailHistory = (assignId)=>{
+        navigate({ pathname: `/company/detailHistory`, search: `?assignId=${assignId}` })
+    }
 
 
-    return { moveToAnotherDay, moveBack, moveToReportList, moveToReviewList }
+    return { moveToAnotherDay, moveBack, moveToReportList, moveToReviewList, moveToDetailHistory }
 }
 export default useHistoryMove;

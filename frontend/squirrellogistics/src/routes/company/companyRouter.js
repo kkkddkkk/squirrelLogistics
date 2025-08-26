@@ -13,6 +13,7 @@ const Report = lazy(() => import("../../pages/Report/Report"));
 const ReportList = lazy(() => import("../../pages/Report/ReportList"));
 const ReviewList = lazy(() => import("../../pages/Review/ReviewList"));
 const ActualCalc = lazy(() => import("../../pages/ActualCalc/ActualCalc"));
+const DetailHistory = lazy(() => import("../../pages/History/DetailHistory"));
 
 const companyRouter = () => {
   return [
@@ -52,6 +53,9 @@ const companyRouter = () => {
     }, {
       path: `reviewList`,//리뷰리스트
       element: <Suspense fallback={Loading}><ReviewList></ReviewList></Suspense>
+    },, {
+      path: `detailHistory`,//리뷰리스트
+      element: <Suspense fallback={Loading}><DetailHistory></DetailHistory></Suspense>
     }
   ];
 };

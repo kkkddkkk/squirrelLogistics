@@ -11,6 +11,7 @@ const Report = () => {
     const [params] = useSearchParams();
     const assignedId = params.get("id");
     const reportId = params.get("rId");
+    const accesstoken = localStorage.getItem('accessToken');
 
     const [preview, setPreview] = useState([]);
     const [report, setReport] = useState({
@@ -33,8 +34,11 @@ const Report = () => {
 
     useEffect(() => {
         if (reportId != 0) {
-            axios.get(`http://localhost:8080/api/public/report`, {
+            axios.get(`http://localhost:8080/api/report`, {
                 params: { reportId: reportId },
+                headers: {
+                    Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+                },
             }).then(res => {
                 setViewReport(res.data);
                 setPreview(res.data.fileName);
@@ -43,6 +47,8 @@ const Report = () => {
             })
         }
     }, [])
+
+
 
     const writing = (e) => {
         setReport(prev => ({
@@ -59,6 +65,10 @@ const Report = () => {
         formData.append("report", reportBlob);
 
         preview.forEach(file => {
+            if (file.size > 1 * 1024 * 1024) {
+                alert("파일 크기가 너무 큽니다 (최대 1MB)");
+                return;
+            }
             formData.append("files", file);
         });
 
@@ -74,16 +84,20 @@ const Report = () => {
             }
         });
 
-        await axios.post(`http://localhost:8080/api/public/report`, formData, {
+        await axios.post(`http://localhost:8080/api/report`, formData, {
             headers: {
-                "Content-Type": "multipart/form-data"
-            }
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+            },
         }).then(res => {
             console.log("등록 성공", res.data);
             window.close();
 
-            axios.get(`http://localhost:8080/api/public/companyHistory/getTodayContent`, {
-                params: { assignedId: assignedId }
+            axios.get(`http://localhost:8080/api/companyHistory/getTodayContent`, {
+                params: { assignedId: assignedId },
+                headers: {
+                    Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+                },
             }).then(res => {
                 console.log(res.data);
             })
@@ -104,7 +118,7 @@ const Report = () => {
                             <Box margin={"3%"} width={"100%"}>
                                 <SubTitle>{viewReport.rtitle} </SubTitle>
                                 <Typography textAlign={"justify"}>{viewReport.rcontent}</Typography>
-                                {preview.length>0 ?
+                                {preview.length > 0 ?
                                     <Box width={"100%"} height={"200px"} display={"flex"} overflow={"auto"} margin={"5% 0"}>                                {
                                         preview && preview.map((fileName, idx) => (
                                             <img

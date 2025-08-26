@@ -16,14 +16,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentSuccessDTO {
-	private Long paymentId;// 결제 ID
-	private Long prepaidId;//사전결제 ID
-	private Long payAmount;//결제금액
-	private String payMethod;//결제방법
+public class RefundDTO {
 
-	private PayStatusEnum payStatus;//결제상태
-	
-	private String impUid;
-	
+    private String impUid;    // 환불할 결제 건의 imp_uid
+    private Long amount;      // 환불 금액
+    private String reason;    // 환불 사유
+
 }
