@@ -43,6 +43,8 @@ const DriverProfile = () => {
     unavailableEnd: "",
     deliveryArea: "",
     rating: 0,
+    insurance: false,
+    insuranceRenewalDate: "",
   });
 
   const [profileImageUrl, setProfileImageUrl] = useState("");
@@ -135,6 +137,9 @@ const DriverProfile = () => {
           unavailableEnd: "", // API에 없는 필드
           deliveryArea: driverData.mainLoca || "",
           rating: 0, // API에 없는 필드
+          // 보험 관련 필드는 백엔드에 아직 구현되지 않음
+          // insurance: driverData.insurance || false,
+          // insuranceRenewalDate: driverData.insuranceRenewalDate || "",
         });
 
         console.log("설정된 driver 상태:", {
@@ -215,6 +220,9 @@ const DriverProfile = () => {
           unavailableEnd: "",
           deliveryArea: "",
           rating: 0,
+          // 보험 관련 필드는 백엔드에 아직 구현되지 않음
+          // insurance: false,
+          // insuranceRenewalDate: "",
         });
       } finally {
         setLoading(false);
@@ -487,18 +495,38 @@ const DriverProfile = () => {
                       {driver.businessId}
                     </Typography>
                   </Box>
-                  <Box>
+                  {/* 보험 관련 필드는 백엔드에 아직 구현되지 않음 */}
+                  {/* <Box>
                     <Typography
                       variant="body2"
                       color="rgba(255,255,255,0.6)"
                       sx={{ mb: 1 }}
                     >
-                      배송 지역
+                      보험 가입
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {driver.deliveryArea}
+                      {driver.insurance ? "가입" : "미가입"}
                     </Typography>
                   </Box>
+
+                  {driver.insurance && (
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        color="rgba(255,255,255,0.6)"
+                        sx={{ mb: 1 }}
+                      >
+                        보험 갱신일
+                      </Typography>
+                      <Typography variant="body1" fontWeight="bold">
+                        {driver.insuranceRenewalDate
+                          ? dayjs(driver.insuranceRenewalDate).format(
+                              "YYYY. MM. DD."
+                            )
+                          : "미설정"}
+                      </Typography>
+                    </Box>
+                  )} */}
                 </Stack>
               </Box>
 

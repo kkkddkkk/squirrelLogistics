@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -214,8 +215,8 @@ public class DeliveryCompletedServiceImpl implements DeliveryCompletedService {
             .droppedAt(waypoint.getDroppedAt())
             .status(waypoint.getStatus())
             .deliveryRequestId(waypoint.getDeliveryRequest() != null ? waypoint.getDeliveryRequest().getRequestId() : null)
-            .lat(0.0) // 기본값 설정 (실제로는 지오코딩 필요)
-            .lng(0.0) // 기본값 설정 (실제로는 지오코딩 필요)
+            .lat(BigDecimal.ZERO) // 기본값 설정 (실제로는 지오코딩 필요)
+            .lng(BigDecimal.ZERO) // 기본값 설정 (실제로는 지오코딩 필요)
             .handlingId(null) // 기본값 설정
             .handlingTags(null) // 기본값 설정
             .build();
