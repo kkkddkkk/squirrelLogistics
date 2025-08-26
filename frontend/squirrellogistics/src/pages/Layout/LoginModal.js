@@ -9,10 +9,13 @@ import {
     IconButton,
     Box,
     InputAdornment,
+    ToggleButtonGroup,
+    ToggleButton,
+    Divider,
+    Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import GoogleIcon from "@mui/icons-material/Google";
-import ChatBubbleIcon from "@mui/icons-material/ChatBubble"; // 카카오 대체용
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble"; // 카카오 대체 아이콘
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useEffect, useState } from "react";
@@ -30,28 +33,45 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({ loginId: "", password: "" });
 
+    // ✅ 신규: 역할 선택
+    const [role, setRole] = useState(""); // "DRIVER" | "COMPANY"
+    const [roleError, setRoleError] = useState("");
+
     const REST_KEY =
-        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_KAKAO_REST_KEY) ||
-        process.env.REACT_APP_KAKAO_REST_KEY || "";
+        (typeof import.meta !== "undefined" &&
+            import.meta.env &&
+            import.meta.env.VITE_KAKAO_REST_KEY) ||
+        process.env.REACT_APP_KAKAO_REST_KEY ||
+        "";
 
     const REDIRECT_URI =
-        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_KAKAO_REDIRECT_URI) ||
+        (typeof import.meta !== "undefined" &&
+            import.meta.env &&
+            import.meta.env.VITE_KAKAO_REDIRECT_URI) ||
         process.env.REACT_APP_KAKAO_REDIRECT_URI ||
         "http://localhost:8080/oauth/kakao/callback";
 
     const handleKakaoLogin = () => {
-        if (REST_KEY) {
-            const url =
-                "https://kauth.kakao.com/oauth/authorize" +
-                `?response_type=code&client_id=${encodeURIComponent(REST_KEY)}` +
-                `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-            window.location.href = url;
-        } else {
-            window.location.href = "http://localhost:8080/oauth/kakao/login";
+        if (!role) {
+            setRoleError("역할을 먼저 선택해 주세요.");
+            return;
         }
+
+        // 백업: 콜백에서 읽을 수 있게 저장
+        sessionStorage.setItem("socialRole", role);
+
+        // Kakao는 state로 role 전달
+        const state = encodeURIComponent(role);
+        const url =
+            "https://kauth.kakao.com/oauth/authorize" +
+            `?response_type=code&client_id=${encodeURIComponent(REST_KEY)}` +
+            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+            `&state=${state}`;
+
+        window.location.href = url;
     };
 
-    // 저장된 아이디 불러오기
+    // 저장된 아이디/초기화
     useEffect(() => {
         if (!open) return;
         const saved = localStorage.getItem("savedLoginId");
@@ -61,6 +81,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         }
         setPassword("");
         setErrors({ loginId: "", password: "" });
+        setRoleError("");
     }, [open]);
 
     const validate = () => {
@@ -78,7 +99,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         try {
             setLoading(true);
             const { data } = await api.post("/api/auth/login", { loginId, password });
-            // 서버 응답 예시: { accessToken, tokenType: "Bearer", userId, name, role }
+            // 서버 응답 예: { accessToken, name, role }
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("userName", data.name || "");
             localStorage.setItem("userRole", data.role || "");
@@ -89,37 +110,63 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
             onClose();
         } catch (err) {
             const status = err?.response?.status;
-            const msg = status === 401
-                ? "아이디 또는 비밀번호를 확인해 주세요."
-                : (err?.response?.data?.message || "로그인 중 오류가 발생했습니다.");
+            const msg =
+                status === 401
+                    ? "아이디 또는 비밀번호를 확인해 주세요."
+                    : err?.response?.data?.message || "로그인 중 오류가 발생했습니다.";
             setErrors({ loginId: "", password: msg });
         } finally {
             setLoading(false);
         }
     };
 
+    const snsDisabled = !role; // 역할 선택 전 SNS 비활성화
+
     return (
         <Dialog open={open} onClose={onClose}>
-            <DialogContent sx={{ width: 400, p: 4, position: "relative" }}>
-                {/* 닫기 버튼 */}
+            <DialogContent sx={{ width: 420, p: 4, position: "relative" }}>
+                {/* 닫기 */}
                 <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8 }}>
                     <CloseIcon />
                 </IconButton>
 
-                {/* 로고 + 인사말 */}
+                {/* 로고/인사 */}
                 <Box sx={{ textAlign: "center", mb: 2 }}>
                     <img src="/images/logo.png" alt="logo" style={{ width: 80, marginBottom: 8 }} />
-                    <Typography variant="h6" fontWeight="bold">
-                        환영합니다
-                    </Typography>
+                    <Typography variant="h6" fontWeight={700}>환영합니다</Typography>
                     <Typography variant="body2">
-                        다람로지틱스에서는 손쉽게
-                        <br />
-                        물류 중개 서비스를 이용하실 수 있습니다
+                        다람로지틱스에서 손쉽게 물류 중개 서비스를 이용하실 수 있습니다.
                     </Typography>
                 </Box>
 
-                {/* 로그인 폼 */}
+                {/* ✅ 역할 선택 */}
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+                        먼저 역할을 선택해 주세요
+                    </Typography>
+                    <ToggleButtonGroup
+                        value={role}
+                        exclusive
+                        onChange={(_, v) => {
+                            setRole(v || "");
+                            setRoleError("");
+                        }}
+                        fullWidth
+                        color="primary"
+                    >
+                        <ToggleButton value="DRIVER">배송기사</ToggleButton>
+                        <ToggleButton value="COMPANY">기업고객</ToggleButton>
+                    </ToggleButtonGroup>
+                    {roleError && (
+                        <Alert severity="warning" sx={{ mt: 1, py: 0.5 }}>
+                            {roleError}
+                        </Alert>
+                    )}
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* 일반 로그인 폼 */}
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <TextField
                         fullWidth
@@ -158,7 +205,9 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                     />
 
                     <FormControlLabel
-                        control={<Checkbox checked={rememberId} onChange={(e) => setRememberId(e.target.checked)} />}
+                        control={
+                            <Checkbox checked={rememberId} onChange={(e) => setRememberId(e.target.checked)} />
+                        }
                         label="아이디 저장"
                         sx={{ mt: 0.5 }}
                     />
@@ -174,35 +223,48 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                     </Button>
                 </Box>
 
-                {/* 소셜 로그인 (placeholder) */}
-                <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                    <GoogleLogin
-                        onSuccess={async (cred) => {
-                            try {
-                                const idToken = cred.credential; // ← 구글 ID 토큰
-                                const { data } = await api.post("/api/auth/oauth/google", { idToken });
+                {/* SNS 로그인 */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
+                    또는 SNS로 계속하기
+                </Typography>
 
-                                // 우리 서버가 반환한 액세스 토큰/유저정보 저장 (기존 로컬 로그인과 동일한 포맷)
-                                localStorage.setItem("accessToken", data.accessToken);
-                                if (data.name) localStorage.setItem("userName", data.name);
-                                if (data.role) localStorage.setItem("userRole", data.role);
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                    {/* Google */}
+                    <Box sx={{ flex: 1, opacity: snsDisabled ? 0.5 : 1, pointerEvents: snsDisabled ? "none" : "auto" }}>
+                        <GoogleLogin
+                            onSuccess={async (cred) => {
+                                try {
+                                    const idToken = cred.credential;
+                                    // ✅ 역할 함께 전송
+                                    const { data } = await api.post("/api/auth/oauth/google", {
+                                        idToken,
+                                        role, // "DRIVER" | "COMPANY"
+                                    });
 
-                                onLoggedIn?.(data);
-                                onClose();
-                            } catch (e) {
-                                console.error(e);
-                                alert("구글 로그인 처리 중 문제가 발생했습니다.");
-                            }
-                        }}
-                        onError={() => alert("구글 로그인에 실패했습니다.")}
-                        useOneTap // 원탭 사용(선택)
-                    />
+                                    localStorage.setItem("accessToken", data.accessToken);
+                                    if (data.name) localStorage.setItem("userName", data.name);
+                                    if (data.role) localStorage.setItem("userRole", data.role);
+
+                                    onLoggedIn?.(data);
+                                    onClose();
+                                } catch (e) {
+                                    console.error(e);
+                                    alert("구글 로그인 처리 중 문제가 발생했습니다.");
+                                }
+                            }}
+                            onError={() => alert("구글 로그인에 실패했습니다.")}
+                            useOneTap={false} // 역할 선택 흐름을 위해 자동 원탭 비활성 권장
+                        />
+                    </Box>
+
+                    {/* Kakao */}
                     <Button
                         variant="contained"
                         fullWidth
                         startIcon={<ChatBubbleIcon />}
-                        sx={{ backgroundColor: "#fee500", color: "#000" }}
+                        sx={{ backgroundColor: "#fee500", color: "#000", flex: 1 }}
                         onClick={handleKakaoLogin}
+                        disabled={snsDisabled}
                     >
                         카카오 로그인
                     </Button>

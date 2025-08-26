@@ -1,89 +1,111 @@
-.bodySection {
-  background-color: #f5f5f5;
-  padding: 32px;
+/* 1) 컨테이너 폭 선택지 */
+.wrapWide {
+  margin: 2rem auto 0;
+  /* 여기서 원하는 최대폭으로 조절 (기본 1440) */
+  max-width: 1440px;
+  padding: 0 24px;
 }
 
-.quoteBox {
-  margin-top: 16px;
-  max-width: 400px;
-  padding: 16px;
+.wrapFull {
+  /* 화면 꽉 차는 배너 */
+  margin: 0;
+  max-width: none;
 }
 
-@media (max-width: 600px) {
-  .bodySection {
-    padding: 16px;
-  }
-
-  .quoteBox {
-    max-width: 100%;
-  }
-}
-
-/* 배너 css */
-.bannerSection {
+/* 2) 히어로/슬라이드 */
+.hero {
   position: relative;
-  display: flex;
-  height: 500px;
-}
-
-.sliderContainer {
-  flex: 1;
-  position: relative;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.12);
 }
 
-.fixedCalculator {
-  width: 360px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.95);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
+.wrapFull .hero {
+  border-radius: 0;        /* 풀블리드일 때는 라운드/그림자 제거 */
+  box-shadow: none;
 }
 
-.bannerImage {
+.slide {
+  position: relative;
+  /* 더 커지게: 높이 클램프 업! */
+  height: clamp(420px, 65vh, 720px);
+}
+
+.bg {
   width: 100%;
-  height: 500px;
+  height: 100%;
   object-fit: cover;
-  filter: brightness(0.6);
+  display: block;
 }
 
-.bannerTextOverlay {
+.overlay {
   position: absolute;
-  top: 20%;
-  left: 5%;
-  color: white;
-  z-index: 5;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,15,30,.55) 0%, rgba(10,15,30,.05) 55%, rgba(10,15,30,.6) 100%),
+              linear-gradient(90deg, rgba(10,15,30,.55) 0%, rgba(10,15,30,0) 60%);
+  pointer-events: none;
 }
 
-/* 👇 추가된 버튼 위치 스타일 */
-.sliderButtons {
+.textBlock {
   position: absolute;
-  bottom: 16px;
-  left: 24px;
-  z-index: 10;
+  left: clamp(16px, 6vw, 80px);
+  bottom: clamp(16px, 8vh, 110px);
+  color: #fff;
+  max-width: min(90%, 720px);
 }
 
+.badge {
+  margin-bottom: 10px;
+  background: rgba(255,255,255,.15) !important;
+  color: #fff !important;
+  backdrop-filter: blur(6px);
+}
+
+.desc { margin-top: 10px; opacity: .92; }
+
+/* 컨트롤 */
+.ctrl {
+  position: absolute !important;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff !important;
+  background: rgba(0,0,0,.35) !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  backdrop-filter: blur(4px);
+  transition: .2s ease;
+}
+.ctrl:hover { background: rgba(0,0,0,.55) !important; }
+.left { left: 12px; }
+.right { right: 12px; }
+.play {
+  top: auto !important;
+  right: 12px;
+  bottom: 12px;
+  transform: none !important;
+}
+
+/* 인디케이터 */
+.indicator {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+}
+.dotBtn {
+  min-width: 36px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,.6) !important;
+}
+.dotBtn.MuiButton-contained {
+  background: #2962ff !important;
+  border-color: transparent !important;
+}
+
+/* 모바일 */
 @media (max-width: 900px) {
-  .bannerSection {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .fixedCalculator {
-    width: 100%;
-    height: auto;
-  }
-
-  .bannerImage {
-    height: 300px;
-  }
-
-  .sliderButtons {
-    bottom: 12px;
-    left: 12px;
-  }
+  .textBlock { bottom: 56px; }
+  .ctrl { display: none !important; }
 }
-

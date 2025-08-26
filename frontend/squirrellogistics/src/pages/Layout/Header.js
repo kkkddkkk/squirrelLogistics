@@ -26,13 +26,12 @@ export default function Header() {
         token: localStorage.getItem("accessToken") || null,
     });
 
-    // 사용자 메뉴
     const [anchorEl, setAnchorEl] = useState(null);
     const menuOpen = Boolean(anchorEl);
     const openMenu = (e) => setAnchorEl(e.currentTarget);
     const closeMenu = () => setAnchorEl(null);
 
-    // 다른 탭에서도 로그인/로그아웃 동기화
+    // 로컬스토리지 변경(다른 탭 포함) 반영
     useEffect(() => {
         const onStorage = () => {
             setUser({
@@ -60,44 +59,56 @@ export default function Header() {
         localStorage.removeItem("userRole");
         setUser({ name: null, role: null, token: null });
         closeMenu();
-        navigate("/"); // 홈으로
+        navigate("/");
     };
 
-    // 역할별 버튼 정의
-    const role = (user.role || "").toUpperCase(); // "ADMIN" | "DRIVER" | "COMPANY" 등
-    const roleButtons = (() => {
-        if (!user.token) return null;
-        switch (role) {
-            case "ADMIN":
-                return (
-                    <Button color="inherit" onClick={() => navigate("/admin")}>
-                        관리자
-                    </Button>
-                );
-            case "DRIVER":
-                return (
-                    <Button color="inherit" onClick={() => navigate("/driver/dashboard")}>
-                        운전기사
-                    </Button>
-                );
-            case "COMPANY":
-            case "LOGISTICS":
-            case "CLIENT":
-                return (
-                    <Button color="inherit" onClick={() => navigate("/company/dashboard")}>
-                        물류회사
-                    </Button>
-                );
-            default:
-                return null;
-        }
-    })();
+    const role = (user.role || "").toUpperCase();
+    const isAuthed = !!user.token;
+
+    /**
+     * 역할별 네비게이션 설정
+     * - 여기서 라벨/경로를 원하는 대로 수정하세요.
+     * - 경로는 /company 같은 base 없이 바로 절대경로 사용.
+     */
+    const NAV = {
+        GUEST: [
+            { label: "서비스", path: "/service" },
+            { label: "공지사항", path: "/notice" },
+            { label: "회사소개", path: "/about" },
+        ],
+        COMPANY: [
+            { label: "배송신청", path: "/request" },
+            { label: "이용 기록", path: "/history" },
+            { label: "마이페이지", path: "/mypage" },
+        ],
+        DRIVER: [
+            // 필요 경로로 자유롭게 교체하세요
+            { label: "배차 수행", path: "/driver/jobs" },
+            { label: "이용 기록", path: "/history" },
+            { label: "마이페이지", path: "/mypage" },
+        ],
+        ADMIN: [
+            // 대시보드 없이 일반 메뉴 예시
+            { label: "사용자", path: "/admin/users" },
+            { label: "공지관리", path: "/admin/notices" },
+            { label: "설정", path: "/admin/settings" },
+        ],
+    };
+
+    // 현재 노출할 네비 결정 (로그인 X -> GUEST, 로그인 O -> 해당 ROLE, 없으면 COMPANY 기본)
+    const navKey = !isAuthed
+        ? "GUEST"
+        : NAV[role]
+            ? role
+            : "COMPANY";
+
+    const leftNav = NAV[navKey];
 
     return (
         <>
             <AppBar position="static" color="default">
                 <Toolbar className={styles.headerContainer}>
-                    {/* 로고/홈 */}
+                    {/* 로고 */}
                     <Typography
                         variant="h6"
                         onClick={() => navigate("/")}
@@ -106,24 +117,22 @@ export default function Header() {
                         Squirrel Logistics
                     </Typography>
 
-                    {/* 좌측 네비 (필요시 라우팅 연결) */}
+                    {/* 좌측 네비: 역할에 따라 버튼 구성 */}
                     <div className={styles.navButtons}>
-                        <Button color="inherit" onClick={() => navigate("/service")}>
-                            서비스
-                        </Button>
-                        <Button color="inherit" onClick={() => navigate("/notice")}>
-                            공지사항
-                        </Button>
-                        <Button color="inherit" onClick={() => navigate("/about")}>
-                            회사소개
-                        </Button>
-                        {/* Role 전용 버튼 */}
-                        {roleButtons}
+                        {leftNav.map((item) => (
+                            <Button
+                                key={item.path}
+                                color="inherit"
+                                onClick={() => navigate(item.path)}
+                            >
+                                {item.label}
+                            </Button>
+                        ))}
                     </div>
 
-                    {/* 우측: 로그인 상태 */}
+                    {/* 우측 사용자 영역 */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {!user.token ? (
+                        {!isAuthed ? (
                             <>
                                 <Button color="inherit" onClick={() => setLoginOpen(true)}>
                                     로그인
@@ -137,7 +146,10 @@ export default function Header() {
                                 <IconButton color="inherit" onClick={openMenu}>
                                     <AccountCircleIcon />
                                 </IconButton>
-                                <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
+                                <Typography
+                                    variant="body2"
+                                    sx={{ display: { xs: "none", sm: "block" } }}
+                                >
                                     {user.name} 님
                                 </Typography>
 
@@ -148,38 +160,6 @@ export default function Header() {
                                     anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                                     transformOrigin={{ vertical: "top", horizontal: "right" }}
                                 >
-                                    {/* 역할별 바로가기 */}
-                                    {role === "ADMIN" && (
-                                        <MenuItem
-                                            onClick={() => {
-                                                closeMenu();
-                                                navigate("/admin");
-                                            }}
-                                        >
-                                            관리자 대시보드
-                                        </MenuItem>
-                                    )}
-                                    {role === "DRIVER" && (
-                                        <MenuItem
-                                            onClick={() => {
-                                                closeMenu();
-                                                navigate("/driver/dashboard");
-                                            }}
-                                        >
-                                            운전기사 대시보드
-                                        </MenuItem>
-                                    )}
-                                    {(role === "COMPANY" || role === "LOGISTICS" || role === "CLIENT") && (
-                                        <MenuItem
-                                            onClick={() => {
-                                                closeMenu();
-                                                navigate("/company/dashboard");
-                                            }}
-                                        >
-                                            물류회사 대시보드
-                                        </MenuItem>
-                                    )}
-
                                     <MenuItem
                                         onClick={() => {
                                             closeMenu();
@@ -197,7 +177,6 @@ export default function Header() {
                 </Toolbar>
             </AppBar>
 
-            {/* 로그인 모달: 로그인 성공시 상태 반영 */}
             <LoginModal
                 open={loginOpen}
                 onClose={() => setLoginOpen(false)}

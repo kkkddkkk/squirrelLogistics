@@ -1,40 +1,39 @@
-.footerWrap {
-  background-color: #002244;
-  color: white;
-  padding: 32px 16px;
-  text-align: center;
+.brand {
+  font-weight: 800;
+  letter-spacing: .2px;
 }
 
-.footerTitle {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 8px;
+.heading {
+  color: rgba(255,255,255,.72);
+  letter-spacing: .12em;
 }
 
-.footerSubText {
-  font-size: 0.9rem;
-  margin-bottom: 16px;
+.footerLink {
+  color: rgba(255,255,255,.92);
+  transition: all .18s ease;
+}
+.footerLink:hover {
+  color: #8ab4ff;           /* 은은한 포커스 색 */
+  transform: translateX(2px);
 }
 
-.joinButton {
-  background-color: white;
-  color: #002244;
-  font-weight: bold;
-  padding: 10px 24px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: none;
+.footerSmallLink {
+  color: rgba(255,255,255,.7);
+  transition: color .18s ease;
+}
+.footerSmallLink:hover {
+  color: rgba(255,255,255,.95);
 }
 
-.grayBottomBar {
-  background-color: #e0e0e0;
-  padding: 16px 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  row-gap: 12px;
-  font-size: 0.85rem;
-  color: #333;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
+.snsBtn {
+  color: rgba(255,255,255,.9) !important;
+  background: rgba(255,255,255,.08) !important;
+  border-radius: 10px !important;
+  width: 36px !important;
+  height: 36px !important;
+  transition: transform .18s ease, background .18s ease;
+}
+.snsBtn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.14) !important;
 }

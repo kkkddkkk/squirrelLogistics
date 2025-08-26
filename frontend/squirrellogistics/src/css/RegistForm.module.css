@@ -16,7 +16,8 @@
 }
 
 .activeTab {
-  background-color: #007aff;
+  /* #34699A, #113F67, #58A0C8, #007aff */
+  background-color: #34699A;
   color: white;
   font-weight: bold;
 }

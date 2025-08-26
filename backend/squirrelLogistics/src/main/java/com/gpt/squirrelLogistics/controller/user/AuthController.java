@@ -83,45 +83,59 @@ public class AuthController {
 					.body(Map.of("error", "Unauthorized", "message", "아이디 또는 비밀번호가 올바르지 않습니다."));
 		}
 	}
-	
+
 	/** Google OAuth: 프론트에서 받은 idToken으로 로그인/회원연동 후 우리 JWT 발급 */
-    @PostMapping("/oauth/google")
-    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) throws Exception {
-        String idToken = body.get("idToken");
-        var payload = googleVerifier.verify(idToken);
+	@PostMapping("/oauth/google")
+	public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+		String idToken = body.get("idToken");
+		String roleStr = body.getOrDefault("role", "ETC"); // 프론트에서 넘어온 role(Optional)
 
-        String googleId = payload.getSubject();        // 고유 식별자
-        String email    = (String) payload.getEmail();
-        String name     = (String) payload.get("name"); // null 가능
+		var payload = googleVerifier.verify(idToken);
+		String googleId = payload.getSubject(); // 구글 sub
+		String email = payload.getEmail();
+		String name = (String) payload.get("name");
 
-        // 우리 시스템상의 loginId 형태 정책(임의): google_{sub}
-        String loginId = "google_" + googleId;
+		String loginId = "google_" + googleId;
 
-        User user = userRepository.findByLoginId(loginId).orElse(null);
-        if (user == null) {
-            // 최초 소셜 로그인 → 자동 가입 (역할 정책은 자유롭게)
-            user = new User();
-            user.setLoginId(loginId);
-            user.setEmail(email);
-            user.setName(name != null ? name : "GoogleUser");
-            user.setPassword("{noop}");         
-            user.setRole(UserRoleEnum.ETC);     
-            user.setRegDate(LocalDateTime.now());
-            user.setSns_login(true);
-        }
+		User user = userRepository.findByLoginId(loginId).orElse(null);
+		if (user == null) {
+			// 신규 가입: 프론트에서 고른 역할을 반영
+			UserRoleEnum role = toRole(roleStr); // 아래 helper 참고
+			user = new User();
+			user.setLoginId(loginId);
+			user.setEmail(email);
+			user.setName(name != null ? name : "GoogleUser");
+			user.setPassword("{noop}"); // 소셜은 패스워드 미사용
+			user.setRole(role);
+			user.setRegDate(LocalDateTime.now());
+			user.setSns_login(true);
+		} else {
+			// ✅ 기존 유저: 원칙적으로 role 유지
+			// - 만약 초기 가입을 ETC로 했고, 이번에 의미있는 역할이 들어오면 1회 갱신하고 싶다면:
+			if (user.getRole() == UserRoleEnum.ETC) {
+				user.setRole(toRole(roleStr));
+			}
+		}
 
-        user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
+		user.setLastLogin(LocalDateTime.now());
+		userRepository.save(user);
 
-        // 우리 JWT 발급 (이미 사용 중인 메서드 시그니처 유지)
-        String token = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
+		String token = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
+		return ResponseEntity.ok(Map.of("accessToken", token, "tokenType", "Bearer", "userId", user.getUserId(), "name",
+				user.getName(), "role", user.getRole().name()));
+	}
 
-        return ResponseEntity.ok(Map.of(
-            "accessToken", token,
-            "tokenType", "Bearer",
-            "userId", user.getUserId(),
-            "name", user.getName(),
-            "role", user.getRole().name()
-        ));
-    }
+	/** 문자열 -> Enum 변환(허용값만) */
+	private UserRoleEnum toRole(String s) {
+		if (s == null)
+			return UserRoleEnum.ETC;
+		switch (s.toUpperCase()) {
+		case "DRIVER":
+			return UserRoleEnum.DRIVER;
+		case "COMPANY":
+			return UserRoleEnum.COMPANY;
+		default:
+			return UserRoleEnum.ETC;
+		}
+	}
 }
