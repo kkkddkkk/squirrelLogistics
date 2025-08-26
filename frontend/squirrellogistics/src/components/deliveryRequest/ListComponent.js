@@ -61,6 +61,9 @@ const ListComponent = () => {
         return () => ctrl.abort();
     }, [driverId]);
 
+    if (loading && !pageData) {
+        return <LoadingComponent open text="요청 목록을 불러오는 중..." />;
+    }
     if (err) return <div>에러: {String(err)}</div>;
     if (!pageData) return null;
 
@@ -198,12 +201,12 @@ const ListComponent = () => {
                                         fontSize: 'clamp(12px, 1.5vw, 14px)',
                                     }}
                                 >
-                                    <Box component="span" sx={{ color: '#ff2121ff', fontWeight: 700, mr:1}}>
+                                    <Box component="span" sx={{ color: '#ff2121ff', fontWeight: 700, mr: 1 }}>
                                         [알림]
                                     </Box>{' '}
-                                    기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!  
-                                    
-                                     <Box component="span" sx={{ ml:1, color: '#e3effcff', fontWeight: 700 }}>
+                                    기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!
+
+                                    <Box component="span" sx={{ ml: 1, color: '#e3effcff', fontWeight: 700 }}>
                                         (클릭하여 확인하기)
                                     </Box>{' '}
                                 </Typography>
@@ -240,9 +243,9 @@ const ListComponent = () => {
                     onClose={closeProposalDialog}
                 />
             )}
-
-            <LoadingComponent open={loading} text="요청 목록을 불러오는 중..." />
-
+            {loading && (
+                <LoadingComponent open={loading} text="요청 목록을 불러오는 중..." />
+            )}
         </Box>
     );
 };

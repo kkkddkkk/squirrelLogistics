@@ -47,27 +47,31 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 	// 엔티티 => 경량 응답 DTO 전환.
 	private DeliveryWaypointSlimResponseDTO entityToSlimDto(DeliveryWaypoint entity) {
 
-		log.info(entity.getAddress());
-
 		LatLng latLng = localClient.geocode(entity.getAddress());
-
-		log.info("latLng is: " + latLng);
-
-		if (!cargoRepository.existsByDeliveryWaypoint_WaypointId(entity.getWaypointId())) {
-			throw new NoSuchElementException("DeliveryCargo not found: " + entity.getWaypointId());
-		}
-
+		
 		var opt = cargoRepository.findByDeliveryWaypoint_WaypointId(entity.getWaypointId());
 		DeliveryCargo cargoRef = opt.orElse(null);
 
-		return DeliveryWaypointSlimResponseDTO.builder().waypointId(entity.getWaypointId()).address(entity.getAddress())
-				.dropOrder(entity.getDropOrder()).arriveAt(entity.getArriveAt()).droppedAt(entity.getDroppedAt())
-				.status(entity.getStatus())
-				.deliveryRequestId(
-						entity.getDeliveryRequest() != null ? entity.getDeliveryRequest().getRequestId() : null)
-				.handlingId(cargoRef.getCargoType().getHandlingId())
-				.handlingTags(cargoRef.getCargoType().getHandlingTags()).lat(latLng.getLat()).lng(latLng.getLng())
-				.build();
+	    Long handlingId = null;
+	    String handlingTags = null;
+	    if (cargoRef != null && cargoRef.getCargoType() != null) {
+	        handlingId  = cargoRef.getCargoType().getHandlingId();
+	        handlingTags = cargoRef.getCargoType().getHandlingTags(); 
+	    }
+		
+	    return DeliveryWaypointSlimResponseDTO.builder()
+	            .waypointId(entity.getWaypointId())
+	            .address(entity.getAddress())
+	            .dropOrder(entity.getDropOrder())
+	            .arriveAt(entity.getArriveAt())
+	            .droppedAt(entity.getDroppedAt())
+	            .status(entity.getStatus())
+	            .deliveryRequestId(entity.getDeliveryRequest() != null ? entity.getDeliveryRequest().getRequestId() : null)
+	            .handlingId(handlingId)      
+	            .handlingTags(handlingTags)      
+	            .lat(latLng != null ? latLng.getLat() : null)
+	            .lng(latLng != null ? latLng.getLng() : null)
+	            .build();
 
 	}
 

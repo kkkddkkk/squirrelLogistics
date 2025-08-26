@@ -1,40 +1,50 @@
-
 import { Box, Typography, Paper, Grid, Button, List, ListItem, ListItemText, Divider } from "@mui/material";
 import RouteMapComponent from "../../components/deliveryMap/RouteMapComponent";
-import { useState } from "react";
-const DriverIndividualScheduleComponent = ({ event }) => {
-    console.log(event);
-    const initData = {
-        schedule_id: event.schedule_id,
-        estimated_fee: event.estimated_fee,
-        created_at: event.created_at,
-        start_address: event.start_address,
-        company_id: event.company_id,
-        company_name: event.company_name,
-        end_address: event.end_address,
-        distance: event.distance,
-        duration: 0, // 없던 필드 추가
-        waypoints: event.waypoints.map(wp => ({
-            ...wp, // handling_id 등 그대로 유지
-            address: wp.address
-        }))
-    };
+import { useCallback, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { renderWarningTags } from "../../components/deliveryRequest/deliveryFormatUtil";
+import DeliveryWaypointPopupComponent from "../../components/deliveryRequest/DeliveryWaypointPopupComponent";
 
-    const [deliveryData, setDeliveryData] = useState(initData);
+import LoadingComponent from '../../components/common/LoadingComponent';
+
+const DriverIndividualScheduleComponent = () => {
+    const { state } = useLocation();
+    const [loading, setLoading] = useState(false);
+    const [waypointOpen, setWaypointOpen] = useState(false);
+
+    const deliveryData = state;
     console.log(deliveryData);
 
-    const handleRouteUpdate = (dist, dur) => {
-
-        setDeliveryData(prev => ({
-            ...prev,
-            distance: dist,
-            duration: dur
-        }));
+    const textSx = {
+        fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
+        color: '#2A2A2A',
+        fontSize: 'clamp(12px, 1vw, 14px)',
     };
+
+    const fmtDateTime = (d) => {
+        const dt = d instanceof Date ? d : new Date(d);
+        return isNaN(dt) ? '-' : dt.toLocaleString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+    };
+    const formatWon = (n) => (Number(n) || 0).toLocaleString('ko-KR') + '원';
+    const handlingTagString = renderWarningTags(deliveryData?.waypoints);
+
+    const handleSelectWaypointEvent = useCallback(() => {
+        setWaypointOpen(true);
+    }, []);
+
+    const handleCloseWaypoinDialog = useCallback(() => {
+        setWaypointOpen(false);
+    }, []);
 
     return (
 
         <Box width={"100%"}>
+            {loading && (
+                <LoadingComponent open={loading} text="운송 일정 정보를 불러오는 중..." />
+            )}
             <Grid width={"100%"}
                 sx={{
                     background: "linear-gradient(to bottom, #58a1c85d 0%, white 100%)",
@@ -51,14 +61,14 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                 </Typography>
 
                 <Grid container m={4} mb={0} justifySelf="center" width={"80%"}>
-                    <Paper variant="outlined" sx={{ p: 6, pt: 2, pb: 2, width: "100%" }}>
+                    <Paper variant="outlined" sx={{ p: 4, pt: 2, pb: 2, width: "100%", borderColor: "#bbc5d0", boxShadow: '0px 5px 5px rgba(0, 0, 0, 0.05)', }}>
                         <Grid container spacing={2} direction="row" justifyContent="space-between" sx={{ width: "100%" }}>
                             <Grid item>
                                 <Typography
                                     variant="body2"
                                     sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1.5vw, 18px)' }}
                                 >
-                                    <Box component="span" sx={{ fontWeight: 'bold' }}>예약 번호:</Box> #RESV-{deliveryData.schedule_id}
+                                    <Box component="span" sx={{ fontWeight: 'bold' }}>요청 번호:</Box> #REQ-{deliveryData.requestId}
                                 </Typography>
                             </Grid>
                             <Grid item>
@@ -66,7 +76,7 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                                     variant="body2"
                                     sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1.5vw, 18px)' }}
                                 >
-                                    <Box component="span" sx={{ fontWeight: 'bold' }}>요청자:</Box> {deliveryData.company_name}
+                                    <Box component="span" sx={{ fontWeight: 'bold' }}>요청자:</Box> {deliveryData.companyName}
                                 </Typography>
                             </Grid>
                         </Grid>
@@ -90,18 +100,19 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                                 }}>
                                 {/* 카카오 지도 컴포넌트 자리 */}
                                 <RouteMapComponent
-                                    startAddress={deliveryData.start_address}
+                                    expectedRoute={deliveryData.expectedRoute}
+                                    expectedPolyline={deliveryData.expectedPolyline}
                                     waypoints={deliveryData.waypoints}
-                                    endAddress={deliveryData.end_address}
-                                    onRouteUpdate={handleRouteUpdate}
                                 />
                             </Paper>
-                            <Box mt={2}>
-                                <Typography fontWeight="bold">안내 및 주의 사항</Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    화물은 깨지기 쉬운 포장으로 되어 있어 상하차시 파손에 유의해주세요.
-                                </Typography>
-                            </Box>
+                            <Grid item width={"100%"}>
+                                <Box mt={2}>
+                                    <Typography fontWeight="bold">안내 및 주의 사항</Typography>
+                                    <Typography variant="body2" color="text.secondary" mt={1}>
+                                        {deliveryData.memoToDriver}
+                                    </Typography>
+                                </Box>
+                            </Grid>
                         </Grid>
 
                         {/* 버튼 영역 */}
@@ -129,67 +140,94 @@ const DriverIndividualScheduleComponent = ({ event }) => {
 
                             {/* 경로 정보 */}
                             <Grid item>
-                                <Paper variant="outlined" sx={{ p: 2 }}>
-                                    <Typography fontWeight="bold" gutterBottom mb={2}>
+                                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
+                                    <Typography fontWeight="bold" gutterBottom>
                                         경로 정보
                                     </Typography>
                                     <Typography variant="body2" mb={1}
-                                        sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1vw, 14px)' }}
-                                    >출발지: {deliveryData.start_address}</Typography>
-                                    <Typography variant="body2" mb={1} sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1vw, 14px)' }}>도착지: {deliveryData.end_address}</Typography>
+                                        sx={textSx}
+                                    ><strong>상차지:</strong> {deliveryData.startAddress}</Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}><strong>최종 하차지:</strong> {deliveryData.endAddress}</Typography>
                                     <Grid container justifyContent="space-between" direction="row">
                                         <Grid item>
-                                            <Typography variant="body2" mb={1} sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1vw, 14px)' }}>경유지 수: {deliveryData.waypoints.length}곳</Typography>
+                                            <Typography variant="body2" mb={1} sx={textSx}><strong>하차지 수: </strong>
+                                                {(!deliveryData.waypoints || (deliveryData.waypoints.length - 1) === 0)
+                                                    ? "하차지 없음"
+                                                    : `${deliveryData.waypoints.length - 1}곳`}
+                                            </Typography>
                                         </Grid>
-                                        <Grid>
-                                            <Button variant="outlined" size="small" mb={1}
-                                                sx={{
-                                                    minWidth: 'auto',
-                                                    height: '24px',
-                                                    padding: '2px 8px',
-                                                    fontSize: '11px',
-                                                    lineHeight: 1.2
-                                                }}>경유지 보기</Button>
-                                        </Grid>
+                                        {deliveryData.waypoints.length > 0 &&
+                                            <Grid>
+                                                <Button variant="outlined"
+                                                    onClick={handleSelectWaypointEvent}
+                                                    sx={{
+                                                        minWidth: 'auto',
+                                                        height: '24px',
+                                                        padding: '2px 8px',
+                                                        fontSize: '11px',
+                                                        lineHeight: 1.2, color: "#113F67", backgroundColor: "white", borderColor: "#113F67"
+                                                    }}><strong>하차지 정보</strong></Button>
+                                            </Grid>
+                                        }
+
                                     </Grid>
-                                    <Typography variant="body2" mb={1} sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1vw, 14px)' }}>총 이동 거리: 약 {(deliveryData.distance / 1000).toFixed(1)}km</Typography>
-                                    <Typography variant="body2" gutterBottom sx={{ fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif', color: '#2A2A2A', fontSize: 'clamp(12px, 1vw, 14px)' }}>예상 소요 시간: 약 {Math.floor(deliveryData.duration / 3600)}시간 {Math.floor((deliveryData.duration % 3600) / 60)}분</Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}><strong>총 이동 거리:</strong> 약 {(deliveryData.distance / 1000).toFixed(1)}km</Typography>
                                 </Paper>
                             </Grid>
 
-                            {/* 화물 정보 */}
                             <Grid item>
-                                <Paper variant="outlined" sx={{ p: 2 }}>
-                                    <Typography fontWeight="bold">화물 정보</Typography>
-                                    <Typography variant="body2">화물 총 수량: 15박스</Typography>
-                                    <Typography variant="body2">총 중량: 280kg</Typography>
-                                    <Typography variant="body2">화물 종류: 잡화</Typography>
-                                    <Typography variant="body2">
-                                        특수 태그: <Typography component="span" color="primary">[신선식품]</Typography>
+                                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
+                                    <Typography fontWeight="bold" gutterBottom>
+                                        화물 정보
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>화물 총 수량:</strong> {deliveryData?.totalCargoCount ?? 0}박스
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>총 중량:</strong> {deliveryData?.totalCargoWeight ?? 0}kg
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>필요 차종:</strong> {deliveryData?.vehicleTypeName ?? "지정된 차종 없음"}                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>특수 태그:</strong>{" "}
+                                        <Typography component="span" color="primary" sx={{ fontSize: 'clamp(10px, 1vw, 12px)' }}>
+                                            {handlingTagString}
+                                        </Typography>
                                     </Typography>
                                 </Paper>
                             </Grid>
 
                             {/* 요청 시간 */}
                             <Grid item>
-                                <Paper variant="outlined" sx={{ p: 2 }}>
-                                    <Typography fontWeight="bold">요청 시간</Typography>
-                                    <Typography variant="body2">출발 가능 시간: 2025-07-26 오전 9:00 이후</Typography>
-                                    <Typography variant="body2">도착 마감 시간: 2025-07-26 오후 6:00까지</Typography>
-                                    <Typography variant="body2">요청 등록일: 2025-07-25 13:02</Typography>
+                                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
+                                    <Typography fontWeight="bold" gutterBottom>
+                                        요청 시간
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>출발:</strong> {fmtDateTime(deliveryData?.wantToStart)}
+                                    </Typography>
+                                    <Typography variant="body2" mb={1} sx={textSx}>
+                                        <strong>도착:</strong> {fmtDateTime(deliveryData?.wantToEnd)}
+                                    </Typography>
+                                    <Typography variant="body2" sx={textSx}>
+                                        <strong>등록일:</strong> {fmtDateTime(deliveryData?.createAt)}
+                                    </Typography>
                                 </Paper>
                             </Grid>
 
                             {/* 운송 수익 정보 */}
                             <Grid item>
-                                <Paper variant="outlined" sx={{ p: 2 }}>
-                                    <Typography fontWeight="bold">운송 수익 정보</Typography>
-                                    <Typography variant="body2">기본 운임: 140,000원</Typography>
-                                    <Typography variant="body2">경유지 가산금: 30,000원</Typography>
-                                    <Typography variant="body2">신선화물 가산금: 20,000원</Typography>
+                                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
+                                    <Typography fontWeight="bold" gutterBottom>
+                                        운송 수익 정보
+                                    </Typography>
                                     <Divider sx={{ my: 1 }} />
-                                    <Typography variant="body1" fontWeight="bold">
-                                        총 수익: 190,000원 (VAT 별도)
+                                    <Typography
+                                        variant="body1"
+                                        fontWeight="bold"
+                                        sx={textSx}
+                                    >
+                                        <strong>예상 수익:</strong> {formatWon(deliveryData?.estimatedFee)} (VAT 별도)
                                     </Typography>
                                 </Paper>
                             </Grid>
@@ -197,7 +235,13 @@ const DriverIndividualScheduleComponent = ({ event }) => {
                     </Grid>
                 </Grid>
             </Box>
-
+            {waypointOpen && (
+                <DeliveryWaypointPopupComponent
+                    waypoints={deliveryData.waypoints}
+                    onClose={handleCloseWaypoinDialog}
+                    open={waypointOpen}
+                />
+            )}
         </Box>
 
     );

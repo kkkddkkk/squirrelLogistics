@@ -8,7 +8,7 @@ import { ScrollShell } from "../components/common/ScrollToTop";
 const Loading = <div>Loading...</div>
 const Layout = lazy(() => import("../pages/Layout/Layout"));
 const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
-const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage"));
+const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage_new"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
 const DriverSearchPage = lazy(() => import("../pages/driversearch/DriverSearchPage"));
 const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
@@ -77,7 +77,7 @@ const root = createBrowserRouter([
                 children: driverRouter()
             },
             {
-                path: "/search-drivers",
+                path: "/driversearch",
                 element: (
                     <Suspense fallback={Loading}>
                         <DriverSearchPage></DriverSearchPage>

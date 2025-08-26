@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import EstimateForm from '../../components/estimate/EstimateForm';
+import EstimateForm_prev from '../../components/estimate/EstimateForm_prev';
 
 const EstimatePage = () => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const EstimatePage = () => {
 
   return (
     <div className="page-wrap">
-      <EstimateForm />
+      <EstimateForm_prev />
     </div>
   );
 };

@@ -231,204 +231,249 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
 //---------- <정적/고정> 지도 훅 ----------.
 export const useStaticRouteMap = ({
   mapContainerRef,
-  encodedPolyline,          // string | null
-  routePointsJSON,          // string(JSON) or array([{lat,lng}]) | null
-  waypoints,                // [{ address?, lat?, lng?, title? }, ...]
-  onRouteUpdate,            // (distanceMeters|null, durationMs|null) => void
+  expectedPolyline,
+  expectedRoute,
+  waypoints
 }) => {
   const mapRef = useRef(null);
-  const geocoderRef = useRef(null);
   const markerImageRef = useRef(null);
   const markersRef = useRef([]);
-  const polylineRef = useRef(null);
-  const onUpdateRef = useRef(onRouteUpdate);
+  const lineRef = useRef(null);
+  const kakaoRef = useRef(null);
+  const geocoderRef = useRef(null);
 
-  useEffect(() => {
-    onUpdateRef.current = onRouteUpdate;
-  }, [onRouteUpdate]);
-
-  // --- Encoded polyline 디코더 (Google 방식) ---
+  console.log("waypoints:", waypoints);
+  // Google Encoded Polyline 디코더
   const decodePolyline = (str) => {
     let index = 0, lat = 0, lng = 0;
-    const points = [];
+    const pts = [];
     while (index < str.length) {
       let b, shift = 0, result = 0;
-      do {
-        b = str.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
+      do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
       const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
       lat += dlat;
-
       shift = 0; result = 0;
-      do {
-        b = str.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
+      do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
       const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
       lng += dlng;
-
-      points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+      pts.push({ lat: lat / 1e5, lng: lng / 1e5 });
     }
-    return points;
+    return pts;
   };
 
-  // routePointsJSON 정규화 → [{lat, lng}, ...] or null
   const normalizeRoutePoints = () => {
-    if (encodedPolyline && encodedPolyline.trim().length > 0) {
-      try {
-        return decodePolyline(encodedPolyline.trim());
-      } catch (e) {
-        console.warn("encodedPolyline decode 실패 → routePointsJSON 사용 시도", e);
-      }
+    // 1) 인코딩 폴리라인 우선
+    if (expectedPolyline && expectedPolyline.trim()) {
+      try { return decodePolyline(expectedPolyline.trim()); } catch { }
     }
-    if (!routePointsJSON) return null;
-
+    // 2) JSON 문자열 or 배열
+    if (!expectedRoute) return null;
     try {
-      if (typeof routePointsJSON === "string") {
-        const arr = JSON.parse(routePointsJSON);
+      if (typeof expectedRoute === "string") {
+        const arr = JSON.parse(expectedRoute);
         return Array.isArray(arr) ? arr : null;
       }
-      if (Array.isArray(routePointsJSON)) return routePointsJSON;
-    } catch (e) {
-      console.error("routePointsJSON 파싱 실패:", e);
-    }
+      if (Array.isArray(expectedRoute)) return expectedRoute;
+    } catch { }
     return null;
   };
 
-  // 좌표가 있는 waypoint만 추출
-  const getWaypointLatLngs = () => {
-    const list = waypoints || [];
-    return list
-      .filter(wp => typeof wp.lat === "number" && typeof wp.lng === "number")
-      .map(wp => ({ lat: wp.lat, lng: wp.lng, title: wp.title || wp.address }));
-  };
+  const geocodeIfNeeded = async (kakao, waypoints) => {
+    if (!kakao?.maps?.services) return [];
+    if (!geocoderRef.current) geocoderRef.current = new kakao.maps.services.Geocoder();
 
-  // 좌표 없는 waypoint는 필요 시 주소 지오코딩
-  const geocodeIfNeeded = (kakao, wps) =>
-    Promise.all(
-      (wps || []).map(async (wp) => {
-        if (typeof wp.lat === "number" && typeof wp.lng === "number") {
-          return { lat: wp.lat, lng: wp.lng, title: wp.title || wp.address };
+    return Promise.all(
+      (waypoints || []).map(async (wp) => {
+        if (wp.lat != null && wp.lng != null) {
+          return { lat: Number(wp.lat), lng: Number(wp.lng), title: wp.title || wp.address };
         }
-        if (!wp.address) return null;
-        if (!geocoderRef.current) geocoderRef.current = new kakao.maps.services.Geocoder();
-
-        return new Promise((resolve) => {
-          geocoderRef.current.addressSearch(wp.address, (result, status) => {
-            if (status === kakao.maps.services.Status.OK) {
-              resolve({
-                lat: Number(result[0].y),
-                lng: Number(result[0].x),
-                title: wp.title || wp.address,
-              });
-            } else {
-              console.warn("지오코딩 실패:", wp.address);
-              resolve(null);
-            }
+        if (wp.address) {
+          return new Promise((resolve) => {
+            geocoderRef.current.addressSearch(wp.address, (result, status) => {
+              if (status === kakao.maps.services.Status.OK) {
+                resolve({
+                  lat: Number(result[0].y),
+                  lng: Number(result[0].x),
+                  title: wp.title || wp.address,
+                });
+              } else {
+                console.warn("지오코딩 실패:", wp.address);
+                resolve(null);
+              }
+            });
           });
-        });
+        }
+        return null;
       })
     ).then(arr => arr.filter(Boolean));
+  };
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const clearMapObjects = () => {
+    const clear = () => {
       markersRef.current.forEach(m => m.setMap && m.setMap(null));
       markersRef.current = [];
-      if (polylineRef.current) {
-        polylineRef.current.setMap(null);
-        polylineRef.current = null;
+      if (lineRef.current) { lineRef.current.setMap(null); lineRef.current = null; }
+    };
+
+    let canceled = false;
+    (async () => {
+      const kakao = await loadKakaoSdk().catch(() => null);
+      if (!kakao || canceled) return;
+      kakaoRef.current = kakao;
+
+      clear();
+
+      const routePts = normalizeRoutePoints()?.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng)) || [];
+      if (routePts.length < 2) {
+        // 경로가 충분치 않으면 조용히 종료
+        return;
+      }
+
+      if (!mapRef.current) {
+        mapRef.current = new kakao.maps.Map(mapContainerRef.current, {
+          center: new kakao.maps.LatLng(routePts[0].lat, routePts[0].lng),
+          level: 6,
+        });
+      }
+
+      // 필요 시 커스텀 마커 이미지 연결
+      // markerImageRef.current = new kakao.maps.MarkerImage(markerImg, new kakao.maps.Size(32,46));
+      if (typeof markerImg === "string" && markerImg) {
+        markerImageRef.current = new kakao.maps.MarkerImage(markerImg, new kakao.maps.Size(32, 46));
+      } else {
+        markerImageRef.current = null;
+      }
+      const { LatLng, LatLngBounds, Marker, Polyline } = kakao.maps;
+
+      const path = routePts.map(p => new LatLng(p.lat, p.lng));
+      lineRef.current = new Polyline({
+        map: mapRef.current,
+        path,
+        strokeWeight: 5,
+        strokeColor: "#34699A",
+        strokeOpacity: 0.9,
+        strokeStyle: "solid",
+      });
+
+      // 시작/경유/종료 마커
+      const startLL = path[0];
+      const endLL = path[path.length - 1];
+
+      const startMarker = new Marker({
+        map: mapRef.current,
+        position: startLL,
+        ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
+        title: "출발",
+      });
+      const endMarker = new Marker({
+        map: mapRef.current,
+        position: endLL,
+        ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
+        title: "도착",
+      });
+
+      const wpLLs = await geocodeIfNeeded(kakao, waypoints);
+      const wpMarkers = wpLLs.map(wp => new Marker({
+        map: mapRef.current,
+        position: new LatLng(wp.lat, wp.lng),
+        ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
+        title: wp.title || "경유지"
+      }));
+
+      // markersRef.current = [startMarker, ...wpMarkers, endMarker];
+      markersRef.current = [...wpMarkers];
+
+      // 화면 맞춤
+      const bounds = new LatLngBounds();
+      path.forEach(ll => bounds.extend(ll));
+      wpLLs.forEach(wp => bounds.extend(new LatLng(wp.lat, wp.lng)));
+      mapRef.current.setBounds(bounds);
+
+    })();
+
+    return () => { canceled = true; clear(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapContainerRef, expectedPolyline, expectedRoute, JSON.stringify(waypoints || [])]);
+};
+
+//폴리라인으로 지도 그리는 경량 유틸.
+export const useStaticRouteMapFromPolyline = ({
+  mapContainerRef,
+  encodedPolyline,
+}) => {
+  const mapRef = useRef(null);
+  const lineRef = useRef(null);
+  const kakaoRef = useRef(null);
+
+  // Google Encoded Polyline 디코더
+  const decodePolyline = (str) => {
+    let index = 0, lat = 0, lng = 0;
+    const pts = [];
+    while (index < str.length) {
+      let b, shift = 0, result = 0;
+      do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
+      shift = 0; result = 0;
+      do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
+      pts.push({ lat: lat / 1e5, lng: lng / 1e5 });
+    }
+    return pts;
+  };
+
+  useEffect(() => {
+    if (!mapContainerRef.current || !encodedPolyline) return;
+
+    console.log("useEffect: " + encodedPolyline);
+
+    const clear = () => {
+      if (lineRef.current) {
+        lineRef.current.setMap(null);
+        lineRef.current = null;
       }
     };
 
-    const draw = async (kakao) => {
-      try {
-        clearMapObjects();
+    let canceled = false;
+    (async () => {
+      const kakao = await loadKakaoSdk().catch(() => null);
+      if (!kakao || canceled) return;
+      kakaoRef.current = kakao;
 
-        const routePoints = normalizeRoutePoints();
-        if (!routePoints || routePoints.length < 2) {
-          console.error("경로 좌표가 부족합니다. encodedPolyline 또는 routePointsJSON 확인");
-          return;
-        }
+      clear();
 
-        if (!mapRef.current) {
-          mapRef.current = new kakao.maps.Map(
-            mapContainerRef.current,
-            { center: new kakao.maps.LatLng(routePoints[0].lat, routePoints[0].lng), level: 6 }
-          );
-        }
-        if (!markerImageRef.current) {
-          markerImageRef.current = new kakao.maps.MarkerImage(
-            markerImg,
-            new kakao.maps.Size(32, 46)
-          );
-        }
+      const routePts = decodePolyline(encodedPolyline)?.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng)) || [];
+      if (routePts.length < 2) return;
 
-        // --- 마커: 출발/경유지/도착 ---
-        const LatLng = kakao.maps.LatLng;
-        const startLL = new LatLng(routePoints[0].lat, routePoints[0].lng);
-        const endLL = new LatLng(routePoints[routePoints.length - 1].lat, routePoints[routePoints.length - 1].lng);
-
-        let waypointLLs = getWaypointLatLngs();
-        if (waypointLLs.length === 0 && (waypoints && waypoints.some(w => w.address))) {
-          waypointLLs = await geocodeIfNeeded(kakao, waypoints);
-        }
-
-        const bounds = new kakao.maps.LatLngBounds();
-        bounds.extend(startLL);
-        waypointLLs.forEach(wp => bounds.extend(new LatLng(wp.lat, wp.lng)));
-        bounds.extend(endLL);
-        mapRef.current.setBounds(bounds);
-
-        const startMarker = new kakao.maps.Marker({
-          map: mapRef.current,
-          position: startLL,
-          image: markerImageRef.current,
-          title: "출발",
+      if (!mapRef.current) {
+        mapRef.current = new kakao.maps.Map(mapContainerRef.current, {
+          center: new kakao.maps.LatLng(routePts[0].lat, routePts[0].lng),
+          level: 6,
         });
-        const endMarker = new kakao.maps.Marker({
-          map: mapRef.current,
-          position: endLL,
-          image: markerImageRef.current,
-          title: "도착",
-        });
-        const wpMarkers = waypointLLs.map(wp =>
-          new kakao.maps.Marker({
-            map: mapRef.current,
-            position: new LatLng(wp.lat, wp.lng),
-            image: markerImageRef.current,
-            title: wp.title || "경유지",
-          })
-        );
-        markersRef.current = [startMarker, ...wpMarkers, endMarker];
-
-        // --- 경로(Polyline) ---
-        const path = routePoints.map(p => new LatLng(p.lat, p.lng));
-        polylineRef.current = new kakao.maps.Polyline({
-          map: mapRef.current,
-          path,
-          strokeWeight: 5,
-          strokeColor: "#34699A",
-          strokeOpacity: 0.9,
-          strokeStyle: "solid",
-        });
-
-        // 거리/시간은 서버 계산값 사용 권장 → 여기서는 null 전달
-        if (onUpdateRef.current) onUpdateRef.current(null, null);
-      } catch (e) {
-        console.error("경로 렌더링 실패:", e);
       }
-    };
 
-    loadKakaoSdk({ libraries: "services" })
-      .then(kakao => draw(kakao))
-      .catch(e => console.error("카카오맵 SDK 로딩 실패:", e));
+      const { LatLng, LatLngBounds, Polyline } = kakao.maps;
 
-    return () => clearMapObjects();
-    // deps: 주요 입력이 바뀔 때만 재렌더
-  }, [mapContainerRef, encodedPolyline, routePointsJSON, JSON.stringify(waypoints || [])]);
+      const path = routePts.map(p => new LatLng(p.lat, p.lng));
+      lineRef.current = new Polyline({
+        map: mapRef.current,
+        path,
+        strokeWeight: 5,
+        strokeColor: "#34699A",
+        strokeOpacity: 0.9,
+        strokeStyle: "solid",
+      });
+
+      // 화면 맞춤
+      const bounds = new LatLngBounds();
+      path.forEach(ll => bounds.extend(ll));
+      mapRef.current.setBounds(bounds);
+
+    })();
+
+    return () => { canceled = true; clear(); };
+  }, [mapContainerRef, encodedPolyline]);
 };

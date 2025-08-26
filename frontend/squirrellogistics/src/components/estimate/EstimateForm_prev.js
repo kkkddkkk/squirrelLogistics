@@ -75,7 +75,7 @@ function readDraft() {
   }
 }
 
-const EstimateForm = () => {
+const EstimateForm_prev = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -690,4 +690,4 @@ const EstimateForm = () => {
   );
 };
 
-export default EstimateForm;
+export default EstimateForm_prev;
