@@ -26,6 +26,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
            "JOIN da.driver d " +
            "WHERE d.driverId = :driverId")
     List<Review> findByDriverId(@Param("driverId") Long driverId);
+    
+    //companyId로 리뷰 조회
+    @Query("SELECT r FROM Review r "+
+			"JOIN r.deliveryAssignment da "+
+			"JOIN da.deliveryRequest dr "+
+			"JOIN dr.company c "+
+			"WHERE c.companyId = :companyId ")
+	List<Review> findByCompanyId(@Param("companyId") Long companyId);
 	
 	//작성자: 고은설.
 	//기능: 특정 아이디의 드라이버가 수행한 모든 운송 할당건에 대한 리뷰 추

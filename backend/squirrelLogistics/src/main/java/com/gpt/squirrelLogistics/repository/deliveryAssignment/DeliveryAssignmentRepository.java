@@ -46,29 +46,62 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 //	List<DeliveryAssignment> findByCompletedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 	List<DeliveryAssignment> findByCompletedAt(LocalDateTime completedAt);
 
+	// 달력에 기록할 일정리스트 추가
+	@Query(value = "SELECT DISTINCT DATE(dr.want_to_start) AS want_to_start " +
+            "FROM delivery_assignment da " +
+            "JOIN delivery_request dr ON da.request_id = dr.request_id " +
+            "JOIN company c ON dr.company_id = c.company_id " +
+            "WHERE c.company_id = :companyId", nativeQuery = true)
+	List<Object[]> findDateListByCompanyId(@Param("companyId")Long companyId);
+
 	// 일정에 포함된 날짜 찾기
 	@Query("SELECT DISTINCT FUNCTION('DATE', d.completedAt) FROM DeliveryAssignment d")
 	List<Date> findOnlyCompletedAt();
 
+	// 날짜별 출발주소+도착주소+상태 찾기
+	@Query("SELECT d.assignedId, r.startAddress, r.endAddress, d.status, p.payStatus FROM DeliveryAssignment d "
+			+ "JOIN d.deliveryRequest r "+
+			"LEFT JOIN d.payment p "+
+			"JOIN r.company c "+
+			"WHERE FUNCTION('DATE', r.wantToStart) = :wantToStart "+
+			"AND c.companyId = :companyId")
+	List<Object[]> findListHeader(@Param("wantToStart") LocalDate wantToStart,
+			@Param("companyId") Long companyId);
+	
+	//ID로 상태찾기
+	@Query("SELECT d.status FROM DeliveryAssignment d "
+			+ "WHERE d.assignedId=:assignedId")
+	List<String> findStatusById(@Param("assignedId") Long assignedId);
+	
+	//ID로 estimatedFee(예상금액) 찾기
+	@Query("SELECT r.estimatedFee FROM DeliveryAssignment d "
+			+ "JOIN d.deliveryRequest r WHERE d.assignedId=:assignedId")
+	Long findEstimatedFeeById(@Param("assignedId") Long assignedId);
+	
 	// 날짜별 출발주소+도착주소 찾기
-	@Query("SELECT d.assignedId, r.startAddress, r.endAddress FROM DeliveryAssignment d "
-			+ "JOIN d.deliveryRequest r WHERE FUNCTION('DATE', d.completedAt) = :completedAt")
-	List<Object[]> findStartEndAddress(@Param("completedAt") String completedAt);
+		@Query("SELECT d.assignedId, r.startAddress, r.endAddress FROM DeliveryAssignment d "
+				+ "JOIN d.deliveryRequest r WHERE FUNCTION('DATE', d.completedAt) = :completedAt")
+		List<Object[]> findStartEndAddress(@Param("completedAt") String completedAt);
 
 	// ID로 출발주소+도착주소 찾기
 	@Query("SELECT r.startAddress, r.endAddress FROM DeliveryAssignment d "
 			+ "JOIN d.deliveryRequest r WHERE d.assignedId=:assignedId")
 	List<Object[]> findStartEndAddressById(@Param("assignedId") Long assignedId);
 
+	//ID로 출발날짜 찾기
+	@Query("SELECT r.wantToStart FROM DeliveryAssignment d "
+			+ "JOIN d.deliveryRequest r WHERE d.assignedId=:assignedId")
+	LocalDateTime findStartDateById(@Param("assignedId") Long assignedId);
+
 	// ID로 리뷰(id, 평점, 사유) 찾기
 	@Query("SELECT r.reviewId, r.rating, r.reason FROM DeliveryAssignment d "
 			+ "JOIN Review r ON r.deliveryAssignment = d WHERE d.assignedId = :assignedId")
-	List<Object[]> findReviewById(@Param("assignedId") String assignedId);
+	List<Object[]> findReviewById(@Param("assignedId") Long assignedId);
 
 	// ID로 실제운송기록(산간지역, 취급주의, 실제요금)
 	@Query("SELECT ad.mountainous, ad.caution, ad.actualFee FROM DeliveryAssignment d "
 			+ "JOIN d.actualDelivery ad WHERE d.assignedId = :assignedId")
-	List<Object[]> findActualDeliveryById(@Param("assignedId") String assignedId);
+	List<Object[]> findActualDeliveryById(@Param("assignedId") Long assignedId);
 
 	// ID로 실제운송기록(ActualDelivery 전체)
 	@Query("SELECT ad FROM DeliveryAssignment d " + "JOIN d.actualDelivery ad WHERE d.assignedId = :assignedId")
@@ -78,8 +111,14 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	@Query("SELECT us.name, vt.name FROM DeliveryAssignment d " + "JOIN d.deliveryRequest dr "
 			+ "JOIN dr.vehicleType vt " + "JOIN d.driver dri " + "JOIN dri.user us "
 			+ "WHERE d.assignedId = :assignedId")
-	List<Object[]> findDriverById(@Param("assignedId") String assignedId);
+	List<Object[]> findDriverById(@Param("assignedId") Long assignedId);
 
+	//ID로 userId(Company) 찾기
+	@Query("SELECT us.userId FROM DeliveryAssignment d " + "JOIN d.deliveryRequest dr "+
+			"JOIN dr.company c " + "JOIN c.user us "
+			+ "WHERE d.assignedId = :assignedId")
+	Long findUserById(@Param("assignedId") Long assignedId);
+	
 	// ID로 requestId 찾기
 	@Query("SELECT dr.requestId FROM DeliveryAssignment d JOIN d.deliveryRequest dr WHERE d.assignedId = :assignedId")
 	Long findRequestIdById(@Param("assignedId") Long assignedId);
@@ -88,7 +127,12 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	@Query("SELECT p.paymentId " + "FROM DeliveryAssignment d " + "JOIN d.deliveryRequest dr " + "JOIN dr.payment p "
 			+ "WHERE d.assignedId = :assignedId")
 	Long findFirstPaymentIdById(@Param("assignedId") Long assignedId);
-
+	
+	//ID로 2차 paymentId 찾기
+	@Query("SELECT p.paymentId " + "FROM DeliveryAssignment d " + "JOIN d.payment p "
+				+ "WHERE d.assignedId = :assignedId")
+	Long findSecondPaymentIdById(@Param("assignedId") Long assignedId);
+		
 	// prepaidId로 실제운송 찾기
 	@Query("SELECT ad FROM DeliveryAssignment da " + "JOIN da.payment p " + "JOIN da.actualDelivery ad "
 			+ "WHERE p.prepaidId =:prepaidId")
@@ -96,7 +140,7 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 
 	// paymentId로 deliveryAssignment 찾기
 	@Query("SELECT da FROM DeliveryAssignment da " + "JOIN da.payment p " + "WHERE p.paymentId = :paymentId")
-	DeliveryAssignment findDeliveryAssignmentById(@Param("paymentId") Long paymentId);
+	DeliveryAssignment findDeliveryAssignmentByPaymentId(@Param("paymentId") Long paymentId);
 
 	// 작성자: 고은설.
 	// 기능: 드라이버 아이디로 모든 기사의 운송 할당 내역을 조회, 이미 예약이 잡힌 일자에 새로운 요청을 수락하는 것을 방지하기 위함.
@@ -347,5 +391,46 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
            where a.assignedId = :id
            """)
     Optional<DeliveryAssignment> findByIdForUpdate(@Param("id") Long id);
+    
+/* ============== 기사 지명 요청 관련 메서드들 ============== */
+	
+	/**
+	 * 🔍 요청 ID로 기사 할당 정보 조회
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @return 기사 할당 정보 목록
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId")
+	List<DeliveryAssignment> findByRequestId(@Param("requestId") Long requestId);
+	
+	/**
+	 * 🗑️ 요청과 기사로 할당 정보 삭제 (중복 방지용)
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param driverId 기사 ID
+	 */
+	@Modifying
+	@Query("DELETE FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId AND da.driver.driverId = :driverId")
+	void deleteByRequestAndDriver(@Param("requestId") Long requestId, @Param("driverId") Long driverId);
+	
+	/**
+	 * 📋 기사 지명 요청 목록 조회 (UNKNOWN 상태 - 기존 상태값 활용)
+	 * 
+	 * @param driverId 기사 ID
+	 * @return 기사 지명 요청 목록
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.driver.driverId = :driverId AND da.status = :status ORDER BY da.assignedAt DESC")
+	List<DeliveryAssignment> findProposedRequestsByDriver(@Param("driverId") Long driverId, @Param("status") StatusEnum status);
+	
+	/**
+	 * 🔍 특정 요청의 기사 할당 상태 조회
+	 * 
+	 * @param requestId 배송 요청 ID
+	 * @param status 할당 상태
+	 * @return 기사 할당 정보
+	 */
+	@Query("SELECT da FROM DeliveryAssignment da WHERE da.deliveryRequest.requestId = :requestId AND da.status = :status")
+	Optional<DeliveryAssignment> findByRequestIdAndStatus(@Param("requestId") Long requestId, @Param("status") StatusEnum status);
+
     
 }

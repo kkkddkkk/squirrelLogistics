@@ -112,8 +112,15 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			""")
 	Page<DeliveryRequest> findActiveRegistered(Pageable pageable);
 
+	//작성자: 김도경
+	//requestId로 estimatedFee 찾기
 	@Query("SELECT r.estimatedFee FROM DeliveryRequest r WHERE r.requestId = :requestId")
 	Long findEstimatedFeeById(@Param("requestId") Long requestId);
+
+	//작성자: 김도경
+	//paymentId로 requestId 찾기
+	@Query("SELECT r.requestId FROM DeliveryRequest r JOIN r.payment p WHERE p.paymentId = :paymentId")
+	Long findIdByPaymentId(@Param("paymentId") Long paymentId);
 
 	// 작성자: 정윤진
 	// 기능: vehicleType, Car, Driver를 조인해서 특정 요청에 지명된 driver 정보 조회

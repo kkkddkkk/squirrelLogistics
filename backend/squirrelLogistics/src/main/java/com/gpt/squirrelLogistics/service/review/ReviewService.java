@@ -32,13 +32,13 @@ public class ReviewService {
 	private final DeliveryAssignmentRepository deliveryAssignmentRepository;
 	private final ReviewRepository reviewRepository;
 	
-	public List<Map<String, Object>> reviewList() {
-		List<Review> reviews = reviewRepository.findAll();
+	public List<Map<String, Object>> reviewList(Long companyId) {
+		List<Review> reviews = reviewRepository.findByCompanyId(companyId);
 		
 		List<Map<String, Object>> result = reviews.stream().map(review -> {
 			Map<String, Object> map = new HashMap<>();
 			List <Object[]> addressList = deliveryAssignmentRepository.findStartEndAddressById(review.getDeliveryAssignment().getAssignedId());
-			List<Object[]> driverList = deliveryAssignmentRepository.findDriverById(review.getDeliveryAssignment().getAssignedId().toString());
+			List<Object[]> driverList = deliveryAssignmentRepository.findDriverById(review.getDeliveryAssignment().getAssignedId());
 			
 			map.put("assignedId", review.getDeliveryAssignment().getAssignedId());
 			map.put("reviewId", review.getReviewId());
@@ -56,7 +56,7 @@ public class ReviewService {
 	}
 	
 	//리뷰 보기
-	public Map<String, Object> readReview(String assignedId) {
+	public Map<String, Object> readReview(Long assignedId) {
 		List<Object[]> reviewList = deliveryAssignmentRepository.findReviewById(assignedId);
 		Object[] reviewListArr;
 		Object[] driverList = deliveryAssignmentRepository.findDriverById(assignedId).get(0);

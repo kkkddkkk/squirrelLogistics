@@ -265,44 +265,81 @@ public class ReportService {
 		map.put("endAddress", "주소 정보 없음");
 		map.put("fileNames", new ArrayList<>());
 	}
-
-	// 🎯 신고 전체 목록 조회 - 통일된 데이터 구조 사용
-	public List<Map<String, Object>> reportList(){
-		try {
-			List<Report> allList = reportRepository.findAll();
-			List<Map<String, Object>> list = new ArrayList<>();
-
-			for (Report report : allList) {
-				Map<String, Object> reportMap = convertReportToMap(report);
-				list.add(reportMap);
-			}
+//
+//	// 🎯 신고 전체 목록 조회 - 통일된 데이터 구조 사용
+//	public List<Map<String, Object>> reportList(){
+//		try {
+//			List<Report> allList = reportRepository.findAll();
+//			List<Map<String, Object>> list = new ArrayList<>();
+//
+//			for (Report report : allList) {
+//				Map<String, Object> reportMap = convertReportToMap(report);
+//				list.add(reportMap);
+//			}
+//			
+//			log.info("✅ Report 목록 조회 완료: 총 {}건", list.size());
+//			return list;
+//		} catch (Exception e) {
+//			log.error("❌ Report 목록 조회 실패: {}", e.getMessage());
+//			throw new RuntimeException("신고 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
+//		}
+//	}
+	
+	// 신고리스트
+	public List<Map<String, Object>> reportList(Long companyId) {
+		List<Report> reports = reportRepository.findByCompanyId(companyId);
+		
+		List<Map<String, Object>> result = reports.stream().map(report -> {
+			Map<String, Object> map = new HashMap<>();
+			List <Object[]> addressList = deliveryAssignmentRepository.findStartEndAddressById(report.getDeliveryAssignment().getAssignedId());
 			
-			log.info("✅ Report 목록 조회 완료: 총 {}건", list.size());
-			return list;
-		} catch (Exception e) {
-			log.error("❌ Report 목록 조회 실패: {}", e.getMessage());
-			throw new RuntimeException("신고 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
-		}
+			map.put("reportId", report.getReportId());
+			map.put("rTitle", report.getRTitle());
+			map.put("rContent", report.getRContent());
+			map.put("regDate", report.getRegDate());
+			map.put("startAddress", addressList.get(0)[0]);
+			map.put("endAddress", addressList.get(0)[1]);
+			map.put("fileNames", reportImageRepository.findImgsByReportId(report.getReportId()));
+			
+			return map;
+		}).toList();
+		
+		return result;
 	}
 
-	// 🎯 신고 상세 확인 - 목록과 동일한 데이터 구조 사용
-	public Map<String, Object> viewReport(Long ReportId) {
-		try {
-			Report report = reportRepository.findById(ReportId)
-				.orElseThrow(() -> new RuntimeException("Report not found with ID: " + ReportId));
-			
-			log.info("📋 Report ID {} 상세 조회 시작", ReportId);
-			
-			// 목록과 동일한 변환 메서드 사용
-			Map<String, Object> reportDetail = convertReportToMap(report);
-			
-			log.info("✅ Report ID {} 상세 조회 완료", ReportId);
-			return reportDetail;
-			
-		} catch (Exception e) {
-			log.error("❌ Report 상세 조회 실패: {}", e.getMessage());
-			throw new RuntimeException("Report 상세 조회 중 오류가 발생했습니다: " + e.getMessage());
-		}
+	
+	
+
+//	// 🎯 신고 상세 확인 - 목록과 동일한 데이터 구조 사용
+//	public Map<String, Object> viewReport(Long ReportId) {
+//		try {
+//			Report report = reportRepository.findById(ReportId)
+//				.orElseThrow(() -> new RuntimeException("Report not found with ID: " + ReportId));
+//			
+//			log.info("📋 Report ID {} 상세 조회 시작", ReportId);
+//			
+//			// 목록과 동일한 변환 메서드 사용
+//			Map<String, Object> reportDetail = convertReportToMap(report);
+//			
+//			log.info("✅ Report ID {} 상세 조회 완료", ReportId);
+//			return reportDetail;
+//			
+//		} catch (Exception e) {
+//			log.error("❌ Report 상세 조회 실패: {}", e.getMessage());
+//			throw new RuntimeException("Report 상세 조회 중 오류가 발생했습니다: " + e.getMessage());
+//		}
+//	}
+	
+	// 신고 상세 확인
+	public ReportSlimResponseDTO viewReport(Long ReportId) {
+		Report report = reportRepository.findById(ReportId).get();
+		List<String> images = reportImageRepository.findImgsByReportId(ReportId);
+
+		ReportSlimResponseDTO reportSlimResponseDTO = ReportSlimResponseDTO.builder().fileName(images)
+				.rTitle(report.getRTitle()).rContent(report.getRContent()).regDate(report.getRegDate())
+				.reporter(report.getReporter()).build();
+
+		return reportSlimResponseDTO;
 	}
 
 	// 기존 메서드들 유지 (신고 등록, 수정, 삭제 등)
@@ -320,11 +357,11 @@ public class ReportService {
 
 			ReportSlimResponseDTO reportSlimResponseDTO = ReportSlimResponseDTO.builder()
 				.reportId(report.getReportId())
-				.reporter(report.getReporter() != null ? report.getReporter().name() : "UNKNOWN")
+//				.reporter(report.getReporter() != null ? report.getReporter().name() : "UNKNOWN")
 				.rTitle(report.getRTitle() != null ? report.getRTitle() : "")
 				.rContent(report.getRContent() != null ? report.getRContent() : "")
-				.rStatus(report.getRStatus() != null ? report.getRStatus().name() : "PENDING") // String으로 변환
-				.rCate(report.getRCate() != null ? report.getRCate().name() : "OTHER") // String으로 변환
+//				.rStatus(report.getRStatus() != null ? report.getRStatus().name() : "PENDING") // String으로 변환
+//				.rCate(report.getRCate() != null ? report.getRCate().name() : "OTHER") // String으로 변환
 				.place(report.getPlace() != null ? report.getPlace() : "")
 				.deliveryAssignmentId(report.getDeliveryAssignment() != null ? report.getDeliveryAssignment().getAssignedId() : null)
 				.regDate(report.getRegDate() != null ? report.getRegDate() : LocalDateTime.now())

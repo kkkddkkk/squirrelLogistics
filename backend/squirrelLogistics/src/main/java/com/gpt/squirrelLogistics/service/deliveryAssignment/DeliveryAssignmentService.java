@@ -1,6 +1,7 @@
 package com.gpt.squirrelLogistics.service.deliveryAssignment;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -20,9 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gpt.squirrelLogistics.common.EncodedRouteSummary;
 import com.gpt.squirrelLogistics.dto.actualCalc.ActualCalcDTO;
+import com.gpt.squirrelLogistics.dto.company.CompanyHistoryContentDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentProposalListDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
+import com.gpt.squirrelLogistics.dto.deliveryAssignment.DetailHistoryDTO;
 import com.gpt.squirrelLogistics.entity.actualDelivery.ActualDelivery;
 import com.gpt.squirrelLogistics.dto.deliveryCargo.DeliveryCargoSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryStatusLog.DeliveryStatusLogSlimResponseDTO;
@@ -85,93 +88,155 @@ public class DeliveryAssignmentService {
 
 	// 작성자: 김도경
 	// 기능: 전 목록 완수일자 뽑기
-	public List<Date> getHistoryDate() {// completedAt 뽑기
+	public List<LocalDate> getHistoryDate(Long companyId) {// completedAt 뽑기
+		List<Object[]> rawList = deliveryAssignmentRepository.findDateListByCompanyId(companyId);
 
-		return deliveryAssignmentRepository.findOnlyCompletedAt();
+		List<LocalDate> dates = rawList.stream().map(obj -> ((java.sql.Date) obj[0]).toLocalDate())
+				.collect(Collectors.toList());
+
+		return dates;
 	}
+
 
 	// 작성자: 김도경
 	// 기능: 완수일자 별 출발지, 도착지
-	public List<Object[]> getTodayList(String completedAt) {
-		return deliveryAssignmentRepository.findStartEndAddress(completedAt);
+	public List<Object[]> getTodayList(LocalDate wantToStart, Long companyId) {
+		return deliveryAssignmentRepository.findListHeader(wantToStart, companyId);
 	}
 
 	// 작성자: 김도경
 	// 기능: 실계산 페이지 랜더링
 	public ActualCalcDTO getActualCalc(Long assignedId) {
-		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId.toString());
+		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
 		ActualDelivery actualDelivery = deliveryAssignmentRepository.findAllActualDeliveyById(assignedId.toString());
 		Long estimatedFee = requestRepository
 				.findEstimatedFeeById(deliveryAssignmentRepository.findRequestIdById(assignedId));
 		Long paymentId = deliveryAssignmentRepository.findFirstPaymentIdById(assignedId);
 
-		log.info(actualDelivery.toString());
 		ActualCalcDTO actualCalcDTO = ActualCalcDTO.builder().paymentId(paymentId)
 				.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId)).assignedId(Long.valueOf(assignedId))
-				.dropOrder1(waypointList.size() == 1).dropOrder2(waypointList.size() == 2)
-				.dropOrder3(waypointList.size() == 3).mountainous(actualDelivery.isMountainous())
+				.dropOrder1(waypointList.size() >= 3).dropOrder2(waypointList.size() >= 4)
+				.dropOrder3(waypointList.size() >= 5).mountainous(actualDelivery.isMountainous())
 				.caution(actualDelivery.isCaution()).distance(actualDelivery.getDistance())
 				.weight(actualDelivery.getWeight())
-				.actualPolyline(actualDelivery.getActualPolyline())
 				.requestId(deliveryAssignmentRepository.findRequestIdById(assignedId)).estimateFee(estimatedFee)
+				.actualPolyline(actualDelivery.getActualPolyline())
 				.build();
 		return actualCalcDTO;
 	}
 
 	// 작성자: 김도경
 	// 완수일자 별 경유지, 리뷰, 신고, 운전자 정보를 json 형태로
-	public Map<String, Object> getTodayContent(String assignedId) {
+	public CompanyHistoryContentDTO getTodayContent(Long assignedId) {
+		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
+		String status = deliveryAssignmentRepository.findStatusById(assignedId).get(0);
 
-		List<Object[]> waypointList = deliveryWaypointRepository.findWaypointByAssignmentId(assignedId);
-		Object[] actualDeliveryList = deliveryAssignmentRepository.findActualDeliveryById(assignedId).get(0);
+		List<String> dropOrders = new ArrayList<>();
+		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
+		    dropOrders = waypointList.subList(1, waypointList.size() - 1);
+		}
+
+		// 실운전(산간주의, 취급주의, 실제금액)
+		List<Object[]> actualDelivery = deliveryAssignmentRepository.findActualDeliveryById(assignedId);
+		Object[] actualDeliveryList = actualDelivery != null && !actualDelivery.isEmpty() ? actualDelivery.get(0)
+				: new Object[] { 0, 0, 0 };
+		
+		Object mountainousObj = actualDeliveryList[0];
+		Object cautionObj = actualDeliveryList[1];
+
+		boolean mountainous = false;
+		boolean caution = false;
+		long actualFee = actualDeliveryList[2] != null ? ((Number) actualDeliveryList[2]).longValue() : 0L;
+
+		if(mountainousObj != null) {
+		    if(mountainousObj instanceof Integer) {
+		        mountainous = ((Integer) mountainousObj) == 1;
+		    } else if(mountainousObj instanceof Boolean) {
+		        mountainous = (Boolean) mountainousObj;
+		    }
+		}
+		if(cautionObj != null) {
+		    if(cautionObj instanceof Integer) {
+		        caution = ((Integer) cautionObj) == 1;
+		    } else if(cautionObj instanceof Boolean) {
+		        caution = (Boolean) cautionObj;
+		    }
+		}
+
+		// 운전자 정보(운전자 이름, 차 이름)
+		List<Object[]> driver = deliveryAssignmentRepository.findDriverById(assignedId);
+		Object[] driverList = driver != null && !driver.isEmpty() ? driver.get(0) : new Object[] { "", "" };
+
+		// 리뷰 정보(리뷰 아이디, 별점, 사유)
 		List<Object[]> reviewList = deliveryAssignmentRepository.findReviewById(assignedId);
-		Object[] reviewListArr;
-		Object[] driverList = deliveryAssignmentRepository.findDriverById(assignedId).get(0);
+		Object[] reviewListArr = reviewList != null && !reviewList.isEmpty() ? reviewList.get(0)
+				: new Object[] { 0, 0, "" };
+
+		// 신고정보(신고 아이디)
 		List<Object[]> reportList = reportRepository.findReportById(assignedId);
-		Object[] reportListArr;
+		Object[] reportListArr = reportList != null && !reportList.isEmpty() ? reportList.get(0) : new Object[] { 0 };
 
-		if (reviewList != null && !reviewList.isEmpty()) {
-			reviewListArr = reviewList.get(0);
-		} else {
-			reviewListArr = new Object[] { 0, 0, "" };
+		if(status=="COMPLETED" || status=="PAYMENTCOMPLETED") {
+			return CompanyHistoryContentDTO.builder()
+					.dropOrder1(dropOrders.size()>0?dropOrders.get(0):"")
+					.dropOrder2(dropOrders.size()>1?dropOrders.get(1):"")
+					.dropOrder3(dropOrders.size()>2?dropOrders.get(2):"")
+					.mountainous(mountainous)
+					.caution(caution)
+					.actualFee(actualFee)
+					.estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
+					.reviewId(((Number)reviewListArr[0]).longValue())
+					.rating(((Number)reviewListArr[1]).intValue())
+					.reason((String) reviewListArr[2])
+					.driverName((String) driverList[0])
+					.carName((String) driverList[1])
+					.reportId(((Number)reportListArr[0]).longValue())
+					.paymentId(deliveryAssignmentRepository.findSecondPaymentIdById(assignedId))
+					.prepaidId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId))
+					.build();
+		}else {
+			return CompanyHistoryContentDTO.builder()
+					.dropOrder1(dropOrders.size()>0?dropOrders.get(0):"")
+					.dropOrder2(dropOrders.size()>1?dropOrders.get(1):"")
+					.dropOrder3(dropOrders.size()>2?dropOrders.get(2):"")
+					.mountainous(mountainous)
+					.caution(caution)
+					.estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
+					.driverName((String) driverList[0])
+					.carName((String) driverList[1])
+					.reportId(((Number)reportListArr[0]).longValue())
+					.paymentId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId))
+					.build();
 		}
-
-		if (reportList != null && !reportList.isEmpty()) {
-			reportListArr = reportList.get(0);
-		} else {
-			reportListArr = new Object[] { 0 };
-		}
-
-		Map<String, Object> map = new LinkedHashMap<>();
-		for (Object[] row : waypointList) {
-			map.put("dropOrder" + row[0], row[1]);
-		}
-
-		Object[] todayContent = new Object[actualDeliveryList.length + reviewListArr.length + driverList.length
-				+ reportListArr.length];
-		int pos = 0;
-		for (Object o : actualDeliveryList)
-			todayContent[pos++] = o;
-		for (Object o : reviewListArr)
-			todayContent[pos++] = o;
-		for (Object o : driverList)
-			todayContent[pos++] = o;
-		for (Object o : reportListArr)
-			todayContent[pos++] = o;
-
-		String[] keys = { "mountainous", "caution", "actualFee", "reviewId", "rating", "reason", "driverName",
-				"carName", "reportId" };
-
-		for (int i = 0; i < todayContent.length; i++) {
-			if (todayContent[i] != null) {
-				map.put(keys[i], todayContent[i]);
-			} else {
-				map.put(keys[i], null);
-			}
-		}
-
-		return map;
 	}
+	
+	//작성자: 김도경
+		//기능: detailHistory(예약, 운송중 세부내역 확인)
+		public DetailHistoryDTO getDetailHistory(Long assignedId) {
+			List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
+
+			List<String> dropOrders = new ArrayList<>();
+			if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
+			    dropOrders = waypointList.subList(1, waypointList.size() - 1);
+			}
+			
+			Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
+			
+			LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
+			
+			DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder()
+					.assignedId(assignedId)
+					.dropOrder1(dropOrders.get(0))
+					.dropOrder2(dropOrders.get(1))
+					.dropOrder3(dropOrders.get(2))
+					.startAddress(startEnd[0].toString())
+					.endAddress(startEnd[1].toString())
+					.wantToStart(startDate)
+					.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0))
+					.build();
+			
+			return detailHistoryDTO;
+		}
 
 	// 작성자: 고은설.
 	// 기능: 운송 요청 수락에 따흔 운송 할당 엔티티 생성.
