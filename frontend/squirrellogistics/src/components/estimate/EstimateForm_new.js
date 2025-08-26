@@ -160,32 +160,44 @@ const EstimateForm_new = () => {
     }
   }, []);
 
-  // 회사 정보(토큰 기반) 조회 + 기본주소 로드
+  // 회사 정보(토큰 기반) 조회
   useEffect(() => {
     const fetchCompanyInfo = async () => {
-      const storedCompanyId = localStorage.getItem("companyId");
-      if (storedCompanyId) {
-        setCompanyId(parseInt(storedCompanyId, 10));
-        return;
-      }
       try {
-        // 테스트 핑
-        try { await http.get(`/api/company/test`); } catch { }
+        // 토큰 유효성 핑 (선택)
+        try {
+          await http.get(`/api/company/test`);
+        } catch (e) {
+          console.warn("company/test 실패:", e);
+        }
 
+        // 실제 회사 정보 가져오기
         const resp = await http.get(`/api/company/current-user`);
         if (resp?.data?.companyId != null) {
           const cid = resp.data.companyId;
-          localStorage.setItem("companyId", String(cid));
           setCompanyId(cid);
+          localStorage.setItem("companyId", String(cid)); // 새로고침 대비
         } else {
           setCompanyId(null);
+          localStorage.removeItem("companyId");
         }
-      } catch {
+      } catch (err) {
+        console.error("회사 정보 불러오기 실패:", err);
         setCompanyId(null);
+        localStorage.removeItem("companyId");
       }
     };
+
     fetchCompanyInfo();
   }, []);
+
+  // 상태 변경 후 확인 로그
+  useEffect(() => {
+    if (companyId != null) {
+      console.log("토큰 기반 companyId 업데이트:", companyId);
+    }
+  }, [companyId]);
+
 
   useEffect(() => {
     const loadSavedAddresses = async () => {

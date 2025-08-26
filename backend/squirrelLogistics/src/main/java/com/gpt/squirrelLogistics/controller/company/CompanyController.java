@@ -6,6 +6,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.gpt.squirrelLogistics.dto.company.CompanyResponseDTO;
 import com.gpt.squirrelLogistics.service.company.CompanyService;
+import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
 import java.util.HashMap;
@@ -17,6 +20,7 @@ import java.util.HashMap;
 public class CompanyController {
     
     private final CompanyService companyService;
+    private final FindUserByTokenService findUserByTokenService;
     
     /**
      * 간단한 테스트 API
@@ -32,39 +36,71 @@ public class CompanyController {
      */
     @GetMapping("/current-user")
     @CrossOrigin(origins = "*")
-    public ResponseEntity<Map<String, Object>> getCurrentUserCompany() {
-        try {
-            System.out.println("=== getCurrentUserCompany 호출됨 ===");
-            
-            // Spring Security Authentication에서 userId 추출
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자"));
-            }
-            
-            // TODO: 실제 JWT 토큰 파싱 로직으로 교체 필요
-            // 현재는 임시로 하드코딩된 userId 사용
-            Long userId = extractUserIdFromAuth(auth);
-            if (userId == null) {
-                return ResponseEntity.status(400).body(Map.of("error", "유효하지 않은 토큰"));
-            }
-            
-            CompanyResponseDTO company = companyService.getCompanyByUserId(userId);
-            if (company != null) {
-                // null 체크를 통한 안전한 응답 생성
-                Map<String, Object> response = new HashMap<>();
-                response.put("companyId", company.getCompanyId()); // null 그대로 내려줌
-                response.put("mainLoca", company.getMainLoca() != null ? company.getMainLoca() : "");
-                
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(404).body(Map.of("error", "회사 정보를 찾을 수 없습니다"));
-            }
-        } catch (Exception e) {
-            System.err.println("=== getCurrentUserCompany 오류 ===");
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Map<String, Object>> getCurrentUserCompany(HttpServletRequest request) {
+//        try {
+//            System.out.println("=== getCurrentUserCompany 호출됨 ===");
+//            
+//            // Spring Security Authentication에서 userId 추출
+//            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//            if (auth == null || !auth.isAuthenticated()) {
+//                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자"));
+//            }
+//            
+//            // TODO: 실제 JWT 토큰 파싱 로직으로 교체 필요
+//            // 현재는 임시로 하드코딩된 userId 사용
+//            Long userId = extractUserIdFromAuth(auth);
+//            if (userId == null) {
+//                return ResponseEntity.status(400).body(Map.of("error", "유효하지 않은 토큰"));
+//            }
+//            
+//            CompanyResponseDTO company = companyService.getCompanyByUserId(userId);
+//            if (company != null) {
+//                // null 체크를 통한 안전한 응답 생성
+//                Map<String, Object> response = new HashMap<>();
+//                response.put("companyId", company.getCompanyId()); // null 그대로 내려줌
+//                response.put("mainLoca", company.getMainLoca() != null ? company.getMainLoca() : "");
+//                
+//                return ResponseEntity.ok(response);
+//            } else {
+//                return ResponseEntity.status(404).body(Map.of("error", "회사 정보를 찾을 수 없습니다"));
+//            }
+//        } catch (Exception e) {
+//            System.err.println("=== getCurrentUserCompany 오류 ===");
+//            e.printStackTrace();
+//            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+//        }
+    	 try {
+    	        System.out.println("=== getCurrentUserCompany 호출됨 ===");
+
+    	        // 헤더에서 JWT 토큰 추출
+    	        String header = request.getHeader("Authorization");
+    	        if (header == null || !header.startsWith("Bearer ")) {
+    	            return ResponseEntity.status(401).body(Map.of("error", "토큰이 필요합니다"));
+    	        }
+
+    	        String token = header.substring(7);
+
+    	        // ✅ 토큰에서 userId 추출
+    	        Long userId = findUserByTokenService.getUserIdByToken(token);
+    	        if (userId == null) {
+    	            return ResponseEntity.status(400).body(Map.of("error", "유효하지 않은 토큰"));
+    	        }
+
+    	        // userId → 회사 정보 조회
+    	        CompanyResponseDTO company = companyService.getCompanyByUserId(userId);
+    	        if (company != null) {
+    	            Map<String, Object> response = new HashMap<>();
+    	            response.put("companyId", company.getCompanyId());
+    	            response.put("mainLoca", company.getMainLoca() != null ? company.getMainLoca() : "");
+    	            return ResponseEntity.ok(response);
+    	        } else {
+    	            return ResponseEntity.status(404).body(Map.of("error", "회사 정보를 찾을 수 없습니다"));
+    	        }
+    	    } catch (Exception e) {
+    	        System.err.println("=== getCurrentUserCompany 오류 ===");
+    	        e.printStackTrace();
+    	        return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+    	    }
     }
     
     /**
