@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.external.api.kakao;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gpt.squirrelLogistics.common.EncodedRouteSummary;
 import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
 import com.gpt.squirrelLogistics.external.dto.kakao.KakaoRouteResponseDTO;
@@ -43,7 +45,6 @@ public class KakaoRouteClient {
 		ResponseEntity<KakaoRouteResponseDTO> response = restTemplate.exchange(url, HttpMethod.GET, entity,
 				KakaoRouteResponseDTO.class);
 
-		
 		KakaoRouteResponseDTO body = response.getBody();
 		if (body == null || body.getRoutes() == null || body.getRoutes().isEmpty()) {
 			throw new IllegalStateException("카카오 경로 응답 없음");
@@ -58,32 +59,28 @@ public class KakaoRouteClient {
 
 	// 경유지 포함 버전 (구간 합산).
 	public RouteInfoDTO requestRoute(List<LatLng> waypoints) {
-	    if (waypoints == null || waypoints.size() < 2) {
-	        throw new IllegalArgumentException("경로 계산을 위해서는 최소 2개 이상의 좌표가 필요합니다.");
-	    }
+		if (waypoints == null || waypoints.size() < 2) {
+			throw new IllegalArgumentException("경로 계산을 위해서는 최소 2개 이상의 좌표가 필요합니다.");
+		}
 
-	    List<LatLng> pts = new ArrayList<>();
-	    long totalDist = 0;
-	    long totalDur = 0;
+		List<LatLng> pts = new ArrayList<>();
+		long totalDist = 0;
+		long totalDur = 0;
 
-	    // 연속된 두 지점씩 끊어서 경로를 요청
-	    for (int i = 0; i < waypoints.size() - 1; i++) {
-	        LatLng from = waypoints.get(i);
-	        LatLng to = waypoints.get(i + 1);
+		// 연속된 두 지점씩 끊어서 경로를 요청
+		for (int i = 0; i < waypoints.size() - 1; i++) {
+			LatLng from = waypoints.get(i);
+			LatLng to = waypoints.get(i + 1);
 
-	        RouteInfoDTO leg = requestRoute(from, to);
-	        if (leg != null) {
-	            pts.addAll(leg.getPolyline());
-	            totalDist += leg.getDistance();
-	            totalDur += leg.getDuration();
-	        }
-	    }
+			RouteInfoDTO leg = requestRoute(from, to);
+			if (leg != null) {
+				pts.addAll(leg.getPolyline());
+				totalDist += leg.getDistance();
+				totalDur += leg.getDuration();
+			}
+		}
 
-	    return RouteInfoDTO.builder()
-	            .polyline(pts)
-	            .distance(totalDist)
-	            .duration(totalDur)
-	            .build();
+		return RouteInfoDTO.builder().polyline(pts).distance(totalDist).duration(totalDur).build();
 	}
 
 	public String toJsonRoute(List<LatLng> points) {
@@ -95,22 +92,24 @@ public class KakaoRouteClient {
 	}
 
 	public String encodePolyline(List<LatLng> points) {
-		StringBuilder out = new StringBuilder();
-		long lastLat = 0, lastLng = 0;
+	    StringBuilder out = new StringBuilder();
+	    long lastLat = 0, lastLng = 0;
 
-		for (LatLng p : points) {
-			long lat = Math.round(p.getLat() * 1e5);
-			long lng = Math.round(p.getLng() * 1e5);
-			long dLat = lat - lastLat;
-			long dLng = lng - lastLng;
+	    for (LatLng p : points) {
+	        // BigDecimal → double 변환 후 1e5 배율 적용
+	        long lat = Math.round(p.getLat().doubleValue() * 1e5);
+	        long lng = Math.round(p.getLng().doubleValue() * 1e5);
 
-			encodeSigned(dLat, out);
+	        long dLat = lat - lastLat;
+	        long dLng = lng - lastLng;
+
+	        encodeSigned(dLat, out);
 			encodeSigned(dLng, out);
 
-			lastLat = lat;
-			lastLng = lng;
-		}
-		return out.toString();
+	        lastLat = lat;
+	        lastLng = lng;
+	    }
+	    return out.toString();
 	}
 
 	private void encodeSigned(long v, StringBuilder out) {
@@ -133,8 +132,8 @@ public class KakaoRouteClient {
 			sec.getRoads().forEach(road -> {
 				var v = road.getVertexes();
 				for (int i = 0; i + 1 < v.size(); i += 2) {
-					double lng = v.get(i);
-					double lat = v.get(i + 1);
+					BigDecimal lng = v.get(i);
+					BigDecimal lat = v.get(i + 1);
 					out.add(new LatLng(lat, lng));
 				}
 			});
@@ -148,5 +147,42 @@ public class KakaoRouteClient {
 
 	public Long estimateDuration(LatLng start, LatLng end) {
 		return requestRoute(start, end).getDuration();
+	}
+
+	//작성자: 고은설.
+	//기능: 실제 이동 좌표를 
+	public EncodedRouteSummary summarizeRecordedPath(List<LatLng> points) {
+		if (points == null || points.size() < 2) {
+			return new EncodedRouteSummary(0L, encodePolyline(points == null ? List.of() : points));
+		}
+		long total = 0L;
+		for (int i = 0; i < points.size() - 1; i++) {
+			total += haversineMeters(points.get(i), points.get(i + 1));
+		}
+		String encoded = encodePolyline(points);
+		return new EncodedRouteSummary(total, encoded);
+	}
+
+	// 작성자: 고은설.
+	// 기능: 좌표 기반 이동 거리 측정.
+	private long haversineMeters(LatLng a, LatLng b) {
+	    final double R = 6371000.0; // meters
+	    double rad = Math.PI / 180.0;
+
+	    // BigDecimal → double 변환
+	    double latA = a.getLat().doubleValue();
+	    double lngA = a.getLng().doubleValue();
+	    double latB = b.getLat().doubleValue();
+	    double lngB = b.getLng().doubleValue();
+
+	    double dLat = (latB - latA) * rad;
+	    double dLng = (lngB - lngA) * rad;
+
+	    double s1 = Math.sin(dLat / 2);
+	    double s2 = Math.sin(dLng / 2);
+
+	    double h = s1 * s1 + Math.cos(latA * rad) * Math.cos(latB * rad) * s2 * s2;
+	    double c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+	    return Math.round(R * c);
 	}
 }

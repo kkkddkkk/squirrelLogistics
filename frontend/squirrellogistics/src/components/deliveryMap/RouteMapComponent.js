@@ -1,14 +1,14 @@
 import { useRef } from "react";
-import { useStaticRouteMap } from "../../hook/DeliveryMap/useKakaoRouteMap";
+import { useStaticRouteMap, useStaticRouteMapFromPolyline } from "../../hook/DeliveryMap/useKakaoRouteMap";
 
 
-const RouteMapComponent = ({ routes, polyline, waypoints }) => {
+const RouteMapComponent = ({ expectedRoute, expectedPolyline, waypoints }) => {
     const mapRef = useRef(null);
     useStaticRouteMap({
         mapContainerRef: mapRef,
-        encodedPolyline: polyline,
-        routePointsJSON: routes,
-        waypoints,
+        expectedPolyline,
+        expectedRoute,
+        waypoints
     });
 
     return (

@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gpt.squirrelLogistics.dto.review.DriverReviewCardResponseDTO;
 import com.gpt.squirrelLogistics.dto.review.ReviewRequestDTO;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 import com.gpt.squirrelLogistics.entity.report.Report;
@@ -116,5 +119,11 @@ public class ReviewService {
 	
 	public void delete(Long reviewId) {
 		reviewRepository.deleteById(reviewId);
+	}
+	
+	//작성자: 고은설
+	//기능: 아이디에 해당하는 드라이버가 진행한 운송건에 대한 리뷰 조회 + 페이지네이션 추가 (삭제 금지).
+	public Page<DriverReviewCardResponseDTO> getSubmittedReviews(Long driverId, Pageable pageable) {
+	    return reviewRepository.findAllSubmittedByDriverId(driverId, pageable);
 	}
 }

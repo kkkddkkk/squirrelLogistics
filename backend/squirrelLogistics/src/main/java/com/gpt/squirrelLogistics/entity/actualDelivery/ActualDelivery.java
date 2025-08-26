@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,4 +34,10 @@ public class ActualDelivery {//실제운송
 	private boolean mountainous;//산간지역 여부
 	private boolean caution;//취급주의 여부
 	private Long actualFee;//총 금액
+	
+	//작성자: 고은설.
+	//기능: DB, 렌더링 최적화를 위한 폴리라인 저장.
+	@Lob
+	@Column(columnDefinition = "TEXT")
+	private String actualPolyline;//예상 폴리라인
 }

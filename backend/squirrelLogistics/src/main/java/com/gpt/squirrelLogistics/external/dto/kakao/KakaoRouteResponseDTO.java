@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.external.dto.kakao;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.Data;
@@ -28,6 +29,6 @@ public class KakaoRouteResponseDTO {
 
 	    @Data
 	    public static class Road {
-	        private List<Double> vertexes;
+	        private List<BigDecimal> vertexes;
 	    }
 }

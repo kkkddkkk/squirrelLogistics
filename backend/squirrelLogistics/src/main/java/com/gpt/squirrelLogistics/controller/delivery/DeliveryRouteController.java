@@ -1,5 +1,7 @@
 package com.gpt.squirrelLogistics.controller.delivery;
 
+import java.math.BigDecimal;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,10 +30,9 @@ public class DeliveryRouteController {
         @RequestParam("endLat") double endLat,
         @RequestParam("endLng") double endLng) {
 
-        routeService.startDummy(driverId,
-            new LatLng(startLat, startLng),
-            new LatLng(endLat, endLng));
-
+    	 routeService.startDummy(driverId,
+    		        new LatLng(BigDecimal.valueOf(startLat), BigDecimal.valueOf(startLng)),
+    		        new LatLng(BigDecimal.valueOf(endLat), BigDecimal.valueOf(endLng)));
         return ResponseEntity.ok("Dummy started for driverId=" + driverId);
     }
     
