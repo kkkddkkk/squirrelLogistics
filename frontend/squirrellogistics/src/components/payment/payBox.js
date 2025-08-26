@@ -45,12 +45,6 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
             </>
         )
     }
-    // let additionalRate = 0;
-    // if (stopOver1) additionalRate += 50000;
-    // if (stopOver2) additionalRate += 50000;
-    // if (stopOver3) additionalRate += 50000;
-    // if (caution) additionalRate += 50000;
-    // if (mountainous) additionalRate += 50000;
 
     function HowMuch({ children, fontSize }) {
         return (
@@ -67,8 +61,6 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
             </Grid>
         )
     }
-
-
 
     return (
         <>

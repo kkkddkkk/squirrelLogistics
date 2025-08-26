@@ -36,8 +36,10 @@ public class DeliveryTrackingLog {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "delivery_assignment_id")
 	private DeliveryAssignment deliveryAssignment; //할당 아이디.
-
+	
+	@Column(precision=10, scale=7)
 	private BigDecimal lat; //위도.
+	@Column(precision=10, scale=7)
 	private BigDecimal lng; //경도.
 	private LocalDateTime createdAt; //기록 시간.
 }

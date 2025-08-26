@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import dayjs from "dayjs";
 import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import {
@@ -23,9 +24,11 @@ import {
   Chip,
   InputLabel,
   FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
   Stack,
+  Switch,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -44,6 +47,12 @@ const EditProfile = () => {
     location.state?.verifiedPassword || ""
   );
 
+  console.log("EditProfile 초기화 - location.state:", location.state);
+  console.log(
+    "EditProfile 초기화 - currentPassword:",
+    location.state?.verifiedPassword
+  );
+
   const [form, setForm] = useState({
     id: "", // 회원가입 시 입력한 아이디가 들어올 예정
     name: "",
@@ -58,6 +67,9 @@ const EditProfile = () => {
     unavailableEnd: "",
     deliveryArea: "",
     rating: 0,
+    insurance: false,
+    insuranceRenewalDate: "",
+    insuranceExpiryDate: "",
   });
 
   // 로딩 상태 추가
@@ -167,34 +179,7 @@ const EditProfile = () => {
   const [selectedCity, setSelectedCity] = useState("서울");
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
-  const [showBankModal, setShowBankModal] = useState(false);
-  const [selectedBank, setSelectedBank] = useState("은행 선택");
-  const [activeTab, setActiveTab] = useState(0);
 
-  // 은행 데이터
-  const banks = [
-    { name: "NH농협", logo: "🏦" },
-    { name: "KB국민", logo: "🏦" },
-    { name: "신한", logo: "🏦" },
-    { name: "우리", logo: "🏦" },
-    { name: "하나", logo: "🏦" },
-    { name: "IBK기업", logo: "🏦" },
-    { name: "부산", logo: "🏦" },
-    { name: "경남", logo: "🏦" },
-    { name: "대구", logo: "🏦" },
-    { name: "우체국", logo: "🏦" },
-    { name: "새마을금고", logo: "🏦" },
-    { name: "SC제일", logo: "🏦" },
-  ];
-  // 증권사 데이터
-  const securities = [
-    { name: "NH투자증권", logo: "📈" },
-    { name: "KB증권", logo: "📈" },
-    { name: "신한투자증권", logo: "📈" },
-    { name: "우리투자증권", logo: "📈" },
-    { name: "하나증권", logo: "📈" },
-    { name: "IBK투자증권", logo: "📈" },
-  ];
   // 도시별 구/군 데이터
   const cityDistricts = {
     서울: [
@@ -536,12 +521,6 @@ const EditProfile = () => {
     }));
   };
 
-  // 은행/증권사 선택 핸들러
-  const handleBankSelect = (bank) => {
-    setSelectedBank(bank.name);
-    setShowBankModal(false);
-  };
-
   // 프로필 사진 업로드 처리
   const handleImageUpload = async (file) => {
     console.log("handleImageUpload 호출됨:", file);
@@ -678,9 +657,19 @@ const EditProfile = () => {
         name: form.name,
         email: form.email,
         phone: form.phone, // 백엔드에서 Pnumber로 매핑됨
-        account: form.bankAccount,
+        account: form.bankAccount || "",
         businessN: form.businessId,
         mainLoca: form.deliveryArea,
+        // 보험 관련 필드는 백엔드에 아직 구현되지 않음
+        // insurance: form.insurance,
+        // insuranceRenewalDate:
+        //   form.insuranceRenewalDate && form.insuranceRenewalDate.trim() !== ""
+        //     ? dayjs(form.insuranceRenewalDate).toDate()
+        //     : null,
+        // insuranceExpiryDate:
+        //   form.insuranceExpiryDate && form.insuranceExpiryDate.trim() !== ""
+        //     ? dayjs(form.insuranceExpiryDate).toDate()
+        //     : null,
         // 기존 데이터 유지를 위한 필드들 (null로 설정하여 기존 값 유지)
         loginId: null, // 기존 값 유지
         password: null, // 기존 값 유지 (별도 API로 처리)
@@ -703,10 +692,18 @@ const EditProfile = () => {
       // 비밀번호 수정 처리
       if (form.password && form.password.trim() !== "") {
         console.log("비밀번호 수정 시작");
+        console.log("currentPassword:", currentPassword);
+        console.log("newPassword:", form.password);
+
+        if (!currentPassword || currentPassword.trim() === "") {
+          alert(
+            "현재 비밀번호가 확인되지 않았습니다. 다시 비밀번호 확인을 진행해주세요."
+          );
+          return;
+        }
+
         try {
-          // 현재 비밀번호는 인증 페이지에서 이미 확인했으므로,
-          // 새로운 비밀번호만 전달 (백엔드에서 현재 비밀번호 확인 로직 필요)
-          await changePassword(currentPassword, form.password); // 현재 비밀번호는 빈 문자열로 전달
+          await changePassword(currentPassword, form.password);
           console.log("비밀번호 수정 성공");
         } catch (passwordError) {
           console.error("비밀번호 수정 실패:", passwordError);
@@ -746,9 +743,23 @@ const EditProfile = () => {
       });
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert(
-        "프로필 수정에 실패했습니다: " + (error.response?.data || error.message)
-      );
+
+      // 에러 메시지 추출
+      let errorMessage = "알 수 없는 오류가 발생했습니다.";
+
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert("프로필 수정에 실패했습니다: " + errorMessage);
     }
   };
 
@@ -1014,26 +1025,13 @@ const EditProfile = () => {
               helperText={emailError}
               fullWidth
             />
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={3}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => setShowBankModal(true)}
-                >
-                  {selectedBank}
-                </Button>
-              </Grid>
-              <Grid item xs={9}>
-                <TextField
-                  label="계좌번호"
-                  name="bankAccount"
-                  value={form.bankAccount}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              label="계좌번호"
+              name="bankAccount"
+              value={form.bankAccount}
+              onChange={handleChange}
+              fullWidth
+            />
             <TextField
               label="사업자 등록 번호"
               name="businessId"
@@ -1041,94 +1039,86 @@ const EditProfile = () => {
               onChange={handleChange}
               fullWidth
             />
-            <TextField
-              label="운행 불가 시작일"
-              name="unavailableStart"
-              type="date"
-              value={form.unavailableStart}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="운행 불가 종료일"
-              name="unavailableEnd"
-              type="date"
-              value={form.unavailableEnd}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            {/* 배송 가능 지역 선택 */}
-            <FormControl fullWidth>
-              <InputLabel>도시</InputLabel>
-              <Select
-                value={selectedCity}
-                label="도시"
-                onChange={handleCityChange}
-              >
-                {Object.keys(cityDistricts).map((city) => (
-                  <MenuItem key={city} value={city}>
-                    {city}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              variant="outlined"
-              onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
-              fullWidth
-            >
-              구/군을 선택하세요
-            </Button>
-            <Modal
-              open={showDistrictDropdown}
-              onClose={() => setShowDistrictDropdown(false)}
-            >
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  bgcolor: "background.paper",
-                  boxShadow: 24,
-                  p: 4,
-                  borderRadius: 2,
-                  width: 300,
-                  maxHeight: 400,
-                  overflowY: "auto",
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  구/군 선택
-                </Typography>
-                <Stack spacing={1}>
-                  {cityDistricts[selectedCity]?.map((district, idx) => (
-                    <Button
-                      key={idx}
-                      onClick={() => handleDistrictSelect(district)}
-                      variant="text"
-                      sx={{ justifyContent: "flex-start" }}
-                    >
-                      {district}
-                    </Button>
-                  ))}
-                </Stack>
-              </Box>
-            </Modal>
-            {/* 선택된 지역들 표시 */}
-            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {selectedAreas.map((area, idx) => (
-                <Chip
-                  key={idx}
-                  label={area}
-                  onDelete={() => removeArea(area)}
-                  color="primary"
-                  variant="outlined"
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="운행 불가 시작일"
+                  name="unavailableStart"
+                  type="date"
+                  value={form.unavailableStart}
+                  onChange={handleChange}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
                 />
-              ))}
+              </div>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="운행 불가 종료일"
+                  name="unavailableEnd"
+                  type="date"
+                  value={form.unavailableEnd}
+                  onChange={handleChange}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </div>
             </Box>
+
+            {/* 보험 관련 섹션 - 백엔드에 아직 구현되지 않음 */}
+            {/* <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={form.insurance}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          insurance: e.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="보험 가입"
+                />
+              </div>
+            </Box>
+
+            {form.insurance && (
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="보험 갱신일"
+                    type="date"
+                    fullWidth
+                    value={form.insuranceRenewalDate || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        insuranceRenewalDate: e.target.value,
+                      }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="보험 만료일"
+                    type="date"
+                    fullWidth
+                    value={form.insuranceExpiryDate || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        insuranceExpiryDate: e.target.value,
+                      }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+              </Box>
+            )} */}
+
             <Box display="flex" justifyContent="space-between" pt={3}>
               <Button
                 variant="outlined"
@@ -1144,83 +1134,6 @@ const EditProfile = () => {
           </Stack>
         </Box>
       </Container>
-      {/* 은행/증권사 선택 모달 */}
-      <Modal open={showBankModal} onClose={() => setShowBankModal(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            borderRadius: 2,
-            width: 350,
-            maxHeight: 500,
-            overflowY: "auto",
-          }}
-        >
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            p={2}
-            borderBottom={1}
-            borderColor="divider"
-          >
-            <Typography variant="h6">은행·증권사 선택</Typography>
-            <IconButton onClick={() => setShowBankModal(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Tabs
-            value={activeTab}
-            onChange={(_, v) => setActiveTab(v)}
-            variant="fullWidth"
-          >
-            <Tab label="은행" />
-            <Tab label="증권사" />
-          </Tabs>
-          <Box p={2}>
-            <Grid container spacing={2}>
-              {(activeTab === 0 ? banks : securities).map((item, idx) => (
-                <Grid item xs={3} key={idx}>
-                  <Button
-                    onClick={() => handleBankSelect(item)}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        bgcolor:
-                          activeTab === 0 ? "primary.main" : "success.main",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        mb: 1,
-                        fontSize: 24,
-                      }}
-                    >
-                      {item.logo}
-                    </Box>
-                    <Typography variant="caption" align="center">
-                      {item.name}
-                    </Typography>
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Box>
-      </Modal>
     </Box>
   );
 };

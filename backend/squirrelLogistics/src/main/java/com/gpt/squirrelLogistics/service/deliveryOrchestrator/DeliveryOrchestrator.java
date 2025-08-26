@@ -57,7 +57,7 @@ public class DeliveryOrchestrator {
     			}
     	
         // 1) 요청 생성 (+ 선결제/검증 로직은 requestService 쪽에 유지)
-    	Long requestId = deliveryRequestService.create(paymentDTO, requestDTO);
+    	Long requestId = deliveryRequestService.create(paymentDTO, requestDTO).getRequestId();
 
         // 2) 제안/할당 생성 (추가금 결제는 없음)
         Map<String, Object> assignResult =

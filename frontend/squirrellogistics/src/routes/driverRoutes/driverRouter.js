@@ -43,6 +43,7 @@ const driverRouter = () => {
   const DeliveredDetail = lazy(() =>
     import("../../pages/Driver/DeliveredDetail")
   );
+  const ReportList = lazy(() => import("../../pages/Report/ReportList"));
 
   return [
     {
@@ -142,10 +143,18 @@ const driverRouter = () => {
       ),
     },
     {
-      path: "deliveredetail/:actualDelivery_id",
+      path: "deliveredetail/:assignedId",
       element: (
         <Suspense fallback={Loading}>
           <DeliveredDetail />
+        </Suspense>
+      ),
+    },
+    {
+      path: ":driverId/reportlist",
+      element: (
+        <Suspense fallback={Loading}>
+          <ReportList />
         </Suspense>
       ),
     },

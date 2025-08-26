@@ -8,6 +8,9 @@ import com.gpt.squirrelLogistics.dto.payment.PayBoxDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentFailureDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentSuccessDTO;
+import com.gpt.squirrelLogistics.dto.payment.RecieptDTO;
+import com.gpt.squirrelLogistics.dto.payment.RefundDTO;
+import com.gpt.squirrelLogistics.dto.payment.TransactionStatementDTO;
 import com.gpt.squirrelLogistics.dto.payment.TryPaymentDTO;
 import com.gpt.squirrelLogistics.dto.review.ReviewRequestDTO;
 import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
@@ -20,18 +23,21 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
 @Log4j2
 @RequiredArgsConstructor
-@RequestMapping("/api/public/payment")
+@RequestMapping("/api/payment")
 public class PaymentController {
 	private final PaymentRepository paymentRepository;
 	private final PaymentService paymentService;
@@ -41,6 +47,22 @@ public class PaymentController {
 //    	Long reviewId = reviewService.regiReview(reviewDTO);
 
         return null;
+    }
+    
+    //1차 결제 payment row 생성
+    @PostMapping("/firstTry/{paymentId}")
+    public Map<String, Long> tryFirstPayment(@PathVariable(name="paymentId") Long paymentId, @RequestBody PaymentDTO paymentDTO ) {
+    	paymentDTO.setPaymentId(paymentId);
+    	Long secondPaymentId =  paymentService.tryFirstPayment(paymentDTO);
+
+        return Map.of("secondPaymentId", secondPaymentId);
+    }
+    
+    //1차 결제창 랜더링
+    @GetMapping("/first/{paymentId}")
+    public PayBoxDTO getFirstPayBox(@PathVariable(name="paymentId") Long paymentId) {
+    	PayBoxDTO payBoxDTO = paymentService.getFirstPayBox(paymentId);
+    	return payBoxDTO;
     }
     
     //2차 결제 payment row 생성
@@ -59,11 +81,13 @@ public class PaymentController {
     	return payBoxDTO;
     }
     
-    //2차 결제 시도
-    @PutMapping("/second/{paymentId}")
-    public Map<String, Long> processingsecondPayment(@PathVariable(name="paymentId") Long paymentId, @RequestBody TryPaymentDTO tryPaymentDTO ) {
-    	tryPaymentDTO.setPaymentId(paymentId);
-    	paymentService.processingsecondPayment(tryPaymentDTO);
+    //1차결제성공
+    @PutMapping("/first/{paymentId}/success")
+    public Map<String, Long> successFirstPayment(@PathVariable(name="paymentId") Long paymentId, @RequestBody PaymentSuccessDTO paymentSuccessDTO ) {
+    	
+    	log.info("DTO in Controller --> " + paymentSuccessDTO);
+    	paymentSuccessDTO.setPaymentId(paymentId);
+    	paymentService.successFirstPayment(paymentSuccessDTO);
 
         return Map.of("paymentId", paymentId);
     }
@@ -84,6 +108,30 @@ public class PaymentController {
     	paymentService.failureSecondPayment(paymentFailureDTO);
 
         return Map.of("paymentId", paymentId);
+    }
+    
+    //환불
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelPayment(@RequestBody RefundDTO refundDTO) {
+        try {
+            log.info("Cancel request received: {}", refundDTO);
+            //paymentService.cancelPayment(refundDTO);
+            return ResponseEntity.ok(Map.of("status", "success"));
+        } catch (Exception e) {
+            log.error("cancelPayment failed", e);
+            throw e; // 반드시 다시 던져서 500 확인
+        }
+    }
+    
+    @GetMapping("/reciept")
+    public RecieptDTO getRecipet(@RequestParam(name = "paymentId") Long paymentId ) {
+
+        return paymentService.getReciept(paymentId);
+    }
+    
+    @GetMapping("/transactionStatement")
+    public TransactionStatementDTO getTransaction(@RequestParam(name="paymentId") Long paymentId) {
+    	return paymentService.getTransaction(paymentId);
     }
     
     

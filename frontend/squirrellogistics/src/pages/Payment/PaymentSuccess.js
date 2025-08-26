@@ -1,9 +1,10 @@
-import { Box, Button, Grid, Modal, Typography } from "@mui/material"
-import React, { useEffect, useRef, useState } from "react"
+import { Box, Button, Grid, } from "@mui/material"
+import React, { useEffect, useState } from "react"
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
-import { Link, useParams, useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import { Layout } from "../../components/common/CommonForCompany"
 import { failureSecondPayment, successSecondPayment } from "../../api/company/paymentApi"
+import Logo from '../../components/common/squirrelLogisticsLogo.png';
 
 export const showReciept = () => {
     window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
@@ -61,18 +62,17 @@ const PaymentSuccess = () => {
 
     return (
         <Layout>
-            <Grid container display={"flex"} justifyContent={"center"} flexWrap={"wrap"} marginTop={"5%"}>
+            <Grid container display={"flex"} justifyContent={"center"} flexWrap={"wrap"} marginTop={"10%"}>
                 {/* <Grid size={3}/> */}
                 <Grid size={12} display={"flex"} justifyContent={"center"} flexWrap={"wrap"}>
                     <Box
                         component="img"
                         sx={{
-                            height: 400,
-                            width: "100%",
-                            marginTop: "2%"
+                            width: "80%",
+                            // margin: "15% 0"
                         }}
-                        alt="OtterImg"
-                        src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                        alt="LOGO"
+                        src={Logo}
                     >
                     </Box>
 
@@ -82,7 +82,7 @@ const PaymentSuccess = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            margin: "5% 0"
+                            margin: "15% 0"
                         }}
                     >
                         <PsButton func={() => moveToMain()}>메인화면</PsButton>

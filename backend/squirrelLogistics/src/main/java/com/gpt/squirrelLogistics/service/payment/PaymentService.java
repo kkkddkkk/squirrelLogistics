@@ -7,6 +7,9 @@ import com.gpt.squirrelLogistics.dto.payment.PayBoxDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentFailureDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentSuccessDTO;
+import com.gpt.squirrelLogistics.dto.payment.RecieptDTO;
+import com.gpt.squirrelLogistics.dto.payment.RefundDTO;
+import com.gpt.squirrelLogistics.dto.payment.TransactionStatementDTO;
 import com.gpt.squirrelLogistics.dto.payment.TryPaymentDTO;
 
 @Service
@@ -15,17 +18,32 @@ public interface PaymentService {
 	
 	PaymentDTO getPayment(Long paymentId);
 	
+	//1차결제 시도
+	Long tryFirstPayment(PaymentDTO paymentDTO);
+	
+	//1차 결제 페이지 랜더링
+	PayBoxDTO getFirstPayBox(Long paymentId);
+	
 	//2차결제 시도
 	Long trySecondPayment(PaymentDTO paymentDTO);
 	
-	//결제 페이지 랜더링
+	//2차 결제 페이지 랜더링
 	PayBoxDTO getSecondPayBox(Long prepaid);
 	
-	//2차 결제
-	void processingsecondPayment(TryPaymentDTO tryPaymentDTO);
+	//1차 결제 성공 시
+	void successFirstPayment(PaymentSuccessDTO paymentSuccessDTO);
 	
+	//2차 결제 생공 시
 	void successSecondPayment(PaymentSuccessDTO paymentSuccessDTO);
 	
+	//2차 결제 실패 시
 	void failureSecondPayment(PaymentFailureDTO paymentFailureDTO);
+	
+	
+	//영수증 랜더링
+	RecieptDTO getReciept(Long paymentId);
+	
+	//거래명세서 랜더링
+	TransactionStatementDTO getTransaction(Long paymentId);
 
 }

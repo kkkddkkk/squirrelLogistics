@@ -15,12 +15,10 @@ const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope
     }
 
     return (
-        <ListBoxContainer header={header}>
-            {!isExpand ?
-                <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
+        <ListBoxContainer header={header} isExpand={isExpand} setIsExpand={setIsExpand}>
+            {!isExpand ?<></>
                 : <>
                 <input type="hidden" value={reviewId}></input>
-                    <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} />
                     <Box margin={"3%"} width={"100%"}>
                         <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"} >
                             <Box width={"30%"} display={"flex"} alignItems={"center"} flexWrap={"wrap"} flexDirection={"column"}>

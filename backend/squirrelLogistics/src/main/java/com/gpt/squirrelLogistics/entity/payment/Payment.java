@@ -43,6 +43,8 @@ public class Payment {//결제
 	private LocalDateTime paid;//결제완료 일시
 	private LocalDateTime refundDate;//환불일자
 	
+	private String impUid;//아임포트 API 승인번호
+	
 	@Enumerated(EnumType.STRING)
 	private PayStatusEnum payStatus;//결제상태
 	

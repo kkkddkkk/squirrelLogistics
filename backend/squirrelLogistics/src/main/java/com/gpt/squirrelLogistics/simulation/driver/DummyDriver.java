@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.simulation.driver;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,7 +44,8 @@ public class DummyDriver {
 		this.driverId = driverId;
 		this.kakaoClient = kakaoClient;
 		this.scheduler = scheduler;
-		this.current = Objects.requireNonNullElseGet(initialPosition, () -> new LatLng(37.5662952, 126.9779451)); // 서울시청
+		this.current = Objects.requireNonNullElseGet(initialPosition, 
+				() -> new LatLng(new BigDecimal("37.5546785"), new BigDecimal("126.9706069"))); // 서울시청
 	}
 
 	private java.util.function.Consumer<LatLng> moveHook = p -> {

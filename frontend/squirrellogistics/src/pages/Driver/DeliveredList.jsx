@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -14,17 +14,12 @@ import {
   TableRow,
   Paper,
   Pagination,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
-const mockDeliveredData = Array.from({ length: 23 }).map((_, i) => ({
-  actualDelivery_id: `#9933${i + 1}`,
-  date: `2025.08.${((i % 28) + 1).toString().padStart(2, "0")}`,
-  company_id: "(주)마녀공장",
-  user_id: "김인주",
-  product_id: `앰플세럼 세트 외 ${(i % 5) + 1}건`,
-  deliveryStatus: "배송완료",
-}));
+import { fetchCompletedDeliveries } from "../../api/deliveryRequest/deliveryCompletedAPI";
+import dayjs from "dayjs";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -33,23 +28,54 @@ const DeliveredList = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
   const [page, setPage] = useState(1);
+  const [deliveredData, setDeliveredData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredData = mockDeliveredData
-    .filter((item) =>
-      `${item.company_id}${item.user_id}${item.product_id}`
+  useEffect(() => {
+    const loadCompletedDeliveries = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchCompletedDeliveries();
+        setDeliveredData(data);
+      } catch (err) {
+        setError("운송 완료 목록을 불러오는데 실패했습니다.");
+        console.error("운송 완료 목록 조회 실패:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCompletedDeliveries();
+  }, []);
+
+  const filteredData = deliveredData
+    .filter((item) => {
+      // 새로운 응답 구조에서 additionalInfo를 통해 주소 정보에 접근
+      const additionalInfo = item.additionalInfo || {};
+      const startAddress = additionalInfo.startAddress || "";
+      const endAddress = additionalInfo.endAddress || "";
+      return `${startAddress}${endAddress}`
         .toLowerCase()
-        .includes(search.toLowerCase())
-    )
+        .includes(search.toLowerCase());
+    })
     .sort((a, b) => {
+      // 새로운 응답 구조에서 additionalInfo를 통해 완료일자에 접근
+      const additionalInfoA = a.additionalInfo || {};
+      const additionalInfoB = b.additionalInfo || {};
+      const completedAtA = additionalInfoA.completedAt;
+      const completedAtB = additionalInfoB.completedAt;
+      const startAddressA = additionalInfoA.startAddress || "";
+      const startAddressB = additionalInfoB.startAddress || "";
+      
       switch (sort) {
         case "latest":
-          return new Date(b.date) - new Date(a.date);
+          return new Date(completedAtB) - new Date(completedAtA);
         case "oldest":
-          return new Date(a.date) - new Date(b.date);
+          return new Date(completedAtA) - new Date(completedAtB);
         case "product":
-          return a.product_id.localeCompare(b.product_id);
-        case "customer":
-          return a.user_id.localeCompare(b.user_id);
+          return startAddressA.localeCompare(startAddressB);
         default:
           return 0;
       }
@@ -59,6 +85,35 @@ const DeliveredList = () => {
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE
   );
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          bgcolor: "#F5F7FA",
+          minHeight: "100vh",
+          py: 6,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh", py: 6 }}>
+        <Container maxWidth="lg">
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh", py: 6 }}>
@@ -70,7 +125,7 @@ const DeliveredList = () => {
         {/* 검색 + 정렬 */}
         <Stack direction="row" spacing={2} mb={4}>
           <TextField
-            label="검색 (기업처 / 고객명 / 상품명)"
+            label="검색 (출발지 / 도착지)"
             variant="outlined"
             size="medium"
             value={search}
@@ -91,8 +146,7 @@ const DeliveredList = () => {
           >
             <MenuItem value="latest">최신순</MenuItem>
             <MenuItem value="oldest">오래된순</MenuItem>
-            <MenuItem value="product">상품명순</MenuItem>
-            <MenuItem value="customer">고객명순</MenuItem>
+            <MenuItem value="product">출발지순</MenuItem>
           </TextField>
         </Stack>
 
@@ -105,9 +159,8 @@ const DeliveredList = () => {
                   "운송번호",
                   "처리상태",
                   "운송완료일자",
-                  "기업처",
-                  "고객명",
-                  "상품명",
+                  "출발지",
+                  "도착지",
                 ].map((header) => (
                   <TableCell
                     key={header}
@@ -134,44 +187,44 @@ const DeliveredList = () => {
                 },
               }}
             >
-              {paginatedData.map((row, idx) => (
-                <TableRow
-                  key={idx}
-                  hover
-                  sx={{ height: 72, cursor: "pointer" }}
-                  onClick={() =>
-                    navigate(`/driver/deliveredetail/${row.actualDelivery_id}`)
-                  }
-                >
-                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
-                    {row.actualDelivery_id}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
-                    {row.deliveryStatus}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
-                    {row.date}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
-                    {row.company_id}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
-                    {row.user_id}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: "1.1rem",
-                      py: 2.5,
-                      maxWidth: 300,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
+              {paginatedData.map((row, idx) => {
+                // 새로운 응답 구조에서 additionalInfo를 통해 필요한 데이터에 접근
+                const additionalInfo = row.additionalInfo || {};
+                const assignedId = additionalInfo.assignedId;
+                const status = additionalInfo.status;
+                const completedAt = additionalInfo.completedAt;
+                const startAddress = additionalInfo.startAddress;
+                const endAddress = additionalInfo.endAddress;
+                
+                return (
+                  <TableRow
+                    key={idx}
+                    hover
+                    sx={{ height: 72, cursor: "pointer" }}
+                    onClick={() =>
+                      navigate(`/driver/deliveredetail/${assignedId}`)
+                    }
                   >
-                    {row.product_id}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                      #{assignedId}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                      {status === "COMPLETED" ? "배송완료" : status}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                      {completedAt
+                        ? dayjs(completedAt).format("YYYY.MM.DD")
+                        : "-"}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                      {startAddress || "-"}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "1.1rem", py: 2.5 }}>
+                      {endAddress || "-"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

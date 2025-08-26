@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.dto.deliveryWaypoint;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -28,8 +29,8 @@ public class DeliveryWaypointSlimResponseDTO {
 	private LocalDateTime droppedAt;//배송시간
 	
 	//경유지 위경도(작성자: 고은설)
-	private double lat; 
-    private double lng;
+	private BigDecimal lat; 
+    private BigDecimal lng;
     
 	private StatusEnum status;//경유지 상태
 	

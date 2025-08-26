@@ -34,6 +34,8 @@ export default function useAuthSession({ onLogout, idleMinutes = 15 }) {
     // 2) 무활동(Idle) 타이머
     const armIdleTimer = () => {
         if (idleMinutes <= 0) return;
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
         const idleMs = idleMinutes * 60 * 1000;
 
         const reset = () => {

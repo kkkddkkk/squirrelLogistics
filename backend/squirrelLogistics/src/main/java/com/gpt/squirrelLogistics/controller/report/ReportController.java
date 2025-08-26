@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -29,9 +30,11 @@ import com.gpt.squirrelLogistics.dto.report.ReportSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.review.ReviewRequestDTO;
 import com.gpt.squirrelLogistics.entity.report.Report;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
+import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
 import com.gpt.squirrelLogistics.repository.reportImage.ReportImageRepository;
 import com.gpt.squirrelLogistics.service.report.ReportService;
+import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,46 +42,65 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/api/public/report")
+@RequestMapping("/api/report")
 public class ReportController {
 	private final ReportService reportService;
 	private final DeliveryAssignmentRepository assignmentRepository;
 	private final String uploadDir = new File("uploads").getAbsolutePath() + "/";
+	private final FindUserByTokenService findUserByTokenService;
+	private final CompanyRepository companyRepository;
 	
+//	@GetMapping("/list")
+//	@TimedEndpoint("reportList")
+//	public List<Map<String, Object>> reportList(){
+//		try {
+//			List<Map<String, Object>> reports = reportService.reportList();
+//			
+//			// 🔍 프론트엔드 전송 직전 로깅 (처음 3개만 샘플로 출력)
+//			log.info("🚀 ReportController /api/public/report/list - 총 {}건 전송", reports.size());
+//			if (!reports.isEmpty()) {
+//				log.info("📋 첫 번째 리포트 샘플: {}", reports.get(0));
+//			}
+//			
+//			return reports;
+//		} catch (Exception e) {
+//			log.error("❌ ReportController /api/public/report/list 실패: {}", e.getMessage());
+//			throw e;
+//		}
+//	}
+	
+	//김도경: userId로 reportList 찾기
 	@GetMapping("/list")
 	@TimedEndpoint("reportList")
-	public List<Map<String, Object>> reportList(){
-		try {
-			List<Map<String, Object>> reports = reportService.reportList();
-			
-			// 🔍 프론트엔드 전송 직전 로깅 (처음 3개만 샘플로 출력)
-			log.info("🚀 ReportController /api/public/report/list - 총 {}건 전송", reports.size());
-			if (!reports.isEmpty()) {
-				log.info("📋 첫 번째 리포트 샘플: {}", reports.get(0));
-			}
-			
-			return reports;
-		} catch (Exception e) {
-			log.error("❌ ReportController /api/public/report/list 실패: {}", e.getMessage());
-			throw e;
-		}
+	public List<Map<String, Object>> reportList(@RequestHeader("Authorization")String token){
+		
+		Long userId = findUserByTokenService.getUserIdByToken(token);
+		Long companyId = companyRepository.findCompanyIdByUserId(userId);
+		
+		return reportService.reportList(companyId);
 	}
 	
-	@GetMapping("/detail")
-	public Map<String, Object> viewReport(@RequestParam("reportId") Long reportId){
-		try {
-			Map<String, Object> reportDetail = reportService.viewReport(reportId);
-			
-			// 🔍 프론트엔드 전송 직전 로깅
-			log.info("🚀 ReportController /api/public/report/detail - ID {} 전송: rStatus={}, rCate={}", 
-				reportId, reportDetail.get("rStatus"), reportDetail.get("rCate"));
-			
-			return reportDetail;
-		} catch (Exception e) {
-			log.error("❌ ReportController /api/public/report/detail ID {} 실패: {}", reportId, e.getMessage());
-			throw e;
-		}
+	@GetMapping
+	@TimedEndpoint("viewReport")
+	public ReportSlimResponseDTO viewReport(@RequestParam("reportId") Long reportId){
+		return reportService.viewReport(reportId);
 	}
+	
+//	@GetMapping("/detail")
+//	public Map<String, Object> viewReport(@RequestParam("reportId") Long reportId){
+//		try {
+//			Map<String, Object> reportDetail = reportService.viewReport(reportId);
+//			
+//			// 🔍 프론트엔드 전송 직전 로깅
+//			log.info("🚀 ReportController /api/public/report/detail - ID {} 전송: rStatus={}, rCate={}", 
+//				reportId, reportDetail.get("rStatus"), reportDetail.get("rCate"));
+//			
+//			return reportDetail;
+//		} catch (Exception e) {
+//			log.error("❌ ReportController /api/public/report/detail ID {} 실패: {}", reportId, e.getMessage());
+//			throw e;
+//		}
+//	}
 
 	
 	@PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })

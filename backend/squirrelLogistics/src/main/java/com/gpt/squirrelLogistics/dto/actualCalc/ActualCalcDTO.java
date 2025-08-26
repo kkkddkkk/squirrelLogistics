@@ -31,6 +31,8 @@ public class ActualCalcDTO {
 	private Long requestId;
 	private Long estimateFee;
 	
+	private String actualPolyline;
+	
 	
 
 }

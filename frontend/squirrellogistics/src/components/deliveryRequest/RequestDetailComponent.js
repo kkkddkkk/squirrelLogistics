@@ -63,9 +63,11 @@ const RequestDetailComponent = () => {
         return () => controller.abort();
     }, [requestId]);
 
+
     // requestData → deliveryData 매핑
     useEffect(() => {
         if (!requestData) return;
+        console.log(requestData);
 
         const mapped = {
             request_id: requestData.requestId,
@@ -94,6 +96,7 @@ const RequestDetailComponent = () => {
                 handlingTags: wp.handlingTags,
             })),
         };
+
 
         setDeliveryData(mapped);
     }, [requestData]);
@@ -193,7 +196,6 @@ const RequestDetailComponent = () => {
     const formatWon = (n) => (Number(n) || 0).toLocaleString('ko-KR') + '원';
     const handlingTagString = renderWarningTags(deliveryData?.waypoints);
 
-    console.log(deliveryData);
     return (
 
         <Box width={"100%"}>
@@ -280,8 +282,8 @@ const RequestDetailComponent = () => {
                                 }}>
                                 {/* 카카오 지도 컴포넌트 자리 */}
                                 <RouteMapComponent
-                                    routes={deliveryData.routes}
-                                    polyline={deliveryData.polyline}
+                                    expectedRoute={deliveryData.routes}
+                                    expectedPolyline={deliveryData.polyline}
                                     waypoints={deliveryData.waypoints}
                                 />
                             </Paper>
@@ -376,9 +378,9 @@ const RequestDetailComponent = () => {
                                     <Grid container justifyContent="space-between" direction="row">
                                         <Grid item>
                                             <Typography variant="body2" mb={1} sx={textSx}><strong>하차지 수: </strong>
-                                                {(!deliveryData.waypoints || (deliveryData.waypoints.length -1) === 0)
+                                                {(!deliveryData.waypoints || (deliveryData.waypoints.length - 1) === 0)
                                                     ? "하차지 없음"
-                                                    : `${deliveryData.waypoints.length-1}곳`}
+                                                    : `${deliveryData.waypoints.length - 1}곳`}
                                             </Typography>
                                         </Grid>
                                         {deliveryData.waypoints.length > 0 &&

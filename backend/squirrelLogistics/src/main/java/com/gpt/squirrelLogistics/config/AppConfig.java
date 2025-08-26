@@ -5,6 +5,7 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -34,7 +35,11 @@ public class AppConfig implements WebMvcConfigurer {
 		return modelMapper;
 	}
 	
-
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+	
 	//작성자: 고은설.
 	//기능: 운송 요청, 운송 할당 관련 api 엔드포인트 호출 시 최신 상태값 반영을 위한 sweeper호출.
 	@Override

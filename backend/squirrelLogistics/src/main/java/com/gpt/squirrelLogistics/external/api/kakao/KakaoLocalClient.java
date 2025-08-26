@@ -1,6 +1,7 @@
 package com.gpt.squirrelLogistics.external.api.kakao;
 
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
@@ -83,8 +84,8 @@ public class KakaoLocalClient {
                 return null;
             }
 
-            double lng = Double.parseDouble(doc.x);
-            double lat = Double.parseDouble(doc.y);
+            BigDecimal lng = BigDecimal.valueOf(Double.parseDouble(doc.x));
+            BigDecimal lat = BigDecimal.valueOf(Double.parseDouble(doc.y));
             log.info("[KAKAO-GEOCODE] OK ({}, {}) addr='{}' took={}ms",
                     lat, lng, query, Math.round((System.nanoTime()-t0)/1_000_000.0));
             return new LatLng(lat, lng);

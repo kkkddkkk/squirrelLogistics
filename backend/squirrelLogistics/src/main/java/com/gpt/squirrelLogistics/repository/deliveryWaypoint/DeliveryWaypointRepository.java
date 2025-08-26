@@ -16,9 +16,12 @@ public interface DeliveryWaypointRepository extends JpaRepository<DeliveryWaypoi
 	List<DeliveryWaypoint> findByDeliveryRequest_RequestIdOrderByDropOrderAsc(Long requestId);
 
 	// 운송기록 ID로 경유지 목록 찾기
-	@Query("SELECT dw.dropOrder, dw.address " + "FROM DeliveryWaypoint dw " + "JOIN dw.deliveryRequest dr "
-			+ "WHERE dr = (SELECT d.deliveryRequest FROM DeliveryAssignment d WHERE d.assignedId = :assignedId)")
-	List<Object[]> findWaypointByAssignmentId(@Param("assignedId") String assignedId);
+		@Query("SELECT dw.address " +
+			       "FROM DeliveryWaypoint dw " +
+			       "JOIN dw.deliveryRequest dr " +
+			       "WHERE dr = (SELECT d.deliveryRequest FROM DeliveryAssignment d WHERE d.assignedId = :assignedId) " +
+			       "ORDER BY dw.dropOrder ASC")
+			List<String> findWaypointsByAssignmentId(@Param("assignedId") Long assignedId);
 
 	@Query("""
 			select w from DeliveryWaypoint w
