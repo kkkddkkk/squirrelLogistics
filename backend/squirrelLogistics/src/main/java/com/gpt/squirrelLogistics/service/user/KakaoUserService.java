@@ -22,7 +22,7 @@ public class KakaoUserService {
     private final PasswordEncoder encoder;
 
     @Transactional
-    public User findOrCreateFromKakao(KakaoUserProfile profile) {
+    public User findOrCreateFromKakao(KakaoUserProfile profile, UserRoleEnum desiredRole) {
         String kakaoId = "kakao_" + profile.getId();
         return userRepository.findByLoginId(kakaoId).orElseGet(() -> {
             User u = new User();
@@ -33,7 +33,7 @@ public class KakaoUserService {
                               .orElse("카카오사용자"));
             u.setEmail(Optional.ofNullable(profile.getKakaoAccount()).map(KakaoUserProfile.KakaoAccount::getEmail).orElse(null));
             u.setPassword("{noop}");
-            u.setRole(UserRoleEnum.ETC);
+            u.setRole(desiredRole != null ? desiredRole : UserRoleEnum.ETC);
             u.setRegDate(LocalDateTime.now());
             u.setSns_login(true);
             return userRepository.save(u);

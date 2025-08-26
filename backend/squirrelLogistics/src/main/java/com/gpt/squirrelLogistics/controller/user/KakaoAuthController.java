@@ -16,6 +16,7 @@ import com.gpt.squirrelLogistics.config.user.JwtTokenProvider;
 import com.gpt.squirrelLogistics.dto.user.KakaoToken;
 import com.gpt.squirrelLogistics.dto.user.KakaoUserProfile;
 import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.service.user.KakaoOAuthService;
 import com.gpt.squirrelLogistics.service.user.KakaoUserService;
 
@@ -32,22 +33,22 @@ public class KakaoAuthController {
 
     // 카카오가 code를 전달하는 콜백
     @GetMapping("/callback")
-    public ResponseEntity<?> callback(@RequestParam("code") String code) {
-        // 1) code -> access token 교환
+    public ResponseEntity<?> callback(
+            @RequestParam("code") String code,
+            @RequestParam(value = "state", required = false) String state // ✅ 역할 전달받기
+    ) {
         KakaoToken token = kakaoOAuthService.getToken(code);
-
-        // 2) 토큰으로 사용자 정보 조회
         KakaoUserProfile profile = kakaoOAuthService.getUserProfile(token.getAccessToken());
 
-        // 3) 우리 서비스 사용자로 매핑/가입 or 조회
-        User user = userService.findOrCreateFromKakao(profile);
+        //  신규 가입 시 사용할 역할
+        UserRoleEnum desiredRole = toRole(state); // null이면 ETC
+
+        //  서비스에서 역할을 반영하도록 오버로드(아래 서비스 수정 참고)
+        User user = userService.findOrCreateFromKakao(profile, desiredRole);
         userService.updateLastLogin(user.getUserId());
 
-        // 4) JWT 발급
         String accessToken = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
 
-        // 5) 프런트로 리다이렉트(쿼리/프래그먼트로 전달)
-        // ex) http://localhost:3000?token=...&name=...&role=...
         URI redirect = URI.create("http://localhost:3000/oauth/success"
                 + "?token=" + accessToken
                 + "&name=" + URLEncoder.encode(user.getName(), StandardCharsets.UTF_8)
@@ -55,5 +56,14 @@ public class KakaoAuthController {
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(redirect);
         return new ResponseEntity<>(headers, HttpStatus.FOUND);
+    }
+
+    private UserRoleEnum toRole(String s) {
+        if (s == null) return UserRoleEnum.ETC;
+        switch (s.toUpperCase()) {
+            case "DRIVER":  return UserRoleEnum.DRIVER;
+            case "COMPANY": return UserRoleEnum.COMPANY;
+            default:        return UserRoleEnum.ETC;
+        }
     }
 }
