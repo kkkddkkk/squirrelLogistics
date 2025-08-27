@@ -34,7 +34,7 @@ public class DriverServiceImpl implements DriverService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public DriverResponseDTO getDriverProfile(Long userId) {
         log.info("DriverProfile 조회 시작 - userId: {}", userId);
         
@@ -237,8 +237,8 @@ public class DriverServiceImpl implements DriverService {
     }
 
     // 공통 메서드: userId로 Driver 찾기 (없으면 생성)
-    @Transactional(readOnly = false)
-    private Driver findDriverByUserId(Long userId) {
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public Driver findDriverByUserId(Long userId) {
         log.info("findDriverByUserId 호출 - userId: {}", userId);
         
         // 먼저 User가 존재하는지 확인
@@ -248,7 +248,7 @@ public class DriverServiceImpl implements DriverService {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다. userId: " + userId);
         }
         
-        log.info("User 찾음: User ID {}, Name: {}, Role: {}", user.getUserId(), user.getName(), user.getRole());
+        log.info("User 찾음: User ID {}, Name: {}, Role: {}, SNS로그인: {}", user.getUserId(), user.getName(), user.getRole(), user.isSns_login());
         
         // User의 Driver 정보 직접 접근 (양방향 관계 활용)
         Driver driver = user.getDriver();
@@ -256,6 +256,14 @@ public class DriverServiceImpl implements DriverService {
         // Driver 엔티티가 없으면 생성 (구글/카카오 로그인 사용자 등)
         if (driver == null) {
             log.info("Driver 엔티티가 없어서 새로 생성합니다. userId: {}, role: {}", userId, user.getRole());
+            
+            // ✅ SNS 로그인 사용자가 ETC 역할인 경우 DRIVER로 자동 변경
+            if (user.isSns_login() && user.getRole() == com.gpt.squirrelLogistics.enums.user.UserRoleEnum.ETC) {
+                log.info("SNS 로그인 사용자의 역할을 ETC에서 DRIVER로 변경합니다. userId: {}", userId);
+                user.setRole(com.gpt.squirrelLogistics.enums.user.UserRoleEnum.DRIVER);
+                userRepository.save(user);
+            }
+            
             driver = new Driver();
             driver.setUser(user);
             driver.setDrivable(true); // 기본값으로 운전 가능 설정
