@@ -24,6 +24,7 @@ import {
   Chip,
   Avatar,
   Divider,
+  Snackbar,
 } from "@mui/material";
 import {
   Edit,
@@ -48,6 +49,11 @@ export default function ManageVehicles() {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // Dialog 상태
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -90,6 +96,7 @@ export default function ManageVehicles() {
     } catch (err) {
       console.error("차량 목록 조회 실패:", err);
       setError("차량 목록을 불러오는데 실패했습니다.");
+      showSnackbar("차량 목록 조회 실패", "error");
     } finally {
       setLoading(false);
     }
@@ -102,6 +109,7 @@ export default function ManageVehicles() {
       setVehicleTypes(typesData);
     } catch (err) {
       console.error("차량 타입 목록 조회 실패:", err);
+      showSnackbar("차량 타입 목록 조회 실패", "error");
     }
   };
 
@@ -109,6 +117,16 @@ export default function ManageVehicles() {
     loadVehicleTypes();
     loadCars();
   }, []);
+
+  // Snackbar 표시
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  // Snackbar 닫기
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   // Dialog 열기
   const handleOpenDialog = (mode, car = null) => {
@@ -119,7 +137,6 @@ export default function ManageVehicles() {
       setForm({
         carNum: car.carNum || "",
         vehicleTypeId: car.vehicleType?.vehicleTypeId || "",
-
         mileage: car.mileage?.toString() || "",
         etc: car.etc || "",
         inspection: car.inspection
@@ -141,7 +158,6 @@ export default function ManageVehicles() {
       setForm({
         carNum: "",
         vehicleTypeId: "",
-
         mileage: "",
         etc: "",
         inspection: "",
@@ -175,29 +191,74 @@ export default function ManageVehicles() {
   const handleSaveCar = async () => {
     try {
       setError("");
+
+      // 필수 필드 검증
+      if (!form.vehicleTypeId) {
+        setError("차종을 선택해주세요.");
+        showSnackbar("차종을 선택해주세요.", "error");
+        return;
+      }
+
       const token = getToken();
       console.log("저장할 차량 데이터:", form);
+      console.log(
+        "form.vehicleTypeId 타입:",
+        typeof form.vehicleTypeId,
+        "값:",
+        form.vehicleTypeId
+      );
+      console.log(
+        "form.mileage 타입:",
+        typeof form.mileage,
+        "값:",
+        form.mileage
+      );
+      console.log("form.etc 타입:", typeof form.etc, "값:", form.etc);
+      console.log(
+        "form.insurance 타입:",
+        typeof form.insurance,
+        "값:",
+        form.insurance
+      );
+      console.log(
+        "form.carStatus 타입:",
+        typeof form.carStatus,
+        "값:",
+        form.carStatus
+      );
+      console.log(
+        "form.inspection 타입:",
+        typeof form.inspection,
+        "값:",
+        form.inspection
+      );
 
       const carData = {
-        ...form,
-        mileage: form.mileage ? parseInt(form.mileage) : 0,
-        inspection: form.inspection ? dayjs(form.inspection).toDate() : null,
-        regDate: form.regDate ? dayjs(form.regDate).toDate() : null,
-        nextInspection: form.nextInspection
-          ? dayjs(form.nextInspection).toDate()
+        vehicleTypeId: Number(form.vehicleTypeId),
+        carNum: form.carNum || null,
+        mileage:
+          form.mileage && form.mileage.trim() !== ""
+            ? Number(form.mileage.replace(/,/g, ""))
+            : 0,
+        etc: form.etc || "",
+        insurance: form.insurance || false,
+        carStatus: form.carStatus || "OPERATIONAL",
+        inspection: form.inspection
+          ? dayjs(form.inspection).format("YYYY-MM-DDTHH:mm:ss")
           : null,
       };
 
       console.log("변환된 차량 데이터:", carData);
+      console.log("JSON.stringify(carData):", JSON.stringify(carData, null, 2));
 
       if (dialogMode === "create") {
         console.log("차량 생성 모드");
         await carApi.createCar(carData, token);
-        alert("차량이 등록되었습니다.");
+        showSnackbar("차량이 등록되었습니다.", "success");
       } else {
         console.log("차량 수정 모드, carId:", selectedCar.carId);
         await carApi.updateCar(selectedCar.carId, carData, token);
-        alert("차량이 수정되었습니다.");
+        showSnackbar("차량이 수정되었습니다.", "success");
       }
 
       handleCloseDialog();
@@ -206,7 +267,14 @@ export default function ManageVehicles() {
       console.error("차량 저장 실패:", err);
       console.error("에러 상세:", err.response?.data);
       console.error("에러 상태:", err.response?.status);
-      setError(err.response?.data?.message || "차량 저장에 실패했습니다.");
+      console.error("에러 메시지:", err.message);
+
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "차량 저장에 실패했습니다.";
+      setError(errorMessage);
+      showSnackbar(errorMessage, "error");
     }
   };
 
@@ -219,11 +287,11 @@ export default function ManageVehicles() {
     try {
       const token = getToken();
       await carApi.deleteCar(carId, token);
-      alert("차량이 삭제되었습니다.");
+      showSnackbar("차량이 삭제되었습니다.", "success");
       loadCars();
     } catch (err) {
       console.error("차량 삭제 실패:", err);
-      alert("차량 삭제에 실패했습니다.");
+      showSnackbar("차량 삭제 실패", "error");
     }
   };
 
@@ -288,20 +356,6 @@ export default function ManageVehicles() {
             등록된 차량 {cars.length}대
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog("create")}
-          sx={{
-            bgcolor: C.blue,
-            "&:hover": { bgcolor: "#0d2f4f" },
-            px: 3,
-            py: 1.5,
-            borderRadius: 2,
-          }}
-        >
-          차량 추가
-        </Button>
       </Box>
 
       {error && (
@@ -335,11 +389,23 @@ export default function ManageVehicles() {
             startIcon={<Add />}
             onClick={() => handleOpenDialog("create")}
             sx={{
-              bgcolor: C.gold,
-              "&:hover": { bgcolor: "#d69a2e" },
+              bgcolor: C.blue,
+              "&:hover": { bgcolor: "#0d2f4f" },
+              px: 4,
+              py: 2,
+              borderRadius: 3,
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              boxShadow: "0 4px 12px rgba(17, 63, 103, 0.3)",
+              "&:hover": {
+                bgcolor: "#0d2f4f",
+                boxShadow: "0 6px 16px rgba(17, 63, 103, 0.4)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
             }}
           >
-            첫 번째 차량 등록
+            차량 등록하기
           </Button>
         </Paper>
       ) : (
@@ -357,11 +423,29 @@ export default function ManageVehicles() {
               p: 3,
               borderBottom: "1px solid #e0e0e0",
               bgcolor: "#fafafa",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: C.blue }}>
               차량 목록
             </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<Add />}
+              onClick={() => handleOpenDialog("create")}
+              sx={{
+                borderColor: C.blue,
+                color: C.blue,
+                "&:hover": {
+                  borderColor: C.blue,
+                  bgcolor: "#f0f8ff",
+                },
+              }}
+            >
+              차량 추가
+            </Button>
           </Box>
 
           {/* 차량 목록 테이블 */}
@@ -544,14 +628,14 @@ export default function ManageVehicles() {
 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 48%" }}>
-                <FormControl fullWidth>
-                  <InputLabel>차종</InputLabel>
+                <FormControl fullWidth required>
+                  <InputLabel>차종 *</InputLabel>
                   <Select
                     value={form.vehicleTypeId}
                     onChange={(e) =>
                       handleFormChange("vehicleTypeId", e.target.value)
                     }
-                    label="차종"
+                    label="차종 *"
                   >
                     {vehicleTypes.map((type) => (
                       <MenuItem
@@ -662,6 +746,22 @@ export default function ManageVehicles() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

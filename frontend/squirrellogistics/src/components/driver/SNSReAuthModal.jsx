@@ -8,40 +8,84 @@ import {
   Typography,
   Box,
   Alert,
+  IconButton,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
+import CloseIcon from "@mui/icons-material/Close";
 
 const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleGoogleLogin = () => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
     setError("");
 
-    // Google OAuth URL로 리다이렉트
-    const googleAuthUrl = `${
-      process.env.REACT_APP_API_URL || "http://localhost:8080"
-    }/oauth/google?reauth=true`;
-    window.location.href = googleAuthUrl;
+    try {
+      // Google 재인증 API 호출
+      const response = await fetch(
+        "http://localhost:8080/api/auth/google/reverify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        onSuccess();
+      } else {
+        setError("Google 재인증에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Google 재인증 오류:", error);
+      setError("Google 재인증 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleKakaoLogin = () => {
+  const handleKakaoReAuth = () => {
     setIsLoading(true);
     setError("");
 
-    // Kakao OAuth URL로 리다이렉트
-    const kakaoAuthUrl = `${
-      process.env.REACT_APP_API_URL || "http://localhost:8080"
-    }/oauth/kakao?reauth=true`;
-    window.location.href = kakaoAuthUrl;
-  };
+    // Kakao 재인증 URL 생성
+    const REST_KEY = process.env.REACT_APP_KAKAO_REST_KEY;
+    const REDIRECT_URI = process.env.REACT_APP_KAKAO_REDIRECT_URI;
 
-  const handleCancel = () => {
-    setError("");
-    setIsLoading(false);
-    onClose();
+    if (!REST_KEY) {
+      setError("Kakao 설정이 올바르지 않습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    const state = encodeURIComponent("REAUTH");
+    const url =
+      "https://kauth.kakao.com/oauth/authorize" +
+      `?response_type=code&client_id=${encodeURIComponent(REST_KEY)}` +
+      `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+      `&state=${state}`;
+
+    // 팝업으로 Kakao 재인증 열기
+    const popup = window.open(
+      url,
+      "kakaoReAuth",
+      "width=480,height=640,menubar=no,toolbar=no,status=no"
+    );
+
+    // 팝업 닫힘 감시
+    const watch = setInterval(() => {
+      if (!popup || popup.closed) {
+        clearInterval(watch);
+        setIsLoading(false);
+      }
+    }, 500);
   };
 
   const getLoginTypeText = () => {
@@ -55,77 +99,85 @@ const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
     }
   };
 
-  const getLoginTypeIcon = () => {
-    switch (loginType) {
-      case "GOOGLE":
-        return "🔍";
-      case "KAKAO":
-        return "💬";
-      default:
-        return "🔐";
-    }
-  };
-
   return (
-    <Dialog open={open} onClose={handleCancel} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ textAlign: "center", pb: 1 }}>
-        <Typography variant="h5" fontWeight="bold" color="#113F67">
-          {getLoginTypeIcon()} {getLoginTypeText()} 재인증
-        </Typography>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle
+        sx={{
+          textAlign: "center",
+          color: "#113F67",
+          fontWeight: "bold",
+          position: "relative",
+        }}
+      >
+        {getLoginTypeText()} 재인증
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: "#113F67",
+            "&:hover": {
+              bgcolor: "rgba(17, 63, 103, 0.1)",
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Box sx={{ textAlign: "center", py: 2 }}>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            정보 수정을 위해 {getLoginTypeText()} 계정으로 다시 로그인해주세요.
-          </Typography>
+        <Typography variant="body1" sx={{ mb: 3, textAlign: "center" }}>
+          회원정보 수정을 위해 {getLoginTypeText()} 계정으로 재인증해주세요.
+        </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            alignItems: "center",
+          }}
+        >
+          {loginType === "GOOGLE" && (
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google 로그인에 실패했습니다.")}
+              disabled={isLoading}
+            />
           )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            보안을 위해 재인증이 필요합니다.
-          </Typography>
+          {loginType === "KAKAO" && (
+            <Button
+              variant="contained"
+              onClick={handleKakaoReAuth}
+              disabled={isLoading}
+              startIcon={<ChatBubbleIcon />}
+              sx={{
+                bgcolor: "#FEE500",
+                color: "#000000",
+                "&:hover": {
+                  bgcolor: "#FDD835",
+                },
+                "&:disabled": {
+                  bgcolor: "#F5F5F5",
+                  color: "#9E9E9E",
+                },
+              }}
+            >
+              {isLoading ? "인증 중..." : "Kakao로 재인증"}
+            </Button>
+          )}
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ justifyContent: "center", pb: 3, px: 3 }}>
-        <Button
-          onClick={handleCancel}
-          variant="outlined"
-          sx={{
-            minWidth: 100,
-            borderColor: "#113F67",
-            color: "#113F67",
-            "&:hover": {
-              borderColor: "#34699A",
-              bgcolor: "#f5f5f5",
-            },
-          }}
-        >
-          취소
-        </Button>
-
-        <Button
-          onClick={
-            loginType === "GOOGLE" ? handleGoogleLogin : handleKakaoLogin
-          }
-          variant="contained"
-          disabled={isLoading}
-          sx={{
-            minWidth: 100,
-            bgcolor: "#113F67",
-            "&:hover": {
-              bgcolor: "#34699A",
-            },
-          }}
-        >
-          {isLoading ? "인증 중..." : `${getLoginTypeText()} 로그인`}
-        </Button>
-      </DialogActions>
+      <DialogActions sx={{ justifyContent: "center", pb: 3 }}></DialogActions>
     </Dialog>
   );
 };

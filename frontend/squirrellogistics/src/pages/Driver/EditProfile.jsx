@@ -459,30 +459,33 @@ const EditProfile = () => {
       setEmailError(isValidEmail ? "" : "이메일 형식이 올바르지 않습니다.");
     }
 
-    // 비밀번호 검증
-    if (name === "password") {
-      // 비밀번호 정규식: 8자 이상, 영문 대소문자, 숫자, 특수문자 포함
-      const passwordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      const isValidPassword = passwordRegex.test(value);
-      setPasswordError(
-        isValidPassword ? "" : "*비밀번호 형식이 올바르지 않습니다."
-      );
+    // 일반 로그인 사용자의 경우에만 비밀번호 검증
+    if (loginType === "EMAIL") {
+      // 비밀번호 검증
+      if (name === "password") {
+        // 비밀번호 정규식: 8자 이상, 영문 대소문자, 숫자, 특수문자 포함
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const isValidPassword = passwordRegex.test(value);
+        setPasswordError(
+          isValidPassword ? "" : "*비밀번호 형식이 올바르지 않습니다."
+        );
 
-      // 비밀번호 확인 필드도 검증
-      if (form.confirmPassword && value !== form.confirmPassword) {
-        setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
-      } else {
-        setPasswordConfirmError("");
+        // 비밀번호 확인 필드도 검증
+        if (form.confirmPassword && value !== form.confirmPassword) {
+          setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+        } else {
+          setPasswordConfirmError("");
+        }
       }
-    }
 
-    // 비밀번호 확인 검증
-    if (name === "confirmPassword") {
-      if (form.password && value !== form.password) {
-        setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
-      } else {
-        setPasswordConfirmError("");
+      // 비밀번호 확인 검증
+      if (name === "confirmPassword") {
+        if (form.password && value !== form.password) {
+          setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+        } else {
+          setPasswordConfirmError("");
+        }
       }
     }
 
@@ -621,34 +624,50 @@ const EditProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("handleSubmit 호출됨 - timestamp:", Date.now());
 
-    // SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 비밀번호 검증 건너뛰기
-    const isSnsUserWithoutPassword =
-      (loginType === "GOOGLE" || loginType === "KAKAO") && !hasSetPassword;
+    // 운행불가 시작일/종료일과 선호시간대를 제외한 필수 필드 검증
+    const requiredFields = {
+      name: "이름",
+      email: "이메일",
+      phone: "연락처",
+      bankAccount: "계좌번호",
+      businessId: "사업자등록번호",
+      deliveryArea: "운행선호지역",
+    };
 
-    if (!isSnsUserWithoutPassword) {
-      // 일반 로그인 사용자 또는 SNS 로그인에서 비밀번호를 설정한 사용자는 비밀번호 검증 필요
+    // 필수 필드 검증
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!form[field] || form[field].trim() === "") {
+        alert(`${label}을(를) 입력해주세요.`);
+        return;
+      }
+    }
+
+    // 이메일 형식 검증
+    if (emailError) {
+      alert("이메일 형식을 확인해주세요.");
+      return;
+    }
+
+    // 일반 로그인 사용자의 경우 비밀번호 검증
+    if (loginType === "EMAIL") {
       if (!form.password || form.password.trim() === "") {
         alert("비밀번호를 입력해주세요.");
         return;
       }
       if (!form.confirmPassword || form.confirmPassword.trim() === "") {
-        alert("비밀번호를 입력해주세요.");
+        alert("비밀번호 확인을 입력해주세요.");
         return;
       }
-    }
-
-    if (emailError) {
-      alert("이메일 형식을 확인해주세요.");
-      return;
-    }
-    if (passwordError) {
-      alert("비밀번호 형식을 확인해주세요.");
-      return;
-    }
-    if (passwordConfirmError) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
+      if (passwordError) {
+        alert("비밀번호 형식을 확인해주세요.");
+        return;
+      }
+      if (passwordConfirmError) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+      }
     }
 
     try {
@@ -673,7 +692,7 @@ const EditProfile = () => {
         // 기존 데이터 유지를 위한 필드들 (null로 설정하여 기존 값 유지)
         loginId: null, // 기존 값 유지
         password: null, // 기존 값 유지 (별도 API로 처리)
-        birthday: null, // 기존 값 유지
+        birthday: form.birth ? dayjs(form.birth).toDate() : null, // 생년월일 업데이트
         licenseNum: null, // 기존 값 유지
         licenseDT: null, // 기존 값 유지
         drivable: null, // 기존 값 유지
@@ -689,8 +708,12 @@ const EditProfile = () => {
       // 프로필 정보 업데이트
       await updateDriverProfile(profileData);
 
-      // 비밀번호 수정 처리
-      if (form.password && form.password.trim() !== "") {
+      // 일반 로그인 사용자의 경우 비밀번호 수정 처리
+      if (
+        loginType === "EMAIL" &&
+        form.password &&
+        form.password.trim() !== ""
+      ) {
         console.log("비밀번호 수정 시작");
         console.log("currentPassword:", currentPassword);
         console.log("newPassword:", form.password);
@@ -715,16 +738,7 @@ const EditProfile = () => {
         }
       }
 
-      // SNS 로그인 사용자가 비밀번호를 설정한 경우 저장
-      if (
-        (loginType === "GOOGLE" || loginType === "KAKAO") &&
-        !hasSetPassword &&
-        form.password
-      ) {
-        localStorage.setItem("hasSetPassword", "true");
-        localStorage.setItem("snsUserPassword", form.password);
-      }
-
+      console.log("수정 완료 알럿 표시 - timestamp:", Date.now());
       alert("수정이 완료되었습니다.");
 
       // 인증 상태 초기화
@@ -906,24 +920,26 @@ const EditProfile = () => {
               </Box>
             </Box>
 
-            <TextField
-              label="아이디"
-              name="id"
-              value={form.id}
-              disabled
-              fullWidth
-              sx={{
-                "& .MuiInputBase-input.Mui-disabled": {
-                  color: "#000000",
-                  WebkitTextFillColor: "#000000",
-                },
-              }}
-            />
-            {/* SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 비밀번호 필드 숨김 */}
-            {!(
-              (loginType === "GOOGLE" || loginType === "KAKAO") &&
-              !hasSetPassword
-            ) && (
+            {/* SNS 로그인 사용자는 아이디 필드 숨김 */}
+            {(loginType === "EMAIL" ||
+              ((loginType === "GOOGLE" || loginType === "KAKAO") &&
+                hasSetPassword)) && (
+              <TextField
+                label="아이디"
+                name="id"
+                value={form.id}
+                disabled
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    color: "#000000",
+                    WebkitTextFillColor: "#000000",
+                  },
+                }}
+              />
+            )}
+            {/* SNS 로그인 사용자는 비밀번호 필드 숨김 */}
+            {loginType === "EMAIL" && (
               <Box display="flex" gap={2}>
                 <Box flex={1}>
                   <TextField
@@ -968,24 +984,23 @@ const EditProfile = () => {
               </Box>
             )}
 
-            {/* SNS 로그인 사용자이고 비밀번호를 설정하지 않은 경우 안내 메시지 */}
-            {(loginType === "GOOGLE" || loginType === "KAKAO") &&
-              !hasSetPassword && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: "#f5f5f5",
-                    borderRadius: 1,
-                    border: "1px solid #e0e0e0",
-                    mb: 2,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    SNS 로그인 사용자입니다. 비밀번호 설정 없이 정보를 수정할 수
-                    있습니다.
-                  </Typography>
-                </Box>
-              )}
+            {/* SNS 로그인 사용자 안내 메시지 */}
+            {(loginType === "GOOGLE" || loginType === "KAKAO") && (
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: "#f5f5f5",
+                  borderRadius: 1,
+                  border: "1px solid #e0e0e0",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  SNS 로그인 사용자입니다. 비밀번호 설정 없이 정보를 수정할 수
+                  있습니다.
+                </Typography>
+              </Box>
+            )}
 
             <TextField
               label="이름"
@@ -999,15 +1014,9 @@ const EditProfile = () => {
               name="birth"
               type="date"
               value={form.birth}
-              disabled
+              onChange={handleChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
-              sx={{
-                "& .MuiInputBase-input.Mui-disabled": {
-                  color: "#000000",
-                  WebkitTextFillColor: "#000000",
-                },
-              }}
             />
             <TextField
               label="연락처"

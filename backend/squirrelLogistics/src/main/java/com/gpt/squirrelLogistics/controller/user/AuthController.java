@@ -125,6 +125,40 @@ public class AuthController {
 				user.getName(), "role", user.getRole().name()));
 	}
 
+	/** Google 재인증: 기존 사용자의 Google 토큰 재검증 */
+	@PostMapping("/google/reverify")
+	public ResponseEntity<?> googleReverify(@RequestBody Map<String, String> body) throws Exception {
+		try {
+			String credential = body.get("credential");
+			if (credential == null) {
+				return ResponseEntity.badRequest().body(Map.of("error", "credential is required"));
+			}
+
+			// Google 토큰 검증
+			var payload = googleVerifier.verify(credential);
+			String googleId = payload.getSubject();
+			String email = payload.getEmail();
+
+			// 기존 사용자 확인
+			String loginId = "google_" + googleId;
+			User user = userRepository.findByLoginId(loginId)
+					.orElseThrow(() -> new IllegalArgumentException("해당 Google 계정으로 가입된 사용자를 찾을 수 없습니다."));
+
+			// 재인증 성공 응답
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "Google 재인증이 완료되었습니다.",
+				"userId", user.getUserId(),
+				"name", user.getName(),
+				"email", email
+			));
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(Map.of("error", "재인증 실패", "message", "Google 재인증에 실패했습니다."));
+		}
+	}
+
 	/** 문자열 -> Enum 변환(허용값만) */
 	private UserRoleEnum toRole(String s) {
 		if (s == null)

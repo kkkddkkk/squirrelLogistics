@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.controller.car;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.gpt.squirrelLogistics.config.user.JwtTokenProvider;
 import com.gpt.squirrelLogistics.dto.car.CarRequestDTO;
@@ -20,6 +22,9 @@ import com.gpt.squirrelLogistics.dto.car.CarResponseDTO;
 import com.gpt.squirrelLogistics.service.car.CarService;
 import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
+import com.gpt.squirrelLogistics.entity.user.User;
+
 
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Claims;
@@ -35,6 +40,7 @@ public class CarController {
     private final CarService carService;
     private final JwtTokenProvider jwtTokenProvider;
     private final DriverRepository driverRepository;
+    private final UserRepository userRepository;
 
     // JWT 토큰에서 userId 추출하는 공통 메서드
     private Long extractUserIdFromToken(String authHeader) {
@@ -69,11 +75,23 @@ public class CarController {
         }
     }
 
-    // userId로 driverId 조회하는 메서드
+    // userId로 driverId 조회하는 메서드 (Driver가 없으면 생성)
     private Long getDriverIdByUserId(Long userId) {
         Driver driver = driverRepository.findByUserId(userId);
         if (driver == null) {
-            throw new IllegalArgumentException("해당 사용자의 Driver 정보를 찾을 수 없습니다. userId: " + userId);
+            log.info("Driver 정보가 없어서 새로 생성합니다. userId: {}", userId);
+            // User 조회
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId: " + userId));
+            
+            // Driver 생성
+            driver = new Driver();
+            driver.setUser(user);
+            driver.setDrivable(true);
+            driver.setMainLoca("서울"); // 기본값 설정
+            
+            driver = driverRepository.save(driver);
+            log.info("Driver 생성 완료 - driverId: {}", driver.getDriverId());
         }
         return driver.getDriverId();
     }
@@ -159,20 +177,43 @@ public class CarController {
      * 작성자: 임수현
      * 기능: 차량 수정
      */
-    @PutMapping("/driver/{carId}")
+    @PutMapping(value = "/driver/{carId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CarResponseDTO> updateDriverCar(@PathVariable Long carId,
                                                         @RequestBody CarRequestDTO carRequestDTO,
                                                         @RequestHeader("Authorization") String authHeader) {
+        log.info("=== updateDriverCar 요청 시작 ===");
+        log.info("carId: {}", carId);
+        log.info("authHeader: {}", authHeader);
+        log.info("요청된 carRequestDTO: {}", carRequestDTO);
+        log.info("carRequestDTO.getVehicleTypeId(): {}", carRequestDTO.getVehicleTypeId());
+        log.info("carRequestDTO.getMileage(): {}", carRequestDTO.getMileage());
+        log.info("carRequestDTO.getEtc(): {}", carRequestDTO.getEtc());
+        log.info("carRequestDTO.isInsurance(): {}", carRequestDTO.isInsurance());
+        log.info("carRequestDTO.getCarStatus(): {}", carRequestDTO.getCarStatus());
+        log.info("carRequestDTO.getInspection(): {}", carRequestDTO.getInspection());
         try {
             log.info("=== updateDriverCar 호출됨 - carId: {} ===", carId);
             log.info("요청된 carRequestDTO: {}", carRequestDTO);
+            log.info("carRequestDTO.getCarNum(): {}", carRequestDTO.getCarNum());
+            log.info("carRequestDTO.getVehicleTypeId(): {}", carRequestDTO.getVehicleTypeId());
+            log.info("carRequestDTO.getMileage(): {}", carRequestDTO.getMileage());
+            log.info("carRequestDTO.getEtc(): {}", carRequestDTO.getEtc());
+            log.info("carRequestDTO.isInsurance(): {}", carRequestDTO.isInsurance());
+            log.info("carRequestDTO.getCarStatus(): {}", carRequestDTO.getCarStatus());
             
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("추출된 userId: {}", userId);
+            
             Long driverId = getDriverIdByUserId(userId);
+            log.info("조회된 driverId: {}", driverId);
             
             // 먼저 해당 차량이 자신의 차량인지 확인
             List<CarResponseDTO> cars = carService.getCarsByDriverId(driverId);
+            log.info("드라이버의 차량 수: {}", cars.size());
+            
             boolean isMyCar = cars.stream().anyMatch(car -> car.getCarId().equals(carId));
+            log.info("내 차량 여부: {}", isMyCar);
+            
             if (!isMyCar) {
                 throw new IllegalArgumentException("해당 차량을 수정할 권한이 없습니다. carId: " + carId);
             }
@@ -183,7 +224,9 @@ public class CarController {
             return ResponseEntity.ok(updatedCar);
         } catch (Exception e) {
             log.error("updateDriverCar 오류 발생: {}", e.getMessage(), e);
-            throw e;
+            log.error("오류 스택 트레이스:", e);
+            // 더 자세한 에러 정보를 클라이언트에 반환
+            throw new RuntimeException("차량 수정 실패: " + e.getMessage(), e);
         }
     }
 

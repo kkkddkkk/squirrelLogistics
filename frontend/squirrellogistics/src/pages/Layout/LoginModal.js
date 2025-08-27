@@ -126,14 +126,23 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
     <Dialog open={open} onClose={onClose}>
       <DialogContent sx={{ width: 420, p: 4, position: "relative" }}>
         {/* 닫기 */}
-        <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8 }}>
+        <IconButton
+          onClick={onClose}
+          sx={{ position: "absolute", top: 8, right: 8 }}
+        >
           <CloseIcon />
         </IconButton>
 
         {/* 로고/인사 */}
         <Box sx={{ textAlign: "center", mb: 2 }}>
-          <img src="/images/logo.png" alt="logo" style={{ width: 80, marginBottom: 8 }} />
-          <Typography variant="h6" fontWeight={700}>환영합니다</Typography>
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            style={{ width: 80, marginBottom: 8 }}
+          />
+          <Typography variant="h6" fontWeight={700}>
+            환영합니다
+          </Typography>
           <Typography variant="body2">
             다람로지틱스에서 손쉽게 물류 중개 서비스를 이용하실 수 있습니다.
           </Typography>
@@ -196,7 +205,10 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword((v) => !v)} tabIndex={-1}>
+                  <IconButton
+                    onClick={() => setShowPassword((v) => !v)}
+                    tabIndex={-1}
+                  >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -206,7 +218,10 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
 
           <FormControlLabel
             control={
-              <Checkbox checked={rememberId} onChange={(e) => setRememberId(e.target.checked)} />
+              <Checkbox
+                checked={rememberId}
+                onChange={(e) => setRememberId(e.target.checked)}
+              />
             }
             label="아이디 저장"
             sx={{ mt: 0.5 }}
@@ -224,13 +239,23 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         </Box>
 
         {/* SNS 로그인 */}
-        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: "block", mt: 2 }}
+        >
           또는 SNS로 계속하기
         </Typography>
 
         <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
           {/* Google */}
-          <Box sx={{ flex: 1, opacity: snsDisabled ? 0.5 : 1, pointerEvents: snsDisabled ? "none" : "auto" }}>
+          <Box
+            sx={{
+              flex: 1,
+              opacity: snsDisabled ? 0.5 : 1,
+              pointerEvents: snsDisabled ? "none" : "auto",
+            }}
+          >
             <GoogleLogin
               onSuccess={async (cred) => {
                 try {
@@ -271,7 +296,14 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         </Box>
 
         {/* 하단 링크 */}
-        <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.85rem",
+          }}
+        >
           <Button
             onClick={() => {
               onClose();
@@ -280,7 +312,10 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
           >
             회원가입
           </Button>
-          <Button variant="text" onClick={() => alert("비밀번호 찾기는 추후 지원 예정입니다.")}>
+          <Button
+            variant="text"
+            onClick={() => alert("비밀번호 찾기는 추후 지원 예정입니다.")}
+          >
             비밀번호 찾기
           </Button>
         </Box>

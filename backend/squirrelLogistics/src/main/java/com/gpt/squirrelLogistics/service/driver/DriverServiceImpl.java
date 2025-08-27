@@ -95,6 +95,9 @@ public class DriverServiceImpl implements DriverService {
         if (request.getBusinessN() != null) {
             user.setBusinessN(request.getBusinessN());
         }
+        if (request.getBirthday() != null) {
+            user.setBirthday(request.getBirthday());
+        }
         
         // Driver 정보 업데이트 (null이 아닌 경우에만 업데이트)
         if (request.getMainLoca() != null) {

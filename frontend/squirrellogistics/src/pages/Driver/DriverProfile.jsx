@@ -21,7 +21,7 @@ import {
 import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
 import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
-import SNSReAuthModal from "../../components/driver/SNSReAuthModal.jsx";
+import SNSReAuthModal from "../../components/driver/SNSReAuthModal";
 import EmergencyReportModal from "../../components/driver/EmergencyReportModal";
 import {
   getDriverProfile,
@@ -248,9 +248,45 @@ const DriverProfile = () => {
     navigate(`/driver/${driverId}/reportlist`);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+        <NavBar />
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Typography variant="h4" align="center">
+            프로필 정보를 불러오는 중...
+          </Typography>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+        <NavBar />
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Typography variant="h4" align="center" color="error">
+            {error}
+          </Typography>
+        </Container>
+      </Box>
+    );
+  }
+
   if (!driver) return <div>데이터를 불러올 수 없습니다.</div>;
+
+  // 사용자 정보가 없거나 기본값인지 확인하는 함수
+  const hasUserInfo = () => {
+    return (
+      driver.name &&
+      driver.name.trim() !== "" &&
+      driver.phone &&
+      driver.phone.trim() !== "" &&
+      driver.email &&
+      driver.email.trim() !== ""
+    );
+  };
 
   const handleWithdraw = async () => {
     const confirmed = window.confirm(
@@ -409,126 +445,137 @@ const DriverProfile = () => {
               </Typography>
 
               {/* 개인 정보 영역 */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-                  개인 정보
-                </Typography>
-                <Box
-                  sx={{
-                    borderBottom: "1px solid rgba(255,255,255,0.3)",
-                    mb: 3,
-                  }}
-                />
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      생년월일
+              {hasUserInfo() ? (
+                <>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+                      개인 정보
                     </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.birth}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      연락처
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.phone}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      이메일
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.email}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Box>
-
-              {/* 사업 정보 영역 */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-                  사업 정보
-                </Typography>
-                <Box
-                  sx={{
-                    borderBottom: "1px solid rgba(255,255,255,0.3)",
-                    mb: 3,
-                  }}
-                />
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      계좌번호
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.bankAccount}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      사업자번호
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.businessId}
-                    </Typography>
-                  </Box>
-                  {/* 보험 관련 필드는 백엔드에 아직 구현되지 않음 */}
-                  {/* <Box>
-                    <Typography
-                      variant="body2"
-                      color="rgba(255,255,255,0.6)"
-                      sx={{ mb: 1 }}
-                    >
-                      보험 가입
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {driver.insurance ? "가입" : "미가입"}
-                    </Typography>
+                    <Box
+                      sx={{
+                        borderBottom: "1px solid rgba(255,255,255,0.3)",
+                        mb: 3,
+                      }}
+                    />
+                    <Stack spacing={3}>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.6)"
+                          sx={{ mb: 1 }}
+                        >
+                          생년월일
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {driver.birth}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.6)"
+                          sx={{ mb: 1 }}
+                        >
+                          연락처
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {driver.phone}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.6)"
+                          sx={{ mb: 1 }}
+                        >
+                          이메일
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {driver.email}
+                        </Typography>
+                      </Box>
+                    </Stack>
                   </Box>
 
-                  {driver.insurance && (
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        color="rgba(255,255,255,0.6)"
-                        sx={{ mb: 1 }}
-                      >
-                        보험 갱신일
-                      </Typography>
-                      <Typography variant="body1" fontWeight="bold">
-                        {driver.insuranceRenewalDate
-                          ? dayjs(driver.insuranceRenewalDate).format(
-                              "YYYY. MM. DD."
-                            )
-                          : "미설정"}
-                      </Typography>
-                    </Box>
-                  )} */}
-                </Stack>
-              </Box>
+                  {/* 사업 정보 영역 */}
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+                      사업 정보
+                    </Typography>
+                    <Box
+                      sx={{
+                        borderBottom: "1px solid rgba(255,255,255,0.3)",
+                        mb: 3,
+                      }}
+                    />
+                    <Stack spacing={3}>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.6)"
+                          sx={{ mb: 1 }}
+                        >
+                          계좌번호
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {driver.bankAccount}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.6)"
+                          sx={{ mb: 1 }}
+                        >
+                          사업자번호
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {driver.businessId}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </>
+              ) : (
+                /* 개인정보가 없는 경우 등록 버튼 표시 */
+                <Box sx={{ mb: 4, textAlign: "center" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 3,
+                      color: "rgba(255,255,255,0.8)",
+                      fontWeight: "normal",
+                    }}
+                  >
+                    아직 개인정보가 등록되지 않았습니다
+                  </Typography>
+                  <Button
+                    onClick={() => {
+                      if (loginType === "GOOGLE" || loginType === "KAKAO") {
+                        setShowSNSReAuthModal(true);
+                      } else {
+                        navigate("/driver/editprofile");
+                      }
+                    }}
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    sx={{
+                      bgcolor: "white",
+                      color: "#113F67",
+                      py: 2,
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.9)",
+                      },
+                      textTransform: "none",
+                      fontWeight: "600",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    개인정보를 등록해주세요
+                  </Button>
+                </Box>
+              )}
 
               {/* 버튼들 */}
               <Box sx={{ mt: "auto" }}>

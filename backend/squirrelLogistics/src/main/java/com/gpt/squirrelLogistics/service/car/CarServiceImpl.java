@@ -38,14 +38,8 @@ public class CarServiceImpl implements CarService {
         log.info("드라이버 차량 조회 - driverId: {}", driverId);
         
         try {
-            // 모든 차량을 가져와서 driverId로 필터링
-            List<Car> allCars = carRepository.findAll();
-            log.info("전체 차량 수: {}", allCars.size());
-            
-            List<Car> driverCars = allCars.stream()
-                    .filter(car -> car.getDriver() != null && car.getDriver().getDriverId().equals(driverId))
-                    .toList();
-            
+            // 드라이버 ID로 직접 조회 (성능 최적화)
+            List<Car> driverCars = carRepository.findByDriverDriverId(driverId);
             log.info("드라이버 차량 수: {}", driverCars.size());
             
             return driverCars.stream()
@@ -98,26 +92,27 @@ public class CarServiceImpl implements CarService {
     @Transactional
     public CarResponseDTO updateCar(Long carId, CarRequestDTO request) {
         log.info("차량 수정 시작 - carId: {}, request: {}", carId, request);
+        log.info("request.getCarNum(): {}", request.getCarNum());
+        log.info("request.getVehicleTypeId(): {}", request.getVehicleTypeId());
+        log.info("request.getMileage(): {}", request.getMileage());
+        log.info("request.getEtc(): {}", request.getEtc());
+        log.info("request.isInsurance(): {}", request.isInsurance());
+        log.info("request.getCarStatus(): {}", request.getCarStatus());
 
         try {
-            // 모든 차량을 가져와서 carId로 필터링
-            List<Car> allCars = carRepository.findAll();
-            log.info("전체 차량 수: {}", allCars.size());
-            
-            Car car = allCars.stream()
-                    .filter(c -> c.getCarId().equals(carId))
-                    .findFirst()
+            // carId로 직접 조회
+            Car car = carRepository.findById(carId)
                     .orElseThrow(() -> new IllegalArgumentException("차량을 찾을 수 없습니다. carId: " + carId));
             
             log.info("찾은 차량: {}", car);
 
-            // 모든 VehicleType을 가져와서 vehicleTypeId로 필터링
-            List<VehicleType> allVehicleTypes = vehicleTypeRepository.findAll();
-            log.info("전체 차량 타입 수: {}", allVehicleTypes.size());
-            
-            VehicleType vehicleType = allVehicleTypes.stream()
-                    .filter(vt -> vt.getVehicleTypeId().equals(request.getVehicleTypeId()))
-                    .findFirst()
+            // vehicleTypeId validation
+            if (request.getVehicleTypeId() == null) {
+                throw new IllegalArgumentException("차량 타입 ID는 필수입니다.");
+            }
+
+            // vehicleTypeId로 직접 조회
+            VehicleType vehicleType = vehicleTypeRepository.findById(request.getVehicleTypeId())
                     .orElseThrow(() -> new IllegalArgumentException("차량 타입을 찾을 수 없습니다. vehicleTypeId: " + request.getVehicleTypeId()));
             
             log.info("찾은 차량 타입: {}", vehicleType);
@@ -142,6 +137,9 @@ public class CarServiceImpl implements CarService {
             return convertToCarResponseDTO(updatedCar);
         } catch (Exception e) {
             log.error("차량 수정 중 예외 발생 - carId: {}, request: {}", carId, request, e);
+            log.error("요청 데이터 상세: vehicleTypeId={}, mileage={}, etc={}, insurance={}, carStatus={}, inspection={}", 
+                request.getVehicleTypeId(), request.getMileage(), request.getEtc(), 
+                request.isInsurance(), request.getCarStatus(), request.getInspection());
             throw e;
         }
     }
@@ -151,12 +149,9 @@ public class CarServiceImpl implements CarService {
     public void deleteCar(Long carId) {
         log.info("차량 삭제 - carId: {}", carId);
 
-        // 모든 차량을 가져와서 carId로 필터링
-        List<Car> allCars = carRepository.findAll();
-        Car car = allCars.stream()
-                .filter(c -> c.getCarId().equals(carId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("차량을 찾을 수 없습니다."));
+        // carId로 직접 조회
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new IllegalArgumentException("차량을 찾을 수 없습니다. carId: " + carId));
 
         carRepository.delete(car);
     }
@@ -177,6 +172,14 @@ public class CarServiceImpl implements CarService {
                 for (Object carIdObj : deletedCarIdsObj) {
                     try {
                         Long carId = Long.valueOf(carIdObj.toString());
+                        // 해당 차량이 드라이버의 차량인지 확인
+                        Car car = carRepository.findById(carId)
+                                .orElseThrow(() -> new IllegalArgumentException("차량을 찾을 수 없습니다. carId: " + carId));
+                        
+                        if (!car.getDriver().getDriverId().equals(driverId)) {
+                            throw new IllegalArgumentException("해당 차량을 삭제할 권한이 없습니다. carId: " + carId);
+                        }
+                        
                         deleteCar(carId);
                         log.info("차량 삭제 완료 - carId: {}", carId);
                     } catch (Exception e) {
@@ -212,6 +215,14 @@ public class CarServiceImpl implements CarService {
                 for (Map<String, Object> carData : updatedCars) {
                     try {
                         Long carId = Long.valueOf(carData.get("carId").toString());
+                        // 해당 차량이 드라이버의 차량인지 확인
+                        Car car = carRepository.findById(carId)
+                                .orElseThrow(() -> new IllegalArgumentException("차량을 찾을 수 없습니다. carId: " + carId));
+                        
+                        if (!car.getDriver().getDriverId().equals(driverId)) {
+                            throw new IllegalArgumentException("해당 차량을 수정할 권한이 없습니다. carId: " + carId);
+                        }
+                        
                         CarRequestDTO carRequestDTO = convertMapToCarRequestDTO(carData);
                         CarResponseDTO result = updateCar(carId, carRequestDTO);
                         results.add(result);
