@@ -41,13 +41,13 @@ const DeliveredDetail = () => {
 
         console.log("=== API 응답 데이터 ===");
         console.log("전체 데이터:", data);
-        
+
         // 새로운 응답 구조에서 데이터 추출
         const additionalInfo = data?.additionalInfo || {};
         const request = data?.request || {};
         const actualDelivery = data?.actualDelivery || {};
         const waypoints = data?.waypoints || [];
-        
+
         console.log("additionalInfo:", additionalInfo);
         console.log("request:", request);
         console.log("actualDelivery:", actualDelivery);
@@ -59,9 +59,7 @@ const DeliveredDetail = () => {
           distance: actualDelivery.distance || 0,
           weight: actualDelivery.weight || 0,
         });
-        setWaypoints(
-          waypoints.map((wp) => wp.address || wp.waypointId)
-        );
+        setWaypoints(waypoints.map((wp) => wp.address || wp.waypointId));
       } catch (err) {
         console.error("운송 상세 정보 로드 실패:", err);
         console.error("오류 상세:", err.response?.data || err.message);
@@ -97,7 +95,7 @@ const DeliveredDetail = () => {
     // 새로운 응답 구조에서 데이터 추출
     const actualDelivery = deliveryData.actualDelivery || {};
     const waypoints = deliveryData.waypoints || [];
-    
+
     const distance = actualDelivery.distance || 0;
     const weight = actualDelivery.weight || 0;
     const mountainous = actualDelivery.mountainous || false;
@@ -191,27 +189,61 @@ const DeliveredDetail = () => {
     );
   }
 
-  // 경로 정보 구성
-  const routeInfo = [
-    {
-      location: deliveryData.startAddress || "상차지 정보 없음",
-      time: formatDate(deliveryData.assignedAt),
-    },
-    {
-      location: deliveryData.endAddress || "하차지 정보 없음",
-      time: formatDate(deliveryData.completedAt),
-    },
-  ];
+  // ✅ 경로 정보 구성 - 올바른 데이터 구조 사용
+  const buildRouteInfo = () => {
+    const info = [];
 
-  // 경유지가 있으면 추가
-  if (waypoints && waypoints.length > 0) {
-    waypoints.forEach((waypoint, index) => {
-      routeInfo.splice(1 + index, 0, {
-        location: waypoint,
-        time: "경유지",
-      });
+    // 1. 상차지 (시작점)
+    const startAddress =
+      deliveryData.request?.startAddress ||
+      deliveryData.additionalInfo?.startAddress ||
+      "상차지 정보 없음";
+    const startTime = formatDate(
+      deliveryData.assignment?.assignedAt ||
+        deliveryData.additionalInfo?.assignedAt
+    );
+
+    info.push({
+      location: startAddress,
+      time: startTime,
     });
-  }
+
+    // 2. 경유지들 (중간점들) - dropOrder 순서대로
+    if (waypoints && waypoints.length > 0) {
+      waypoints.forEach((waypoint, index) => {
+        info.push({
+          location: waypoint || `경유지 ${index + 1}`,
+          time: "경유지",
+        });
+      });
+    }
+
+    // 3. 하차지 (도착점)
+    const endAddress =
+      deliveryData.request?.endAddress ||
+      deliveryData.additionalInfo?.endAddress ||
+      "하차지 정보 없음";
+    const endTime = formatDate(
+      deliveryData.assignment?.completedAt ||
+        deliveryData.additionalInfo?.completedAt
+    );
+
+    info.push({
+      location: endAddress,
+      time: endTime,
+    });
+
+    console.log("=== 구성된 routeInfo ===");
+    console.log("routeInfo:", info);
+    console.log(
+      "locations for map:",
+      info.map((r) => r.location)
+    );
+
+    return info;
+  };
+
+  const routeInfo = buildRouteInfo();
 
   return (
     <Box sx={{ bgcolor: "#F5F7FA", py: 6 }}>

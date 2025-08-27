@@ -149,11 +149,36 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = findDriverByUserId(userId);
         User user = driver.getUser();
         
-        // Driver 먼저 삭제 (외래키 제약조건)
-        driverRepository.delete(driver);
+        log.info("회원탈퇴 처리 시작 - userId: {}, name: {}", userId, user.getName());
         
-        // User 삭제
-        userRepository.delete(user);
+        // ✅ 하드 삭제 대신 소프트 삭제 (role 변경 + 개인정보 마스킹)
+        
+        // 1. User 정보 비활성화 및 마스킹
+        user.setRole(com.gpt.squirrelLogistics.enums.user.UserRoleEnum.ETC);  // 역할을 ETC로 변경
+        user.setName("탈퇴한사용자");  // 이름 마스킹
+        user.setEmail("deleted_" + userId + "@deleted.com");  // 이메일 마스킹
+        user.setPnumber("***-****-****");  // 전화번호 마스킹
+        user.setLoginId("deleted_" + userId + "_" + System.currentTimeMillis());  // 로그인 차단
+        user.setPassword("{deleted}");  // 로그인 차단
+        user.setAccount(null);  // 계좌정보 삭제
+        user.setBusinessN(null);  // 사업자번호 삭제
+        user.setBirthday(null);  // 생년월일 삭제
+        user.setModiDate(java.time.LocalDateTime.now());  // 수정일시 업데이트
+        
+        // 2. Driver 정보 비활성화
+        driver.setDrivable(false);  // 운전 불가능으로 설정
+        driver.setMainLoca("탈퇴한사용자");  // 선호지역 마스킹
+        driver.setLicenseNum("***-***-***");  // 면허번호 마스킹
+        driver.setLicenseDT(null);  // 면허유효기간 삭제
+        driver.setProfileImageUrl(null);  // 프로필 이미지 삭제
+        driver.setProfileImagePath(null);
+        driver.setProfileImageName(null);
+        
+        // 3. 데이터베이스 저장 (삭제가 아닌 업데이트)
+        userRepository.save(user);
+        driverRepository.save(driver);
+        
+        log.info("회원탈퇴 처리 완료 - userId: {}, 개인정보 마스킹 및 role ETC 변경 완료", userId);
     }
 
     @Override
