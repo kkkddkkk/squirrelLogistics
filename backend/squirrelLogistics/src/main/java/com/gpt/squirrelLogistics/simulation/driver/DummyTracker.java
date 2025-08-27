@@ -19,10 +19,12 @@ import com.gpt.squirrelLogistics.service.deliveryTrackingLog.DeliveryTrackingLog
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Component
 @RequiredArgsConstructor
 @Builder
+@Log4j2
 public class DummyTracker {
 
 	public static final LatLng SEOUL_STATION = 
@@ -125,6 +127,7 @@ public class DummyTracker {
 		var prev = lastPersistedPos.get(driverId);
 		if (prev == null) {
 			// 이제 픽업 이후 첫 점만 강제 저장
+			log.info("lat={}, scale={}", curr.getLat(), curr.getLat().scale());
 			trackingLogService.save(driverId, currentAssignedId.get(driverId), curr);
 			lastPersistedPos.put(driverId, curr);
 			lastPersistedAtMs.put(driverId, now);
@@ -133,6 +136,7 @@ public class DummyTracker {
 
 		double meters = haversineMeters(prev, curr);
 		if (meters >= PERSIST_THRESHOLD_METERS && meters < 300 /* 스파이크 컷 */) {
+			log.info("lat={}, scale={}", curr.getLat(), curr.getLat().scale());
 			trackingLogService.save(driverId, currentAssignedId.get(driverId), curr);
 			lastPersistedPos.put(driverId, curr);
 			lastPersistedAtMs.put(driverId, now);

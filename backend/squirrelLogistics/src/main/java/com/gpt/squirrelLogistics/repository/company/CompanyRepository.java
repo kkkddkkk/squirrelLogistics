@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.repository.company;
 
+import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +13,13 @@ import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
 
+    /**
+     * userId로 Company 정보 조회
+     * @param userId 사용자 ID
+     * @return Company 정보 (Optional)
+     */
+    @Query("SELECT c FROM Company c JOIN c.user u WHERE u.userId = :userId")
+    Optional<Company> findByUserId(@Param("userId") Long userId);
 	//김도경
 	//userId로 companyId 찾기
 	@Query("SELECT c.companyId FROM Company c "

@@ -1,62 +1,122 @@
 import React, { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useNavigate } from "react-router-dom";
+import { createSearchParams, useNavigate } from "react-router-dom";
 import {
   calculateDistance,
   createDeliveryRequest,
   fetchVehicleTypes,
+  fetchCargoTypes
 } from "../../api/estimate/estimateApi";
 import { useSelector, useDispatch } from "react-redux";
 import { setDistance } from "../../slice/estimate/estimateSlice";
 import CargoDialog from "./CargoDialog";
-import PaymentDialog from "./PaymentDialog";
-
 import http from "../../api/user/api"; // 기본주소용 http 인스턴스
 import "./EstimateForm.css";
 
 const STORAGE_KEY = "deliveryFlow";
 const WAYPOINT_FEE_PER_ITEM = 50000;
-const MOUNTAIN_FEE = 50000;
-const includesGangwon = (addr) => (addr || "").includes("강원");
 
-const EstimateForm = () => {
+const EstimateForm_new = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   // redux
   const { distance } = useSelector((s) => s.estimate);
-  const userId = useSelector((s) => s.auth?.user?.id);
 
   // 주소/화물 상태
   const [hubAddress, setHubAddress] = useState("");
   const [finalAddress, setFinalAddress] = useState("");
   const [memoToDriver, setMemoToDriver] = useState("");
   const [finalCargo, setFinalCargo] = useState(null);
-  const [waypoints, setWaypoints] = useState([]); // [{ address, cargo }]
+  const [waypoints, setWaypoints] = useState([]);
   const [totalCargoCount, setTotalCargoCount] = useState(0);
   const [totalCargoWeight, setTotalCargoWeight] = useState(0);
-  const [companyId, setCompanyId] = useState(null);
 
-  // 차량/요청 상태
+  // 회사/차량/가격
+  const [companyId, setCompanyId] = useState(null);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [vehicleTypeId, setVehicleTypeId] = useState("");
   const [price, setPrice] = useState(0);
   const [distanceOnlyPrice, setDistanceOnlyPrice] = useState(0);
-  const [weight, setWeight] = useState(13); // 전체 톤(요금 산정용, CargoDialog와 별개)
-  const [cargoTypes, setCargoTypes] = useState([]); // ["위험물 (취급주의 +5000)", ...]
+  const [weight, setWeight] = useState(0);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  // 날짜
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-
-  // 저장된 기본 주소
-  const [savedAddresses, setSavedAddresses] = useState([]);
+  // 취급유형 옵션(서버)
+  const [cargoTypeOptions, setCargoTypeOptions] = useState([]);
 
   // 다이얼로그 상태
   // number(경유지 인덱스) | "final"(최종 목적지) | null
   const [cargoDialogIdx, setCargoDialogIdx] = useState(null);
-  const [paymentOpen, setPaymentOpen] = useState(false);
 
+  // 저장된 기본 주소
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
+  const normalizeFlow = (raw) => {
+    if (!raw) return null;
+    if (raw.requestDto || raw.paymentDto) return raw;
+    if (raw.request || raw.payment) {
+      return { requestDto: raw.request, paymentDto: raw.payment };
+    }
+    return null;
+  };
+
+  const prefillFromFlow = (flow) => {
+    const req = flow?.requestDto;
+    if (!req) return;
+
+    // 주소들
+    setHubAddress(req.startAddress || "");
+    setFinalAddress(req.endAddress || "");
+    setMemoToDriver(req.memoToDriver || "");
+
+    // 날짜
+    setStartDate(req.wantToStart ? new Date(req.wantToStart) : null);
+    setEndDate(req.wantToEnd ? new Date(req.wantToEnd) : null);
+
+    // 차량/거리/요금
+    setDistance(Number(req.distance || 0)); // redux로 넣는다면 dispatch(setDistance(...)) 사용
+    setVehicleTypeId(req.vehicleTypeId ? String(req.vehicleTypeId) : "");
+    // price는 아래 재계산 로직이 있으니 그대로 두거나 표기만 참조하게 둠
+
+    // 경유지 + 화물
+    // req.waypoints: [{address, dropOrder, status, cargo?{description,handlingId}}...]
+    // 첫 항목은 출발지(집하지), 마지막은 최종 목적지로 들어있다면, 중간만 경유지로
+    const wps = Array.isArray(req.waypoints) ? req.waypoints : [];
+    const middle = wps.slice(1, Math.max(0, wps.length - 1));
+
+    setWaypoints(
+      middle.map(w => ({
+        address: w.address || "",
+        cargo: w.cargo
+          ? {
+            description: w.cargo.description || "",
+            handlingId: w.cargo.handlingId ?? null,
+            // (이전 단계에서 kg로 저장하지 않았다면 기본 1000kg로 둠)
+            weightKg: w.cargo.weightKg ?? 1000,
+          }
+          : null,
+      }))
+    );
+
+    // 최종 목적지 화물
+    const last = wps[wps.length - 1];
+    setFinalCargo(
+      last?.cargo
+        ? {
+          description: last.cargo.description || "",
+          handlingId: last.cargo.handlingId ?? null,
+          weightKg: last.cargo.weightKg ?? 1000,
+        }
+        : null
+    );
+
+    // 총 화물 개수/무게 (없으면 재계산되게 두어도 OK)
+    setTotalCargoCount(Number(req.totalCargoCount || 0));
+    setTotalCargoWeight(Number(req.totalCargoWeight || 0));
+  };
+
+  // 모든 화물(flat)
   const allCargos = useMemo(() => {
     const list = [];
     waypoints.forEach((w) => { if (w?.cargo) list.push(w.cargo); });
@@ -64,209 +124,163 @@ const EstimateForm = () => {
     return list;
   }, [waypoints, finalCargo]);
 
-  const hasCarefulHandling = useMemo(
-    () => allCargos.some(c => Number(c.handlingId) === 2 || /취급주의|위험/.test(c?.description || "")),
-    [allCargos]
-  );
+  // 취급주의/산간 플래그 (handlingId 기반, 각 1회만 적용)
+  const { hasCareful, hasMountain } = useMemo(() => {
+    let careful = false;
+    let mountain = false;
+    allCargos.forEach(c => {
+      const hid = Number(c?.handlingId);
+      if (!hid) return;              // null/undefined/"" → 없음
+      if (hid === 1) careful = true; // 취급주의
+      if (hid === 2) mountain = true; // 산간
+      if (hid === 3) { careful = true; mountain = true; } // 취급주의+산간(합산)
+    });
+    return { hasCareful: careful, hasMountain: mountain };
+  }, [allCargos]);
 
-  const hasColdChain = useMemo(
-    () => allCargos.some(c => Number(c.handlingId) === 3 || /냉장|냉동/.test(c?.description || "")),
-    [allCargos]
-  );
-
-  // (선택) UI/페이로드 태그로도 쓰려면 cargoTypes를 동기화
-  useEffect(() => {
-    const tags = [];
-    if (hasCarefulHandling) tags.push("취급주의");
-    if (hasColdChain) tags.push("냉장식품");
-    setCargoTypes(tags);
-  }, [hasCarefulHandling, hasColdChain]);
-
-  // nonEmptyWaypoints: 주소값이 있는 경유지
+  // 비어있지 않은 경유지 주소
   const nonEmptyWaypoints = useMemo(
     () =>
       (waypoints || [])
-        .map((w) => (typeof w === "string" ? w : w?.address || ""))
+        .map((w) => (typeof w === "string" ? w : w?.address || "")) // 안전 처리
         .filter((a) => a.trim() !== ""),
     [waypoints]
   );
 
-  // 산간지역 여부 (집하지/경유/최종 목적지 중 강원도 포함 판정)
-  const hasMountainRegion = useMemo(
-    () => [hubAddress, ...nonEmptyWaypoints, finalAddress].some(includesGangwon),
-    [hubAddress, nonEmptyWaypoints, finalAddress]
-  );
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const flow = normalizeFlow(parsed);
+      if (!flow) return;
+      prefillFromFlow(flow);
+    } catch (e) {
+      console.warn("[EstimateForm] session flow load failed:", e);
+    }
+  }, []);
 
+  // 회사 정보(토큰 기반) 조회
   useEffect(() => {
     const fetchCompanyInfo = async () => {
-      const storedCompanyId = localStorage.getItem("companyId");
-      console.log("=== Company 정보 조회 시작 ===");
-      console.log("localStorage companyId:", storedCompanyId);
-
-      if (storedCompanyId) {
-        setCompanyId(parseInt(storedCompanyId));
-        console.log("저장된 companyId 사용:", parseInt(storedCompanyId));
-        return;
-      }
-
-      // localStorage에 companyId가 없으면 토큰 기반 API로 조회
       try {
-        console.log("토큰 기반 API로 companyId 조회 시도...");
-
-        // 먼저 테스트 API 호출
+        // 토큰 유효성 핑 (선택)
         try {
-          const testResponse = await http.get(`/api/company/test`);
-          console.log("테스트 API 성공:", testResponse.data);
-        } catch (testError) {
-          console.error("테스트 API 실패:", testError);
+          await http.get(`/api/company/test`);
+        } catch (e) {
+          console.warn("company/test 실패:", e);
         }
 
-        // 새로운 토큰 기반 API 사용
-        // /api/company/current-user - Authorization 헤더 자동 포함
-        const response = await http.get(`/api/company/current-user`);
-        console.log("토큰 기반 API 조회 성공:", response.data);
-
-        // 응답 데이터 안전성 검증
-        if (response.data && response.data.companyId !== null && response.data.companyId !== undefined) {
-          const companyId = response.data.companyId;
-          console.log("companyId 확인:", companyId);
-
-          // localStorage에 저장
-          localStorage.setItem("companyId", companyId.toString());
-          setCompanyId(companyId);
-
-          // 기본 주소가 있으면 로드
-          if (response.data.mainLoca && response.data.mainLoca.trim() !== "") {
-            console.log("기본 주소 발견:", response.data.mainLoca);
-            // TODO: 기본 주소를 UI에 표시
-          }
+        // 실제 회사 정보 가져오기
+        const resp = await http.get(`/api/company/current-user`);
+        if (resp?.data?.companyId != null) {
+          const cid = resp.data.companyId;
+          setCompanyId(cid);
+          localStorage.setItem("companyId", String(cid)); // 새로고침 대비
         } else {
-          console.warn("companyId가 응답에 없거나 null/undefined:", response.data);
           setCompanyId(null);
+          localStorage.removeItem("companyId");
         }
-      } catch (error) {
-        console.error("토큰 기반 API 호출 실패:", error);
-        console.error("오류 상세:", error.response?.data || error.message);
-
-        // 에러 응답에서 더 자세한 정보 추출
-        if (error.response?.data?.error) {
-          console.error("서버 에러 메시지:", error.response.data.error);
-        }
-
+      } catch (err) {
+        console.error("회사 정보 불러오기 실패:", err);
         setCompanyId(null);
+        localStorage.removeItem("companyId");
       }
     };
 
     fetchCompanyInfo();
   }, []);
-  console.log("companyId:", companyId);
 
-  // 차량 목록 로딩
+  // 상태 변경 후 확인 로그
+  useEffect(() => {
+    if (companyId != null) {
+      console.log("토큰 기반 companyId 업데이트:", companyId);
+    }
+  }, [companyId]);
+
+
+  useEffect(() => {
+    const loadSavedAddresses = async () => {
+      if (!companyId) return;
+      try {
+        const res = await http.get(`/api/company/get-address/${companyId}`);
+        if (res?.data?.mainLoca) {
+          setSavedAddresses([{ id: 1, type: "START", value: res.data.mainLoca }]);
+        } else {
+          setSavedAddresses([]);
+        }
+      } catch {
+        setSavedAddresses([]);
+      }
+    };
+    loadSavedAddresses();
+  }, [companyId]);
+
+  // 차량 타입 로드
   useEffect(() => {
     (async () => {
       try {
         const list = await fetchVehicleTypes();
         setVehicleTypes(list || []);
-        console.log("[fetchVehicleTypes] =>", list);
-      } catch (e) {
-        console.error("차량 목록 로드 실패:", e);
+      } catch { }
+    })();
+  }, []);
+
+  // 취급유형(옵션) 로드
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await fetchCargoTypes(); // [{ handlingId, handlingTags, extraFee }, ...]
+        setCargoTypeOptions(list || []);
+      } catch {
+        setCargoTypeOptions([]);
       }
     })();
   }, []);
 
-  // 기본 주소 로드
-  useEffect(() => {
-    loadSavedAddresses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId]);
-
-  const loadSavedAddresses = async () => {
-    if (!companyId) return;
-    try {
-      console.log("[loadSavedAddresses] companyId:", companyId);
-      const res = await http.get(`/api/company/get-address/${companyId}`);
-      console.log("[loadSavedAddresses] response:", res?.data);
-      if (res?.data?.mainLoca) {
-        setSavedAddresses([{ id: 1, type: "START", value: res.data.mainLoca }]);
-      } else {
-        setSavedAddresses([]);
-      }
-    } catch (e) {
-      console.error("주소 로드 실패:", e);
-      setSavedAddresses([]);
-    }
-  };
-
-  const saveDefaultAddress = async () => {
-    if (!companyId || !hubAddress) {
-      alert("회사ID나 출발지가 없습니다.");
-      return;
-    }
-    try {
-      console.log("[saveDefaultAddress] companyId:", companyId, "address:", hubAddress);
-      await http.post(`/api/company/save-address`, {
-        companyId,
-        address: hubAddress,
-        type: "START",
-      });
-      alert("기본 주소 저장 성공");
-      loadSavedAddresses();
-    } catch (e) {
-      console.error("기본 주소 저장 실패:", e);
-      alert("저장 실패");
-    }
-  };
-
-  const removeDefaultAddress = async () => {
-    try {
-      console.log("[removeDefaultAddress] companyId:", companyId);
-      await http.post(`/api/company/save-address`, {
-        companyId,
-        address: "",
-        type: "CLEAR",
-      });
-      setSavedAddresses([]);
-      alert("기본 주소 삭제됨");
-    } catch (e) {
-      console.error("삭제 실패:", e);
-      alert("삭제 실패");
-    }
-  };
-
-  const applySavedAddress = (addr) => {
-    console.log("[applySavedAddress] applying:", addr);
-    setHubAddress(addr);
-    alert(`출발지로 적용: ${addr}`);
-  };
-
-  // 거리/요금 + 화물 합계 계산
+  // 거리/요금 계산 버튼
   const handleCalculateDistance = async () => {
     if (!hubAddress || !finalAddress) {
       alert("집하지와 최종 목적지를 입력해주세요.");
       return;
     }
-    const addresses = [hubAddress, ...waypoints.map((w) => w.address).filter(Boolean), finalAddress];
-    console.log("[handleCalculateDistance] addresses:", addresses);
-    const result = await calculateDistance(addresses);
-    const km = Number(result) || 0;
+    const addresses = [hubAddress, ...waypoints.map(w => w.address).filter(Boolean), finalAddress];
+    const km = Number(await calculateDistance(addresses)) || 0;
 
-    console.log("[handleCalculateDistance] km:", km);
     dispatch(setDistance(km));
-    setPrice(100000 + Math.ceil(km) * 3000);
+    setHasCalculated(true);
 
     // 화물 합계
     const waypointWeightSum = waypoints.reduce((s, w) => s + (w.cargo?.weightKg || 0), 0);
     const totalWeight = waypointWeightSum + (finalCargo?.weightKg || 0);
-    const waypointCargoCount = waypoints.filter((w) => !!w.cargo).length;
-    const totalCount = waypointCargoCount + (finalCargo ? 1 : 0);
-
-    console.log("[handleCalculateDistance] totalCount:", totalCount, "totalWeight:", totalWeight);
     setTotalCargoWeight(totalWeight);
-    setTotalCargoCount(totalCount);
+    setTotalCargoCount(waypoints.filter(w => !!w.cargo).length + (finalCargo ? 1 : 0));
 
-    const priceWeightTon = Math.max(1, Math.ceil(totalWeight / 1000));
+    // 톤 요금 산정용
+    const priceWeightTon = Math.max(0, Math.ceil(totalWeight / 1000)); // ✅ 최소 0톤
     setWeight(priceWeightTon);
   };
+
+  // 총액 계산: 거리 + 무게 + 취급주의/산간(각 1회) + 경유지 수
+  useEffect(() => {
+    if (!hasCalculated) {
+      setDistanceOnlyPrice(0);
+      setPrice(0);
+      return;
+    }
+
+    const km = Number(distance) || 0;
+    const baseByDistance = 100000 + Math.floor(km) * 3000;
+    setDistanceOnlyPrice(baseByDistance);
+
+    let sum = baseByDistance + (Number(weight) || 0) * 30000;
+
+    if (hasCareful) sum += 50000;
+    if (hasMountain) sum += 50000;
+
+    sum += nonEmptyWaypoints.length * 50000;
+    setPrice(Math.floor(sum));
+  }, [hasCalculated, distance, weight, nonEmptyWaypoints.length, hasCareful, hasMountain]);
 
   // 경유지 추가/삭제
   const addWaypoint = () => {
@@ -275,28 +289,20 @@ const EstimateForm = () => {
       return;
     }
     setWaypoints((prev) => [...prev, { address: "", cargo: null }]);
-    console.log("[addWaypoint] after add:", waypoints);
   };
-  const handleRemoveWaypoint = (index) =>
-    setWaypoints((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      console.log("[handleRemoveWaypoint] removed index:", index, "=>", next);
-      return next;
-    });
 
-  // 주소 검색
+  const handleRemoveWaypoint = (index) =>
+    setWaypoints((prev) => prev.filter((_, i) => i !== index));
+
+  // 주소 검색(다음 우편번호)
   const openAddressPopup = (setter) => {
     new window.daum.Postcode({
-      oncomplete: (data) => {
-        console.log("[AddressPopup selected]", data?.address);
-        setter(data.address);
-      },
+      oncomplete: (data) => setter(data.address),
     }).open();
   };
   const openWaypointAddress = (idx) => {
     new window.daum.Postcode({
       oncomplete: (data) => {
-        console.log("[WaypointPopup selected]", idx, data?.address);
         setWaypoints((prev) => {
           const copy = [...prev];
           copy[idx] = { ...copy[idx], address: data.address };
@@ -308,7 +314,6 @@ const EstimateForm = () => {
 
   // 화물 저장 (경유지 / 최종 목적지)
   const handleSaveCargo = (cargo) => {
-    console.log("[handleSaveCargo] cargoDialogIdx:", cargoDialogIdx, "cargo:", cargo);
     if (cargoDialogIdx === "final") {
       setFinalCargo(cargo);
     } else if (typeof cargoDialogIdx === "number") {
@@ -321,39 +326,80 @@ const EstimateForm = () => {
     setCargoDialogIdx(null);
   };
 
-  // payload 빌드
+  // 기본 주소 저장/삭제/적용
+  const saveDefaultAddress = async () => {
+    if (!companyId || !hubAddress) {
+      alert("회사ID나 출발지가 없습니다.");
+      return;
+    }
+    try {
+      await http.post(`/api/company/save-address`, {
+        companyId,
+        address: hubAddress,
+        type: "START",
+      });
+      alert("기본 주소 저장 성공");
+      // 재로드
+      const res = await http.get(`/api/company/get-address/${companyId}`);
+      if (res?.data?.mainLoca) setSavedAddresses([{ id: 1, type: "START", value: res.data.mainLoca }]);
+    } catch {
+      alert("저장 실패");
+    }
+  };
+
+  const removeDefaultAddress = async () => {
+    try {
+      await http.post(`/api/company/save-address`, {
+        companyId,
+        address: "",
+        type: "CLEAR",
+      });
+      setSavedAddresses([]);
+      alert("기본 주소 삭제됨");
+    } catch {
+      alert("삭제 실패");
+    }
+  };
+
+  const applySavedAddress = (addr) => {
+    setHubAddress(addr);
+    alert(`출발지로 적용: ${addr}`);
+  };
+
+  const formatLocalDateTime = (d) => {
+    if (!d) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const MM = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const HH = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
+  };
+
+  // payload 빌드 (handlingId: null 허용)
   const buildPayload = (payment) => {
     let order = 1;
     const wp = [];
     wp.push({ address: hubAddress, dropOrder: order++, status: "PENDING" });
-    waypoints.forEach((w) =>
-      wp.push({
-        address: w.address,
-        dropOrder: order++,
-        status: "PENDING",
-        ...(w.cargo
-          ? {
-            cargo: {
-              description: w.cargo.description,
-              handlingId: w.cargo.handlingId
-            },
-          }
-          : {}),
-      })
-    );
-    wp.push({
-      address: finalAddress,
-      dropOrder: order++,
-      status: "PENDING",
-      ...(finalCargo ? {
-        cargo: {
-          description: finalCargo.description,
-          handlingId: finalCargo.handlingId
-        }
-      } : {}),
+
+    waypoints.forEach((w) => {
+      const base = { address: w.address, dropOrder: order++, status: "PENDING" };
+      const withCargo = w.cargo
+        ? { ...base, cargo: { description: w.cargo.description, handlingId: w.cargo.handlingId ?? null } }
+        : base;
+      wp.push(withCargo);
     });
 
-    const payload = {
+    const finalBase = { address: finalAddress, dropOrder: order++, status: "PENDING" };
+    wp.push(
+      finalCargo
+        ? { ...finalBase, cargo: { description: finalCargo.description, handlingId: finalCargo.handlingId ?? null } }
+        : finalBase
+    );
+
+    return {
       payment,
       request: {
         startAddress: hubAddress,
@@ -363,80 +409,82 @@ const EstimateForm = () => {
         totalCargoWeight,
         estimatedFee: price,
         distance: Math.round(Number(distance) || 0),
-        wantToStart: startDate ? startDate.toISOString().slice(0, 19).replace("T", " ") : null,
-        wantToEnd: endDate ? endDate.toISOString().slice(0, 19).replace("T", " ") : null,
+        wantToStart: formatLocalDateTime(startDate),
+        wantToEnd: formatLocalDateTime(endDate),
         companyId,
         vehicleTypeId: vehicleTypeId ? Number(vehicleTypeId) : null,
         waypoints: wp
       },
     };
-
-    console.log("[buildPayload] =>", payload);
-    return payload;
   };
 
-  // 기사님 검색 이동
+  // 기사님 검색
   const goDriverSearch = () => {
-    const flow = buildPayload(null);
-    console.log("[goDriverSearch] flow saved to sessionStorage:", flow);
+    const payload = buildPayload(null); // { request, payment }
+
+    //세션스토리지에 저장
+    const flow = {
+      requestDto: payload.request,
+      paymentDto: payload.payment,
+    };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(flow));
     navigate("/driverSearch", { state: { flow } });
   };
 
   // 요청 확정 후 결제 페이지 이동
-  const handleConfirmPayment = async (payment) => {
-    const payload = buildPayload(payment);
+  const handleConfirmPayment = async () => {
+    if (!hasCalculated || price <= 0) {
+      alert("먼저 집하지/목적지를 입력하고 거리 및 금액 계산을 해주세요.");
+      return;
+    }
+
+    // 임시 결제 DTO(결제 페이지에서 최종 확정 예정)
+    const paymentDto = {
+      paid: null,
+      payAmount: price,
+      payMethod: null,      // 결제 페이지에서 선택
+      payStatus: "PENDING",
+      prepaidId: null,
+      refundDate: null,
+      settlement: false,
+      settlementFee: 0,
+    };
+
+    const payload = buildPayload(paymentDto);
     try {
-      console.log("[handleConfirmPayment] sending:", payload);
+      const { requestId, paymentId } = await createDeliveryRequest(
+        payload.request,
+        payload.payment
+      );
 
-      // API가 (payload) 또는 (request, payment) 형태 중 어느 걸 받는지 환경에 따라 다르면 두 방식 모두 시도
-      let requestId;
-      try {
-        requestId = await createDeliveryRequest(payload.request, payload.payment);
-      } catch (e1) {
-        console.warn("[createDeliveryRequest(payload)] 실패, (request,payment) 시도:", e1?.response?.data || e1);
-        requestId = await createDeliveryRequest(payload.request, payload.payment);
-      }
-
-      console.log("[createDeliveryRequest] success, requestId:", requestId);
-      alert("요청이 저장되었습니다.");
-
-      navigate("/company/payment", {
-        state: {
-          flow: { ...payload, requestId },
-          requestId,
-          paymentAmount: payment?.payAmount || price,
+      // state + querystring 동시 전달
+      navigate(
+        {
+          pathname: "/company/payment",
+          search: createSearchParams({
+            paymentId: String(paymentId),
+            requestId: String(requestId),
+          }).toString(),
         },
-      });
+        {
+          state: {
+            flow: { ...payload, requestId, paymentId },
+            requestId,
+            paymentId,
+            paymentAmount: paymentDto.payAmount,
+          },
+        }
+      );
     } catch (e) {
-      console.error("[handleConfirmPayment] error:", e?.response?.data || e);
+      console.error("[createDeliveryRequest] error:", e?.response?.data || e);
       alert("저장 실패");
     }
   };
 
-  // 요금 계산(useEffect)
-  useEffect(() => {
-    // 1) 거리 요금: 기본 100,000 + (표시 km * 3,000)
-    const km = Number(distance) || 0;
-    const kmForPricing = Math.floor(km); // 표시와 동일하게
-    const baseByDistance = 100000 + kmForPricing * 3000;
-    setDistanceOnlyPrice(baseByDistance);
 
-    // 2) 무게(톤) 요금: 슬라이더(=앞 단계에서 총무게 기반으로 세팅됨)
-    let sum = baseByDistance + (Number(weight) || 0) * 30000;
-
-    // 3) 취급 카테고리(있으면 각각 1회만) + 50,000
-    if (hasCarefulHandling) sum += 50000;
-    if (hasColdChain) sum += 50000;
-
-    // 4) 경유지 추가요금: 경유지 수 * 50,000
-    sum += nonEmptyWaypoints.length * WAYPOINT_FEE_PER_ITEM;
-
-    // 5) 산간지역(강원) + 50,000
-    if (hasMountainRegion) sum += MOUNTAIN_FEE;
-
-    setPrice(Math.floor(sum));
-  }, [distance, weight, nonEmptyWaypoints.length, hasMountainRegion, hasCarefulHandling, hasColdChain]);
+  // 날짜
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   return (
     <div className="estimate-container">
@@ -461,16 +509,10 @@ const EstimateForm = () => {
         <div key={i} className="form-row">
           {i + 1}번 경유지: {w.address || "주소 없음"} /{" "}
           {w.cargo ? `${w.cargo.description}, ${w.cargo.weightKg}kg` : "화물 없음"}
-          <button
-            className="address-button small waypoint-search"
-            onClick={() => openWaypointAddress(i)}
-          >
+          <button className="address-button small waypoint-search" onClick={() => openWaypointAddress(i)}>
             주소 검색
           </button>
-          <button
-            className="address-button small waypoint-search"
-            onClick={() => setCargoDialogIdx(i)}
-          >
+          <button className="address-button small waypoint-search" onClick={() => setCargoDialogIdx(i)}>
             화물 입력
           </button>
           <button
@@ -523,43 +565,55 @@ const EstimateForm = () => {
         </div>
       )}
 
-      {/* 상세 운송/요금 내역 */}
-      <div className="info-section">
-        <p>상세 운송 내역</p>
-        <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
-          <li>예상 거리: {Number(Math.floor(distance) || 0)} km</li>
-          <li>총 화물 개수: {totalCargoCount} 개</li>
-          <li>총 화물 무게: {totalCargoWeight} kg</li>
-        </ul>
+      {hasCalculated ? (
+        <div className="info-section">
+          <p>상세 운송 내역</p>
+          <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
+            <li>예상 거리: {Number(Math.floor(distance) || 0)} km</li>
+            <li>총 화물 개수: {totalCargoCount} 개</li>
+            <li>총 화물 무게: {totalCargoWeight} kg</li>
+          </ul>
 
-        <p>상세 요금 내역</p>
-        <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
-          <li>거리 요금: {Number(distanceOnlyPrice || 0).toLocaleString()}원</li>
-          <li>무게 요금 (톤당 30,000): {(Number(weight) * 30000).toLocaleString()}원</li>
+          <p>상세 요금 내역</p>
+          <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
+            {distance > 0 && (
+              <li>거리 요금: {Number(distanceOnlyPrice || 0).toLocaleString()}원</li>
+            )}
+            {weight > 0 && (
+              <li>무게 요금 (톤당 30,000): {(Number(weight) * 30000).toLocaleString()}원</li>
+            )}
+            {hasCareful && <li>취급주의 추가요금: +{(50000).toLocaleString()}원</li>}
+            {hasMountain && <li>산간지역 추가요금: +{(50000).toLocaleString()}원</li>}
+            {nonEmptyWaypoints.length > 0 && (
+              <li>
+                경유지 추가요금 ({nonEmptyWaypoints.length}개 × 50,000):{" "}
+                {(nonEmptyWaypoints.length * 50000).toLocaleString()}원
+              </li>
+            )}
+          </ul>
 
-          {hasCarefulHandling && <li>취급주의 추가요금: +{(50000).toLocaleString()}원</li>}
-          {hasColdChain && <li>냉장식품 추가요금: +{(50000).toLocaleString()}원</li>}
-
-          {nonEmptyWaypoints.length > 0 && (
-            <li>
-              경유지 추가요금 ({nonEmptyWaypoints.length}개 × 50,000):{" "}
-              {(nonEmptyWaypoints.length * 50000).toLocaleString()}원
-            </li>
-          )}
-          {hasMountainRegion && <li>산간지역(강원도) 추가요금: +{(50000).toLocaleString()}원</li>}
-        </ul>
-
-        <p style={{ marginTop: 8, fontWeight: 600 }}>
-          총 예상 금액: {Number(price || 0).toLocaleString()}원
-        </p>
-      </div>
+          <p style={{ marginTop: 8, fontWeight: 600 }}>
+            총 예상 금액: {Number(price || 0).toLocaleString()}원
+          </p>
+        </div>
+      ) : (
+        <div className="info-section">
+          <p>상세 운송/요금 내역</p>
+          <p style={{ color: "#666" }}>
+            집하지/최종 목적지를 입력하고 &ldquo;거리 및 금액 계산&rdquo;을 눌러주세요.
+          </p>
+        </div>
+      )}
 
       {/* 차량 선택 */}
       <div className="form-row">
         <select value={vehicleTypeId} onChange={(e) => setVehicleTypeId(e.target.value)}>
           <option value="">차량 선택</option>
           {vehicleTypes.map((v) => (
-            <option key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id} value={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}>
+            <option
+              key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
+              value={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
+            >
               {v.name}
             </option>
           ))}
@@ -587,22 +641,10 @@ const EstimateForm = () => {
 
       {/* 액션 */}
       <div className="form-row">
-        <button
-          className="driver-button"
-          onClick={() => {
-            console.log("[Click] 기사님 검색");
-            goDriverSearch();
-          }}
-        >
+        <button className="driver-button" onClick={goDriverSearch}>
           기사님 검색
         </button>
-        <button
-          className="submit-button"
-          onClick={() => {
-            console.log("[Click] 요청하기 (결제 다이얼로그 오픈)");
-            setPaymentOpen(true);
-          }}
-        >
+        <button className="submit-button" onClick={handleConfirmPayment}>
           요청하기
         </button>
       </div>
@@ -613,17 +655,16 @@ const EstimateForm = () => {
           open={cargoDialogIdx != null}
           onClose={() => setCargoDialogIdx(null)}
           onSave={handleSaveCargo}
+          options={cargoTypeOptions}
+          initialCargo={
+            cargoDialogIdx === "final"
+              ? finalCargo || null
+              : (typeof cargoDialogIdx === "number" ? waypoints[cargoDialogIdx]?.cargo || null : null)
+          }
         />
       )}
-
-      <PaymentDialog
-        open={paymentOpen}
-        onClose={() => setPaymentOpen(false)}
-        onConfirm={handleConfirmPayment}
-        amount={price}
-      />
     </div>
   );
 };
 
-export default EstimateForm;
+export default EstimateForm_new;

@@ -51,6 +51,17 @@ const DriverSearchForm = () => {
     size: 10                        // Integer: 페이지 크기
   });
 
+  const normalizeFlow = (raw) => {
+    if (!raw) return null;
+    // 이미 정상 형태면 그대로
+    if (raw.requestDto || raw.paymentDto) return raw;
+    // 혹시 (request, payment)로 온 구버전이면 보정
+    if (raw.request || raw.payment) {
+      return { requestDto: raw.request, paymentDto: raw.payment };
+    }
+    return null;
+  };
+
   // 검색 결과 상태 (백엔드 DriverSearchPageResponseDTO와 동일한 구조)
   const [searchResult, setSearchResult] = useState({
     drivers: [],                    // List<DriverSearchResponseDTO>: 기사 목록
@@ -84,13 +95,12 @@ const DriverSearchForm = () => {
     handleSearch();
   }, []);
 
-  // 예상금액 페이지에서 온 flow (state 우선, 없으면 sessionStorage)
   const [flow, setFlow] = useState(() => {
     const fromState = location?.state?.flow;
-    if (fromState) return fromState;
+    if (fromState) return normalizeFlow(fromState);
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : null;
+      return normalizeFlow(saved ? JSON.parse(saved) : null);
     } catch {
       return null;
     }
@@ -107,7 +117,7 @@ const DriverSearchForm = () => {
         ...searchParams,
         page: page
       };
-      
+
       console.log("=== 검색 파라미터 상세 ===");
       console.log("전체 파라미터:", params);
       console.log("최대 적재량 (kg):", params.maxWeight);
@@ -115,11 +125,11 @@ const DriverSearchForm = () => {
       console.log("즉시 배차:", params.drivable);
       console.log("정렬 옵션:", params.sortOption);
       console.log("========================");
-      
+
       const result = await searchDrivers(params);
       console.log("검색 결과:", result);
       setSearchResult(result);
-      
+
       // Redux 상태 업데이트
       dispatch(setDrivers(result.drivers));
       dispatch(setKeyword(params.keyword));
@@ -128,11 +138,11 @@ const DriverSearchForm = () => {
       dispatch(setMaxWeight(params.maxWeight));
       dispatch(setVehicleType(params.vehicleTypeId));
       dispatch(setDrivable(params.drivable));
-      
+
       if (params.latitude && params.longitude) {
         dispatch(setMyLocation({ lat: params.latitude, lng: params.longitude }));
       }
-      
+
     } catch (error) {
       console.error("기사 검색 실패:", error);
       console.error("에러 상세:", error.response?.data || error.message);
@@ -181,7 +191,7 @@ const DriverSearchForm = () => {
       oncomplete: function (data) {
         const address = data.address;
         setSearchParams(prev => ({ ...prev, region: address }));
-        
+
         // 주소를 좌표로 변환
         convertAddressToCoords(address, (coords) => {
           const newParams = {
@@ -216,20 +226,20 @@ const DriverSearchForm = () => {
     try {
       console.log("=== 기사 지명 요청 시작 ===");
       console.log("전송할 데이터:", { payment: flow.paymentDto, request: flow.requestDto });
-      
+
       // 🚛 새로운 기사 지명 요청 API 사용
       const requestId = await createDriverSpecificRequest(flow.requestDto, flow.paymentDto, driverId);
       console.log("기사 지명 요청 생성 성공, requestId:", requestId);
-      
+
       // 결제 페이지로 이동 (requestId 포함)
-      navigate("/company/payment", { 
-        state: { 
+      navigate("/company/payment", {
+        state: {
           flow: { ...flow, requestId },
           requestId: requestId,
           paymentAmount: flow.paymentDto.payAmount,
           isDriverRequest: true,
           driverId: driverId
-        } 
+        }
       });
     } catch (e) {
       const data = e?.response?.data;
@@ -242,7 +252,7 @@ const DriverSearchForm = () => {
     <div className="driversearch-form">
       {/* 기사검색 제목 - 맨 상단 가운데 */}
       <h2 className="page-title">기사 검색</h2>
-      
+
       {/* 예상금액 데이터 표시 */}
       {flow && (
         <div className="estimate-summary">
@@ -280,7 +290,7 @@ const DriverSearchForm = () => {
           )}
         </div>
       )}
-      
+
       {/* 검색 필터 */}
       <div className="search-bar">
         {/* 주소 API 버튼 - 검색란 왼쪽 */}
@@ -358,7 +368,7 @@ const DriverSearchForm = () => {
             <div className="search-info">
               총 {searchResult.totalElements}명의 기사님
             </div>
-            
+
             {/* 기사 목록 */}
             {searchResult.drivers.length > 0 ? (
               searchResult.drivers.map((driver) => (
@@ -385,7 +395,7 @@ const DriverSearchForm = () => {
           >
             이전
           </button>
-          
+
           {Array.from({ length: searchResult.totalPages }, (_, i) => (
             <button
               key={i}
@@ -395,7 +405,7 @@ const DriverSearchForm = () => {
               {i + 1}
             </button>
           ))}
-          
+
           <button
             className="page-btn"
             onClick={() => handlePageChange(searchResult.currentPage + 1)}

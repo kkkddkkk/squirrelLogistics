@@ -1,5 +1,5 @@
 // src/pages/company/MyPage.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfoItem from '../../components/company/InfoItem';
 import { useNavigate } from 'react-router-dom';
@@ -9,14 +9,14 @@ import './MyPage.css';
 
 import {
   logout,
-  fetchUserInfo,
   fetchDeliveryList,
+  fetchCompanyMyPageInfo,
 } from '../../slice/company/companySlice';
 
 const MyPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userInfo, deliveryList, filteredList } = useSelector((state) => state.company);
+  const { deliveryList, filteredList, myPageInfo, isLoading, error } = useSelector((state) => state.company);
 
   const {
     status,
@@ -27,16 +27,42 @@ const MyPage = () => {
     STATUS_OPTIONS,
   } = useDeliveryFilter();
 
-  const [showFullAccount, setShowFullAccount] = useState(true);
-  const maskedAccount = userInfo?.accountNumber
-    ? userInfo.accountNumber.slice(0, -7) + '•'.repeat(7)
-    : '';
+  const [showFullAccount, setShowFullAccount] = useState(false); // 기본값을 false로 설정하여 계좌번호 숨김 상태로 시작
+  
+  // 계좌번호 마스킹 처리 (안전한 처리)
+  const maskedAccount = useMemo(() => {
+    if (!myPageInfo?.account) return '';
+    
+    const account = myPageInfo.account;
+    if (account.length <= 4) {
+      // 계좌번호가 4자리 이하면 전체를 마스킹
+      return '•'.repeat(account.length);
+    } else {
+      // 앞부분은 보여주고 뒷부분 4자리는 마스킹 (더 안전)
+      return account.slice(0, -4) + '•'.repeat(4);
+    }
+  }, [myPageInfo?.account]);
 
-  // ✅ 실제 서버 데이터 불러오기 (목데이터 주입 삭제)
+  // ✅ 실제 서버 데이터 불러오기
   useEffect(() => {
-    dispatch(fetchUserInfo());
+    dispatch(fetchCompanyMyPageInfo());
     dispatch(fetchDeliveryList());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (myPageInfo) {
+      console.log('마이페이지 정보 로드됨:', myPageInfo);
+      console.log('연락처(pnumber):', myPageInfo.pnumber);
+      console.log('이름:', myPageInfo.name);
+      console.log('이메일:', myPageInfo.email);
+    }
+  }, [myPageInfo]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('마이페이지 데이터 로딩 실패:', error);
+    }
+  }, [error]);
 
   // (선택) 탭으로 돌아왔을 때 최신화하고 싶다면 아래 주석 해제
   // useEffect(() => {
@@ -64,8 +90,7 @@ const MyPage = () => {
 
   return (
     <div className="mypage-container">
-      <h2 className="mypage-title">마이페이지</h2>
-
+      
       {/* 회원정보 */}
       <div className="info-section">
         <div className="info-header">
@@ -77,52 +102,42 @@ const MyPage = () => {
             onClick={() => navigate('/company/verify')}
           />
         </div>
-        <InfoItem label="회사명" value={userInfo?.companyName} />
-        <InfoItem label="이메일" value={userInfo?.email} />
-        <InfoItem label="연락처" value={userInfo?.phone} />
-        <InfoItem label="회사 주소" value={userInfo?.address} />
-        <InfoItem label="사업자 등록번호" value={userInfo?.bizNumber} />
-        {/* (선택) 은행사도 표시 */}
-        <InfoItem label="은행사" value={userInfo?.bankName} />
+        
+        {isLoading ? (
+          <div className="loading-message">데이터를 불러오는 중...</div>
+        ) : error ? (
+          <div className="error-message">데이터를 불러올 수 없습니다. 다시 시도해주세요.</div>
+        ) : (
+          <>
+            <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} />
+            <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} />
+            <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} />
+            <InfoItem label="회사 주소" value={myPageInfo?.address || "정보 없음"} />
+            <InfoItem label="사업자 등록번호" value={myPageInfo?.businessN || "정보 없음"} />
 
-        <div className="info-item">
-          <span className="info-label">메인 계좌</span>
-          <span className="info-value">
-            {showFullAccount ? userInfo?.accountNumber : maskedAccount}
-            <button className="mask-toggle" onClick={() => setShowFullAccount(prev => !prev)}>
-              {showFullAccount ? "숨기기" : "보이기"}
-            </button>
-          </span>
-        </div>
+            {/* 계좌번호는 별도로 처리 (숨기기/보이기 기능 포함) */}
+            <div className="info-item">
+              <span className="info-label">계좌번호</span>
+              <span className="info-value">
+                {showFullAccount ? (myPageInfo?.account || "정보 없음") : (maskedAccount || "정보 없음")}
+                {myPageInfo?.account && (
+                  <button 
+                    className="mask-toggle" 
+                    onClick={() => setShowFullAccount(prev => !prev)}
+                    disabled={!myPageInfo?.account}
+                  >
+                    {showFullAccount ? "숨기기" : "보이기"}
+                  </button>
+                )}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 배송 검색 필터 */}
       <div className="delivery-filter">
-        <select
-          value={status}
-          onChange={(e) => handleChange("status", e.target.value)}
-          className="status-select"
-        >
-          <option value="">전체 상태</option>
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-
-        <input
-          type="text"
-          placeholder="기사명"
-          value={driverName}
-          onChange={(e) => handleChange("driverName", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="운송장번호"
-          value={trackingNumber}
-          onChange={(e) => handleChange("trackingNumber", e.target.value)}
-        />
-        <button className="filter-btn" onClick={() => handleChange("search")}>검색</button>
-        <button className="filter-btn" onClick={handleReset}>초기화</button>
+        
       </div>
 
       {/* 배송 정보 테이블 */}

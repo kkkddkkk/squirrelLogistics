@@ -51,7 +51,7 @@ public class HousekeepingServiceImpl implements HousekeepingService {
 	    
 	    // 만기 요청에 대한 선결제 환불 처리.
 	    runStep("CANCEL_PROPOSALS",                  assignmentRepo::cancelExpiredProposals,                now);
-	    runStep("REFUND_PAYMENTS",                   paymentRepo::refundForRequestsWithoutActiveProposals,  now);
+//	    runStep("REFUND_PAYMENTS",                   paymentRepo::refundForRequestsWithoutActiveProposals,  now);
 	    // 지명 제안 만기된 운송 요청 제안됨 => 공개됨으로 상태 전환.
 	    runStep("REOPEN_AND_DETACH",                 requestRepo::reopenAndDetachPaymentForRequestsNative,  now);
 	    

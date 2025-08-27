@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.gpt.squirrelLogistics.dto.actualCalc.EstimateCalcDTO;
+import com.gpt.squirrelLogistics.dto.deliveryRequest.CreatedRequestPaymentInfoDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
@@ -21,7 +22,7 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO
 public interface DeliveryRequestService {
 	
 	//운송 요청 생성(작성자: 고은설).
-    Long create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO dto);	
+    CreatedRequestPaymentInfoDTO create(PaymentDTO paymentDTO, DeliveryRequestRequestDTO dto);	
 	//개별 운송 요청 자세히 읽기(작성자: 고은설).
 	DeliveryRequestResponseDTO readFull(Long requestId);
     DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId) throws NotFoundException;

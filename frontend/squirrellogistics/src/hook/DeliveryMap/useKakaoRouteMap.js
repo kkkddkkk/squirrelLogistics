@@ -477,3 +477,65 @@ export const useStaticRouteMapFromPolyline = ({
     return () => { canceled = true; clear(); };
   }, [mapContainerRef, encodedPolyline]);
 };
+
+async function geocodeAddresses(addresses) {
+  const headers = { Authorization: `KakaoAK ${KAKAO_NAVIGATION_REST_KEY}` };
+  const base = "https://dapi.kakao.com/v2/local/search/address.json"; // Kakao Local API
+  const jobs = addresses.map(async (addr) => {
+    const res = await axios.get(base, { headers, params: { query: addr } });
+    const doc = res?.data?.documents?.[0];
+    if (!doc) throw new Error(`지오코딩 실패: "${addr}"`);
+    return { x: Number(doc.x), y: Number(doc.y), name: addr }; // x=lng, y=lat
+  });
+  return Promise.all(jobs);
+}
+
+// ---- 2) 직선거리 폴백 ----
+function haversineMeters(a, b) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.y - a.y);
+  const dLng = toRad(b.x - a.x);
+  const lat1 = toRad(a.y), lat2 = toRad(b.y);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+function sumStraightLineDistance(points) {
+  let sum = 0;
+  for (let i = 1; i < points.length; i++) sum += haversineMeters(points[i - 1], points[i]);
+  return Math.round(sum);
+}
+
+// ---- 3) (x,y) 포인트들로 카카오모빌리티 길찾기 ----
+async function fetchRouteDistanceFromPoints(points) {
+  const headers = {
+    Authorization: `KakaoAK ${KAKAO_NAVIGATION_REST_KEY}`,
+    "Content-Type": "application/json",
+  };
+  const body = {
+    origin: { x: points[0].x, y: points[0].y, name: points[0].name || "출발" },
+    destination: { x: points.at(-1).x, y: points.at(-1).y, name: points.at(-1).name || "도착" },
+    waypoints: points.slice(1, -1).map((p, i) => ({ x: p.x, y: p.y, name: p.name || `경유지${i + 1}` })),
+    priority: "RECOMMEND",
+    car_fuel: "GASOLINE",
+    car_hipass: true,
+    summary: true,              // 요약만(거리/시간) 응답 → 페이로드 절약
+  };
+  const url = "https://apis-navi.kakaomobility.com/v1/waypoints/directions";
+  const { data } = await axios.post(url, body, { headers });
+
+  const distance = data?.routes?.[0]?.summary?.distance;
+  if (typeof distance !== "number") return sumStraightLineDistance(points); // 폴백
+  return Math.round(distance); // meters
+}
+
+export async function getRouteDistanceFromAddresses(addresses) {
+  if (!Array.isArray(addresses) || addresses.length < 2) {
+    throw new Error("최소 2개 이상의 주소가 필요합니다.");
+  }
+
+  const points = await geocodeAddresses(addresses);
+  const distance = await fetchRouteDistanceFromPoints(points);
+
+  return distance;
+}
