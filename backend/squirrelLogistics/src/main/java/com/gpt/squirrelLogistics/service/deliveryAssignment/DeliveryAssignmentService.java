@@ -266,7 +266,8 @@ public class DeliveryAssignmentService {
 		// 운송 할당 엔티티 생성.
 		DeliveryAssignment a = DeliveryAssignment.builder().deliveryRequest(req).driver(driver)
 				.status(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED)
-				.assignedAt(LocalDateTime.now()).build();
+				.assignedAt(LocalDateTime.now())
+				.build();
 		deliveryAssignmentRepository.save(a);
 
 		return Map.of("SUCCESS", "ACCEPTED");
@@ -704,9 +705,17 @@ public class DeliveryAssignmentService {
 				.mountainous(mountainous).caution(caution).build();
 		ad = actualDeliveryRepository.save(ad);
 		a.setActualDelivery(ad);
+		
+		DeliveryRequest reqRef = a.getDeliveryRequest();
+		
+		Long prepaidId = null;
+		if(reqRef != null && reqRef.getPayment() != null) {
+			prepaidId = reqRef.getPayment().getPaymentId();
+		}
 
 		// 3) Payment 생성/저장 → 즉시 할당
 		Payment p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false)
+				.prepaidId(prepaidId)
 				// .payAmount(a.getDeliveryRequest().getEstimatedFee()) // 금액 연결하려면 이렇게
 				.build();
 		p = paymentRepository.save(p);

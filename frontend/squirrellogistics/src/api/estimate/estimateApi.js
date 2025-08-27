@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getRouteDistanceFromAddresses } from "../../hook/DeliveryMap/useKakaoRouteMap";
 
 /* =========================
  * 기본 설정
@@ -25,7 +26,7 @@ http.interceptors.request.use((config) => {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-  } catch (_) {}
+  } catch (_) { }
   return config;
 });
 
@@ -63,6 +64,7 @@ export const getCoordsFromAddress = async (address) => {
  * 거리 계산 (하버사인) - km
  * ========================= */
 
+//TO DO: 길찾기로 바꾸기.
 export const calculateDistance = async (addresses) => {
   const coordsList = await Promise.all(addresses.map(getCoordsFromAddress));
   const validCoords = coordsList.filter(Boolean);
@@ -72,25 +74,16 @@ export const calculateDistance = async (addresses) => {
     return null;
   }
 
-  let total = 0;
-  for (let i = 0; i < validCoords.length - 1; i++) {
-    const { lat: lat1, lng: lng1 } = validCoords[i];
-    const { lat: lat2, lng: lng2 } = validCoords[i + 1];
-    const rad = Math.PI / 180;
-    const dLat = (lat2 - lat1) * rad;
-    const dLng = (lng2 - lng1) * rad;
+  // 카카오 내비 API 기반 거리(m)
+  const meters = await getRouteDistanceFromAddresses(addresses);
 
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const R = 6371; // km
-    total += R * c;
-  }
+  // km 변환 후 올림 처리
+  const km = Math.ceil(meters / 1000);
 
-  return total;
+  console.log(`${km} km`);
+
+  return km; // 정수 km
 };
-
 /* =========================
  * 예상 금액 API
  * ========================= */
@@ -160,14 +153,14 @@ export const createDriverSpecificRequest = async (requestDto, paymentDto, driver
     }, { headers });
 
     console.log("기사 지명 요청 생성 성공:", response.data);
-    
+
     // 백엔드 응답 구조에 맞춰 requestId 추출
     if (response.data.success && response.data.requestId) {
       return response.data.requestId;
     } else {
       throw new Error(response.data.message || "요청 ID를 찾을 수 없습니다.");
     }
-    
+
   } catch (error) {
     console.error("기사 지명 요청 생성 실패:", error);
     const errorMessage = error.response?.data?.message || error.message;
@@ -197,14 +190,14 @@ export const sendDriverRequestAfterPayment = async (requestId, paymentId) => {
     }, { headers });
 
     console.log("기사 지명 요청 전송 성공:", response.data);
-    
+
     // 백엔드 응답 구조에 맞춰 처리
     if (response.data.success) {
       return response.data;
     } else {
       throw new Error(response.data.message || "요청 전송에 실패했습니다.");
     }
-    
+
   } catch (error) {
     console.error("기사 지명 요청 전송 실패:", error);
     const errorMessage = error.response?.data?.message || error.message;
@@ -225,7 +218,7 @@ export const checkIfDriverSpecificRequest = async (requestId) => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const response = await axios.get(`${API_SERVER_HOST}/api/delivery/requests/requests/${requestId}/type`, { headers });
-    
+
     // 백엔드 응답 구조에 맞춰 isDriverSpecific 추출
     if (response.data.success) {
       return response.data.isDriverSpecific;

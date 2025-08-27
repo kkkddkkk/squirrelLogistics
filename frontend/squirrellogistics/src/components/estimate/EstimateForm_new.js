@@ -366,6 +366,18 @@ const EstimateForm_new = () => {
     alert(`출발지로 적용: ${addr}`);
   };
 
+  const formatLocalDateTime = (d) => {
+    if (!d) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const MM = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const HH = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
+  };
+
   // payload 빌드 (handlingId: null 허용)
   const buildPayload = (payment) => {
     let order = 1;
@@ -397,8 +409,8 @@ const EstimateForm_new = () => {
         totalCargoWeight,
         estimatedFee: price,
         distance: Math.round(Number(distance) || 0),
-        wantToStart: startDate ? startDate.toISOString().slice(0, 19).replace("T", " ") : null,
-        wantToEnd: endDate ? endDate.toISOString().slice(0, 19).replace("T", " ") : null,
+        wantToStart: formatLocalDateTime(startDate),
+        wantToEnd: formatLocalDateTime(endDate),
         companyId,
         vehicleTypeId: vehicleTypeId ? Number(vehicleTypeId) : null,
         waypoints: wp
