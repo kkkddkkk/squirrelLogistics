@@ -8,6 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.gpt.squirrelLogistics.dto.company.CompanyResponseDTO;
 import com.gpt.squirrelLogistics.dto.company.CompanyMyPageResponseDTO;
+import com.gpt.squirrelLogistics.dto.delivery.DeliveryListResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import com.gpt.squirrelLogistics.service.company.CompanyService;
 import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.entity.company.Company;
@@ -19,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/company")
@@ -145,8 +150,8 @@ public class CompanyController {
                 return ResponseEntity.badRequest().body(Map.of("error", "이메일과 새 비밀번호를 입력해주세요."));
             }
             
-            // CompanyServiceImpl의 completePasswordReset 메서드 호출
-            boolean success = ((com.gpt.squirrelLogistics.service.company.CompanyServiceImpl) companyService).completePasswordReset(email, newPassword);
+            // CompanyService의 completePasswordReset 메서드 호출
+            boolean success = companyService.completePasswordReset(email, newPassword);
             
             if (success) {
                 return ResponseEntity.ok(Map.of("ok", true, "message", "비밀번호가 성공적으로 재설정되었습니다."));
@@ -165,6 +170,14 @@ public class CompanyController {
     @GetMapping("/test")
     public ResponseEntity<Map<String, Object>> test() {
         return ResponseEntity.ok(Map.of("message", "Company API 정상 작동"));
+    }
+    
+    /**
+     * 비밀번호 재설정 테스트 API (공개 접근 확인용)
+     */
+    @GetMapping("/password/reset/test")
+    public ResponseEntity<Map<String, Object>> testPasswordResetAccess() {
+        return ResponseEntity.ok(Map.of("message", "비밀번호 재설정 엔드포인트 공개 접근 가능"));
     }
     
     /**
@@ -354,71 +367,57 @@ public class CompanyController {
         }
     }
     
-         /**
-      * 마이페이지 회원정보 조회
-      * @param userId 로그인한 사용자의 userId (localStorage에서 전달)
-      * @return CompanyMyPageResponseDTO
-      */
-     @GetMapping("/mypage")
-     public ResponseEntity<Object> getMyPageInfo(@RequestParam(name = "userId", required = false) Long userId) {
-         try {
-             log.info("=== 마이페이지 정보 조회 시작 ===");
-             log.info("요청 파라미터 userId: {}", userId);
-             
-             if (userId == null) {
-                 log.warn("userId가 제공되지 않음");
-                 return ResponseEntity.badRequest().body(Map.of("error", "사용자 ID가 필요합니다"));
-             }
-             
-             if (userId <= 0) {
-                 log.warn("유효하지 않은 userId: {}", userId);
-                 return ResponseEntity.badRequest().body(Map.of("error", "유효하지 않은 사용자 ID입니다"));
-             }
-             
-             // userId로 User 조회
-             log.info("UserRepository.findById() 호출 시작 - userId: {}", userId);
-             
-             // 디버깅: DB에 있는 모든 User의 loginId 확인 (개발 환경에서만)
-             if (log.isDebugEnabled()) {
-                 List<User> allUsers = userRepository.findAll();
-                 log.debug("=== DB에 저장된 모든 User의 loginId ===");
-                 for (User u : allUsers) {
-                     log.debug("  userId: {}, loginId: '{}', name: '{}'", u.getUserId(), u.getLoginId(), u.getName());
-                 }
-                 log.debug("=== DB User 목록 끝 ===");
-             }
-             
-             User user = userRepository.findById(userId)
-                 .orElseThrow(() -> new IllegalArgumentException("User not found with userId: " + userId));
-             log.info("User 조회 성공 - userId: {}, name: {}", user.getUserId(), user.getName());
+    /**
+     * 마이페이지 회원정보 조회 (JWT 토큰 기반 인증)
+     * @return CompanyMyPageResponseDTO
+     */
+    @GetMapping("/mypage")
+    public ResponseEntity<Object> getMyPageInfo() {
+        try {
+            log.info("=== 마이페이지 정보 조회 시작 ===");
             
-            // userId로 Company 조회 (이미 CompanyRepository에 JPQL JOIN 쿼리 있음)
+            // JWT 토큰에서 userId 추출
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                log.warn("인증되지 않은 사용자");
+                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자입니다"));
+            }
+            
+            String username = auth.getName();
+            log.info("인증된 사용자: {}", username);
+            
+            // username으로 User 조회
+            User user = userRepository.findByLoginId(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
+            log.info("User 조회 성공 - userId: {}, name: {}", user.getUserId(), user.getName());
+            
+            // userId로 Company 조회
             log.info("CompanyRepository.findByUserId() 호출 시작");
             Company company = companyRepository.findByUserId(user.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Company not found for userId: " + user.getUserId()));
             log.info("Company 조회 성공 - companyId: {}, address: {}", company.getCompanyId(), company.getAddress());
             
-                         // CompanyMyPageResponseDTO로 변환
-             CompanyMyPageResponseDTO myPageInfo = CompanyMyPageResponseDTO.builder()
-                 .userId(user.getUserId())
-                 .loginId(user.getLoginId())
-                 .name(user.getName())
-                 .email(user.getEmail())
-                 .Pnumber(user.getPnumber())  // Entity의 Pnumber -> DTO의 pnumber
-                 .account(user.getAccount())
-                 .businessN(user.getBusinessN())
-                 .companyId(company.getCompanyId())
-                 .address(company.getAddress())
-                 .mainLoca(company.getMainLoca())
-                 .build();
+            // CompanyMyPageResponseDTO로 변환
+            CompanyMyPageResponseDTO myPageInfo = CompanyMyPageResponseDTO.builder()
+                .userId(user.getUserId())
+                .loginId(user.getLoginId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .Pnumber(user.getPnumber())  // Entity의 Pnumber -> DTO의 pnumber
+                .account(user.getAccount())
+                .businessN(user.getBusinessN())
+                .companyId(company.getCompanyId())
+                .address(company.getAddress())
+                .mainLoca(company.getMainLoca())
+                .build();
             
-                         if (myPageInfo != null) {
-                 log.info("마이페이지 정보 조회 성공 - name: {}, email: {}", myPageInfo.getName(), myPageInfo.getEmail());
-                 return ResponseEntity.ok(myPageInfo);
-             } else {
-                 log.warn("마이페이지 정보를 찾을 수 없음 - userId: {}", userId);
-                 return ResponseEntity.status(404).body(Map.of("error", "마이페이지 정보를 찾을 수 없습니다"));
-             }
+            if (myPageInfo != null) {
+                log.info("마이페이지 정보 조회 성공 - name: {}, email: {}", myPageInfo.getName(), myPageInfo.getEmail());
+                return ResponseEntity.ok(myPageInfo);
+            } else {
+                log.warn("마이페이지 정보를 찾을 수 없음 - userId: {}", user.getUserId());
+                return ResponseEntity.status(404).body(Map.of("error", "마이페이지 정보를 찾을 수 없습니다"));
+            }
             
         } catch (Exception e) {
             log.error("=== 마이페이지 정보 조회 실패 ===", e);
@@ -428,6 +427,144 @@ public class CompanyController {
                 log.error("원인: {}", e.getCause().getMessage());
             }
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * 회사의 배송 목록 조회 (필터링 및 페이징 지원)
+     * - driverName → name
+     * - estimatedFee → payAmount (DTO/쿼리에서 반영됨)
+     * - deliveryStatus → status (DTO/쿼리에서 반영됨)
+     */
+    @GetMapping("/deliveries")
+    public ResponseEntity<Object> getCompanyDeliveries(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "5") int size) {
+        try {
+            log.info("=== 회사 배송 목록 조회 시작 ===");
+            log.info("필터 - name: {}, status: {}, page: {}, size: {}", name, status, page, size);
+            
+            // JWT 토큰에서 userId 추출
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                log.warn("인증되지 않은 사용자");
+                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자입니다"));
+            }
+            
+            String username = auth.getName();
+            log.info("인증된 사용자: {}", username);
+            
+            // username으로 User 조회
+            User user = userRepository.findByLoginId(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
+            log.info("User 조회 성공 - userId: {}, name: {}", user.getUserId(), user.getName());
+            
+            // userId로 Company 조회
+            Company company = companyRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Company not found for userId: " + user.getUserId()));
+            log.info("Company 조회 성공 - companyId: {}", company.getCompanyId());
+            
+            // 페이징 정보 생성
+            Pageable pageable = PageRequest.of(page, size);
+            
+            // Service를 통해 배송 목록 조회
+            Page<DeliveryListResponseDTO> deliveriesPage = companyService
+                    .getCompanyDeliveriesWithFilters(company.getCompanyId(), name, status, pageable);
+            
+            log.info("=== 회사 배송 목록 조회 완료 - 총 건수: {}, 현재 페이지 건수: {} ===", 
+                    deliveriesPage.getTotalElements(), deliveriesPage.getContent().size());
+            
+            return ResponseEntity.ok(Map.of(
+                "deliveries", deliveriesPage.getContent(),
+                "totalCount", deliveriesPage.getTotalElements(),
+                "currentPage", deliveriesPage.getNumber(),
+                "totalPages", deliveriesPage.getTotalPages(),
+                "hasNext", deliveriesPage.hasNext(),
+                "hasPrevious", deliveriesPage.hasPrevious()
+            ));
+            
+        } catch (Exception e) {
+            log.error("=== 회사 배송 목록 조회 실패 ===", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * 회원탈퇴 (사용자 정보 완전 삭제)
+     */
+    @DeleteMapping("/account/delete")
+    public ResponseEntity<Map<String, Object>> deleteUserAccount() {
+        try {
+            log.info("=== 회원탈퇴 요청 시작 ===");
+            
+            // JWT 토큰에서 userId 추출
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                log.warn("인증되지 않은 사용자");
+                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자입니다"));
+            }
+            
+            String username = auth.getName();
+            log.info("인증된 사용자: {}", username);
+            
+            // username으로 User 조회
+            User user = userRepository.findByLoginId(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
+            log.info("User 조회 성공 - userId: {}, name: {}", user.getUserId(), user.getName());
+            
+            // 회원탈퇴 실행
+            boolean isDeleted = companyService.deleteUserAccount(user.getUserId());
+            
+            if (isDeleted) {
+                log.info("=== 회원탈퇴 완료 성공 - userId: {} ===", user.getUserId());
+                return ResponseEntity.ok(Map.of(
+                    "ok", true, 
+                    "message", "회원탈퇴가 완료되었습니다."
+                ));
+            } else {
+                log.warn("=== 회원탈퇴 실패 - userId: {} ===", user.getUserId());
+                return ResponseEntity.ok(Map.of(
+                    "ok", false, 
+                    "message", "회원탈퇴에 실패했습니다."
+                ));
+            }
+            
+        } catch (Exception e) {
+            log.error("=== 회원탈퇴 실패 ===", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 회원탈퇴 (role을 ETC로 변경)
+     */
+    @PostMapping("/withdraw")
+    public ResponseEntity<Map<String, Object>> withdrawAccount(@RequestBody Map<String, Object> request) {
+        try {
+            log.info("=== 회원탈퇴 요청 시작 ===");
+            
+            Long userId = Long.valueOf(request.get("userId").toString());
+            log.info("회원탈퇴 요청 - userId: {}", userId);
+            
+            if (userId == null) {
+                log.warn("사용자 ID가 null입니다.");
+                return ResponseEntity.badRequest().body(Map.of("error", "사용자 ID가 필요합니다."));
+            }
+            
+            boolean success = companyService.withdrawAccount(userId);
+            
+            if (success) {
+                log.info("=== 회원탈퇴 완료 성공 - userId: {} ===", userId);
+                return ResponseEntity.ok(Map.of("ok", true, "message", "회원탈퇴가 완료되었습니다."));
+            } else {
+                log.warn("=== 회원탈퇴 실패 - userId: {} ===", userId);
+                return ResponseEntity.ok(Map.of("ok", false, "message", "회원탈퇴 처리에 실패했습니다."));
+            }
+        } catch (Exception e) {
+            log.error("=== 회원탈퇴 실패 ===", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "회원탈퇴 처리 중 오류가 발생했습니다."));
         }
     }
 }
