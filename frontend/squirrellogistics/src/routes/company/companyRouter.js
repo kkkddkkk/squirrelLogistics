@@ -5,6 +5,7 @@ const Loading = <div>로딩 중...</div>;
 const MyPage = lazy(() => import("../../pages/company/MyPage"));
 const CompanyVerifyPage = lazy(() => import("../../pages/company/CompanyVerifyPage"));
 const CompanyEditPage = lazy(() => import("../../pages/company/CompanyEditPage"));
+const ResetPasswordPage = lazy(() => import("../../pages/company/ResetPasswordPage"));
 const SocialReauthComplete = lazy(() => import("../../pages/company/SocialReauthComplete"));
 const Payment = lazy(() => import("../../pages/Payment/Payment"));
 const Success = lazy(() => import("../../pages/Payment/PaymentSuccess"));
@@ -28,6 +29,10 @@ const companyRouter = () => {
     {
       path: "/company/edit",          // ✅ ② 정보수정 (인증 후 진입)
       element: <Suspense fallback={Loading}><CompanyEditPage /></Suspense>,
+    },
+    {
+      path: "/company/reset-password", // ✅ ③ 비밀번호 재설정
+      element: <Suspense fallback={Loading}><ResetPasswordPage /></Suspense>,
     },
     { 
       path: "/company/auth/social-complete",
