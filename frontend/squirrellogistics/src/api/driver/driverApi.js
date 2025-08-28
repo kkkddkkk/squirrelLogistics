@@ -10,11 +10,11 @@ const driverApi = axios.create({
   },
 });
 
-// 요청 인터셉터 - 토큰 자동 추가
+// 요청 인터셉터 - 토큰 자동 추가 (일반/OAuth 사용자 우선)
 driverApi.interceptors.request.use(
   (config) => {
     const token =
-      localStorage.getItem("token") || localStorage.getItem("accessToken");
+      localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
