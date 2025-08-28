@@ -184,7 +184,7 @@ export default function DriverForm() {
             next.mainLoca = "최소 1개 이상의 선호지역을 선택해주세요.";
         }
         // ✅ 필수 약관 강제
-        const requiredIds = terms.filter(t => t.isRequired).map(t => t.id);
+        const requiredIds = terms.filter(t => t.required).map(t => t.termId);
         const agreedSet = agreedTerms instanceof Set ? agreedTerms : new Set(agreedTerms);
         if (requiredIds.length > 0 && !requiredIds.every(id => agreedSet.has(id))) {
             // 약관 블록에 에러 표시를 위해 키 추가(예: agreeTerms)
@@ -529,8 +529,8 @@ export default function DriverForm() {
                         idStatus === "checking" || emailStatus === "checking" ||
                         idStatus === "dup" || emailStatus === "dup" ||
                         // ✅ 필수 약관 미동의 시 버튼 비활성
-                        terms.some(t => t.isRequired) &&
-                        !terms.filter(t => t.isRequired).every(t => agreedTerms.has(t.id))
+                        terms.some(t => t.required) &&
+                        !terms.filter(t => t.required).every(t => agreedTerms.has(t.termId))
                     }
                 >
                     {loading ? "처리 중..." : "회원가입"}

@@ -18,7 +18,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 /**
  * props
- * - terms: [{id, termName, termContent, isRequired, createDT, updateDT}, ...]
+ * - terms: [{id, termName, termContent, required, createDT, updateDT}, ...]
  * - agreed: Set<number> | number[]
  * - onChange: (next:Set<number>) => void
  */
@@ -32,11 +32,11 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
     );
 
     const requiredIds = useMemo(
-        () => terms.filter((t) => !!t.isRequired).map((t) => t.id),
+        () => terms.filter((t) => !!t.required).map((t) => t.termId),
         [terms]
     );
     const requiredAllAgreed = useMemo(
-        () => requiredIds.every((id) => agreedSet.has(id)),
+        () => requiredIds.every((termId) => agreedSet.has(termId)),
         [requiredIds, agreedSet]
     );
 
@@ -58,18 +58,18 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
 
     const agreeFromModal = () => {
         if (!active) return;
-        setAgree(active.id, true);
+        setAgree(active.termId, true);
         closeModal();
     };
 
     const unagreeFromModal = () => {
         if (!active) return;
-        setAgree(active.id, false);
+        setAgree(active.termId, false);
         closeModal();
     };
 
     const agreeAll = () => {
-        const next = new Set(terms.map((t) => t.id)); // 선택 포함 전체 동의
+        const next = new Set(terms.map((t) => t.termId)); // 선택 포함 전체 동의
         onChange?.(next);
     };
 
@@ -106,13 +106,13 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
                     </Typography>
                 ) : (
                     terms.map((t) => {
-                        const isAgreed = agreedSet.has(t.id);
+                        const isAgreed = agreedSet.has(t.termId);
                         return (
                             <Button
-                                key={t.id}
+                                key={t.termId}
                                 onClick={() => openModal(t)}
                                 variant={isAgreed ? "contained" : "outlined"}
-                                color={isAgreed ? "primary" : t.isRequired ? "warning" : "inherit"}
+                                color={isAgreed ? "primary" : t.required ? "warning" : "inherit"}
                                 startIcon={isAgreed ? <CheckCircleIcon /> : null}
                                 sx={{
                                     justifyContent: "flex-start",
@@ -122,11 +122,11 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
                                 <span>{t.termName}</span>
                                 <span
                                     style={{
-                                        color: t.isRequired ? "#ff9800" : "#777",
-                                        fontWeight: t.isRequired ? "bold" : "normal",
+                                        color: t.required ? "#ff9800" : "#777",
+                                        fontWeight: t.required ? "bold" : "normal",
                                     }}
                                 >
-                                    {t.isRequired ? "(필수)" : "(선택)"}
+                                    {t.required ? "(필수)" : "(선택)"}
                                 </span>
                             </Button>
                         );
@@ -137,7 +137,7 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
             {/* 상세 모달 */}
             <Dialog open={open} onClose={closeModal} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {active?.termName} {active?.isRequired ? "(필수)" : "(선택)"}
+                    {active?.termName} {active?.required ? "(필수)" : "(선택)"}
                 </DialogTitle>
                 <DialogContent dividers sx={{ maxHeight: 500 }}>
                     <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
@@ -146,7 +146,7 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
                 </DialogContent>
                 <DialogActions>
                     {active && (
-                        agreedSet.has(active.id) ? (
+                        agreedSet.has(active.termId) ? (
                             <>
                                 <Button onClick={unagreeFromModal} variant="outlined" color="warning">
                                     동의 해제
