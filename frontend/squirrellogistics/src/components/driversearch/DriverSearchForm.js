@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DriverCard from "./DriverCard";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import {
   setKeyword,
   setRegion,
@@ -13,6 +13,7 @@ import {
   setMyLocation,
 } from "../../slice/driversearch/driverSearchSlice";
 import {
+  createDeliveryPropose,
   createDeliveryRequest, // 결제 플로우: 기사 지명 시 바로 생성
   createDriverSpecificRequest, // 기사 지명 요청 전용 API
 } from "../../api/estimate/estimateApi";
@@ -224,23 +225,48 @@ const DriverSearchForm = () => {
     if (!ok) return;
 
     try {
-      console.log("=== 기사 지명 요청 시작 ===");
-      console.log("전송할 데이터:", { payment: flow.paymentDto, request: flow.requestDto });
+      const paymentDto = {
+        paid: null,
+        payAmount: flow.estimatedFee ?? 0,
+        payMethod: null,
+        payStatus: "PENDING",
+        prepaidId: null,
+        refundDate: null,
+        settlement: false,
+        settlementFee: 0,
+      };
 
-      // 🚛 새로운 기사 지명 요청 API 사용
-      const requestId = await createDriverSpecificRequest(flow.requestDto, flow.paymentDto, driverId);
-      console.log("기사 지명 요청 생성 성공, requestId:", requestId);
+      console.log("전송 데이터:", {
+        payment: paymentDto,
+        request: flow.requestDto
+      });
+
+      console.log("driverId: " + driverId);
+
+      const { requestId, paymentId } = await createDeliveryPropose(
+        flow.requestDto,
+        paymentDto,
+        driverId
+      );
 
       // 결제 페이지로 이동 (requestId 포함)
-      navigate("/company/payment", {
-        state: {
-          flow: { ...flow, requestId },
-          requestId: requestId,
-          paymentAmount: flow.paymentDto.payAmount,
-          isDriverRequest: true,
-          driverId: driverId
+      navigate(
+        {
+          pathname: "/company/payment",
+          search: createSearchParams({
+            paymentId: String(paymentId),
+          }).toString(),
+        },
+        {
+          state: {
+            flow: { ...flow, requestId, paymentId, paymentDto },
+            requestId,
+            paymentId,
+            paymentAmount: paymentDto.payAmount,
+            isDriverRequest: true,
+          },
         }
-      });
+      );
     } catch (e) {
       const data = e?.response?.data;
       console.error("createDriverSpecificRequest error:", data || e);

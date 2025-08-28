@@ -13,15 +13,32 @@ const BASE = `${API_SERVER_HOST}/api/delivery/requests`;
 //sort: 정렬 기준 컬럼명, createdAt등.
 //dir: "ASC" 혹은 "DESC".
 
+// export async function fetchDeliveryRequests(pageReq = {}) {
+//     const params = {
+//         page: pageReq.page ?? 1,
+//         size: pageReq.size ?? 10,
+//         sort: pageReq.sort ?? "createAt",
+//         dir: pageReq.dir ?? "DESC",
+//     };
+//     const res = await axios.get(`${BASE}`, { params });
+//     return res.data; //<= PageResponseDTO.
+// }
+
+
 export async function fetchDeliveryRequests(pageReq = {}) {
-    const params = {
-        page: pageReq.page ?? 1,
-        size: pageReq.size ?? 10,
-        sort: pageReq.sort ?? "createAt",
-        dir: pageReq.dir ?? "DESC",
-    };
-    const res = await axios.get(`${BASE}`, { params });
-    return res.data; //<= PageResponseDTO.
+  const params = {
+    page: pageReq.page ?? 1,
+    size: pageReq.size ?? 10,
+
+    sortKey: pageReq.sortKey ?? 'RECENT',
+
+    // 검색, 날짜 필터
+    q: pageReq.q ?? '',
+    scope: pageReq.scope ?? '',         
+    startDate: pageReq.startDate ?? '', 
+  };
+  const res = await axios.get(`${BASE}`, { params });
+  return res.data; // PageResponseDTO
 }
 
 //2. 개별 요청 정보 조회

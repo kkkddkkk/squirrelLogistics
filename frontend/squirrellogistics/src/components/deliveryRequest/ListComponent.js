@@ -1,44 +1,97 @@
 import {
     Typography, Button, Box, Grid, Paper, Select, MenuItem,
-    TextField, InputLabel, FormControl, Pagination, Divider,
-    Snackbar,
-    Alert,
-    IconButton
+    TextField, InputLabel, FormControl, Pagination
 } from '@mui/material';
-import CloseIcon from "@mui/icons-material/Close"
-
-import DeliveryCard from './DeliveryCard';
-import { fetchDeliveryRequests } from '../../api/deliveryRequest/deliveryRequestAPI';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
-import { fetchDeliveryProposals } from '../../api/deliveryRequest/deliveryProposalAPI';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import DriverProposalComponent from './DriverProposalComponent';
+import DeliveryCard from './DeliveryCard';
 import LoadingComponent from '../common/LoadingComponent';
+import { fetchDeliveryRequests } from '../../api/deliveryRequest/deliveryRequestAPI';
+import { fetchDeliveryProposals } from '../../api/deliveryRequest/deliveryProposalAPI';
+import DriverProposalComponent from './DriverProposalComponent';
+import DatePicker from 'react-datepicker';
+
+
+const SORT_MAP = {
+    recent: 'RECENT',
+    profit: 'FEE_DESC',
+    'less-waypoint': 'WP_ASC',
+    'more-waypoint': 'WP_DESC',
+    'long-distance': 'DIST_DESC',
+    'short-distance': 'DIST_ASC',
+};
 
 const ListComponent = () => {
 
     const { driverId } = useParams();
 
     const [pageData, setPageData] = useState(null);
-    const [pageReq, setPageReq] = useState({ page: 1, size: 10, sort: "createAt", dir: "DESC" });
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState(null);
 
-    // proposals (토스트용)
+    // proposals 토스트용
     const [proposals, setProposals] = useState([]);
     const [openToast, setOpenToast] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
 
+    // 페이지, 필터용
+    const [pageReq, setPageReq] = useState({
+        page: 1,
+        size: 10,
+        sort: 'createAt',
+        dir: 'DESC',
+        q: '',
+        scope: '',
+        startDate: '',
+        sortKey: 'RECENT',
+    });
+
+    // 페이지 및 필터관련 입력값 감지용.
+    const [q, setQ] = useState('');
+    const [scope, setScope] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [sortSel, setSortSel] = useState('recent');
+
+
+    //백엔드 목록 데이터 로딩.
     useEffect(() => {
         setLoading(true);
         setErr(null);
         fetchDeliveryRequests(pageReq)
             .then(setPageData)
-            .catch(e => {
-                setErr(e?.response?.data || e.message);
-            })
+            .catch(e => setErr(e?.response?.data || e.message))
             .finally(() => setLoading(false));
     }, [pageReq]);
+
+    //날짜 필터 적용 이벤트 핸들러.
+    const applyFilters = () => {
+        setPageReq(prev => ({
+            ...prev,
+            page: 1,
+            q: q?.trim() || '',
+            scope: scope || '',
+            startDate: startDate || '',
+            sortKey: SORT_MAP[sortSel] || 'RECENT',
+        }));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    //날짜 필터 초기화 이벤트 핸들러.
+    const resetFilters = () => {
+        setQ('');
+        setScope('');
+        setStartDate('');
+        setSortSel('recent');
+        setPageReq(prev => ({
+            ...prev,
+            page: 1,
+            q: '',
+            scope: '',
+            startDate: '',
+            sortKey: 'RECENT',
+        }));
+    };
+
 
     // 지명 제안 조회 + 토스트 열기
     useEffect(() => {
@@ -67,7 +120,7 @@ const ListComponent = () => {
     if (err) return <div>에러: {String(err)}</div>;
     if (!pageData) return null;
 
-    const { dtoList, pageNumList, current, prev, next, prevPage, nextPage, totalCount, totalPage, pageRequestDTO } = pageData;
+    const { dtoList, totalPage, current } = pageData;
 
     const openProposalDialog = () => {
         setDialogOpen(true);
@@ -83,6 +136,7 @@ const ListComponent = () => {
                 <Grid
                     sx={{
                         background: "linear-gradient(to bottom, #58a1c85d 0%, white 100%)",
+                        minHeight: 190
                     }}
                 >
                     <Typography variant="h4" align="center" pt={4} gutterBottom
@@ -93,91 +147,111 @@ const ListComponent = () => {
                             margin: 0
                         }}>배송 요청</Typography>
 
-                    <Grid container spacing={10} justifyContent="center" width={"100%"} p={4}>
+                    <Grid container spacing={10} justifySelf={"center"} justifyContent="center" width={"90%"} p={4}>
 
-                        <Grid item width={"20%"} >
-                            <FormControl fullWidth
-                                sx={{
-                                    fontFamily: 'inherit',
-                                    fontWeight: 'bold',
-                                    color: '#2A2A2A',
-                                    bgcolor: 'white',
-                                    borderRadius: 1.2,
-                                }}>
-                                <InputLabel>출발 지역</InputLabel>
-                                <Select defaultValue="">
-                                    <MenuItem value="">전체</MenuItem>
-                                    <MenuItem value="서울">서울</MenuItem>
+                        <Grid item sx={{ minWidth: 200 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>검색 영역</InputLabel>
+                                <Select
+                                    label="검색 영역"
+                                    value={scope}
+                                    onChange={(e) => setScope(e.target.value)}
+                                >
+                                    <MenuItem value="START">출발 지역</MenuItem>
+                                    <MenuItem value="END">도착 지역</MenuItem>
+                                    <MenuItem value="MEMO">요청 설명</MenuItem>
+                                    <MenuItem value="ALL">모두</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item width={"60%"}>
-                            <TextField fullWidth placeholder="Search" size="medium" p={4}
-                                sx={{
-                                    fontFamily: 'inherit',
-                                    fontWeight: 'bold',
-                                    color: '#2A2A2A',
-                                    bgcolor: 'white',
-                                    borderRadius: 1.2,
-                                }}></TextField>
+
+                        <Grid item sx={{ flex: 1, minWidth: 300 }}>
+                            <TextField
+                                fullWidth
+                                placeholder="키워드를 입력하세요"
+                                value={q}
+                                onChange={(e) => setQ(e.target.value)}
+                            />
                         </Grid>
                     </Grid>
 
                 </Grid>
 
                 {/* 필터 및 검색 */}
-                <Grid container width={"100%"} p={4} pt={0} spacing={10} justifyContent={"center"}>
+                <Grid container width={"90%"} p={4} pt={0} spacing={10} justifySelf={"center"} justifyContent={"space-between"}>
                     {/* 좌측 필터 영역 */}
-                    <Grid item width={"20%"}>
-                        <Typography variant="subtitle1" fontWeight="bold">검색 필터</Typography>
-                        <Button size="small">초기화</Button>
+                    <Grid item minWidth={200}>
+                        <Typography variant="subtitle1" fontWeight="bold" mb={1}>정렬 기준 선택</Typography>
 
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>시작 위치</InputLabel>
-                            <Select defaultValue="서울 특별시">
-                                <MenuItem value="서울 특별시">서울 특별시</MenuItem>
-                            </Select>
-                        </FormControl>
+                        <Grid item sx={{ mb: 5 }}>
+                            <FormControl fullWidth variant="standard" size="small">
+                                <Select
+                                    value={sortSel}
+                                    onChange={(e) => setSortSel(e.target.value)}
+                                >
+                                    <MenuItem value="recent">최신 등록 순</MenuItem>
+                                    <MenuItem value="profit">수익 높은 순</MenuItem>
+                                    <MenuItem value="less-waypoint">경유지 적은 순</MenuItem>
+                                    <MenuItem value="more-waypoint">경유지 많은 순</MenuItem>
+                                    <MenuItem value="long-distance">거리 긴 순</MenuItem>
+                                    <MenuItem value="short-distance">거리 짧은 순</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
 
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>종료 위치</InputLabel>
-                            <Select defaultValue="서울 특별시">
-                                <MenuItem value="서울 특별시">서울 특별시</MenuItem>
-                            </Select>
-                        </FormControl>
+                        <Typography variant="subtitle1" fontWeight="bold" mb={1}>시작일 선택</Typography>
 
-                        <Box display="flex" gap={1} mt={2}>
-                            <TextField label="경유지 수 (최소)" type="number" fullWidth size="small" />
-                            <TextField label="최대" type="number" fullWidth size="small" />
-                        </Box>
+                        <Grid item sx={{ minWidth: 180 }}>
+                            {/* 간단 시작일 필터: 해당 날짜의 wantToStart 만 */}
+                            <TextField
+                                fullWidth
+                                type="date"
+                                InputLabelProps={{ shrink: true }}
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </Grid>
 
-                        <Box display="flex" gap={1} mt={2}>
-                            <TextField label="수익 (최소)" type="number" fullWidth size="small" />
-                            <TextField label="최대" type="number" fullWidth size="small" />
-                        </Box>
+                        <Grid container direction={"row"} justifyContent={'space-between'} mt={2}>
+                            <Grid item>
+                                <Button variant="contained" onClick={applyFilters}>적용</Button>
+                            </Grid>
+                            <Grid item>
+                                <Button variant="outlined" onClick={resetFilters}>초기화</Button>
+                            </Grid>
+                        </Grid>
 
-                        <Button variant="outlined" fullWidth sx={{ mt: 2 }}>적용하기</Button>
+
                     </Grid>
 
                     {/* 리스트 영역 */}
-                    <Grid item width={"60%"}>
-                        <Box display="flex" justifyContent="flex-end" mb={2}>
-                            <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
-                                <Select
-                                    defaultValue="최신 등록 순"
-                                    disableUnderline
-                                    sx={{
-                                        color: '#2A2A2A',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.95rem',
-                                        '& .MuiSelect-icon': { color: '#2A2A2A' },
-                                    }}
-                                >
-                                    <MenuItem value="최신 등록 순">최신 등록 순</MenuItem>
-                                    <MenuItem value="수익 높은 순">수익 높은 순</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Box>
+                    <Grid item sx={{ flex: 1, minWidth: 300 }}>
+                        <Grid container width="100%" spacing={2} justifyContent="space-between">
+                            <Grid item width="100%">
+                                {dtoList.map((item, idx) => (
+                                    <DeliveryCard key={item.requestId} item={item} />
+                                ))}
+
+
+                                <Box display="flex" justifyContent="center" mt={4}>
+                                    <Pagination
+                                        page={current}
+                                        count={totalPage}
+                                        onChange={(_, value) => {
+                                            if (value !== pageReq.page) {
+                                                setPageReq(prev => ({ ...prev, page: value }));
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }
+                                        }}
+                                        shape="rounded"
+                                        showFirstButton
+                                        showLastButton
+                                        siblingCount={1}
+                                        boundaryCount={1}
+                                    />
+                                </Box>
+                            </Grid>
+                        </Grid>
 
                         {/* 운전자 지명 제안 도착 */}
                         {openToast ?
@@ -212,27 +286,8 @@ const ListComponent = () => {
                                 </Typography>
                             </Paper>
                             : <></>}
-                        {dtoList.map((item, idx) => (
-                            <DeliveryCard key={item.requestId} item={item} />
-                        ))}
 
-                        <Box display="flex" justifyContent="center" mt={4}>
-                            <Pagination
-                                page={current}               // 1-based라 그대로 OK
-                                count={totalPage}            // 전체 페이지 수
-                                onChange={(_, value) => {
-                                    if (value !== pageReq.page) {
-                                        setPageReq(prev => ({ ...prev, page: value }));
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }
-                                }}
-                                shape="rounded"
-                                showFirstButton
-                                showLastButton
-                                siblingCount={1}
-                                boundaryCount={1}
-                            />
-                        </Box>
+
                     </Grid>
                 </Grid>
             </Box>

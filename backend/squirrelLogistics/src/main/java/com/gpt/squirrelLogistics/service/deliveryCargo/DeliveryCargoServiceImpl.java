@@ -25,8 +25,13 @@ public class DeliveryCargoServiceImpl implements DelilveryCargoService {
 	public Long create(Long waypointId, DeliveryCargoRequestDTO dto) {
 		// 추가 SELECT 없이 프록시로만 참조(waypointId가 확실할 때 유리)
 		DeliveryWaypoint wpRef = em.getReference(DeliveryWaypoint.class, waypointId);
-		CargoType handlingRef = em.getReference(CargoType.class, dto.getHandlingId());
-
+		
+		CargoType handlingRef = null;
+		
+		if(dto.getHandlingId() != null) {
+			handlingRef = em.getReference(CargoType.class, dto.getHandlingId());
+		}
+		
 		DeliveryCargo cargo = DeliveryCargo.builder()
 				.description(dto.getDescription())
 				.droppedAt(dto.getDroppedAt())

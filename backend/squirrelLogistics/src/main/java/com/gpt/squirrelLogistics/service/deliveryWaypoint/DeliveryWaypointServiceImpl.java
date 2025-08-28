@@ -78,9 +78,9 @@ public class DeliveryWaypointServiceImpl implements DeliveryWaypointService {
 	// 경유지 엔티티 추가.
 	@Override
 	public Long create(DeliveryRequest parent, DeliveryWaypointRequestDTO dto) {
-		DeliveryWaypoint resultEntity = reqDtoToEntity(parent, dto);
-		waypointrepo.save(resultEntity);
-		return resultEntity.getWaypointId();
+	    DeliveryWaypoint resultEntity = reqDtoToEntity(parent, dto);
+	    DeliveryWaypoint saved = waypointrepo.saveAndFlush(resultEntity); 
+	    return saved.getWaypointId();
 	}
 
 	// 개별 경유지 정보 경량 읽기.

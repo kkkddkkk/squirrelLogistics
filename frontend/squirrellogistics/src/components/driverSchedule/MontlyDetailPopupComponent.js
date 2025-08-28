@@ -52,12 +52,12 @@ export default function MontlyDetailPopupComponent(
   const goDetailPage = () => {
     // 완료건: 완료 상세(예: 운송 실적/리포트) 페이지로
     if (completed && assignedId) {
-      navigate(`/driver/${driverId}/schedule/${requestId}`,
+      navigate(`/driver/${driverId}/schedule/${assignedId}`,
         { state: data });
       return;
     }
     // 미완료/예약: 요청 상세(변경/수락/취소 등) 페이지로
-    navigate(`/driver/${driverId}/schedule/${requestId}`,
+    navigate(`/driver/${driverId}/detail/${requestId}`,
       { state: data });
   };
 

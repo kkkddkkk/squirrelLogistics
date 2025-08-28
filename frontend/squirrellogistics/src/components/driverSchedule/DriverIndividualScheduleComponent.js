@@ -1,20 +1,19 @@
 import { Box, Typography, Paper, Grid, Button, List, ListItem, ListItemText, Divider } from "@mui/material";
 import RouteMapComponent from "../../components/deliveryMap/RouteMapComponent";
-import { useCallback, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import { renderWarningTags } from "../../components/deliveryRequest/deliveryFormatUtil";
 import DeliveryWaypointPopupComponent from "../../components/deliveryRequest/DeliveryWaypointPopupComponent";
 
 import LoadingComponent from '../../components/common/LoadingComponent';
+import { fetchDeliveryHistoryById } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 
 const DriverIndividualScheduleComponent = () => {
-    const { state } = useLocation();
+    const { scheduleId } = useParams();
     const [loading, setLoading] = useState(false);
     const [waypointOpen, setWaypointOpen] = useState(false);
-
-    const deliveryData = state;
-    console.log(deliveryData);
-
+    const [history, setHistory] = useState(null);
+    const [err, setErr] = useState(null);
     const textSx = {
         fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
         color: '#2A2A2A',
@@ -29,7 +28,7 @@ const DriverIndividualScheduleComponent = () => {
         });
     };
     const formatWon = (n) => (Number(n) || 0).toLocaleString('ko-KR') + '원';
-    const handlingTagString = renderWarningTags(deliveryData?.waypoints);
+    const handlingTagString = renderWarningTags(history?.waypoints);
 
     const handleSelectWaypointEvent = useCallback(() => {
         setWaypointOpen(true);
@@ -39,13 +38,30 @@ const DriverIndividualScheduleComponent = () => {
         setWaypointOpen(false);
     }, []);
 
+    useEffect(() => {
+        const ctrl = new AbortController();
+
+        setLoading(true);
+        fetchDeliveryHistoryById(scheduleId, { signal: ctrl.signal })
+            .then((data) => {
+                console.log("API 응답:", data);
+                setHistory(data);
+            })
+            .catch((e) => setErr(e?.response?.data || e.message))
+            .finally(() => setLoading(false));
+
+        return () => ctrl.abort();
+    }, [scheduleId]);
+
+    console.log("history json:", JSON.stringify(history, null, 2));
+
     return (
 
         <Box width={"100%"}>
             {loading && (
                 <LoadingComponent open={loading} text="운송 일정 정보를 불러오는 중..." />
             )}
-            <Grid width={"100%"}
+            {/* <Grid width={"100%"}
                 sx={{
                     background: "linear-gradient(to bottom, #58a1c85d 0%, white 100%)",
                     minHeight: 190
@@ -57,7 +73,7 @@ const DriverIndividualScheduleComponent = () => {
                         fontWeight: 'bold',
                         color: '#2A2A2A',
                         margin: 0
-                    }}>예약 운송 정보
+                    }}>완료 운송 내역
                 </Typography>
 
                 <Grid container m={4} mb={0} justifySelf="center" width={"80%"}>
@@ -98,7 +114,6 @@ const DriverIndividualScheduleComponent = () => {
                                     boxShadow: '0px 5px 8px rgba(0, 0, 0, 0.1)',
                                     borderRadius: 1.2,
                                 }}>
-                                {/* 카카오 지도 컴포넌트 자리 */}
                                 <RouteMapComponent
                                     expectedRoute={deliveryData.expectedRoute}
                                     expectedPolyline={deliveryData.expectedPolyline}
@@ -115,7 +130,6 @@ const DriverIndividualScheduleComponent = () => {
                             </Grid>
                         </Grid>
 
-                        {/* 버튼 영역 */}
                         <Grid container justifyContent="center" mt={4} width={"100%"}>
                             <Grid item>
                                 <Button variant="contained" color="primary" size="large"
@@ -134,11 +148,9 @@ const DriverIndividualScheduleComponent = () => {
                         </Grid>
                     </Grid>
 
-                    {/* 정보 영역 */}
                     <Grid item sx={{ width: "30%" }}>
                         <Grid container spacing={2} direction="column">
 
-                            {/* 경로 정보 */}
                             <Grid item>
                                 <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
                                     <Typography fontWeight="bold" gutterBottom>
@@ -197,7 +209,6 @@ const DriverIndividualScheduleComponent = () => {
                                 </Paper>
                             </Grid>
 
-                            {/* 요청 시간 */}
                             <Grid item>
                                 <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
                                     <Typography fontWeight="bold" gutterBottom>
@@ -215,7 +226,6 @@ const DriverIndividualScheduleComponent = () => {
                                 </Paper>
                             </Grid>
 
-                            {/* 운송 수익 정보 */}
                             <Grid item>
                                 <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
                                     <Typography fontWeight="bold" gutterBottom>
@@ -241,7 +251,7 @@ const DriverIndividualScheduleComponent = () => {
                     onClose={handleCloseWaypoinDialog}
                     open={waypointOpen}
                 />
-            )}
+            )} */}
         </Box>
 
     );

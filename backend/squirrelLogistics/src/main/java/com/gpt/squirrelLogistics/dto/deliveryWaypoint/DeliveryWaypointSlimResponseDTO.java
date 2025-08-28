@@ -14,29 +14,35 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class DeliveryWaypointSlimResponseDTO {
 	private Long waypointId;// 경유지 ID
 
 	private String address;// 주소
 	private int dropOrder;// 배송순서
-	
-	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime arriveAt;//도착시간
-	
-	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime droppedAt;//배송시간
-	
-	//경유지 위경도(작성자: 고은설)
-	private BigDecimal lat; 
-    private BigDecimal lng;
-    
-	private StatusEnum status;//경유지 상태
-	
-	private Long deliveryRequestId;//배송 요청 ID
-	private Long handlingId;//취급유형 ID
-	private String handlingTags;//취급유형 ID
 
-	
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime arriveAt;// 도착시간
+
+	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime droppedAt;// 배송시간
+
+	// 경유지 위경도(작성자: 고은설)
+	private BigDecimal lat;
+	private BigDecimal lng;
+
+	private StatusEnum status;// 경유지 상태
+
+	private Long deliveryRequestId;// 배송 요청 ID
+	private Long handlingId;// 취급유형 ID
+	private String handlingTags;// 취급유형 ID
+
+	public DeliveryWaypointSlimResponseDTO(Long waypointId, String address, int dropOrder, StatusEnum status) {
+		this.waypointId = waypointId;
+		this.address = address;
+		this.dropOrder = dropOrder;
+		this.status = status;
+	}
+
 }

@@ -34,10 +34,26 @@ export async function fetchDeliveryReservationById(driverId, requestId, options 
 }
 
 // 드라이버의 "완료된" 운송 일정 히스토리 상세 조회.
-export async function fetchDeliveryHistoryById(driverId, assignedId, options = {}) {
-  const { signal, ...rest } = options;
-  const res = await axios.get(`${BASE}/${driverId}/history/${assignedId}`, { signal, ...rest });
-  return res.data; // DeliveryRequestResponseDTO
+export async function fetchDeliveryHistoryById(assignedId, { signal } = {}) {
+  try {
+    const token =
+      localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const res = await axios.get(`${BASE}/history/${assignedId}`, { headers, signal });
+    return res.data; // DriverDeliveryHistoryDTO
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        "[fetchDriverHistory 실패]",
+        error.response.status,
+        error.response.data
+      );
+    } else {
+      console.error("[fetchDriverHistory 실패]", error.message);
+    }
+    throw error;
+  }
 }
 
 // 드라이버의 완료 운송에 대한 리뷰 목록 가져오기.

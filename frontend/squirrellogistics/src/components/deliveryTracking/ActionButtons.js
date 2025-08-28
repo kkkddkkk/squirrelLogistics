@@ -1,7 +1,6 @@
 import { Button, Grid, Stack } from '@mui/material';
 import { useRef, useState } from 'react';
 import { postDriverAction } from '../../api/deliveryRequest/deliveryAssignmentAPI';
-import CompleteConfirmDialog from './CompleteConfirmDialog';
 
 // props: data(=trackData), onRefresh()
 export function ActionButtons({ data, onRefresh }) {
@@ -159,7 +158,10 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.complete}
-            onClick={() => setOpen(true)}
+            onClick={async ({ mountainous, caution }) => {
+              await postDriverAction(assignedId, "COMPLETE", { mountainous, caution });
+              onRefresh();
+            }}
           >
             전체 운송 완료
           </Button>
@@ -187,14 +189,6 @@ export function ActionButtons({ data, onRefresh }) {
           </Stack>
         </Grid>
       </Grid>
-      <CompleteConfirmDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={async ({ mountainous, caution }) => {
-          await postDriverAction(assignedId, "COMPLETE", { mountainous, caution });
-          onRefresh();
-        }}
-      />
 
     </Grid>
   );

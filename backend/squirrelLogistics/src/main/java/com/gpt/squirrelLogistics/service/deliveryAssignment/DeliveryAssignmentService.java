@@ -26,15 +26,19 @@ import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentPropos
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DetailHistoryDTO;
+import com.gpt.squirrelLogistics.dto.deliveryAssignment.DriverDeliveryHistoryDTO;
 import com.gpt.squirrelLogistics.entity.actualDelivery.ActualDelivery;
 import com.gpt.squirrelLogistics.dto.deliveryCargo.DeliveryCargoSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryStatusLog.DeliveryStatusLogSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingDTO;
 import com.gpt.squirrelLogistics.dto.deliveryTracking.NavigateDeliveryDTO;
+import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.driverSchedule.DriverScheduleDTO;
 import com.gpt.squirrelLogistics.entity.deliveryAssignment.DeliveryAssignment;
+import com.gpt.squirrelLogistics.entity.deliveryCargo.DeliveryCargo;
 import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
 import com.gpt.squirrelLogistics.entity.deliveryStatusLog.DeliveryStatusLog;
+import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.payment.Payment;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
@@ -266,8 +270,7 @@ public class DeliveryAssignmentService {
 		// 운송 할당 엔티티 생성.
 		DeliveryAssignment a = DeliveryAssignment.builder().deliveryRequest(req).driver(driver)
 				.status(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED)
-				.assignedAt(LocalDateTime.now())
-				.build();
+				.assignedAt(LocalDateTime.now()).build();
 		deliveryAssignmentRepository.save(a);
 
 		return Map.of("SUCCESS", "ACCEPTED");
@@ -676,10 +679,42 @@ public class DeliveryAssignmentService {
 			throw new IllegalStateException(msg);
 	}
 
+	public record HandlingFlags(boolean isCautious, boolean isMountainous) {
+	}
+
+	private HandlingFlags getHandlingFlags(Long assignId) {
+		List<DeliveryWaypoint> wps = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(assignId);
+		if (wps == null || wps.isEmpty()) {
+			return new HandlingFlags(false, false);
+		}
+
+		boolean isCautious = false;
+		boolean isMountainous = false;
+
+		for (DeliveryWaypoint wp : wps) {
+			DeliveryCargo cargo = cargoRepository.findByDeliveryWaypoint_WaypointId(wp.getWaypointId()).orElse(null);
+
+			if (cargo != null) {
+				Long handlingId = cargo.getCargoType().getHandlingId();
+				if (handlingId != null) {
+					if (handlingId == 1L) {
+						isCautious = true;
+					} else if (handlingId == 2L) {
+						isMountainous = true;
+					} else if (handlingId == 3L) {
+						// 바로 둘 다 true 세팅하고 더 이상 검사할 필요 없음
+						return new HandlingFlags(true, true);
+					}
+				}
+			}
+		}
+
+		return new HandlingFlags(isCautious, isMountainous);
+	}
+
 	// 운송 완료 처리
 	@Transactional
-	private void completeAssignment(DeliveryAssignment a, LocalDateTime now,
-			boolean mountainous, boolean caution) {
+	private void completeAssignment(DeliveryAssignment a, LocalDateTime now, boolean mountainous, boolean caution) {
 		if (a == null) {
 			return;
 		}
@@ -698,24 +733,29 @@ public class DeliveryAssignmentService {
 		// 1) 실주행 경로 요약 만들기 (+ 원본 로그 삭제)
 		var summary = trackingLogService.extractActualRoute(a.getAssignedId(), true);
 		Long weight = (long) a.getDeliveryRequest().getTotalCargoWeight();
+		Long distance = summary.getDistance();
+		HandlingFlags flags = getHandlingFlags(a.getAssignedId());
+		boolean isCautious = flags.isCautious();
+		boolean isMountainous = flags.isMountainous();
+
+		Long actualFee = calcPostFee(a.getAssignedId(), weight, distance, isCautious, isMountainous);
 
 		// 2) ActualDelivery 생성/저장 → 즉시 할당
 		ActualDelivery ad = ActualDelivery.builder().distance(summary.getDistance())
-				.actualPolyline(summary.getEncodedPolyline()).weight(weight)
-				.mountainous(mountainous).caution(caution).build();
+				.actualPolyline(summary.getEncodedPolyline()).weight(weight).actualFee(actualFee)
+				.mountainous(isMountainous).caution(isCautious).build();
 		ad = actualDeliveryRepository.save(ad);
 		a.setActualDelivery(ad);
-		
+
 		DeliveryRequest reqRef = a.getDeliveryRequest();
-		
+
 		Long prepaidId = null;
-		if(reqRef != null && reqRef.getPayment() != null) {
+		if (reqRef != null && reqRef.getPayment() != null) {
 			prepaidId = reqRef.getPayment().getPaymentId();
 		}
 
 		// 3) Payment 생성/저장 → 즉시 할당
-		Payment p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false)
-				.prepaidId(prepaidId)
+		Payment p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false).prepaidId(prepaidId)
 				// .payAmount(a.getDeliveryRequest().getEstimatedFee()) // 금액 연결하려면 이렇게
 				.build();
 		p = paymentRepository.save(p);
@@ -724,6 +764,34 @@ public class DeliveryAssignmentService {
 		// 4) 상태/완료시각 업데이트
 		a.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED);
 		a.setCompletedAt(now);
+	}
+
+	private Long calcPostFee(Long assignId, Long distance, Long weight, boolean isC, boolean isM) {
+		List<DeliveryWaypoint> wps = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(assignId);
+		if (wps == null || wps.isEmpty()) {
+			return 0L;
+		}
+
+		long total = 0L;
+
+		// 상차지, 최종 하차지 제외 중간 경유지 요금
+		if (wps.size() > 2) {
+			total += 50_000L * (wps.size() - 2);
+		}
+
+		// 핸들링 플래그 조회
+		HandlingFlags flags = getHandlingFlags(assignId);
+
+		if (isC) {
+			total += 50_000L;
+		}
+		if (isM) {
+			total += 50_000L;
+		}
+
+		log.info("[calcPostFee] assignId={}, totalFee={}", assignId, total);
+
+		return total;
 	}
 
 //	private Long createActualDelivery(Long assignId) {
@@ -752,6 +820,27 @@ public class DeliveryAssignmentService {
 		LocalDateTime monthEnd = ym.plusMonths(1).atDay(1).atStartOfDay(); // [start, end)
 
 		return deliveryAssignmentRepository.findMonthlyScheduleForDriver(driverId, monthStart, monthEnd);
+	}
+
+	//작성자: 고은설.
+	//기능: 운송 할당 번호에 대한 조회.
+	@Transactional(readOnly = true)
+	public DriverDeliveryHistoryDTO getHistory(Long assignId) {
+		DriverDeliveryHistoryDTO dto = deliveryAssignmentRepository.findHistoryBase(assignId)
+				.orElseThrow(() -> new EntityNotFoundException("Assignment not found: " + assignId));
+
+		// Waypoints
+		DeliveryAssignment assignment = deliveryAssignmentRepository.findById(assignId).orElseThrow();
+		List<DeliveryWaypointSlimResponseDTO> wps = deliveryAssignmentRepository
+				.findWaypointsByRequest(assignment.getDeliveryRequest());
+
+		// Logs
+		List<DeliveryStatusLogSlimResponseDTO> logs = deliveryAssignmentRepository.findLogsByAssignId(assignId);
+
+		dto.setWaypoints(wps);
+		dto.setLogs(logs);
+
+		return dto;
 	}
 
 }

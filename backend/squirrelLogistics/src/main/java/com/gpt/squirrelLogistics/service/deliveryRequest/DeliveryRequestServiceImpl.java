@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.service.deliveryRequest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
@@ -30,6 +32,8 @@ import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointRequestDTO
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageRequestDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
 import com.gpt.squirrelLogistics.entity.company.Company;
 import com.gpt.squirrelLogistics.entity.deliveryCargo.DeliveryCargo;
@@ -74,7 +78,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	private final DeliveryWaypointService waypointService;
 	private final KakaoLocalClient localClient;
 	private final KakaoRouteClient routeClient;
-	
+
 	private final DeliveryCargoRepository deliveryCargoRepository;
 
 	@PersistenceContext
@@ -83,72 +87,87 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	/* ============== Mapping ============== */
 
 	// DTO -> Entity (카카오 지오코딩/경로 포함)
-		public DeliveryRequest reqDtoToEntity(DeliveryRequestRequestDTO dto) {
+	public DeliveryRequest reqDtoToEntity(DeliveryRequestRequestDTO dto) {
 
-			// 출발지 + (경유지) + 도착지 위경도.
-			List<LatLng> pointsAll = new ArrayList<>();
-		    if (dto.getWaypoints() != null && !dto.getWaypoints().isEmpty()) {
-		        var sorted = dto.getWaypoints().stream()
-		                .sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder))
-		                .toList();
+		// 출발지 + (경유지) + 도착지 위경도.
+		List<LatLng> pointsAll = new ArrayList<>();
+		if (dto.getWaypoints() != null && !dto.getWaypoints().isEmpty()) {
+			var sorted = dto.getWaypoints().stream()
+					.sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder)).toList();
 
-		        for (var w : sorted) {
-		            LatLng p = localClient.geocode(w.getAddress());
-		            if (p != null) pointsAll.add(p);
-		        }
-		    }
-
-		    Long distance = dto.getDistance();
-		    String polylineJson = dto.getExpectedPolyline();
-		    String routeJson = dto.getExpectedRoute();
-
-		    if (distance == null) distance = 0L;
-
-			// 경로/폴리라인 계산.
-		    if (pointsAll.size() >= 2) {
-		        var route = routeClient.requestRoute(pointsAll);
-		        if (route != null) {
-		            if (route.getDistance() != null && route.getDistance() > 0) {
-		                distance = route.getDistance();
-		            }
-		            try {
-		                routeJson = routeClient.toJsonRoute(route.getPolyline());
-		                polylineJson = routeClient.encodePolyline(route.getPolyline());
-		            } catch (Exception ignore) {}
-		        }
-		    }
-
-			// 연관 엔티티 참조
-			Payment paymentRef = (dto.getPaymentId() != null)
-					? entityManager.getReference(Payment.class, dto.getPaymentId())
-					: null;
-
-			Company companyRef = null;
-			if (dto.getCompanyId() != null) {
-				companyRef = companyRepository.findById(dto.getCompanyId())
-						.orElseThrow(() -> new IllegalArgumentException("Company not found: " + dto.getCompanyId()));
+			for (var w : sorted) {
+				if (w.getAddress() != null && !w.getAddress().isBlank()) {
+					LatLng p = localClient.geocode(w.getAddress());
+					if (p != null) {
+						pointsAll.add(p);
+					}
+				}
 			}
-
-			VehicleType vehicleTypeRef = null;
-			if (dto.getVehicleTypeId() != null) {
-				vehicleTypeRef = vehicleTypeRepository.findById(dto.getVehicleTypeId()).orElseThrow(
-						() -> new IllegalArgumentException("VehicleType not found: " + dto.getVehicleTypeId()));
-			}
-
-			// 엔티티 생성
-			return DeliveryRequest.builder().requestId(dto.getRequestId()).startAddress(dto.getStartAddress())
-					.endAddress(dto.getEndAddress()).memoToDriver(dto.getMemoToDriver())
-					.totalCargoCount(dto.getTotalCargoCount()).totalCargoWeight(dto.getTotalCargoWeight())
-					.estimatedFee(dto.getEstimatedFee()).distance(distance)
-					.createAt(dto.getCreateAt() != null ? dto.getCreateAt() : LocalDateTime.now())
-					.wantToStart(dto.getWantToStart()).wantToEnd(dto.getWantToEnd()).expectedPolyline(polylineJson)
-					.expectedRoute(routeJson).status(dto.getStatus() != null ? dto.getStatus() : StatusEnum.REGISTERED) // [MOD]
-																														// null
-																														// 시
-																														// 기본값
-					.payment(paymentRef).company(companyRef).vehicleType(vehicleTypeRef) 
-					.build();
 		}
+
+		Long distance = dto.getDistance();
+		String polylineJson = dto.getExpectedPolyline();
+		String routeJson = dto.getExpectedRoute();
+
+		if (distance == null)
+			distance = 0L;
+
+		// 경로/폴리라인 계산.
+		if (pointsAll.size() >= 2) {
+			var route = routeClient.requestRoute(pointsAll);
+			if (route != null) {
+				if (route.getDistance() != null && route.getDistance() > 0) {
+					distance = route.getDistance();
+				}
+				try {
+					routeJson = routeClient.toJsonRoute(route.getPolyline());
+					polylineJson = routeClient.encodePolyline(route.getPolyline());
+				} catch (Exception ignore) {
+				}
+			}
+		}
+
+		// ==== 연관 엔티티 참조 ====
+		Payment paymentRef = null;
+		if (dto.getPaymentId() != null) {
+			if (dto.getPaymentId() > 0) {
+				paymentRef = paymentRepository.findById(dto.getPaymentId()).orElse(null);
+				if (paymentRef == null) {
+					log.warn("[reqDtoToEntity] Payment not found: {}", dto.getPaymentId());
+				}
+			} else {
+				log.warn("[reqDtoToEntity] Invalid PaymentId (<=0): {}", dto.getPaymentId());
+			}
+		}
+
+		Company companyRef = null;
+		if (dto.getCompanyId() != null) {
+			companyRef = companyRepository.findById(dto.getCompanyId()).orElse(null);
+			if (companyRef == null) {
+				log.warn("[reqDtoToEntity] Company not found: {}", dto.getCompanyId());
+			}
+		}
+
+		VehicleType vehicleTypeRef = null;
+		if (dto.getVehicleTypeId() != null) {
+			vehicleTypeRef = vehicleTypeRepository.findById(dto.getVehicleTypeId()).orElse(null);
+			if (vehicleTypeRef == null) {
+				log.warn("[reqDtoToEntity] VehicleType not found: {}", dto.getVehicleTypeId());
+			}
+		}
+
+		// ==== 엔티티 생성 ====
+		return DeliveryRequest.builder().requestId(dto.getRequestId()) // create() 단계에서는 null 강제
+				.startAddress(dto.getStartAddress()).endAddress(dto.getEndAddress()).memoToDriver(dto.getMemoToDriver())
+				.totalCargoCount(dto.getTotalCargoCount() != 0 ? dto.getTotalCargoCount() : 0)
+				.totalCargoWeight(dto.getTotalCargoWeight() != 0 ? dto.getTotalCargoWeight() : 0)
+				.estimatedFee(dto.getEstimatedFee() != null ? dto.getEstimatedFee() : 0L)
+				.distance(distance != null ? distance : 0L)
+				.createAt(dto.getCreateAt() != null ? dto.getCreateAt() : LocalDateTime.now())
+				.wantToStart(dto.getWantToStart()).wantToEnd(dto.getWantToEnd()).expectedPolyline(polylineJson)
+				.expectedRoute(routeJson).status(dto.getStatus() != null ? dto.getStatus() : StatusEnum.REGISTERED) // 기본값
+				.payment(paymentRef).company(companyRef).vehicleType(vehicleTypeRef).build();
+	}
 
 	// Entity -> Full DTO
 	// Entity -> Full DTO
@@ -229,23 +248,29 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		requestDTO.setPaymentId(paymentId);
 		requestDTO.setStatus(com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED);
 
+		log.info("!!!!1: " + requestDTO.toString());
 		DeliveryRequest entity = reqDtoToEntity(requestDTO);
+		log.info("!!!!2: ");
+		log.info("!!!!3: ");
+		log.info("!!!!4: ");
+		log.info("!!!!5: ");
+
 		entity.setRequestId(null);
 
 		DeliveryRequest saved = repository.save(entity);
 		int order = 0;
-		
 
-	    if (requestDTO.getWaypoints() != null) {
-	        for (DeliveryWaypointRequestDTO wpdto : requestDTO.getWaypoints().stream()
-	                 .sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder)).toList()) {
-	            wpdto.setDropOrder(order++); // 순번 이어붙이기
-	            Long wpId = waypointService.create(saved, wpdto);
-	            if (wpdto.getCargo() != null) cargoService.create(wpId, wpdto.getCargo());
-	        }
-	    }
-	    
-	    return new CreatedRequestPaymentInfoDTO(saved.getRequestId(), paymentId);
+		if (requestDTO.getWaypoints() != null) {
+			for (DeliveryWaypointRequestDTO wpdto : requestDTO.getWaypoints().stream()
+					.sorted(Comparator.comparingInt(DeliveryWaypointRequestDTO::getDropOrder)).toList()) {
+				wpdto.setDropOrder(order++); // 순번 이어붙이기
+				Long wpId = waypointService.create(saved, wpdto);
+				if (wpdto.getCargo() != null)
+					cargoService.create(wpId, wpdto.getCargo());
+			}
+		}
+
+		return new CreatedRequestPaymentInfoDTO(saved.getRequestId(), paymentId);
 	}
 
 	@Override
@@ -266,85 +291,60 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 
 	@Transactional(readOnly = true)
 	public DeliveryRequestResponseDTO readFullSafe(Long id, Long driverId) {
-	    var dr = repository.findDetailHead(id)
-	        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-	    // 권한 체크 로직 그대로…
+		var dr = repository.findDetailHead(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		// 권한 체크 로직 그대로…
 
-	    var waypoints = waypointRepository.findAllByRequestIdOrderByDrop(id);
-	    var waypointIds = waypoints.stream()
-	        .map(DeliveryWaypoint::getWaypointId)
-	        .toList();
+		var waypoints = waypointRepository.findAllByRequestIdOrderByDrop(id);
+		var waypointIds = waypoints.stream().map(DeliveryWaypoint::getWaypointId).toList();
 
-	    // 가변 Map 사용
-	    Map<Long, DeliveryCargo> cargoByWp = new HashMap<>();
-	    if (!waypointIds.isEmpty()) {
-	        waypointIds.forEach(t -> {
-	            var opt = cargoRepository.findByDeliveryWaypoint_WaypointId(t);
-	            DeliveryCargo cargo = opt.orElse(null);
-	            if (cargo != null) {
-	                cargoByWp.put(t, cargo);
-	            }
-	        });
-	    }
+		// 가변 Map 사용
+		Map<Long, DeliveryCargo> cargoByWp = new HashMap<>();
+		if (!waypointIds.isEmpty()) {
+			waypointIds.forEach(t -> {
+				var opt = cargoRepository.findByDeliveryWaypoint_WaypointId(t);
+				DeliveryCargo cargo = opt.orElse(null);
+				if (cargo != null) {
+					cargoByWp.put(t, cargo);
+				}
+			});
+		}
 
-	    return toDetailDto(dr, waypoints, cargoByWp);
+		return toDetailDto(dr, waypoints, cargoByWp);
 	}
-	
-	private DeliveryRequestResponseDTO toDetailDto(
-	        DeliveryRequest dr,
-	        List<DeliveryWaypoint> waypoints,
-	        Map<Long, DeliveryCargo> cargoByWp
-	) {
-	    return DeliveryRequestResponseDTO.builder()
-	        .requestId(dr.getRequestId())
-	        .createAt(dr.getCreateAt())
-	        .wantToStart(dr.getWantToStart())
-	        .wantToEnd(dr.getWantToEnd())
-	        .startAddress(dr.getStartAddress())
-	        .endAddress(dr.getEndAddress())
-	        .memoToDriver(dr.getMemoToDriver())
-	        .distance(dr.getDistance())
-	        .totalCargoCount(dr.getTotalCargoCount())
-	        .totalCargoWeight(dr.getTotalCargoWeight())
-	        .estimatedFee(dr.getEstimatedFee())
-	        .status(dr.getStatus())
-	        .expectedPolyline(dr.getExpectedPolyline())
-	        .expectedRoute(dr.getExpectedRoute())
-	        // company & user
-	        .companyName(dr.getCompany() != null && dr.getCompany().getUser() != null
-	                ? dr.getCompany().getUser().getName() : null)
-	        // vehicle
-	        .vehicleTypeName(dr.getVehicleType() != null
-	                ? dr.getVehicleType().getName() : null)
 
-	        // waypoints
-	        .waypoints(
-	            waypoints.stream()
-	                .map(wp -> {
-	                    // 지오코딩 1번만 호출
-	                    var geo = localClient.geocode(wp.getAddress());
-	                    var cargo = cargoByWp.get(wp.getWaypointId());
-	                    Long handlingId = (cargo != null && cargo.getCargoType() != null)
-	                            ? cargo.getCargoType().getHandlingId()
-	                            : null;
-	                    
-	                    String handlingTag = (cargo != null && cargo.getCargoType() != null)
-	                            ? cargo.getCargoType().getHandlingTags()
-	                            : null;
-	                    
-	                    return DeliveryWaypointSlimResponseDTO.builder()
-	                            .waypointId(wp.getWaypointId())
-	                            .dropOrder(wp.getDropOrder())
-	                            .address(wp.getAddress())
-	                            .lat(geo != null ? geo.getLat() : null)
-	                            .lng(geo != null ? geo.getLng() : null)
-	                            .handlingId(handlingId)
-	                            .handlingTags(handlingTag)
-	                            .build();
-	                })
-	                .collect(Collectors.toList())
-	        )
-	        .build();
+	private DeliveryRequestResponseDTO toDetailDto(DeliveryRequest dr, List<DeliveryWaypoint> waypoints,
+			Map<Long, DeliveryCargo> cargoByWp) {
+		return DeliveryRequestResponseDTO.builder().requestId(dr.getRequestId()).createAt(dr.getCreateAt())
+				.wantToStart(dr.getWantToStart()).wantToEnd(dr.getWantToEnd()).startAddress(dr.getStartAddress())
+				.endAddress(dr.getEndAddress()).memoToDriver(dr.getMemoToDriver()).distance(dr.getDistance())
+				.totalCargoCount(dr.getTotalCargoCount()).totalCargoWeight(dr.getTotalCargoWeight())
+				.estimatedFee(dr.getEstimatedFee()).status(dr.getStatus()).expectedPolyline(dr.getExpectedPolyline())
+				.expectedRoute(dr.getExpectedRoute())
+				// company & user
+				.companyName(dr.getCompany() != null && dr.getCompany().getUser() != null
+						? dr.getCompany().getUser().getName()
+						: null)
+				// vehicle
+				.vehicleTypeName(dr.getVehicleType() != null ? dr.getVehicleType().getName() : null)
+
+				// waypoints
+				.waypoints(waypoints.stream().map(wp -> {
+					// 지오코딩 1번만 호출
+					var geo = localClient.geocode(wp.getAddress());
+					var cargo = cargoByWp.get(wp.getWaypointId());
+					Long handlingId = (cargo != null && cargo.getCargoType() != null)
+							? cargo.getCargoType().getHandlingId()
+							: null;
+
+					String handlingTag = (cargo != null && cargo.getCargoType() != null)
+							? cargo.getCargoType().getHandlingTags()
+							: null;
+
+					return DeliveryWaypointSlimResponseDTO.builder().waypointId(wp.getWaypointId())
+							.dropOrder(wp.getDropOrder()).address(wp.getAddress())
+							.lat(geo != null ? geo.getLat() : null).lng(geo != null ? geo.getLng() : null)
+							.handlingId(handlingId).handlingTags(handlingTag).build();
+				}).collect(Collectors.toList())).build();
 	}
 
 	@Override
@@ -369,11 +369,21 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	// 커스텀 페이지 DTO
 	@Transactional(readOnly = true)
 	public PageResponseDTO<DeliveryRequestCardSlimDTO> list(PageRequestDTO pageReq) {
-		Page<DeliveryRequestCardSlimDTO> page = repository.findActiveRegisteredSlim(pageReq.toPageable());
-
-		return PageResponseDTO.<DeliveryRequestCardSlimDTO>withAll().dtoList(page.getContent()).pageRequestDTO(pageReq)
-				.totalCount(page.getTotalElements()).build();
+//		Page<DeliveryRequestCardSlimDTO> page = repository.findActiveRegisteredSlim(pageReq.toPageable());
+//
+//		return PageResponseDTO.<DeliveryRequestCardSlimDTO>withAll().dtoList(page.getContent()).pageRequestDTO(pageReq)
+//				.totalCount(page.getTotalElements()).build();
+		
+		return null;
 	}
+
+//	@Transactional(readOnly = true)
+//	public RequestPageResponseDTO<DeliveryRequestCardSlimDTO> list(RequestPageRequestDTO pageReq) {
+//		Page<DeliveryRequestCardSlimDTO> page = repository.findActiveRegisteredSlim(pageReq.toPageable());
+//
+//		return RequestPageResponseDTO.<DeliveryRequestCardSlimDTO>withAll().dtoList(page.getContent())
+//				.pageRequestDTO(pageReq).totalCount(page.getTotalElements()).build();
+//	}
 
 	// Spring 표준 Page<T>
 	@Override
@@ -382,8 +392,8 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		return repository.findAll(pageable).map(this::entityToSlimDto);
 	}
 
-	//김도경
-	//repository 는 deliveryRequest꺼
+	// 김도경
+	// repository 는 deliveryRequest꺼
 	@Override
 	public List<Object[]> getEstimateCalc(Long requestId) {
 		return deliveryCargoRepository.findEstimatedCalcByRequestId(requestId);
@@ -410,7 +420,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 	@Override
 	public void sendDriverRequestAfterPayment(Long requestId, Long paymentId) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -418,4 +428,41 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Transactional(readOnly = true)
+	public RequestPageResponseDTO<DeliveryRequestCardSlimDTO> listWithFilter(RequestPageRequestDTO pageReq) {
+
+		// 페이지/사이즈 → Pageable
+		int page = Math.max(pageReq.getPage() - 1, 0);
+		int size = Math.max(pageReq.getSize(), 1);
+		Pageable pageable = PageRequest.of(page, size); 
+
+		// 검색어/범위
+		String q = safe(pageReq.getQ());
+		String scope = safe(pageReq.getScope());
+
+		// 시작일 → 하루 범위
+		LocalDateTime startFrom = null, startTo = null;
+		if (pageReq.getStartDate() != null && !pageReq.getStartDate().isBlank()) {
+			LocalDate d = LocalDate.parse(pageReq.getStartDate()); // yyyy-MM-dd
+			startFrom = d.atStartOfDay();
+			startTo = d.plusDays(1).atStartOfDay().minusNanos(1);
+		}
+
+		// 정렬 키
+		String sortKey = safe(pageReq.getSortKey());
+		if (sortKey.isBlank())
+			sortKey = "RECENT";
+
+		Page<DeliveryRequestCardSlimDTO> pageData = repository.findActiveRegisteredSlimFiltered(q, scope, startFrom,
+				startTo, sortKey, pageable);
+
+		return RequestPageResponseDTO.<DeliveryRequestCardSlimDTO>withAll().dtoList(pageData.getContent())
+				.pageRequestDTO(pageReq).totalCount(pageData.getTotalElements()).build();
+	}
+
+	private String safe(String s) {
+		return s == null ? "" : s;
+	}
+
 }

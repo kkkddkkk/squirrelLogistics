@@ -11,15 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.gpt.squirrelLogistics.dto.deliveryRequest.CreatedRequestPaymentInfoDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
@@ -28,11 +19,20 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageRequestDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
+import com.gpt.squirrelLogistics.entity.driver.Driver;
+import com.gpt.squirrelLogistics.entity.user.User;
+import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
+import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
+import com.gpt.squirrelLogistics.repository.user.UserRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryOrchestrator.DeliveryOrchestrator;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
+import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
+import com.sun.istack.NotNull;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 
 import jakarta.validation.Valid;
@@ -48,14 +48,22 @@ public class DeliveryRequestController {
 	private final DeliveryRequestService requestService;
 	private final DeliveryAssignmentService assignmentService;
 	private final DeliveryOrchestrator deliveryOrchestrator;
-
-	public record CreateProposeRequest(@jakarta.validation.Valid PaymentDTO payment,
+	private final FindUserByTokenService findUserByTokenService;
+	private final UserRepository userRepository;
+	public record CreatRequest(
+			@jakarta.validation.Valid PaymentDTO payment,
 			@jakarta.validation.Valid DeliveryRequestRequestDTO request) {
+	}
+
+	public record ProposeRequest(
+			@Valid PaymentDTO payment, 
+			@Valid DeliveryRequestRequestDTO request, 
+			@NotNull Long driverId) {
 	}
 
 	// 생성
 	@PostMapping
-	public CreatedRequestPaymentInfoDTO create(@Valid @RequestBody CreateProposeRequest payload) {
+	public CreatedRequestPaymentInfoDTO create(@Valid @RequestBody CreatRequest payload) {
 
 		return requestService.create(payload.payment(), payload.request());
 	}
@@ -91,12 +99,18 @@ public class DeliveryRequestController {
 	}
 
 	// 목록 (슬림 응답 + 커스텀 페이지 DTO)
+//	@GetMapping
+//	@TimedEndpoint("request_list")
+//	public ResponseEntity<PageResponseDTO<DeliveryRequestCardSlimDTO>> list(@ModelAttribute PageRequestDTO pageReq) {
+//		PageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.list(pageReq);
+//		return ResponseEntity.ok(page);
+//	}
+	
 	@GetMapping
 	@TimedEndpoint("request_list")
-	public ResponseEntity<PageResponseDTO<DeliveryRequestCardSlimDTO>> list(
-			@ModelAttribute PageRequestDTO pageReq) {
-		PageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.list(pageReq);
-		return ResponseEntity.ok(page);
+	public ResponseEntity<RequestPageResponseDTO<DeliveryRequestCardSlimDTO>> list(@ModelAttribute RequestPageRequestDTO pageReq) {
+		RequestPageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.listWithFilter(pageReq);
+	    return ResponseEntity.ok(page);
 	}
 
 	/** 목록 - Spring 표준 Pageable(Page<T>) */
@@ -125,23 +139,34 @@ public class DeliveryRequestController {
 
 	// 요청 생성과 동시에 지명 제안, 물류회사 전용.
 	@PostMapping("/propose")
-	public ResponseEntity<Map<String, Object>> createAndPropose(@Valid @RequestBody CreateProposeRequest payload,
-			@RequestParam("driverId") Long driverId) {
+	public CreatedRequestPaymentInfoDTO createAndPropose(@Valid @RequestBody ProposeRequest payload,
+			@RequestHeader("Authorization") String token) {
 
-		Map<String, Object> result = deliveryOrchestrator.createAndPropose(payload.request(), payload.payment(),
-				driverId);
-
-		if (result.containsKey("FAILED")) {
-			HttpStatus s = switch (String.valueOf(result.get("FAILED"))) {
-			case "DRIVER_NOT_FOUND", "COMPANY_NOT_FOUND", "VEHICLE_TYPE_NOT_FOUND" -> HttpStatus.NOT_FOUND;
-			case "VALIDATION_ERROR" -> HttpStatus.BAD_REQUEST;
-			default -> HttpStatus.CONFLICT;
-			};
-			return ResponseEntity.status(s).body(result);
+		Long userId = findUserByTokenService.getUserIdByToken(token);
+		
+		if (userId == null ) {
+			log.info("[ERROR] 토큰으로부터 유저 아이디 추출에 실패하였습니다: " + token);
+			return null;
 		}
-		return ResponseEntity.ok(result);
+		
+		User user = userRepository.getReferenceById(userId);
+		
+		if (user == null) {
+			log.info("[ERROR] 해당 아이디의 유저가 발견되지 않았습니다: " + userId);
+			return null;
+		}
+		
+		if (user.getRole() != UserRoleEnum.COMPANY) {
+			log.info("[ERROR] 회사계정이 아닌 회읜은 요청을 넣을 수 없습니다: " + user.getRole());
+			return null;
+		}
+
+		CreatedRequestPaymentInfoDTO result = deliveryOrchestrator.createAndPropose(payload.request(),
+				payload.payment(), payload.driverId());
+
+		return result;
 	}
-	
+
 	// 특정 요청에 지명된 기사 정보 조회 (작성자: 정윤진)
 	@GetMapping("/{id}/driver-assignment")
 	public ResponseEntity<DriverAssignmentResponseDTO> getDriverAssignment(@PathVariable("id") Long requestId) {
@@ -151,37 +176,36 @@ public class DeliveryRequestController {
 		}
 		return ResponseEntity.ok(result);
 	}
-	
+
 	// 모든 지명된 요청의 기사 정보 조회 (작성자: 정윤진)
 	@GetMapping("/driver-assignments")
 	public ResponseEntity<List<DriverAssignmentResponseDTO>> getAllDriverAssignments() {
 		List<DriverAssignmentResponseDTO> results = requestService.getAllAssignedDriverRequests();
 		return ResponseEntity.ok(results);
 	}
-	
+
 	// 기사 지명 제안 (작성자: 정윤진)
 	@PostMapping("/{id}/propose")
-	public ResponseEntity<Map<String, Object>> proposeToDriver(
-			@PathVariable("id") Long requestId,
+	public ResponseEntity<Map<String, Object>> proposeToDriver(@PathVariable("id") Long requestId,
 			@RequestParam("driverId") Long driverId) {
-		
+
 		Map<String, Object> result = assignmentService.propose(requestId, driverId);
-		
+
 		if (result.containsKey("FAILED")) {
 			String error = (String) result.get("FAILED");
 			HttpStatus status = switch (error) {
-				case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
-				case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
-				default -> HttpStatus.BAD_REQUEST;
+			case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+			case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
+			default -> HttpStatus.BAD_REQUEST;
 			};
 			return ResponseEntity.status(status).body(result);
 		}
-		
+
 		return ResponseEntity.ok(result);
 	}
 
 	/* ============== 기사 지명 요청 관련 엔드포인트들 ============== */
-	
+
 	/**
 	 * 🚛 기사 지명 요청 생성
 	 * 
@@ -192,66 +216,62 @@ public class DeliveryRequestController {
 	public ResponseEntity<Map<String, Object>> createDriverRequest(@RequestBody DriverSpecificRequestRequest request) {
 		try {
 			log.info("기사 지명 요청 생성 시작: driverId={}", request.getDriverId());
-			
-			Long requestId = requestService.createDriverRequest(
-				request.getPaymentDto(), 
-				request.getRequestDto(), 
-				request.getDriverId()
-			);
-			
+
+			Long requestId = requestService.createDriverRequest(request.getPaymentDto(), request.getRequestDto(),
+					request.getDriverId());
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
 			response.put("requestId", requestId);
 			response.put("message", "기사 지명 요청이 성공적으로 생성되었습니다.");
-			
+
 			log.info("기사 지명 요청 생성 완료: requestId={}", requestId);
 			return ResponseEntity.ok(response);
-			
+
 		} catch (Exception e) {
 			log.error("기사 지명 요청 생성 실패", e);
-			
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", false);
 			response.put("message", "기사 지명 요청 생성에 실패했습니다: " + e.getMessage());
-			
+
 			return ResponseEntity.badRequest().body(response);
 		}
 	}
-	
+
 	/**
 	 * 📱 결제 완료 후 기사 지명 요청 전송
 	 * 
 	 * @param requestId 배송 요청 ID
-	 * @param request 결제 정보
+	 * @param request   결제 정보
 	 * @return 전송 결과
 	 */
 	@PostMapping("/driver-requests/{requestId}/send")
-	public ResponseEntity<Map<String, Object>> sendDriverRequestAfterPayment(
-			@PathVariable Long requestId,
+	public ResponseEntity<Map<String, Object>> sendDriverRequestAfterPayment(@PathVariable Long requestId,
 			@RequestBody PaymentCompletionRequest request) {
 		try {
 			log.info("기사 지명 요청 전송 시작: requestId={}, paymentId={}", requestId, request.getPaymentId());
-			
+
 			requestService.sendDriverRequestAfterPayment(requestId, request.getPaymentId());
-			
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
 			response.put("message", "기사 지명 요청이 성공적으로 전송되었습니다.");
-			
+
 			log.info("기사 지명 요청 전송 완료: requestId={}", requestId);
 			return ResponseEntity.ok(response);
-			
+
 		} catch (Exception e) {
 			log.error("기사 지명 요청 전송 실패: requestId={}", requestId, e);
-			
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", false);
 			response.put("message", "기사 지명 요청 전송에 실패했습니다: " + e.getMessage());
-			
+
 			return ResponseEntity.badRequest().body(response);
 		}
 	}
-	
+
 	/**
 	 * 🔄 일반 요청과 기사 지명 요청 구분
 	 * 
@@ -262,27 +282,27 @@ public class DeliveryRequestController {
 	public ResponseEntity<Map<String, Object>> getRequestType(@PathVariable Long requestId) {
 		try {
 			boolean isDriverSpecific = requestService.isDriverSpecificRequest(requestId);
-			
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
 			response.put("isDriverSpecific", isDriverSpecific);
 			response.put("requestType", isDriverSpecific ? "기사 지명 요청" : "일반 요청");
-			
+
 			return ResponseEntity.ok(response);
-			
+
 		} catch (Exception e) {
 			log.error("요청 타입 확인 실패: requestId={}", requestId, e);
-			
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", false);
 			response.put("message", "요청 타입 확인에 실패했습니다: " + e.getMessage());
-			
+
 			return ResponseEntity.badRequest().body(response);
 		}
 	}
 
 	/* ============== DTO 클래스들 ============== */
-	
+
 	/**
 	 * 기사 지명 요청 요청 DTO
 	 */
@@ -290,26 +310,46 @@ public class DeliveryRequestController {
 		private PaymentDTO paymentDto;
 		private DeliveryRequestRequestDTO requestDto;
 		private Long driverId;
-		
+
 		// Getters and Setters
-		public PaymentDTO getPaymentDto() { return paymentDto; }
-		public void setPaymentDto(PaymentDTO paymentDto) { this.paymentDto = paymentDto; }
-		
-		public DeliveryRequestRequestDTO getRequestDto() { return requestDto; }
-		public void setRequestDto(DeliveryRequestRequestDTO requestDto) { this.requestDto = requestDto; }
-		
-		public Long getDriverId() { return driverId; }
-		public void setDriverId(Long driverId) { this.driverId = driverId; }
+		public PaymentDTO getPaymentDto() {
+			return paymentDto;
+		}
+
+		public void setPaymentDto(PaymentDTO paymentDto) {
+			this.paymentDto = paymentDto;
+		}
+
+		public DeliveryRequestRequestDTO getRequestDto() {
+			return requestDto;
+		}
+
+		public void setRequestDto(DeliveryRequestRequestDTO requestDto) {
+			this.requestDto = requestDto;
+		}
+
+		public Long getDriverId() {
+			return driverId;
+		}
+
+		public void setDriverId(Long driverId) {
+			this.driverId = driverId;
+		}
 	}
-	
+
 	/**
 	 * 결제 완료 요청 DTO
 	 */
 	public static class PaymentCompletionRequest {
 		private Long paymentId;
-		
+
 		// Getters and Setters
-		public Long getPaymentId() { return paymentId; }
-		public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
+		public Long getPaymentId() {
+			return paymentId;
+		}
+
+		public void setPaymentId(Long paymentId) {
+			this.paymentId = paymentId;
+		}
 	}
 }

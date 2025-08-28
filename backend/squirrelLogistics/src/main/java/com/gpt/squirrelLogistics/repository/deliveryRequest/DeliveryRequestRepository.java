@@ -59,31 +59,32 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 
 	// 작성자: 고은설.
 	// 기능: 요청 목록 화면에서 필요한 데이터만 추출하기 위함.
-	@Query(value = """
-			   select new com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO(
-			       dr.requestId,
-			       dr.createAt,
-			       dr.startAddress,
-			       dr.endAddress,
-			       dr.distance,
-			       dr.estimatedFee,
-			       u.name,
-			       vt.name
-			   )
-			     from DeliveryRequest dr
-			left join dr.company c
-			left join c.user u
-			left join dr.vehicleType vt
-			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
-			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
-			order by dr.wantToStart asc nulls last
-			""", countQuery = """
-			select count(dr)
-			from DeliveryRequest dr
-			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
-			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
-			""")
-	Page<DeliveryRequestCardSlimDTO> findActiveRegisteredSlim(Pageable pageable);
+//	@Query(value = """
+//			   select new com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO(
+//			    dr.requestId,
+//			    dr.createAt,
+//			    dr.startAddress,
+//			    dr.endAddress,
+//			    dr.distance,
+//			    dr.estimatedFee,
+//			    u.name,
+//			    vt.name,
+//			    count(dw)
+//			   )
+//			     from DeliveryRequest dr
+//			left join dr.company c
+//			left join c.user u
+//			left join dr.vehicleType vt
+//			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+//			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
+//			order by dr.wantToStart asc nulls last
+//			""", countQuery = """
+//			select count(dr)
+//			from DeliveryRequest dr
+//			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+//			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
+//			""")
+//	Page<DeliveryRequestCardSlimDTO> findActiveRegisteredSlim(Pageable pageable);
 
 	// 작성자: 고은설.
 	// 기능: 유효한 목록만 가져오기 위함 2.
@@ -112,13 +113,13 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			""")
 	Page<DeliveryRequest> findActiveRegistered(Pageable pageable);
 
-	//작성자: 김도경
-	//requestId로 estimatedFee 찾기
+	// 작성자: 김도경
+	// requestId로 estimatedFee 찾기
 	@Query("SELECT r.estimatedFee FROM DeliveryRequest r WHERE r.requestId = :requestId")
 	Long findEstimatedFeeById(@Param("requestId") Long requestId);
 
-	//작성자: 김도경
-	//paymentId로 requestId 찾기
+	// 작성자: 김도경
+	// paymentId로 requestId 찾기
 	@Query("SELECT r.requestId FROM DeliveryRequest r JOIN r.payment p WHERE p.paymentId = :paymentId")
 	Long findIdByPaymentId(@Param("paymentId") Long paymentId);
 
@@ -157,5 +158,79 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			ORDER BY dr.createAt DESC
 			""")
 	List<Object[]> findAllAssignedDriverRequests();
+
+	// 작성자: 고은설.
+	// 기능: 검색어 및 필터 기능 추가한 요청 목록 페이지 구성.
+	@Query(value = """
+			select new com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO(
+			    dr.requestId,
+			    dr.createAt,
+			    dr.startAddress,
+			    dr.endAddress,
+			    dr.distance,
+			    dr.estimatedFee,
+			    u.name,
+			    vt.name,
+			    count(dw)
+			)
+			from DeliveryRequest dr
+			left join dr.company c
+			left join c.user u
+			left join dr.vehicleType vt
+			left join DeliveryWaypoint dw on dw.deliveryRequest = dr
+			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
+			  and (
+			    :q is null or :q = '' or
+			    (
+			      (:scope is null or :scope = '' or :scope = 'ALL') and
+			      ( lower(dr.startAddress) like lower(concat('%', :q, '%'))
+			        or lower(dr.endAddress) like lower(concat('%', :q, '%'))
+			        or lower(dr.memoToDriver) like lower(concat('%', :q, '%')) )
+			    ) or
+			    ( :scope = 'START' and lower(dr.startAddress) like lower(concat('%', :q, '%')) ) or
+			    ( :scope = 'END'   and lower(dr.endAddress)  like lower(concat('%', :q, '%')) ) or
+			    ( :scope = 'MEMO'  and lower(dr.memoToDriver) like lower(concat('%', :q, '%')) )
+			  )
+			  and (
+			    :startFrom is null or :startTo is null or
+			    dr.wantToStart between :startFrom and :startTo
+			  )
+			group by dr.requestId, dr.createAt, dr.startAddress, dr.endAddress, dr.distance, dr.estimatedFee, u.name, vt.name
+			order by
+			  case when :sortKey = 'RECENT'    then dr.createAt end desc,
+			  case when :sortKey = 'FEE_DESC'  then dr.estimatedFee end desc,
+			  case when :sortKey = 'DIST_ASC'  then dr.distance end asc,
+			  case when :sortKey = 'DIST_DESC' then dr.distance end desc,
+			  case when :sortKey = 'WP_ASC'    then count(dw) end asc,
+			  case when :sortKey = 'WP_DESC'   then count(dw) end desc,
+			  dr.createAt desc
+			""", countQuery = """
+			select count(distinct dr)
+			from DeliveryRequest dr
+			left join dr.company c
+			left join c.user u
+			where dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+			  and (dr.wantToEnd is null or dr.wantToEnd >= CURRENT_TIMESTAMP)
+			  and (
+			    :q is null or :q = '' or
+			    (
+			      (:scope is null or :scope = '' or :scope = 'ALL') and
+			      ( lower(dr.startAddress) like lower(concat('%', :q, '%'))
+			        or lower(dr.endAddress) like lower(concat('%', :q, '%'))
+			        or lower(dr.memoToDriver) like lower(concat('%', :q, '%')) )
+			    ) or
+			    ( :scope = 'START' and lower(dr.startAddress) like lower(concat('%', :q, '%')) ) or
+			    ( :scope = 'END'   and lower(dr.endAddress)  like lower(concat('%', :q, '%')) ) or
+			    ( :scope = 'MEMO'  and lower(dr.memoToDriver) like lower(concat('%', :q, '%')) )
+			  )
+			  and (
+			    :startFrom is null or :startTo is null or
+			    dr.wantToStart between :startFrom and :startTo
+			  )
+			""")
+	Page<DeliveryRequestCardSlimDTO> findActiveRegisteredSlimFiltered(@Param("q") String q,
+			@Param("scope") String scope, @Param("startFrom") LocalDateTime startFrom,
+			@Param("startTo") LocalDateTime startTo, @Param("sortKey") String sortKey, Pageable pageable);
 
 }

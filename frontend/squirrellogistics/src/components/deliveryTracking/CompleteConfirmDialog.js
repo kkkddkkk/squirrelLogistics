@@ -44,9 +44,9 @@ function CompleteConfirmDialog({
                 </Box>
             </DialogTitle>
 
-            <DialogContent dividers>
+            {/* <DialogContent dividers>
                 <Typography mb={2}>
-                    예상과 다른 사항이 있었다면 체크해 주세요.
+                    다음과 같은 사항이 있었다면 체크해 주세요.
                 </Typography>
                 <FormGroup>
                     <FormControlLabel
@@ -68,7 +68,7 @@ function CompleteConfirmDialog({
                         label="기재되지 않은 취급주의 화물 존재"
                     />
                 </FormGroup>
-            </DialogContent>
+            </DialogContent> */}
 
             <DialogActions sx={{ px: 2.5, pb: 2.5 }}>
                 <Button
