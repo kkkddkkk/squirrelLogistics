@@ -233,4 +233,137 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			@Param("scope") String scope, @Param("startFrom") LocalDateTime startFrom,
 			@Param("startTo") LocalDateTime startTo, @Param("sortKey") String sortKey, Pageable pageable);
 
+	// 작성자 정윤진
+	@Query("""
+			SELECT
+			    dr.requestId,
+			    dr.createAt,
+			    dr.wantToStart,
+			    dr.wantToEnd,
+			    dr.estimatedFee,
+			    dr.startAddress,
+			    dr.endAddress
+			FROM DeliveryRequest dr
+			WHERE dr.company.companyId = :companyId
+			ORDER BY dr.createAt DESC
+			""")
+	List<Object[]> findDeliveryRequestsBasicByCompany(@Param("companyId") Long companyId);
+
+	@Query("""
+			SELECT d.driverId, u.name, da.status
+			FROM DeliveryRequest dr
+			LEFT JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			LEFT JOIN da.driver d
+			LEFT JOIN d.user u
+			WHERE dr.requestId = :requestId
+			""")
+	Object[] findDriverInfoByRequestId(@Param("requestId") Long requestId);
+
+	@Query("""
+			SELECT ct.handlingTags
+			FROM DeliveryRequest dr
+			JOIN DeliveryWaypoint dw ON dw.deliveryRequest.requestId = dr.requestId
+			JOIN DeliveryCargo dc ON dc.deliveryWaypoint.waypointId = dw.waypointId
+			JOIN dc.cargoType ct
+			WHERE dr.requestId = :requestId
+			""")
+	List<String> findCargoTypesByRequestId(@Param("requestId") Long requestId);
+
+	@Query("""
+			SELECT p.payAmount, p.payMethod
+			FROM DeliveryRequest dr
+			LEFT JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			LEFT JOIN da.payment p
+			WHERE dr.requestId = :requestId
+			""")
+	Object[] findPaymentInfoByRequestId(@Param("requestId") Long requestId);
+
+	// 작성자: 정윤진
+	// 기능: DeliveryRequest에서 직접 Payment 정보 조회 (DeliveryAssignment가 없는 경우도 처리)
+	@Query("""
+			SELECT p.payAmount, p.payMethod
+			FROM DeliveryRequest dr
+			LEFT JOIN dr.payment p
+			WHERE dr.requestId = :requestId
+			""")
+	Object[] findPrepaidPaymentInfoByRequestId(@Param("requestId") Long requestId);
+
+	@Query("""
+			SELECT ad.actualFee
+			FROM DeliveryRequest dr
+			JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			JOIN da.actualDelivery ad
+			WHERE dr.requestId = :requestId
+			""")
+	Object[] findActualDeliveryInfoByRequestId(@Param("requestId") Long requestId);
+
+	@Query("""
+			SELECT DISTINCT dr.requestId
+			FROM DeliveryRequest dr
+			JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			JOIN Driver d ON da.driver.driverId = d.driverId
+			JOIN User u ON d.user.userId = u.userId
+			WHERE dr.company.companyId = :companyId
+			AND u.name LIKE %:name%
+			""")
+	List<Long> findRequestIdsByName(@Param("companyId") Long companyId, @Param("name") String name);
+
+	@Query("""
+			SELECT DISTINCT dr.requestId
+			FROM DeliveryRequest dr
+			JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			WHERE dr.company.companyId = :companyId
+			AND da.status = :status
+			""")
+	List<Long> findRequestIdsByStatus(@Param("companyId") Long companyId, @Param("status") String status);
+
+	@Query("""
+			SELECT DISTINCT dr.requestId
+			FROM DeliveryRequest dr
+			JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			JOIN Driver d ON da.driver.driverId = d.driverId
+			JOIN User u ON d.user.userId = u.userId
+			WHERE dr.company.companyId = :companyId
+			AND u.name LIKE %:name%
+			AND da.status = :status
+			""")
+	List<Long> findRequestIdsByNameAndStatus(@Param("companyId") Long companyId, @Param("name") String name,
+			@Param("status") String status);
+
+	@Query("""
+			SELECT COUNT(dr)
+			FROM DeliveryRequest dr
+			WHERE dr.company.companyId = :companyId
+			""")
+	Long countDeliveryRequestsByCompany(@Param("companyId") Long companyId);
+
+	@Query("""
+			SELECT DISTINCT
+			    dr.requestId,
+			    dr.createAt,
+			    dr.wantToStart,
+			    dr.wantToEnd,
+			    d.driverId as driverId,
+			    u.name as name,
+			    da.status as status,
+			    COALESCE(p.payMethod, dr.payment.payMethod) as payMethod,
+			    COALESCE(p.payAmount, dr.payment.payAmount) as payAmount,
+			    ad.actualFee as actualFee,
+			    dr.startAddress,
+			    dr.endAddress
+			FROM DeliveryRequest dr
+			LEFT JOIN DeliveryAssignment da ON da.deliveryRequest.requestId = dr.requestId
+			LEFT JOIN da.driver d
+			LEFT JOIN d.user u
+			LEFT JOIN da.payment p
+			LEFT JOIN da.actualDelivery ad
+			LEFT JOIN dr.payment drPayment
+			WHERE dr.company.companyId = :companyId
+			AND (:name IS NULL OR u.name LIKE %:name%)
+			AND (:status IS NULL OR da.status = :status)
+			ORDER BY dr.createAt DESC
+			""")
+	List<Object[]> findCompanyDeliveriesWithAllInfo(@Param("companyId") Long companyId, @Param("name") String name,
+			@Param("status") String status);
+
 }
