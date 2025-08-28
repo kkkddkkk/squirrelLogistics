@@ -48,26 +48,7 @@ public class ReportController {
 	private final DeliveryAssignmentRepository assignmentRepository;
 	private final String uploadDir = new File("uploads").getAbsolutePath() + "/";
 	private final FindUserByTokenService findUserByTokenService;
-	private final CompanyRepository companyRepository;
-	
-//	@GetMapping("/list")
-//	@TimedEndpoint("reportList")
-//	public List<Map<String, Object>> reportList(){
-//		try {
-//			List<Map<String, Object>> reports = reportService.reportList();
-//			
-//			// 🔍 프론트엔드 전송 직전 로깅 (처음 3개만 샘플로 출력)
-//			log.info("🚀 ReportController /api/public/report/list - 총 {}건 전송", reports.size());
-//			if (!reports.isEmpty()) {
-//				log.info("📋 첫 번째 리포트 샘플: {}", reports.get(0));
-//			}
-//			
-//			return reports;
-//		} catch (Exception e) {
-//			log.error("❌ ReportController /api/public/report/list 실패: {}", e.getMessage());
-//			throw e;
-//		}
-//	}
+	private final CompanyRepository companyRepository;	
 	
 	//김도경: userId로 reportList 찾기
 	@GetMapping("/list")
@@ -85,22 +66,6 @@ public class ReportController {
 	public ReportSlimResponseDTO viewReport(@RequestParam("reportId") Long reportId){
 		return reportService.viewReport(reportId);
 	}
-	
-//	@GetMapping("/detail")
-//	public Map<String, Object> viewReport(@RequestParam("reportId") Long reportId){
-//		try {
-//			Map<String, Object> reportDetail = reportService.viewReport(reportId);
-//			
-//			// 🔍 프론트엔드 전송 직전 로깅
-//			log.info("🚀 ReportController /api/public/report/detail - ID {} 전송: rStatus={}, rCate={}", 
-//				reportId, reportDetail.get("rStatus"), reportDetail.get("rCate"));
-//			
-//			return reportDetail;
-//		} catch (Exception e) {
-//			log.error("❌ ReportController /api/public/report/detail ID {} 실패: {}", reportId, e.getMessage());
-//			throw e;
-//		}
-//	}
 
 	
 	@PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })

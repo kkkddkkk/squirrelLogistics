@@ -85,9 +85,9 @@ public class PaymentServiceImpl implements PaymentService {
 		DeliveryRequest deliveryRequest = deliveryRequestOpt
 				.orElseThrow(() -> new RuntimeException("해당 요청 ID에 대한 DeliveryRequest가 존재하지 않습니다. ID: " + requestId));
 		List<DeliveryWaypoint> waypoints = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(requestId);
-		boolean dropOrder1 = waypoints.size() > 0 ? true : false;
-		boolean dropOrder2 = waypoints.size() > 1 ? true : false;
-		boolean dropOrder3 = waypoints.size() > 2 ? true : false;
+		boolean dropOrder1 = waypoints.size() > 2 ? true : false;
+		boolean dropOrder2 = waypoints.size() > 3 ? true : false;
+		boolean dropOrder3 = waypoints.size() > 4 ? true : false;
 
 		PayBoxDTO payBoxDTO = PayBoxDTO.builder().requestId(requestId).dropOrder1(dropOrder1).dropOrder2(dropOrder2)
 				.dropOrder3(dropOrder3).distance(deliveryRequest.getDistance())
@@ -126,19 +126,19 @@ public class PaymentServiceImpl implements PaymentService {
 		return payBoxDTO;
 	}
 
-
 	@Transactional
-	@Override//1차 결제 성공 시
+	@Override // 1차 결제 성공 시
 	public void successFirstPayment(PaymentSuccessDTO paymentSuccessDTO) {
 
 		log.info("Received DTO: {}", paymentSuccessDTO);
-		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId()).orElseThrow(() -> new RuntimeException("Payment not found!"));
+		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId())
+				.orElseThrow(() -> new RuntimeException("Payment not found!"));
 		payment.setPayMethod(paymentSuccessDTO.getPayMethod());
 		payment.setPayAmount(paymentSuccessDTO.getPayAmount());
 		payment.setPayStatus(PayStatusEnum.COMPLETED);
 		payment.setPaid(LocalDateTime.now());
 		payment.setImpUid(paymentSuccessDTO.getImpUid());
-		
+
 		log.info("Found payment: {}", payment);
 
 		paymentRepository.saveAndFlush(payment); // flush 강제
@@ -147,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Transactional
-	@Override//2차 결제 성공 시
+	@Override // 2차 결제 성공 시
 	public void successSecondPayment(PaymentSuccessDTO paymentSuccessDTO) {
 		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId()).orElseThrow();
 
@@ -160,7 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Transactional
-	@Override//결제 실패 시
+	@Override // 결제 실패 시
 	public void failureSecondPayment(PaymentFailureDTO paymentFailureDTO) {
 		Payment payment = paymentRepository.findById(paymentFailureDTO.getPaymentId()).orElseThrow();
 
@@ -170,13 +170,13 @@ public class PaymentServiceImpl implements PaymentService {
 		paymentRepository.flush();
 
 	}
-	
 
-    private final RestTemplate restTemplate; // 스프링에서 HTTP 호출용
+	private final RestTemplate restTemplate; // 스프링에서 HTTP 호출용
 
-    private final String IMP_KEY = "1576161706372485";
-    private final String IMP_SECRET = "XA4cfKZavvUUr261zjc6itgnoYvSqZaR2IohgfDzfbGkCr4AvJ1uWbnMUtXCZHPZHPjnWSLFHuLITCR7";//REST API Secret
-
+	private final String IMP_KEY = "1576161706372485";
+	private final String IMP_SECRET = "XA4cfKZavvUUr261zjc6itgnoYvSqZaR2IohgfDzfbGkCr4AvJ1uWbnMUtXCZHPZHPjnWSLFHuLITCR7";// REST
+																															// API
+																															// Secret
 
 	@Override // 영수증
 	public RecieptDTO getReciept(Long paymentId) {
@@ -197,14 +197,44 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override // 거래명세서
 	public TransactionStatementDTO getTransaction(Long paymentId) {
-
+		Long assignedId = deliveryAssignmentRepository.findIdByPaymentId(paymentId);
+		
+		if(assignedId == null) {
+			assignedId = deliveryRequestRepository.findIdByPaymentId(paymentId);
+		}
+		log.info(assignedId);
+		
+		String assignedmentStatus = null;
+		
+		if (assignedId != null) {
+		    List<String> statuses = deliveryAssignmentRepository.findStatusById(assignedId);
+		    if (!statuses.isEmpty()) {
+		        assignedmentStatus = statuses.get(0);
+		    }
+		}
+		
+	
 		Long prepaidId = paymentRepository.findPrepaidIdByPaymentId(paymentId);
+		TransactionStatementDTO transactionStatementDTO = null;
+		
+		if(assignedmentStatus==null) {
+			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(paymentId)
+					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(paymentId))
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId))
+					.build();
+		}else if (assignedmentStatus.equals("COMPLETED")) {
+			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(prepaidId)
+					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(prepaidId))
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(prepaidId)).paymentId(paymentId)
+					.amount(paymentRepository.findPayAmountByPaymentId(paymentId))
+					.paid(paymentRepository.findPaidByPaymentId(paymentId)).build();
+		} else {
+			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(paymentId)
+					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(paymentId))
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId))
+					.build();
+		}
 
-		TransactionStatementDTO transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(prepaidId)
-				.prepaidAmount(paymentRepository.findPayAmountByPaymentId(prepaidId))
-				.prepaidPaid(paymentRepository.findPaidByPaymentId(prepaidId)).paymentId(paymentId)
-				.amount(paymentRepository.findPayAmountByPaymentId(paymentId))
-				.paid(paymentRepository.findPaidByPaymentId(paymentId)).build();
 		return transactionStatementDTO;
 	}
 

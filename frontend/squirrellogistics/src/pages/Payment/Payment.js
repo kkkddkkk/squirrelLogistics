@@ -6,7 +6,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { Layout, paymentFormat, SubTitle, Title } from "../../components/common/CommonForCompany";
-import { getFirstPayBox, getSecondPayBox, refund, successFirstPayment, successSecondPayment } from "../../api/company/paymentApi";
+import { cancelPayment, getFirstPayBox, getSecondPayBox, refund, requestRefund, successFirstPayment, successSecondPayment } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
 import RemoveIcon from '@mui/icons-material/Remove';
 import HelpIcon from '@mui/icons-material/Help';
@@ -180,8 +180,8 @@ export const Payment = () => {
         if (!actualCalc) return;
         let additionalFee;
         if (estimateCalc.dropOrderNum) additionalFee = estimateCalc.dropOrderNum * 50000;
-        if (estimateCalc.mountainous) additionalFee += 50000;
-        if (estimateCalc.caution) additionalFee += 50000;
+        if (estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3) additionalFee += 50000;
+        if (estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3) additionalFee += 50000;
         setAdditionalRateEstimate(additionalFee);
         setBaseRateEstimate(
             100000
@@ -231,7 +231,7 @@ export const Payment = () => {
                             payAmount: totalRate,
                             payMethod: paymentMethod,
                             payStatus: "PROCESSING",
-                            impUid: response.imp_uid
+                            impUid: response.paymentId
                         };
                         await successFirstPayment({ paymentId, successFirstPayment: firstPaymentBody });
                         moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
@@ -246,35 +246,46 @@ export const Payment = () => {
 
     }
 
-    async function cancelPayment() {
-        if (!actualCalc?.impUid) {
-            console.error("impUid가 없습니다.");
-            return;
-        }
+    //     paymentId: prepaidId, // getPaymentByImpUid 결과 사용
+    // reason: "고객 요청",
+    // currentCancellableAmount: 1000000000,
+    // amount: actualCalc?.estimateFee
+    //     ? totalRate - actualCalc.estimateFee
+    //     : totalRate, // 반드시 양수
 
+
+    // async function cancelPayment() {
+    //     if (!actualCalc?.impUid) {
+    //         alert("환불할 결제 정보가 없습니다.");
+    //         return;
+    //     }
+
+    //     const refundDTO = {
+    //         impUid: actualCalc.impUid,
+    //         amount: actualCalc.estimateFee ? totalRate - actualCalc.estimateFee : totalRate,
+    //         reason: "고객 요청",
+    //     };
+
+    //     try {
+    //         const result = await requestRefund(refundDTO);
+    //         console.log("환불 성공:", result);
+    //         alert("환불이 완료되었습니다.");
+    //     } catch (err) {
+    //         alert("환불 중 오류가 발생했습니다: " + err.message);
+    //     }
+    // }
+
+    const handleClickRefund = async () => {
         try {
-            const paymentClient = new PaymentClient({
-                secret: "XA4cfKZavvUUr261zjc6itgnoYvSqZaR2IohgfDzfbGkCr4AvJ1uWbnMUtXCZHPZHPjnWSLFHuLITCR7", // 여기에 실제 시크릿 넣기
-            });
-
-            // 2. 부분 환불 실행
-            const response = await paymentClient.cancelPayment({
-                paymentId: prepaidId, // getPaymentByImpUid 결과 사용
-                reason: "고객 요청",
-                currentCancellableAmount: 1000000000,
-                amount: actualCalc?.estimateFee
-                    ? totalRate - actualCalc.estimateFee
-                    : totalRate, // 반드시 양수
-            });
-
-            console.log("환불 성공:", response);
-            alert("환불이 완료되었습니다.");
-        } catch (error) {
-            console.error("환불 실패:", error);
-            alert("환불 중 오류가 발생했습니다.");
+            const result = await cancelPayment(actualCalc.impUid, "고객 요청");
+            console.log("환불 결과:", result);
+            alert("환불이 완료되었습니다!");
+        } catch (err) {
+            console.error("환불 실패:", err);
+            alert("환불 실패: " + err.message);
         }
-    }
-    // cancelPayment("imp_123456789012");
+    };
+
 
     return (
         <Layout title={"결제"}>
@@ -337,8 +348,8 @@ export const Payment = () => {
                                                     stopOver1={estimateCalc.dropOrderNum >= 1}
                                                     stopOver2={estimateCalc.dropOrderNum >= 2}
                                                     stopOver3={estimateCalc.dropOrderNum >= 3}
-                                                    caution={estimateCalc.handlingId === 11 || estimateCalc.handlingId === 13}
-                                                    mountainous={estimateCalc.handlingId === 12 || estimateCalc.handlingId === 13}
+                                                    caution={estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3}
+                                                    mountainous={estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3}
                                                     additionalRate={additionalRateEstimate}
                                                 />
                                             )}
@@ -403,7 +414,7 @@ export const Payment = () => {
                             <Button
                                 variant="contained"
                                 sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
-                                onClick={cancelPayment}
+                                onClick={handleClickRefund}
                             >
                                 환불신청
                             </Button> : <></>
@@ -417,6 +428,6 @@ export const Payment = () => {
 
 
     );
-}
 
+}
 export default Payment;

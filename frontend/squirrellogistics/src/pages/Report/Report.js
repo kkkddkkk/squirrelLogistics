@@ -5,6 +5,7 @@ import ReportRadio from "../../components/report/ReportRadio";
 import ReportImgList from "../../components/report/ReportImgList";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
+import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 
 
 const Report = () => {
@@ -12,6 +13,7 @@ const Report = () => {
     const assignedId = params.get("id");
     const reportId = params.get("rId");
     const accesstoken = localStorage.getItem('accessToken');
+    const {moveToActualCalc} = usePaymentMove();
 
     const [preview, setPreview] = useState([]);
     const [report, setReport] = useState({
@@ -33,7 +35,7 @@ const Report = () => {
     })
 
     useEffect(() => {
-        if (reportId != 0) {
+        if (reportId !== "0" && reportId !== null ) {
             axios.get(`http://localhost:8080/api/report`, {
                 params: { reportId: reportId },
                 headers: {
@@ -91,7 +93,12 @@ const Report = () => {
             },
         }).then(res => {
             console.log("등록 성공", res.data);
+            if(window.opener){
             window.close();
+            }else{
+                moveToActualCalc({assignedId, reported: true});
+            }
+
 
             axios.get(`http://localhost:8080/api/companyHistory/getTodayContent`, {
                 params: { assignedId: assignedId },
@@ -112,7 +119,26 @@ const Report = () => {
             <Grid container width={"80%"} maxWidth="1000px" margin="0 auto" display={"flex"} flexWrap={"wrap"} marginBottom={"5%"}>
                 <Grid item size={3} />
                 <Grid item size={6} display={"flex"} flexWrap={"wrap"} flexDirection={"column"}>
-                    {reportId != 0 ?
+                    {reportId === "0" || reportId === null ?
+                        <form onSubmit={handleSubmit}>
+                            <FormControl fullWidth >
+
+                                <SubTitle>제목</SubTitle>
+                                <TextField fullWidth sx={{ marginBottom: "5%" }} name="rTitle" onChange={writing}></TextField>
+
+                                <SubTitle>내용</SubTitle>
+                                <TextField fullWidth multiline rows={10} sx={{ marginBottom: "5%" }} name="rContent" onChange={writing}></TextField>
+
+                                <Box marginBottom={"5%"} width={"100%"}>
+                                    <ReportRadio cateValue={report.rCate} setCateValue={(cate) => setReport(prev => ({ ...prev, rCate: cate }))} reporter={report.reporter}></ReportRadio>
+                                </Box>
+
+                                <SubTitle>사진({preview.length}/5)</SubTitle>
+                                <ReportImgList preview={preview} setPreview={setPreview} />
+
+                                <OneBigBtn margin={"10%"}>신&nbsp;&nbsp;&nbsp;고</OneBigBtn>
+                            </FormControl>
+                        </form> :
                         <>
                             <SubTitle>{viewReport.regDate.toString().slice(0, 10)}</SubTitle>
                             <Box margin={"3%"} width={"100%"}>
@@ -138,26 +164,6 @@ const Report = () => {
                                 </Typography>
                             </Box>
                         </>
-                        :
-                        <form onSubmit={handleSubmit}>
-                            <FormControl fullWidth >
-
-                                <SubTitle>제목</SubTitle>
-                                <TextField fullWidth sx={{ marginBottom: "5%" }} name="rTitle" onChange={writing}></TextField>
-
-                                <SubTitle>내용</SubTitle>
-                                <TextField fullWidth multiline rows={10} sx={{ marginBottom: "5%" }} name="rContent" onChange={writing}></TextField>
-
-                                <Box marginBottom={"5%"} width={"100%"}>
-                                    <ReportRadio cateValue={report.rCate} setCateValue={(cate) => setReport(prev => ({ ...prev, rCate: cate }))} reporter={report.reporter}></ReportRadio>
-                                </Box>
-
-                                <SubTitle>사진({preview.length}/5)</SubTitle>
-                                <ReportImgList preview={preview} setPreview={setPreview} />
-
-                                <OneBigBtn margin={"10%"}>신&nbsp;&nbsp;&nbsp;고</OneBigBtn>
-                            </FormControl>
-                        </form>
                     }
 
                 </Grid>

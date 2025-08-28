@@ -8,12 +8,13 @@ import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { getTodayContent } from "../../api/company/historyApi";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 
-export const Buttons = ({ children, func }) => {
+export const Buttons = ({ children, func, disabled }) => {
     return (
         <Button
             variant="contained"
             sx={{ marginRight: "7px" }}
             onClick={func}
+            disabled={disabled}
         >
             {children}
         </Button>
@@ -92,7 +93,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const handleSecondPayment = () => {
-        moveToActualCalc(assignedId);
+        moveToActualCalc({assignedId, reported: todayContent.reportId?true:false});
     }
 
     return (

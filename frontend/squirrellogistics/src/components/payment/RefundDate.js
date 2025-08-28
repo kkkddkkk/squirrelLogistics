@@ -21,36 +21,38 @@ export const RefundDate = ({ refundDate, setRefundDate }) => {
         ];
 
         return (
-            <FormControl>
-                <Box
-                    width="100%"
-                    display='flex'
-                    flexWrap={'wrap'}
-                    justifyContent={'space-around'}
-                    margin={"2%"}
-                >
 
-                    {refundOption.map((item) => (
-                        <Box>
+            <Box
+                width="100%"
+                display='flex'
+                flexWrap={'wrap'}
+                justifyContent={'center'}
+                margin={"2%"}
+            >
+                <FormControl>
+                    <RadioGroup
+                        row   // 가로 배치
+                        name="refund_date"
+                        value={refundDate}
+                        onChange={(e) => setRefundDate(e.target.value)}
+                        sx={{
+                            justifyContent: "center", // 가운데 정렬
+                            gap: 8,                   // 버튼 사이 간격(px, rem 단위 가능)
+                        }}
+                    >
+                        {refundOption.map((item) => (
                             <FormControlLabel
                                 key={item.value}
                                 value={item.value}
-                                control={
-                                    <Radio
-                                        checked={refundDate === item.value}
-                                        onChange={(e) => setRefundDate(e.target.value)}
-                                        value={item.value}
-                                        name="refund_date"
-                                    />
-                                }
+                                control={<Radio />}
                                 label={item.label}
                             />
-                        </Box>
-                    ))}
+                        ))}
+                    </RadioGroup>
+                </FormControl>
 
+            </Box>
 
-                </Box>
-            </FormControl>
         );
     }
 

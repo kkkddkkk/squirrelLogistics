@@ -17,8 +17,8 @@ const usePaymentMove=()=>{
     const moveBack = ()=>{
         navigate(-1);
     }
-    const moveToActualCalc=(assignedId)=>{
-        navigate(`/company/actualCalc?assignedId=${assignedId}`)
+    const moveToActualCalc=({assignedId, reported})=>{
+        navigate(`/company/actualCalc?assignedId=${assignedId}&reported=${reported}`)
     }
 
     return {moveToMain, moveToHistory, moveToSuccess, moveBack, moveToSecondPayment, moveToActualCalc}

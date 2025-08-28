@@ -22,7 +22,7 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
 
     }
 
-    const Content = ({ dataKey, value }) => {
+    const Content = ({ dataKey, value, locale }) => {
 
         function PforCharge({ children }) {
             return (
@@ -40,7 +40,7 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
         return (
             <>
                 <PforCharge>{dataKey}</PforCharge>
-                <PforCharge>{value}</PforCharge>
+                <PforCharge>{value}{locale?"원":""}</PforCharge>
                 <Grid size={12} borderBottom={"2px solid #909095"} />
             </>
         )
@@ -71,11 +71,11 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
             </ContentBox>
 
             <ContentBox subTitle={"추가요금"}>
-                {stopOver1 ? <Content dataKey={"경유지1"} value={paymentFormat(50000)} /> : <></>}
-                {stopOver2 ? <Content dataKey={"경유지2"} value={paymentFormat(50000)} /> : <></>}
-                {stopOver3 ? <Content dataKey={"경유지3"} value={paymentFormat(50000)} /> : <></>}
-                {caution ? <Content dataKey={"산간지역"} value={paymentFormat(50000)} /> : <></>}
-                {mountainous ? <Content dataKey={"취급주의"} value={paymentFormat(50000)} /> : <></>}
+                {stopOver1 ? <Content dataKey={"경유지1"} value={paymentFormat(50000)} locale={true}/> : <></>}
+                {stopOver2 ? <Content dataKey={"경유지2"} value={paymentFormat(50000)} locale={true}/> : <></>}
+                {stopOver3 ? <Content dataKey={"경유지3"} value={paymentFormat(50000)} locale={true}/> : <></>}
+                {caution ? <Content dataKey={"산간지역"} value={paymentFormat(50000)} locale={true}/> : <></>}
+                {mountainous ? <Content dataKey={"취급주의"} value={paymentFormat(50000)} locale={true} /> : <></>}
                 <HowMuch fontSize={20} inBox={true}>{paymentFormat(additionalRate)}원</HowMuch>
             </ContentBox>
 

@@ -125,9 +125,9 @@ const TransactionStatement = () => {
                             </TableRow>
 
                             {/* 이곳에 결제데이터 삽입! */}
-                            {trans?.paymentId ? <>
+                            {trans?.prepaidId ? <>
 
-                                {trans?.prepaidId ?
+                                {trans?.prepaidAmount ?
                                     <TableRow>
                                         <TableCell align="center">{trans.prepaidPaid?.slice(0, 10)}</TableCell>
                                         <TableCell colSpan={6} align="center">다람쥑스프레스 사전결제</TableCell>
@@ -137,7 +137,7 @@ const TransactionStatement = () => {
                                     </TableRow> : <></>
                                 }
 
-                                {trans?.paid ?
+                                {trans?.amount ?
                                     <TableRow>
                                         <TableCell align="center">{trans.paid?.slice(0, 10)}</TableCell>
                                         <TableCell colSpan={6} align="center">다람쥑스프레스 사후결제</TableCell>

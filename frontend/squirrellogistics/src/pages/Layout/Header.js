@@ -77,13 +77,13 @@ export default function Header() {
       { label: "회사소개", path: "/about" },
     ],
     COMPANY: [
-      { label: "배송신청", path: "/request" },
-      { label: "이용 기록", path: "/history" },
-      { label: "마이페이지", path: "/mypage" },
+      { label: "배송신청", path: "/estimate" },
+      { label: "이용 기록", path: "/company/history" },
+      { label: "마이페이지", path: "/company" },
     ],
     DRIVER: [
       // 필요 경로로 자유롭게 교체하세요
-      { label: "배차 수행", path: "/driver/jobs" },
+      { label: "요청 목록", path: "/driver/list" },
       { label: "이용 기록", path: "/history" },
       { label: "마이페이지", path: "/mypage" },
     ],

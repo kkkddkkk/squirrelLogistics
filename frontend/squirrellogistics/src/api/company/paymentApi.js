@@ -116,17 +116,47 @@ export const getTransactionStatement = async ({ paymentId, options = {} }) => {
   }
 };
 
+//전체환불
+// export async function requestRefund(refundDTO) {
+//   try {
+//     const response = await fetch("http://localhost:8080/api/refund", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accesstoken}`, },
+//       body: JSON.stringify(refundDTO),
+//     });
 
-export const refund = async (refundDTO) => {
+//     const result = await response.json();
+
+//     if (!response.ok) {
+//       throw new Error(result.error || "환불 실패");
+//     }
+
+//     return result;
+//   } catch (err) {
+//     console.error("환불 요청 중 오류:", err.message);
+//     throw err; // 호출한 쪽에서 catch 가능
+//   }
+// }
+
+export async function cancelPayment(impUid, reason = "고객 요청") {
   try {
-    const res = await axios.post(`${API_SERVER_HOST}/cancel`, refundDTO, {
+    const response = await fetch(`/api/payments/${impUid}/cancel`, {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accesstoken}`
       },
+      body: JSON.stringify({ reason }),
     });
-    return res.data;
+
+    if (!response.ok) {
+      throw new Error(`환불 실패: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error(err);
+    throw err; // 호출 쪽에서 catch 할 수 있도록
   }
-
 }

@@ -9,13 +9,16 @@ import { useEffect, useState } from "react";
 import { Layout, paymentFormat, Title } from "../../components/common/CommonForCompany";
 import { actualCalc, getActualCalc, getEstimateCalc, trySecondPayment } from "../../api/company/actualCalcApi";
 import { useSearchParams } from "react-router-dom";
+import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 
 const ActualCalc = () => {
     const { moveToSecondPayment } = usePaymentMove();
+    const { moveToReport } = useHistoryMove();
 
 
     const [params] = useSearchParams();
     const assignedId = params.get("assignedId");
+    const reported = params.get("reported")==="true";
 
     const [modal, setModal] = useState(false);
     const [actualCalc, setActualCalc] = useState(null);
@@ -28,8 +31,9 @@ const ActualCalc = () => {
     const [paymentId, setPaymentId] = useState(0);
 
     const showTransactionStatement = () => {
-        window.open(`${window.location.origin}/company/transactionStatement`, 'name', 'width=1000, height=600');
+        window.open(`${window.location.origin}/company/transactionStatement?paymentId=${actualCalc.paymentId}&token=${localStorage.getItem("accessToken")}`, 'name', 'width=1000, height=600');
     }
+
 
     useEffect(() => {
         if (assignedId != 0) {
@@ -55,7 +59,7 @@ const ActualCalc = () => {
         setAdditionalRate(addThisRate)
         setBaseRate(100000
             + (3000 * Math.ceil((actualCalc.distance) / 1000))
-            + ((actualCalc.weight) * 30000));
+            + (Math.ceil((actualCalc.weight) / 1000) * 30000));
         setRequestId(actualCalc.requestId);
         setPaymentId(actualCalc.paymentId);
     }, [actualCalc])
@@ -78,8 +82,8 @@ const ActualCalc = () => {
         if (!estimateCalc) return; // 값 없으면 계산 안 함
         let additionalFee;
         if (estimateCalc.dropOrderNum) additionalFee = estimateCalc.dropOrderNum * 50000;
-        if (estimateCalc.mountainous) additionalFee += 50000;
-        if (estimateCalc.caution) additionalFee += 50000;
+        if (estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3) additionalFee += 50000;
+        if (estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3) additionalFee += 50000;
         setAdditionalRateEstimate(additionalFee);
         setBaseRateEstimate(
             100000
@@ -92,7 +96,6 @@ const ActualCalc = () => {
         if (assignedId != 0)
             moveToSecondPayment(paymentId);
     }
-
 
     return (
         <Layout title={"실 계산"}>
@@ -156,11 +159,11 @@ const ActualCalc = () => {
                                                 mileage={Math.ceil(estimateCalc.distance / 1000)}
                                                 weight={estimateCalc.weight}
                                                 baseRate={baseRateEstimate}
-                                                stopOver1={estimateCalc.dropOrderNum>=1}
+                                                stopOver1={estimateCalc.dropOrderNum >= 1}
                                                 stopOver2={estimateCalc.dropOrderNum >= 2}
-                                                stopOver3={estimateCalc.dropOrderNum >=3}
-                                                caution={estimateCalc.handlingId === 11 || estimateCalc.handlingId === 13}
-                                                mountainous={estimateCalc.handlingId === 12 || estimateCalc.handlingId === 13}
+                                                stopOver3={estimateCalc.dropOrderNum >= 3}
+                                                caution={estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3}
+                                                mountainous={estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3}
                                                 additionalRate={additionalRateEstimate}
                                             />
                                         )}
@@ -187,11 +190,11 @@ const ActualCalc = () => {
                                 marginRight: '2%'
                             }}
                         >
-                            총 {paymentFormat(actualCalc?baseRate+additionalRate-actualCalc.estimateFee:0)}원
+                            총 {paymentFormat(actualCalc ? baseRate + additionalRate - actualCalc.estimateFee : 0)}원
                         </Typography>
                     </Box>
                     <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5% 0" }}>
-                        <Buttons>신고</Buttons>
+                        <Buttons func={() => moveToReport(assignedId)} disabled={reported}>신고{reported?"완료":""}</Buttons>
                         <Buttons func={showTransactionStatement}>명세서</Buttons>
                         <Buttons func={handlePayment}>정 산</Buttons>
                     </Box>

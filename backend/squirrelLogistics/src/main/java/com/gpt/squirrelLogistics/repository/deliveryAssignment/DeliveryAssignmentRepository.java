@@ -141,6 +141,10 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	// paymentId로 deliveryAssignment 찾기
 	@Query("SELECT da FROM DeliveryAssignment da " + "JOIN da.payment p " + "WHERE p.paymentId = :paymentId")
 	DeliveryAssignment findDeliveryAssignmentByPaymentId(@Param("paymentId") Long paymentId);
+	
+	//paymentID로 deliveryAssignmentId 찾기
+	@Query("SELECT da.assignedId FROM DeliveryAssignment da " + "JOIN da.payment p " + "WHERE p.paymentId = :paymentId")
+	Long findIdByPaymentId(@Param("paymentId") Long paymentId);
 
 	// 작성자: 고은설.
 	// 기능: 드라이버 아이디로 모든 기사의 운송 할당 내역을 조회, 이미 예약이 잡힌 일자에 새로운 요청을 수락하는 것을 방지하기 위함.

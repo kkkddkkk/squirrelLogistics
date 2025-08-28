@@ -110,25 +110,14 @@ public class PaymentController {
         return Map.of("paymentId", paymentId);
     }
     
-    //환불
-    @PostMapping("/cancel")
-    public ResponseEntity<?> cancelPayment(@RequestBody RefundDTO refundDTO) {
-        try {
-            log.info("Cancel request received: {}", refundDTO);
-            //paymentService.cancelPayment(refundDTO);
-            return ResponseEntity.ok(Map.of("status", "success"));
-        } catch (Exception e) {
-            log.error("cancelPayment failed", e);
-            throw e; // 반드시 다시 던져서 500 확인
-        }
-    }
-    
+    //영수증
     @GetMapping("/reciept")
     public RecieptDTO getRecipet(@RequestParam(name = "paymentId") Long paymentId ) {
 
         return paymentService.getReciept(paymentId);
     }
     
+    //거래명세서
     @GetMapping("/transactionStatement")
     public TransactionStatementDTO getTransaction(@RequestParam(name="paymentId") Long paymentId) {
     	return paymentService.getTransaction(paymentId);
