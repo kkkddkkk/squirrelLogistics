@@ -18,6 +18,8 @@ import com.gpt.squirrelLogistics.dto.login.LoginResponse;
 import com.gpt.squirrelLogistics.dto.regist.RegisterCompanyRequest;
 import com.gpt.squirrelLogistics.dto.regist.RegisterDriverRequest;
 import com.gpt.squirrelLogistics.dto.regist.RegisterResponse;
+import com.gpt.squirrelLogistics.entity.company.Company;
+import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.repository.user.UserRepository;
@@ -39,6 +41,7 @@ public class AuthController {
 	private final JwtTokenProvider jwt;
 	private final UserRepository userRepository;
 	private final GoogleVerifier googleVerifier;
+	private final UserRepository userRepo;
 
 	@PostMapping("/register/driver")
 	public ResponseEntity<RegisterResponse> registerDriver(@RequestBody RegisterDriverRequest req) {
@@ -69,6 +72,11 @@ public class AuthController {
 			User user = userRepository.findByLoginId(req.getLoginId())
 					.orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
+			if (user.getRole() == UserRoleEnum.ETC) {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN)
+						.body(Map.of("error", "Forbidden", "message", "탈퇴 처리된 계정입니다."));
+			}
+
 			user.setLastLogin(LocalDateTime.now());
 			userRepository.save(user);
 
@@ -86,7 +94,7 @@ public class AuthController {
 
 	/** Google OAuth: 프론트에서 받은 idToken으로 로그인/회원연동 후 우리 JWT 발급 */
 	@PostMapping("/oauth/google")
-	public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) throws Exception {
+	public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body, RegisterCompanyRequest req) throws Exception {
 		String idToken = body.get("idToken");
 		String roleStr = body.getOrDefault("role", "ETC"); // 프론트에서 넘어온 role(Optional)
 
@@ -109,6 +117,16 @@ public class AuthController {
 			user.setRole(role);
 			user.setRegDate(LocalDateTime.now());
 			user.setSns_login(true);
+			
+			if (toRole(roleStr) == role.COMPANY) {
+				Company c = new Company();
+			    c.setUser(user);
+			    user.setCompany(c);
+			} else if(toRole(roleStr) == role.DRIVER) {
+				Driver d = new Driver();
+			    d.setUser(user);
+			    user.setDriver(d);
+			}
 		} else {
 			// ✅ 기존 유저: 원칙적으로 role 유지
 			// - 만약 초기 가입을 ETC로 했고, 이번에 의미있는 역할이 들어오면 1회 갱신하고 싶다면:
