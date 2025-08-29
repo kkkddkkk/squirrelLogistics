@@ -230,7 +230,7 @@ export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없
                     sx={{
                         width: "100%",        // 원하는 높이
                         width: "auto",     // 비율 유지
-                        margin: "15% 0"
+                        margin: "10% 0"
                     }}
                 />
                 <Typography width={"100%"} textAlign={"center"}

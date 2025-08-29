@@ -101,6 +101,15 @@ public class PaymentController {
         return Map.of("paymentId", paymentId);
     }
     
+    //환불
+    @PutMapping("/refund/{paymentId}/success")
+    public Map<String, Long> successRefundPayment(@PathVariable(name="paymentId") Long paymentId, @RequestBody RefundDTO refundDTO ) {
+    	refundDTO.setPaymentId(paymentId);
+    	paymentService.successRefundPayment(refundDTO);
+
+        return Map.of("paymentId", paymentId);
+    }
+    
     //2차결제실패
     @PutMapping("/second/{paymentId}/failure")
     public Map<String, Long> failureSecondPayment(@PathVariable(name="paymentId") Long paymentId, @RequestBody PaymentFailureDTO paymentFailureDTO ) {

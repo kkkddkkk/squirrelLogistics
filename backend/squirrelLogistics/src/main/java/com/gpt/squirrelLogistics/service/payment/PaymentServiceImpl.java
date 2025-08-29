@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpEntity;
@@ -38,6 +39,7 @@ import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepos
 import com.gpt.squirrelLogistics.repository.deliveryWaypoint.DeliveryWaypointRepository;
 import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
+import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
 import com.gpt.squirrelLogistics.service.deliveryWaypoint.DeliveryWaypointServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +58,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private final DeliveryRequestRepository deliveryRequestRepository;
 
 	private final DeliveryAssignmentService deliveryAssignmentService;
+	private final DeliveryRequestService deliveryRequestService;
 
 	@Override
 	public Long registerPayment(PaymentDTO paymentDTO) {
@@ -79,6 +82,32 @@ public class PaymentServiceImpl implements PaymentService {
 	public PayBoxDTO getFirstPayBox(Long paymentId) {
 
 		Long requestId = deliveryRequestRepository.findIdByPaymentId(paymentId);
+
+		List<Object[]> estimateCalcList = deliveryRequestService.getEstimateCalc(requestId);
+
+		List<Object> handlingIds = estimateCalcList.stream().map(arr -> arr[arr.length - 1])
+				.collect(Collectors.toList());
+
+		Optional<Integer> maxHandlingId = estimateCalcList.stream()
+				.map(arr -> ((Number) arr[arr.length - 1]).intValue()) // Object → int 변환
+				.max(Integer::compareTo);
+
+		// mountainous, caution 계산
+		boolean mountainous = false;
+		boolean caution = false;
+		if (!maxHandlingId.isPresent()) {
+			mountainous = false;
+			caution = false;
+		} else if ((maxHandlingId.get() == 3) || (maxHandlingId.get() == 2 && handlingIds.contains(1))) {
+			mountainous = true;
+			caution = true;
+		} else if ((maxHandlingId.get() == 2) || (maxHandlingId.get() == 1)) {
+			if (maxHandlingId.get() == 2)
+				mountainous = true;
+			else
+				caution = true;
+		}
+
 		System.out.println("requestID: " + requestId);
 
 		Optional<DeliveryRequest> deliveryRequestOpt = deliveryRequestRepository.findById(requestId);
@@ -91,10 +120,8 @@ public class PaymentServiceImpl implements PaymentService {
 
 		PayBoxDTO payBoxDTO = PayBoxDTO.builder().requestId(requestId).dropOrder1(dropOrder1).dropOrder2(dropOrder2)
 				.dropOrder3(dropOrder3).distance(deliveryRequest.getDistance())
-				.weight((long) deliveryRequest.getTotalCargoWeight())
-//				.caution(actualCalcDTO.isCaution())
-//				.mountainous(actualCalcDTO.isMountainous())
-				.estimateFee(deliveryRequest.getEstimatedFee()).build();
+				.weight((long) deliveryRequest.getTotalCargoWeight()).caution(mountainous).mountainous(caution)
+				.paymentId(paymentId).estimateFee(deliveryRequest.getEstimatedFee()).build();
 
 		return payBoxDTO;
 	}
@@ -111,6 +138,7 @@ public class PaymentServiceImpl implements PaymentService {
 	public PayBoxDTO getSecondPayBox(Long prepaidId) {
 
 		Long paymentId = paymentRepository.findPaymentIdByPrepaidId(prepaidId);
+		String impUid = paymentRepository.findimpUidPaymentId(prepaidId);
 
 		DeliveryAssignment deliveryAssignment = deliveryAssignmentRepository
 				.findDeliveryAssignmentByPaymentId(paymentId);
@@ -121,7 +149,7 @@ public class PaymentServiceImpl implements PaymentService {
 				.dropOrder3(actualCalcDTO.isDropOrder3()).distance(actualCalcDTO.getDistance())
 				.weight(actualCalcDTO.getWeight()).caution(actualCalcDTO.isCaution())
 				.mountainous(actualCalcDTO.isMountainous()).estimateFee(actualCalcDTO.getEstimateFee())
-				.impUid(paymentRepository.findById(prepaidId).get().getImpUid()).build();
+				.impUid(impUid).build();
 
 		return payBoxDTO;
 	}
@@ -130,7 +158,6 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override // 1차 결제 성공 시
 	public void successFirstPayment(PaymentSuccessDTO paymentSuccessDTO) {
 
-		log.info("Received DTO: {}", paymentSuccessDTO);
 		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId())
 				.orElseThrow(() -> new RuntimeException("Payment not found!"));
 		payment.setPayMethod(paymentSuccessDTO.getPayMethod());
@@ -138,12 +165,8 @@ public class PaymentServiceImpl implements PaymentService {
 		payment.setPayStatus(PayStatusEnum.COMPLETED);
 		payment.setPaid(LocalDateTime.now());
 		payment.setImpUid(paymentSuccessDTO.getImpUid());
-
-		log.info("Found payment: {}", payment);
-
+		
 		paymentRepository.saveAndFlush(payment); // flush 강제
-		log.info("After saveAndFlush, DB should be updated");
-
 	}
 
 	@Transactional
@@ -158,6 +181,17 @@ public class PaymentServiceImpl implements PaymentService {
 		paymentRepository.flush();
 
 	}
+	
+	@Transactional
+	@Override // 환불 성공 시
+	public void successRefundPayment(RefundDTO refundDTO) {
+		Payment payment = paymentRepository.findById(refundDTO.getPaymentId()).orElseThrow();
+		payment.setPayStatus(PayStatusEnum.ALLCOMPLETED);
+		payment.setPaid(LocalDateTime.now());
+		payment.setPayAmount(refundDTO.getAmount());
+		paymentRepository.save(payment);
+		paymentRepository.flush();
+	}
 
 	@Transactional
 	@Override // 결제 실패 시
@@ -171,25 +205,26 @@ public class PaymentServiceImpl implements PaymentService {
 
 	}
 
-	private final RestTemplate restTemplate; // 스프링에서 HTTP 호출용
-
-	private final String IMP_KEY = "1576161706372485";
-	private final String IMP_SECRET = "XA4cfKZavvUUr261zjc6itgnoYvSqZaR2IohgfDzfbGkCr4AvJ1uWbnMUtXCZHPZHPjnWSLFHuLITCR7";// REST
-																															// API
-																															// Secret
-
 	@Override // 영수증
 	public RecieptDTO getReciept(Long paymentId) {
 
 		Long prepaidId = paymentRepository.findPrepaidIdByPaymentId(paymentId);
 
-		RecieptDTO recieptDTO = RecieptDTO.builder().paymentId(paymentId).prepaidId(prepaidId)
-				.prepaidAmount(paymentRepository.findPayAmountByPaymentId(prepaidId))
-				.prepaidMethod(paymentRepository.findMethodByPaymentId(prepaidId))
-				.prepaidPaid(paymentRepository.findPaidByPaymentId(prepaidId)).paymentId(paymentId)
-				.amount(paymentRepository.findPayAmountByPaymentId(paymentId))
-				.method(paymentRepository.findMethodByPaymentId(paymentId))
-				.paid(paymentRepository.findPaidByPaymentId(paymentId)).build();
+		RecieptDTO recieptDTO = null;
+		if (prepaidId != null) {
+			recieptDTO = RecieptDTO.builder().paymentId(paymentId).prepaidId(prepaidId)
+					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(prepaidId))
+					.prepaidMethod(paymentRepository.findMethodByPaymentId(prepaidId))
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(prepaidId)).paymentId(paymentId)
+					.amount(paymentRepository.findPayAmountByPaymentId(paymentId))
+					.method(paymentRepository.findMethodByPaymentId(paymentId))
+					.paid(paymentRepository.findPaidByPaymentId(paymentId)).build();
+		} else {
+			recieptDTO = RecieptDTO.builder().prepaidId(paymentId)
+					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(paymentId))
+					.prepaidMethod(paymentRepository.findMethodByPaymentId(paymentId))
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId)).build();
+		}
 
 		return recieptDTO;
 
@@ -198,31 +233,29 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override // 거래명세서
 	public TransactionStatementDTO getTransaction(Long paymentId) {
 		Long assignedId = deliveryAssignmentRepository.findIdByPaymentId(paymentId);
-		
-		if(assignedId == null) {
+
+		if (assignedId == null) {
 			assignedId = deliveryRequestRepository.findIdByPaymentId(paymentId);
 		}
 		log.info(assignedId);
-		
+
 		String assignedmentStatus = null;
-		
+
 		if (assignedId != null) {
-		    List<String> statuses = deliveryAssignmentRepository.findStatusById(assignedId);
-		    if (!statuses.isEmpty()) {
-		        assignedmentStatus = statuses.get(0);
-		    }
+			List<String> statuses = deliveryAssignmentRepository.findStatusById(assignedId);
+			if (!statuses.isEmpty()) {
+				assignedmentStatus = statuses.get(0);
+			}
 		}
-		
-	
+
 		Long prepaidId = paymentRepository.findPrepaidIdByPaymentId(paymentId);
 		TransactionStatementDTO transactionStatementDTO = null;
-		
-		if(assignedmentStatus==null) {
+
+		if (assignedmentStatus == null) {
 			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(paymentId)
 					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(paymentId))
-					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId))
-					.build();
-		}else if (assignedmentStatus.equals("COMPLETED")) {
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId)).build();
+		} else if (assignedmentStatus.equals("COMPLETED")) {
 			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(prepaidId)
 					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(prepaidId))
 					.prepaidPaid(paymentRepository.findPaidByPaymentId(prepaidId)).paymentId(paymentId)
@@ -231,8 +264,7 @@ public class PaymentServiceImpl implements PaymentService {
 		} else {
 			transactionStatementDTO = TransactionStatementDTO.builder().prepaidId(paymentId)
 					.prepaidAmount(paymentRepository.findPayAmountByPaymentId(paymentId))
-					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId))
-					.build();
+					.prepaidPaid(paymentRepository.findPaidByPaymentId(paymentId)).build();
 		}
 
 		return transactionStatementDTO;

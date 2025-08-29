@@ -167,38 +167,38 @@ export const Reciept = () => {
                             <TermBox></TermBox>
                             <Box marginBottom={"500px"} ref={blankRef} display={"none"}></Box>
                         </> : <></>}
-                        {reciept.paid ?<>
-                                                <Box
-                            sx={{
-                                width: "90%",
-                                fontWeight: "bold",
-                                fontSize: "25px",
-                                display: "flex",
-                                justifyContent: "center",
-                                flexWrap: "wrap"
-                            }}
-                        >영 수 증
-                            <RecieptBox title={"결제정보"}>
-                                <ReceiptContents title={"거래종류"} content={method} />
-                                <ReceiptContents title={"거래일시"} content={reciept.paid} />
-                            </RecieptBox>
-                            <RecieptBox title={"구매정보"}>
-                                <ReceiptContents title={"주문번호"} content={reciept.paymentId} />
-                                <ReceiptContents title={"상 품 명"} content={"다람쥑스프레스 사후결제"} />
-                                <ReceiptContents title={"과세금액"} content={paymentFormat(Math.floor(reciept.amount / 1.1)) + "원"} />
-                                <ReceiptContents title={"비과세금액"} content={"0원"} />
-                                <ReceiptContents title={"부가세"} content={paymentFormat(reciept.amount - Math.floor(reciept.amount / 1.1)) + "원"} />
-                                <ReceiptContents title={"합계금액"} content={paymentFormat(reciept.amount) + "원"} />
-                            </RecieptBox>
-                            <RecieptBox title={"업체정보"}>
-                                <ReceiptContents title={"상호"} content={"(주)다람쥑스프레스"} />
-                                <ReceiptContents title={"사업자등록번호"} content={"012-34-56789"} />
-                                <ReceiptContents title={"주소"} content={"깊은 산 속"} />
-                            </RecieptBox>
-                        </Box>
-                        <TermBox></TermBox>
-                        </>:<></>
-                    }
+                        {reciept.paid ? <>
+                            <Box
+                                sx={{
+                                    width: "90%",
+                                    fontWeight: "bold",
+                                    fontSize: "25px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    flexWrap: "wrap"
+                                }}
+                            >영 수 증
+                                <RecieptBox title={"결제정보"}>
+                                    <ReceiptContents title={"거래종류"} content={method} />
+                                    <ReceiptContents title={"거래일시"} content={reciept.paid} />
+                                </RecieptBox>
+                                <RecieptBox title={"구매정보"}>
+                                    <ReceiptContents title={"주문번호"} content={reciept.paymentId} />
+                                    <ReceiptContents title={"상 품 명"} content={"다람쥑스프레스 사후결제"} />
+                                    <ReceiptContents title={"과세금액"} content={paymentFormat(Math.floor(reciept.amount / 1.1)) + "원"} />
+                                    <ReceiptContents title={"비과세금액"} content={"0원"} />
+                                    <ReceiptContents title={"부가세"} content={paymentFormat(reciept.amount - Math.floor(reciept.amount / 1.1)) + "원"} />
+                                    <ReceiptContents title={"합계금액"} content={paymentFormat(reciept.amount) + "원"} />
+                                </RecieptBox>
+                                <RecieptBox title={"업체정보"}>
+                                    <ReceiptContents title={"상호"} content={"(주)다람쥑스프레스"} />
+                                    <ReceiptContents title={"사업자등록번호"} content={"012-34-56789"} />
+                                    <ReceiptContents title={"주소"} content={"깊은 산 속"} />
+                                </RecieptBox>
+                            </Box>
+                            <TermBox></TermBox>
+                        </> : <></>
+                        }
                     </> : <></>}
                     <Button
                         variant="contained"

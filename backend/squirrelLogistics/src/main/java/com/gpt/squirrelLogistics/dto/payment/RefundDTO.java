@@ -18,8 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RefundDTO {
 
-    private String impUid;    // 환불할 결제 건의 imp_uid
+    private Long paymentId;    // 환불할 결제 건의 id
     private Long amount;      // 환불 금액
-    private String reason;    // 환불 사유
 
 }

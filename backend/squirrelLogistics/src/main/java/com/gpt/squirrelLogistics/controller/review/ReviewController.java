@@ -35,7 +35,7 @@ import lombok.extern.log4j.Log4j2;
 @RestController
 @Log4j2
 @RequiredArgsConstructor
-@RequestMapping("/api/public/review")
+@RequestMapping("/api/review")
 public class ReviewController {
     private final ReviewRepository reviewRepository;
     private final ReviewService reviewService;

@@ -60,7 +60,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const showReciept = () => {
-        window.open(`${window.location.origin}/company/reciept?paymentId=${todayContent?.paymentId}&token=${accesstoken}`, 'name', 'width=500, height=600');
+        window.open(`${window.location.origin}/company/reciept?paymentId=${todayContent?.paymentId}`, 'name', 'width=500, height=600');
     }
 
     const showReport = () => {
