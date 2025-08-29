@@ -23,6 +23,7 @@ public class CompanyHistoryContentDTO {
 	private int rating;
 	private String reason;
 	private String driverName;
+	private String driverImg;
 	private String carName;
 	private Long reportId;
 	private Long paymentId;

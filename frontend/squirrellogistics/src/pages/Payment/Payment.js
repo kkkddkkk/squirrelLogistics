@@ -234,7 +234,7 @@ export const Payment = () => {
                         const secondPaymentBody = {
                             paymentId: actualCalc.paymentId,
                             prepaidId: prepaidId,
-                            payAmount: totalRate,
+                            payAmount: totalRate - actualCalc.estimateFee,
                             payMethod: paymentMethod,
                             payStatus: "PROCESSING",
                             impUid: response.imp_uid

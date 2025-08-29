@@ -24,6 +24,7 @@ const ReviewList = () => {
             },
         })
             .then(res => {
+                console.log(res.data);
                 setReviewList(res.data);
                 const dateSet = [...new Set(res.data.map(report => report.regDate.toString().slice(0, 10)))];
                 setDates(dateSet);
@@ -32,7 +33,8 @@ const ReviewList = () => {
     }, [changed])
 
     const handleDelReview = (review) => {
-        axios.delete(`http://localhost:8080/api/public/review/${review.reviewId}`, {
+        console.log(review.reviewId);
+        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },

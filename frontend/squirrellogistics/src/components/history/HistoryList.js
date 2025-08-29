@@ -64,6 +64,9 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const showReport = () => {
+        if (todayContent.reportId) {
+
+        }
         window.open(
             `${window.location.origin}/company/report?id=${assignedId}&rId=${todayContent?.reportId}&token=${accesstoken}`,
             'reportWindow',
@@ -93,7 +96,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const handleSecondPayment = () => {
-        moveToActualCalc({assignedId, reported: todayContent.reportId?true:false});
+        moveToActualCalc({ assignedId, reported: todayContent.reportId ? true : false });
     }
 
     return (
@@ -116,7 +119,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                 children1={"명세서"} func1={showTransactionStatement}
                                 children2={"영수증"} func2={showReciept}
                             />
-                            <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee?paymentFormat(todayContent.actualFee):paymentFormat(todayContent.estimatedFee)} 원</Typography>
+                            <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee ? paymentFormat(todayContent.actualFee) : paymentFormat(todayContent.estimatedFee)} 원</Typography>
                         </Grid>
                         <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -129,7 +132,8 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                         marginTop: "2%"
                                     }}
                                     alt="OtterImg"
-                                    src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                                    // src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                                    src= {`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
                                 />
                                 <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}({todayContent.carName})</Typography>
                             </Box>
@@ -139,10 +143,10 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                         <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
                             {assignStatus === "배송완료" ?
                                 <TwoBtns
-                                    children1={todayContent.reportId != 0 ? "신고 내역" : "신고"} func1={showReport}
+                                    children1={todayContent.reportId != 0 ? "신고 완료" : "신고"} func1={showReport} disabled1={todayContent.reportId != 0}
                                     children2={todayContent.reviewId != 0 ? "리뷰 수정" : "리뷰 작성"} func2={openModal}
                                 /> : (assignStatus === "배송중" || assignStatus === "예약" ?
-                                    <OneBtnAtRight func={()=>moveToDetailHistory(assignedId)}>
+                                    <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
                                         세부내역 확인
                                     </OneBtnAtRight> : (assignStatus === "미정산" ?
                                         <OneBtnAtRight func={handleSecondPayment}>

@@ -32,12 +32,13 @@ const HistoryCalendar = () => {
         setMarkedDates(historyDate.map(d => new Date(d)));
     }, [historyDate])
 
-    const PsButton = ({ children, func }) => {
+    const PsButton = ({ children, func, disabled }) => {
         return (
             <Button
                 variant="contained"
                 sx={{ width: "40%", minWidth: "110px" }}
                 onClick={func}
+                disabled={disabled}
             >
                 {children}
             </Button>
@@ -172,7 +173,7 @@ const HistoryCalendar = () => {
                 )}
             />
             <Box sx={{ width: "100%", display: "flex", justifyContent: "space-around", marginTop: "5%" }} >
-                <PsButton func={handleClickReportList}>내 신고목록</PsButton>
+                <PsButton func={handleClickReportList} disabled={true}>내 신고목록</PsButton>
                 <PsButton func={moveToReviewList}>내 리뷰목록</PsButton>
             </Box>
         </div>

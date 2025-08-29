@@ -165,10 +165,17 @@ public class DeliveryAssignmentService {
 			}
 		}
 
-		// 운전자 정보(운전자 이름, 차 이름)
+		// 운전자 정보(운전자 이름, 차 이름, 사진)
 		List<Object[]> driver = deliveryAssignmentRepository.findDriverById(assignedId);
-		Object[] driverList = driver != null && !driver.isEmpty() ? driver.get(0) : new Object[] { "", "" };
+		Object[] driverList = driver != null && !driver.isEmpty() ? driver.get(0) : new Object[] { "", "", "" };
 
+    	String path ="";
+    	String fileName = "default_profile.png";
+		if((String) driverList[2]!="" && (String) driverList[2] !=null) {
+	    	path = (String) driverList[2];
+	    	fileName = path.substring(path.lastIndexOf("/") + 1);
+		}
+    	
 		// 리뷰 정보(리뷰 아이디, 별점, 사유)
 		List<Object[]> reviewList = deliveryAssignmentRepository.findReviewById(assignedId);
 		Object[] reviewListArr = reviewList != null && !reviewList.isEmpty() ? reviewList.get(0)
@@ -186,7 +193,8 @@ public class DeliveryAssignmentService {
 					.estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
 					.reviewId(((Number) reviewListArr[0]).longValue()).rating(((Number) reviewListArr[1]).intValue())
 					.reason((String) reviewListArr[2]).driverName((String) driverList[0])
-					.carName((String) driverList[1]).reportId(((Number) reportListArr[0]).longValue())
+					.carName((String) driverList[1]).driverImg(fileName)
+					.reportId(((Number) reportListArr[0]).longValue())
 					.paymentId(deliveryAssignmentRepository.findSecondPaymentIdById(assignedId))
 					.prepaidId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId)).build();
 		} else {
@@ -194,7 +202,7 @@ public class DeliveryAssignmentService {
 					.dropOrder2(dropOrders.size() > 1 ? dropOrders.get(1) : "")
 					.dropOrder3(dropOrders.size() > 2 ? dropOrders.get(2) : "").mountainous(mountainous)
 					.caution(caution).estimatedFee(deliveryAssignmentRepository.findEstimatedFeeById(assignedId))
-					.driverName((String) driverList[0]).carName((String) driverList[1])
+					.driverName((String) driverList[0]).carName((String) driverList[1]).driverImg(fileName)
 					.reportId(((Number) reportListArr[0]).longValue())
 					.paymentId(deliveryAssignmentRepository.findFirstPaymentIdById(assignedId)).build();
 		}

@@ -234,9 +234,9 @@ export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없
                     }}
                 />
                 <Typography width={"100%"} textAlign={"center"}
-                 fontSize={"25px"} fontWeight={"bold"}
-                 marginBottom={"10%"}
-                 >{children}</Typography>
+                    fontSize={"25px"} fontWeight={"bold"}
+                    marginBottom={"10%"}
+                >{children}</Typography>
                 <OneBigBtn func={() => moveBack()}>뒤로가기</OneBigBtn>
 
             </Box>
@@ -249,19 +249,21 @@ export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없
 
 
 //#region [버튼]
-export const TwoBtns = ({ children1, children2, func1, func2 }) => {
+export const TwoBtns = ({ children1, children2, func1, func2, disabled1, disabled2 }) => {
     return (
         <Box>
             <Button
                 variant="contained"
                 sx={{ marginRight: "7px" }}
                 onClick={func1}
+                disabled={disabled1}
             >
                 {children1}
             </Button>
             <Button
                 variant="contained"
                 onClick={func2}
+                disabled={disabled2}
             >
                 {children2}
             </Button>

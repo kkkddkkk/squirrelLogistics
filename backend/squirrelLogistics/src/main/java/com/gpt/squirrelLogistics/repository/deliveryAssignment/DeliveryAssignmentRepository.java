@@ -104,7 +104,7 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	ActualDelivery findAllActualDeliveyById(@Param("assignedId") String assignedId);
 
 	// ID로 user(기사이름), vehicleType(차량이름)
-	@Query("SELECT us.name, vt.name FROM DeliveryAssignment d " + "JOIN d.deliveryRequest dr "
+	@Query("SELECT us.name, vt.name, dri.profileImageUrl FROM DeliveryAssignment d " + "JOIN d.deliveryRequest dr "
 			+ "JOIN dr.vehicleType vt " + "JOIN d.driver dri " + "JOIN dri.user us "
 			+ "WHERE d.assignedId = :assignedId")
 	List<Object[]> findDriverById(@Param("assignedId") Long assignedId);

@@ -1,4 +1,4 @@
-package com.gpt.squirrelLogistics.controller.reportImage;
+package com.gpt.squirrelLogistics.controller.report;
 
 import java.io.File;
 import java.io.IOException;
