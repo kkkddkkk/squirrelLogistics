@@ -269,19 +269,21 @@ const EstimateForm_new = () => {
       return;
     }
 
-    const km = Number(distance) || 0;
-    const baseByDistance = 100000 + Math.floor(km) * 3000;
-    setDistanceOnlyPrice(baseByDistance);
+    console.log(distance);
+    const kmUnits = Math.ceil((Number(distance) || 0));
 
-    let sum = baseByDistance + (Number(weight) || 0) * 30000;
+    const distanceFee = kmUnits * 3000;
+    const weightFee = weight * 30000;
 
+    let sum = 100000 + distanceFee + weightFee;
     if (hasCareful) sum += 50000;
     if (hasMountain) sum += 50000;
+    const waypointFee = waypoints.filter(w => w.address?.trim()).length * 50000;
+    sum += waypointFee;
 
-    sum += nonEmptyWaypoints.length * 50000;
+    setDistanceOnlyPrice(distanceFee);  // ← 추가!
     setPrice(Math.floor(sum));
   }, [hasCalculated, distance, weight, nonEmptyWaypoints.length, hasCareful, hasMountain]);
-
   // 경유지 추가/삭제
   const addWaypoint = () => {
     if (waypoints.length >= 3) {
@@ -485,6 +487,7 @@ const EstimateForm_new = () => {
   // 날짜
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
     <div className="estimate-container">
@@ -576,18 +579,15 @@ const EstimateForm_new = () => {
 
           <p>상세 요금 내역</p>
           <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
-            {distance > 0 && (
-              <li>거리 요금: {Number(distanceOnlyPrice || 0).toLocaleString()}원</li>
-            )}
-            {weight > 0 && (
-              <li>무게 요금 (톤당 30,000): {(Number(weight) * 30000).toLocaleString()}원</li>
-            )}
-            {hasCareful && <li>취급주의 추가요금: +{(50000).toLocaleString()}원</li>}
-            {hasMountain && <li>산간지역 추가요금: +{(50000).toLocaleString()}원</li>}
-            {nonEmptyWaypoints.length > 0 && (
+            <li>기본 요금: 100,000원</li>
+            <li>거리 요금: {distanceOnlyPrice.toLocaleString()}원</li>
+            <li>무게 요금 (톤당 30,000): {(weight * 30000).toLocaleString()}원</li>
+            {hasCareful && <li>취급주의 추가요금: +50,000원</li>}
+            {hasMountain && <li>산간지역 추가요금: +50,000원</li>}
+            {middleWaypointCount > 0 && (
               <li>
-                경유지 추가요금 ({nonEmptyWaypoints.length}개 × 50,000):{" "}
-                {(nonEmptyWaypoints.length * 50000).toLocaleString()}원
+                경유지 추가요금 ({middleWaypointCount}개 × 50,000):{" "}
+                {(middleWaypointCount * 50000).toLocaleString()}원
               </li>
             )}
           </ul>

@@ -582,82 +582,70 @@ public class DeliveryAssignmentService {
 
 		switch (action) {
 		case START_TO_PICKUP -> {
-			// last == null 만 허용
-			if (last != null)
-				throw new IllegalStateException("이미 시작됨");
+			require(last == null, "이미 시작됨");
 			insertLog(assignment, DeliveryStatusEnum.MOVING_TO_PICKUP, 0, now);
 
 			dummyTracker.startToPickup(assignment.getDriver().getDriverId().toString(), assignedId,
 					points.get(0).getAddress());
 		}
 		case PICKUP_COMPLETED -> {
-			// MOVING_TO_PICKUP 상태에서만
 			require(status == DeliveryStatusEnum.MOVING_TO_PICKUP, "집하 이동 중이 아님");
 			insertLog(assignment, DeliveryStatusEnum.PICKUP_COMPLETED, 0, now);
 			insertLog(assignment, DeliveryStatusEnum.MOVING_TO_WAYPOINT, 0, now.plusNanos(1));
 
-			// Dummy 이동: 0 -> 1 (있다면)
 			if (points.size() > 1) {
 				dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
-						points.get(0).getAddress(), points.get(1).getAddress(), true // auto 주행
+						points.get(0).getAddress(), // from (픽업)
+						points.get(1).getAddress(), // to (첫 경유지)
+						true // AUTO
 				);
 			}
 		}
 		case ARRIVED_AT_WAYPOINT -> {
-			// MOVING_TO_WAYPOINT 에서만.
 			require(status == DeliveryStatusEnum.MOVING_TO_WAYPOINT, "경유지 이동 중이 아님");
 			int arriveIdx = lastVisited + 1;
 			require(arriveIdx >= 1 && arriveIdx < points.size(), "도착 인덱스 범위 오류");
 			insertLog(assignment, DeliveryStatusEnum.ARRIVED_AT_WAYPOINT, arriveIdx, now);
+
 			dummyTracker.arriveNow(assignment.getDriver().getDriverId().toString());
 		}
 		case DROPPED_AT_WAYPOINT -> {
-			// ARRIVED_AT_WAYPOINT 에서만.
 			require(status == DeliveryStatusEnum.ARRIVED_AT_WAYPOINT, "경유지 도착 상태가 아님");
-			int k = lastVisited; // 도착해 둔 인덱스
+			int k = lastVisited;
 			require(k >= 1 && k < points.size(), "하차 인덱스 범위 오류");
 			insertLog(assignment, DeliveryStatusEnum.DROPPED_AT_WAYPOINT, k, now);
-			// 다음 이동 상태로 전환: 다음 목표는 k+1 (존재할 때)
+
 			if (k + 1 < points.size()) {
 				insertLog(assignment, DeliveryStatusEnum.MOVING_TO_WAYPOINT, k, now.plusNanos(1));
-				// lastVisited는 "마지막 방문 완료 지점"을 의미하므로 그대로 k 유지가 자연스럽습니다.
-
-				// 다음 구간은 k -> k+1 이어야 함 (from != to) ✅
 				dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
-						points.get(k).getAddress(), // from
-						points.get(k + 1).getAddress(), // to ✅
+						points.get(k).getAddress(), // from (방금 드랍한 곳)
+						points.get(k + 1).getAddress(), // to (다음 경유/도착)
 						true);
-			} else {
-				// 더 이상 경유지 없다면 COMPLETE로 넘어가게 하거나, 대기 상태 처리
-				// (비즈니스 규칙에 맞게)
 			}
 		}
+
 		case COMPLETE -> {
-			// 마지막 구간은 points.size()-1 이 도착지(DEST).
 			int lastIdx = points.size() - 1;
 			require((status == DeliveryStatusEnum.ARRIVED_AT_WAYPOINT
 					|| status == DeliveryStatusEnum.DROPPED_AT_WAYPOINT) && lastVisited == lastIdx, "완료 가능한 상태/위치가 아님");
 			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
+
 			completeAssignment(assignment, now, mountainous, caution);
-			dummyTracker.setMode(assignment.getDriver().getDriverId().toString(), DummyDriver.Mode.MANUAL);
+
+			// 운송 종료: 더미 상태/캐시 정리 (이후 로그 저장 방지)
+			dummyTracker.finishAssignment(assignment.getDriver().getDriverId().toString());
 		}
 		case PAUSE -> {
 			insertLog(assignment, DeliveryStatusEnum.ON_HOLD, Math.max(lastVisited, 0), now);
-			dummyTracker.setMode(assignment.getDriver().getDriverId().toString(), DummyDriver.Mode.MANUAL);
-
+			dummyTracker.pause(assignment.getDriver().getDriverId().toString());
 		}
 		// 다음 경유지 건너뛰기
 		case SKIPPED_WAYPOINT -> {
 			require(status == DeliveryStatusEnum.MOVING_TO_WAYPOINT, "경유지 이동 중이 아님");
-
-			// 건너뛸 인덱스: 마지막 방문/완료 인덱스 + 1
 			int skipIdx = lastVisited + 1;
-			// DEST를 스킵하면 운송 애매해지므로 막음.
 			require(skipIdx >= 1 && (skipIdx + 1) < points.size(), "마지막 경유지는 건너뛸 수 없음");
 
 			insertLog(assignment, DeliveryStatusEnum.MOVING_TO_WAYPOINT, skipIdx, now.plusNanos(1));
-
-			// 더미 드라이버도 즉시 전환.
 			dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
 					points.get(skipIdx).getAddress(), points.get(skipIdx + 1).getAddress(), true);
 		}
@@ -679,118 +667,113 @@ public class DeliveryAssignmentService {
 			throw new IllegalStateException(msg);
 	}
 
-	public record HandlingFlags(boolean isCautious, boolean isMountainous) {
+	public record HandlingFlags(boolean cautious, boolean mountainous) {
 	}
 
-	private HandlingFlags getHandlingFlags(Long assignId) {
-		List<DeliveryWaypoint> wps = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(assignId);
-		if (wps == null || wps.isEmpty()) {
+	private HandlingFlags getHandlingFlagsByRequestId(Long requestId) {
+		var wps = deliveryWaypointRepository.findAllByRequestIdOrderByDropOrderAsc(requestId);
+		if (wps == null || wps.isEmpty())
 			return new HandlingFlags(false, false);
+
+		boolean c = false, m = false;
+		for (var wp : wps) {
+			var cargo = cargoRepository.findByDeliveryWaypoint_WaypointId(wp.getWaypointId()).orElse(null);
+			if (cargo == null || cargo.getCargoType() == null)
+				continue;
+			Long hid = cargo.getCargoType().getHandlingId();
+			if (hid == null)
+				continue;
+			if (hid == 3L)
+				return new HandlingFlags(true, true); // 둘 다 true.
+			if (hid == 1L)
+				c = true;
+			if (hid == 2L)
+				m = true;
 		}
-
-		boolean isCautious = false;
-		boolean isMountainous = false;
-
-		for (DeliveryWaypoint wp : wps) {
-			DeliveryCargo cargo = cargoRepository.findByDeliveryWaypoint_WaypointId(wp.getWaypointId()).orElse(null);
-
-			if (cargo != null) {
-				Long handlingId = cargo.getCargoType().getHandlingId();
-				if (handlingId != null) {
-					if (handlingId == 1L) {
-						isCautious = true;
-					} else if (handlingId == 2L) {
-						isMountainous = true;
-					} else if (handlingId == 3L) {
-						// 바로 둘 다 true 세팅하고 더 이상 검사할 필요 없음
-						return new HandlingFlags(true, true);
-					}
-				}
-			}
-		}
-
-		return new HandlingFlags(isCautious, isMountainous);
+		return new HandlingFlags(c, m);
 	}
 
 	// 운송 완료 처리
 	@Transactional
 	private void completeAssignment(DeliveryAssignment a, LocalDateTime now, boolean mountainous, boolean caution) {
-		if (a == null) {
+		if (a == null)
 			return;
-		}
-
-		// 이미 완료면 무시
 		if (a.getStatus() == com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED)
 			return;
-
-		// 허용 상태 검사
 		if (a.getStatus() != com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
 				&& a.getStatus() != com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED) {
-			// 필요하면 예외
 			throw new IllegalStateException("Not completable state: " + a.getStatus());
 		}
 
-		// 1) 실주행 경로 요약 만들기 (+ 원본 로그 삭제)
+		// 실제 경로 요약
 		var summary = trackingLogService.extractActualRoute(a.getAssignedId(), true);
+
 		Long weight = (long) a.getDeliveryRequest().getTotalCargoWeight();
 		Long distance = summary.getDistance();
-		HandlingFlags flags = getHandlingFlags(a.getAssignedId());
-		boolean isCautious = flags.isCautious();
-		boolean isMountainous = flags.isMountainous();
 
-		Long actualFee = calcPostFee(a.getAssignedId(), weight, distance, isCautious, isMountainous);
+		// 핸들링 플래그 계산
+		Long requestId = a.getDeliveryRequest().getRequestId();
+		var flags = getHandlingFlagsByRequestId(requestId);
+		boolean isCautious = flags.cautious();
+		boolean isMountainous = flags.mountainous();
 
-		// 2) ActualDelivery 생성/저장 → 즉시 할당
-		ActualDelivery ad = ActualDelivery.builder().distance(summary.getDistance())
-				.actualPolyline(summary.getEncodedPolyline()).weight(weight).actualFee(actualFee)
-				.mountainous(isMountainous).caution(isCautious).build();
+		Long postFee = calcPostFee(requestId, distance, weight, isCautious, isMountainous);
+
+		// ActualDelivery 저장
+		var ad = ActualDelivery.builder().distance(distance).actualPolyline(summary.getEncodedPolyline()).weight(weight)
+				.actualFee(postFee).mountainous(isMountainous).caution(isCautious).build();
 		ad = actualDeliveryRepository.save(ad);
 		a.setActualDelivery(ad);
 
-		DeliveryRequest reqRef = a.getDeliveryRequest();
+		// Payment 생성 (사후결제용 빈 프레임)
+		Long prepaidId = (a.getDeliveryRequest() != null && a.getDeliveryRequest().getPayment() != null)
+				? a.getDeliveryRequest().getPayment().getPaymentId()
+				: null;
 
-		Long prepaidId = null;
-		if (reqRef != null && reqRef.getPayment() != null) {
-			prepaidId = reqRef.getPayment().getPaymentId();
-		}
-
-		// 3) Payment 생성/저장 → 즉시 할당
-		Payment p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false).prepaidId(prepaidId)
-				// .payAmount(a.getDeliveryRequest().getEstimatedFee()) // 금액 연결하려면 이렇게
+		var p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false).prepaidId(prepaidId)
+				// .payAmount(postFee)
 				.build();
 		p = paymentRepository.save(p);
 		a.setPayment(p);
 
-		// 4) 상태/완료시각 업데이트
+		// 완료 처리
 		a.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED);
 		a.setCompletedAt(now);
 	}
 
-	private Long calcPostFee(Long assignId, Long distance, Long weight, boolean isC, boolean isM) {
-		List<DeliveryWaypoint> wps = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(assignId);
-		if (wps == null || wps.isEmpty()) {
+	private Long calcPostFee(Long requestId, Long distance, Long weight, boolean isC, boolean isM) {
+		var wps = deliveryWaypointRepository.findAllByRequestIdOrderByDropOrderAsc(requestId);
+		if (wps == null || wps.isEmpty())
 			return 0L;
+
+		long total = 100_000L; // 기본금
+
+		// 1km당 3,000원 (distance: meters)
+		if (distance != null && distance > 0) {
+			long kmUnits = (long) Math.ceil(distance / 1000.0);
+			total += kmUnits * 3_000L;
 		}
 
-		long total = 0L;
-
-		// 상차지, 최종 하차지 제외 중간 경유지 요금
-		if (wps.size() > 2) {
-			total += 50_000L * (wps.size() - 2);
+		// 1톤당 30,000원 (weight: kg)
+		if (weight != null && weight > 0) {
+			long tonUnits = (long) Math.ceil(weight / 1000.0);
+			total += tonUnits * 30_000L;
 		}
 
-		// 핸들링 플래그 조회
-		HandlingFlags flags = getHandlingFlags(assignId);
+		// 중간 경유지(상차/최종하차 제외)당 50,000원
+		int midStops = Math.max(wps.size() - 2, 0);
+		if (midStops > 0) {
+			total += 50_000L * midStops;
+		}
 
-		if (isC) {
+		// 취급주의/산간 각 50,000원
+		if (isC)
 			total += 50_000L;
-		}
-		if (isM) {
+		if (isM)
 			total += 50_000L;
-		}
 
-		log.info("[calcPostFee] assignId={}, totalFee={}", assignId, total);
-
+		log.info("[calcPostFee] requestId={}, distance(m)={}, weight(kg)={}, C={}, M={}, midStops={}, total={}",
+				requestId, distance, weight, isC, isM, midStops, total);
 		return total;
 	}
 
@@ -822,8 +805,8 @@ public class DeliveryAssignmentService {
 		return deliveryAssignmentRepository.findMonthlyScheduleForDriver(driverId, monthStart, monthEnd);
 	}
 
-	//작성자: 고은설.
-	//기능: 운송 할당 번호에 대한 조회.
+	// 작성자: 고은설.
+	// 기능: 운송 할당 번호에 대한 조회.
 	@Transactional(readOnly = true)
 	public DriverDeliveryHistoryDTO getHistory(Long assignId) {
 		DriverDeliveryHistoryDTO dto = deliveryAssignmentRepository.findHistoryBase(assignId)

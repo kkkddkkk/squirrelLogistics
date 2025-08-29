@@ -226,33 +226,6 @@ const ListComponent = () => {
 
                     {/* 리스트 영역 */}
                     <Grid item sx={{ flex: 1, minWidth: 300 }}>
-                        <Grid container width="100%" spacing={2} justifyContent="space-between">
-                            <Grid item width="100%">
-                                {dtoList.map((item, idx) => (
-                                    <DeliveryCard key={item.requestId} item={item} />
-                                ))}
-
-
-                                <Box display="flex" justifyContent="center" mt={4}>
-                                    <Pagination
-                                        page={current}
-                                        count={totalPage}
-                                        onChange={(_, value) => {
-                                            if (value !== pageReq.page) {
-                                                setPageReq(prev => ({ ...prev, page: value }));
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }
-                                        }}
-                                        shape="rounded"
-                                        showFirstButton
-                                        showLastButton
-                                        siblingCount={1}
-                                        boundaryCount={1}
-                                    />
-                                </Box>
-                            </Grid>
-                        </Grid>
-
                         {/* 운전자 지명 제안 도착 */}
                         {openToast ?
                             <Paper
@@ -286,6 +259,35 @@ const ListComponent = () => {
                                 </Typography>
                             </Paper>
                             : <></>}
+
+                        <Grid container width="100%" spacing={2} justifyContent="space-between">
+                            <Grid item width="100%">
+                                {dtoList.map((item, idx) => (
+                                    <DeliveryCard key={item.requestId} item={item} />
+                                ))}
+
+
+                                <Box display="flex" justifyContent="center" mt={4}>
+                                    <Pagination
+                                        page={current}
+                                        count={totalPage}
+                                        onChange={(_, value) => {
+                                            if (value !== pageReq.page) {
+                                                setPageReq(prev => ({ ...prev, page: value }));
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }
+                                        }}
+                                        shape="rounded"
+                                        showFirstButton
+                                        showLastButton
+                                        siblingCount={1}
+                                        boundaryCount={1}
+                                    />
+                                </Box>
+                            </Grid>
+                        </Grid>
+
+
 
 
                     </Grid>
