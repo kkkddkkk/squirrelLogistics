@@ -11,7 +11,9 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Paper,
 } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useNavigate, useParams } from "react-router-dom";
 import DeliveryRouteMap from "../../components/driver/DeliveryRouteMap";
@@ -77,6 +79,10 @@ const DeliveredDetail = () => {
   const formatPrice = (price) => `₩${price?.toLocaleString() || 0}`;
   const formatDate = (dateString) => {
     return dayjs(dateString).format("YYYY.MM.DD");
+  };
+
+  const formatTime = (dateString) => {
+    return dayjs(dateString).format("HH:mm");
   };
 
   // 요금 계산 함수
@@ -198,7 +204,7 @@ const DeliveredDetail = () => {
       deliveryData.request?.startAddress ||
       deliveryData.additionalInfo?.startAddress ||
       "상차지 정보 없음";
-    const startTime = formatDate(
+    const startTime = formatTime(
       deliveryData.assignment?.assignedAt ||
         deliveryData.additionalInfo?.assignedAt
     );
@@ -206,6 +212,7 @@ const DeliveredDetail = () => {
     info.push({
       location: startAddress,
       time: startTime,
+      status: "completed", // 상차 완료
     });
 
     // 2. 경유지들 (중간점들) - dropOrder 순서대로
@@ -213,7 +220,9 @@ const DeliveredDetail = () => {
       waypoints.forEach((waypoint, index) => {
         info.push({
           location: waypoint || `경유지 ${index + 1}`,
-          time: "경유지",
+          time: "시간 미정",
+          status: "waypoint", // 경유지
+          waypointNumber: index + 1,
         });
       });
     }
@@ -223,7 +232,7 @@ const DeliveredDetail = () => {
       deliveryData.request?.endAddress ||
       deliveryData.additionalInfo?.endAddress ||
       "하차지 정보 없음";
-    const endTime = formatDate(
+    const endTime = formatTime(
       deliveryData.assignment?.completedAt ||
         deliveryData.additionalInfo?.completedAt
     );
@@ -231,6 +240,7 @@ const DeliveredDetail = () => {
     info.push({
       location: endAddress,
       time: endTime,
+      status: "completed", // 하차 완료
     });
 
     console.log("=== 구성된 routeInfo ===");
@@ -245,109 +255,360 @@ const DeliveredDetail = () => {
 
   const routeInfo = buildRouteInfo();
 
+  // 타임라인 아이템 렌더링 함수
+  const renderTimelineItem = (item, index) => {
+    const isCompleted = item.status === "completed";
+    const isWaypoint = item.status === "waypoint";
+
+    let label = "";
+    if (index === 0) {
+      label = "상차 완료";
+    } else if (index === routeInfo.length - 1) {
+      label = "하차 완료";
+    } else {
+      label = `경유지 ${item.waypointNumber}`;
+    }
+
+    return (
+      <Box
+        key={index}
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          mb: 1.8,
+          position: "relative",
+        }}
+      >
+        {/* 왼쪽: 마커와 연결선 영역 */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mr: 2,
+            position: "relative",
+            width: 40,
+          }}
+        >
+          {/* 마커 */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              ...(isCompleted
+                ? {
+                    bgcolor: "#4CAF50",
+                    color: "white",
+                  }
+                : {
+                    bgcolor: "#757575",
+                    color: "white",
+                  }),
+              zIndex: 2,
+              position: "relative",
+            }}
+          >
+            {isCompleted ? (
+              <CheckIcon sx={{ fontSize: 20, color: "white" }} />
+            ) : (
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: "bold",
+                  color: "white",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {item.waypointNumber}
+              </Typography>
+            )}
+          </Box>
+
+          {/* 연결선 (마지막 아이템이 아닌 경우) */}
+          {index < routeInfo.length - 1 && (
+            <Box
+              sx={{
+                width: 2,
+                height: 45,
+                bgcolor: "#D3D3D3",
+                position: "absolute",
+                top: 40,
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 1,
+              }}
+            />
+          )}
+        </Box>
+
+        {/* 내용과 시간 영역 */}
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mt: 0.2,
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            {/* 상단: 제목과 시간을 한 줄에 */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 0.8,
+              }}
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#2A2A2A",
+                  fontSize: "1rem",
+                }}
+              >
+                {label}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#2A2A2A",
+                  fontSize: "1rem",
+                }}
+              >
+                {item.time}
+              </Typography>
+            </Box>
+
+            {/* 하단: 주소 박스 */}
+            <Box
+              sx={{
+                bgcolor: "white",
+                borderRadius: 1,
+                px: 1.5,
+                py: 1,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: "1px solid #E8E8E8",
+                width: "fit-content",
+                minWidth: "180px",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#333",
+                  lineHeight: 1.3,
+                  fontSize: "0.875rem",
+                }}
+              >
+                {item.location}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ bgcolor: "#F5F7FA", py: 6 }}>
       <Container maxWidth="lg">
-        <Typography variant="h4" fontWeight="bold" gutterBottom color="#2A2A2A">
-          운송 상세
-        </Typography>
+        {/* 운송 번호 헤더 */}
+        <Box sx={{ borderBottom: "2px solid #ccc", pb: 2, mb: 4 }}>
+          <Typography variant="h4" fontWeight="bold" color="#2A2A2A">
+            운송 번호 # {assignedId}
+          </Typography>
+        </Box>
 
-        <Typography variant="h4" fontWeight="bold" gutterBottom color="#2A2A2A">
-          # {assignedId}
-        </Typography>
-
-        {/* 운송 일정 */}
-        <Box my={4}>
-          <Box sx={{ borderBottom: "2px solid #ccc", pb: 1, mb: 2 }}>
-            <Typography variant="h6" fontWeight="bold">
-              운송 내역
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 3 }}>
-            {/* 왼쪽: 일정 */}
-            <Box
-              sx={{
-                width: "50%",
-                backgroundColor: "#F5F7FA",
-                borderRadius: 2,
-                px: 2,
-                py: 1,
-              }}
-            >
-              {[
-                { label: "운송 ID", value: deliveryData.assignedId },
-                {
-                  label: "운송 시작일",
-                  value: formatDate(deliveryData.assignedAt),
-                },
-                {
-                  label: "운송 완료일",
-                  value: formatDate(deliveryData.completedAt),
-                },
-                {
-                  label: "상차지",
-                  value: `${routeInfo[0].location} (${routeInfo[0].time})`,
-                },
-                ...(routeInfo.length > 2
-                  ? routeInfo.slice(1, -1).map((waypoint, index) => ({
-                      label: `경유지 ${index + 1}`,
-                      value: `${waypoint.location} (${waypoint.time})`,
-                    }))
-                  : []),
-                {
-                  label: "하차지",
-                  value: `${routeInfo[routeInfo.length - 1].location} (${
-                    routeInfo[routeInfo.length - 1].time
-                  })`,
-                },
-                {
-                  label: "",
-                  value: (
-                    <Typography
-                      sx={{
-                        fontSize: "0.95rem",
-                        color: "#d45d55ff",
-                        textAlign: "right",
-                        width: "100%",
-                        pr: 0.1,
-                        mt: 1.0,
-                        fontWeight: "medium",
-                      }}
-                    >
-                      지도를 확대하거나 축소해서 경로를 확인해보세요.
-                    </Typography>
-                  ),
-                },
-              ].map((item, idx, arr) => (
+        {/* 메인 콘텐츠 영역 */}
+        <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
+          {/* 왼쪽: 운송 단계 타임라인 */}
+          <Box sx={{ width: "45%" }}>
+            {/* 타임라인 */}
+            <Box>
+              {routeInfo.map((item, index) => (
                 <Box
-                  key={idx}
+                  key={index}
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "1rem",
-                    lineHeight: 1.5,
-                    px: 2,
-                    py: 2,
-                    borderBottom:
-                      idx !== arr.length - 1 ? "1px solid #ccc" : "none",
+                    alignItems: "flex-start",
+                    mb: 2.5,
+                    position: "relative",
                   }}
                 >
-                  <Typography sx={{ fontWeight: 500 }}>{item.label}</Typography>
-                  <Typography>{item.value}</Typography>
+                  {/* 왼쪽: 마커와 연결선 영역 */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      mr: 2.5,
+                      position: "relative",
+                      width: 40,
+                    }}
+                  >
+                    {/* 마커 */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        bgcolor:
+                          item.status === "completed" ? "#4CAF50" : "#6B7280",
+                        color: "white",
+                        zIndex: 2,
+                        position: "relative",
+                      }}
+                    >
+                      {item.status === "completed" ? (
+                        <CheckIcon sx={{ fontSize: 20, color: "white" }} />
+                      ) : (
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: "bold",
+                            color: "white",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {item.waypointNumber}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {/* 연결선 */}
+                    {index < routeInfo.length - 1 ? (
+                      <Box
+                        sx={{
+                          width: 3,
+                          height: 60,
+                          bgcolor: "#E5E7EB",
+                          position: "absolute",
+                          top: 40,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          zIndex: 1,
+                        }}
+                      />
+                    ) : (
+                      // 마지막 아이템에도 긴 선 추가
+                      <Box
+                        sx={{
+                          width: 3,
+                          height: 40,
+                          bgcolor: "#E5E7EB",
+                          position: "absolute",
+                          top: 40,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
+                  </Box>
+
+                  {/* 내용과 시간 영역 */}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      mt: 0.5,
+                    }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      {/* 상단: 제목과 시간을 한 줄에 */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: "bold",
+                            color: "#2A2A2A",
+                            fontSize: "1.1rem",
+                          }}
+                        >
+                          {index === 0
+                            ? "상차 완료"
+                            : index === routeInfo.length - 1
+                            ? "하차 완료"
+                            : `경유지 ${item.waypointNumber}`}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontWeight: "normal",
+                            color:
+                              item.status === "completed"
+                                ? "#4CAF50"
+                                : "#6B7280",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {item.time}
+                        </Typography>
+                      </Box>
+
+                      {/* 하단: 주소 박스 */}
+                      <Box
+                        sx={{
+                          bgcolor: "white",
+                          borderRadius: 1,
+                          px: 2,
+                          py: 1.5,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          border: "1px solid #E8E8E8",
+                          width: "100%",
+                          maxWidth: "420px",
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: "#333",
+                            lineHeight: 1.4,
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {item.location}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
                 </Box>
               ))}
             </Box>
+          </Box>
 
-            {/* 오른쪽: 지도 */}
+          {/* 오른쪽: 지도 영역 */}
+          <Box sx={{ width: "55%" }}>
+            {/* 지도 */}
             <Box
               sx={{
-                width: "50%",
                 height: 500,
                 border: "1px solid #ccc",
                 borderRadius: 2,
                 overflow: "hidden",
+                backgroundColor: "white",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                mb: 2,
               }}
             >
               {window.kakao && window.kakao.maps ? (
@@ -368,6 +629,19 @@ const DeliveredDetail = () => {
                 </Box>
               )}
             </Box>
+
+            {/* 지도 하단 안내 텍스트 */}
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#666",
+                fontSize: "0.875rem",
+                textAlign: "center",
+                fontStyle: "italic",
+              }}
+            >
+              지도를 확대하거나 축소해서 경로를 확인해보세요.
+            </Typography>
           </Box>
         </Box>
 
