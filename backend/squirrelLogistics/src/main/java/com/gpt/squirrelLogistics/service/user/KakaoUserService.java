@@ -26,7 +26,13 @@ public class KakaoUserService {
 	@Transactional
 	public User findOrCreateFromKakao(KakaoUserProfile profile, UserRoleEnum desiredRole) {
 		String kakaoId = "kakao_" + profile.getId();
-		return userRepository.findByLoginId(kakaoId).orElseGet(() -> {
+
+		return userRepository.findByLoginId(kakaoId).map(existing -> {
+			// ✅ 기존 유저가 ETC면 절대 승격하지 않음
+			// 컨트롤러가 최종 차단하도록 그대로 반환(또는 여기서 예외 throw도 가능)
+			return existing;
+		}).orElseGet(() -> {
+			// 신규 생성
 			User u = new User();
 			u.setLoginId(kakaoId);
 			u.setName(Optional.ofNullable(profile.getKakaoAccount()).map(KakaoUserProfile.KakaoAccount::getProfile)
@@ -34,22 +40,22 @@ public class KakaoUserService {
 			u.setEmail(Optional.ofNullable(profile.getKakaoAccount()).map(KakaoUserProfile.KakaoAccount::getEmail)
 					.orElse(null));
 			u.setPassword("{noop}");
+			// desiredRole 이 null/ETC라면 컨트롤러에서 이미 403으로 막고 오게 설계하는 게 안전
 			u.setRole(desiredRole != null ? desiredRole : UserRoleEnum.ETC);
 			u.setRegDate(LocalDateTime.now());
 			u.setSns_login(true);
+
 			if (desiredRole == UserRoleEnum.COMPANY) {
 				Company c = new Company();
 				c.setUser(u);
 				u.setCompany(c);
-
-				userRepository.save(u);
-			} else if(desiredRole == UserRoleEnum.DRIVER) {
+			} else if (desiredRole == UserRoleEnum.DRIVER) {
 				Driver d = new Driver();
-			    d.setUser(u);
-			    u.setDriver(d);
+				d.setUser(u);
+				u.setDriver(d);
 			}
+
 			return userRepository.save(u);
-			
 		});
 	}
 

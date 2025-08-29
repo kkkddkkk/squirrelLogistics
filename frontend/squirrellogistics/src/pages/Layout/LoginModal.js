@@ -141,7 +141,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         {/* 로고/인사 */}
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <img
-            src="/images/logo.png"
+            src="/images/squirrelLogisticsLogo.png"
             alt="logo"
             style={{ width: 80, marginBottom: 8 }}
           />
@@ -284,7 +284,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                   onClose();
                 } catch (e) {
                   console.error(e);
-                  alert("구글 로그인 처리 중 문제가 발생했습니다.");
+                  alert("탈퇴된 계정입니다.");
                 }
               }}
               onError={() => alert("구글 로그인에 실패했습니다.")}

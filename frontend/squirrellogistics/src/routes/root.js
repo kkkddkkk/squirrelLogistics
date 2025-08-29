@@ -16,6 +16,7 @@ const Company = lazy(() => import("../pages/company/CompanyLayout"));
 const Reciept = lazy(() => import("../pages/Payment/Reciept"));
 const TransactionStatement = lazy(() => import("../pages/Payment/TransactionStatement"));
 const OAuthSuccess = lazy(() => import("../api/user/OAuthSuccess"));
+const OAuthBridge = lazy(() => import("../pages/Layout/error/OAuthBridge"));
 
 const root = createBrowserRouter([
     {
@@ -30,7 +31,23 @@ const root = createBrowserRouter([
                     </Suspense>
                 ),
                 // children: registRouter()
-            }, {
+            },{
+                path: "/oauth/success",
+                element: (
+                    <Suspense fallback={Loading}>
+                        <OAuthBridge></OAuthBridge>
+                    </Suspense>
+                )
+                // children: registRouter()
+            },{
+                path: "/oauth/failure",
+                element: (
+                    <Suspense fallback={Loading}>
+                        <OAuthBridge></OAuthBridge>
+                    </Suspense>
+                )
+                // children: registRouter()
+            },{
                 path: "/register",
                 element: (
                     <Suspense fallback={Loading}>
