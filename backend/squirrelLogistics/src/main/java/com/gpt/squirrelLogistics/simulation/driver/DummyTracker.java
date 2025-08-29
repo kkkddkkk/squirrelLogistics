@@ -27,12 +27,15 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class DummyTracker {
 
-	public static final LatLng SEOUL_STATION = 
-		    new LatLng(new BigDecimal("37.5546785"), new BigDecimal("126.9706069"));
+	public static final LatLng SEOUL_STATION = new LatLng(new BigDecimal("37.5546785"), new BigDecimal("126.9706069"));
+
+	enum Phase {
+		IDLE, TO_PICKUP, IN_TRANSIT
+	}
 
 	private final KakaoRouteClient kakaoClient;
-	private final KakaoLocalClient localClient; // 주소→좌표 (네가 이미 쓰는 geocode 클라이언트)
-	private final SimpMessagingTemplate messaging; // WS 브로드캐스트
+	private final KakaoLocalClient localClient;
+	private final SimpMessagingTemplate messaging;
 	private final DeliveryTrackingLogService trackingLogService;
 
 	// 스케줄러는 공유 스레드풀 1~2개면 충분
@@ -42,125 +45,155 @@ public class DummyTracker {
 	private final Map<String, LatLng> lastPersistedPos = new ConcurrentHashMap<>();
 	private final Map<String, Long> lastPersistedAtMs = new ConcurrentHashMap<>();
 	private final Map<String, Long> currentAssignedId = new ConcurrentHashMap<>();
-	private final Map<String, Boolean> isBeforePickup = new ConcurrentHashMap<>();
+	private final Map<String, Phase> phaseMap = new ConcurrentHashMap<>();
 
-	// 100미터 터벌 지정.
-	private static final double PERSIST_THRESHOLD_METERS = 100.0;
-	private static final long MIN_INTERVAL_MS = 3000;
-
-	private static final boolean INCLUDE_PRE_PICKUP_LOGS = false;
+	// 샘플링 정책 (완화 + 시간 백업)
+	private static final double PERSIST_THRESHOLD_METERS = 20.0; // 100m → 20m
+	private static final long MIN_INTERVAL_MS = 2000; // 3s → 2s
+	private static final long FORCE_SAVE_EVERY_MS = 5000; // 5초마다 1점 보장
 
 	private DummyDriver ensure(String driverId) {
 		return driverMap.computeIfAbsent(driverId, id -> {
 			var d = new DummyDriver(id, kakaoClient, scheduler, SEOUL_STATION);
-			// 브로드캐스트 콜백 주입
-			d.setBroadcaster(routeInfo -> messaging.convertAndSend("/topic/driver/" + id, routeInfo));
+			d.setBroadcaster(route -> messaging.convertAndSend("/topic/driver/" + id, route));
 			d.setMoveHook(pos -> maybePersist(id, pos));
-			d.start(); // 자동 틱 시작 (mode 기본 AUTO)
+			d.start();
+			phaseMap.put(id, Phase.IDLE);
 			return d;
 		});
 	}
 
-	public void setMode(String driverId, DummyDriver.Mode mode) {
-		ensure(driverId).setMode(mode);
-	}
-
-	/** 집하처 이동 시작: 서울역 → 픽업 주소 */
-	public void startToPickup(String driverId, Long assignedId, String pickupAddress) {
-		setCurrentAssignment(driverId, assignedId);
-		var d = ensure(driverId);
-		var from = SEOUL_STATION;
-		var to = localClient.geocode(pickupAddress);
-		var polyline = kakaoClient.requestRoute(from, to).getPolyline();
-		d.setRoute(polyline); // 경로 세팅 즉시 브로드캐스트
-		d.setMode(DummyDriver.Mode.AUTO);
-		d.setPaused(false);
-		isBeforePickup.put(driverId, true); // 출발→픽업 중
-	}
-
-	/** 다음 레그 준비: from → to (주소 문자열) */
-	public void prepareLeg(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto) {
-		setCurrentAssignment(driverId, assignedId);
-		var d = ensure(driverId);
-		var from = localClient.geocode(fromAddr);
-		var to = localClient.geocode(toAddr);
-		var polyline = kakaoClient.requestRoute(from, to).getPolyline();
-		d.setRoute(polyline);
-		d.setMode(auto ? DummyDriver.Mode.AUTO : DummyDriver.Mode.MANUAL);
-		d.setPaused(false);
-		isBeforePickup.put(driverId, false); // 이제 본운송 시작
-	}
-
-	/** 즉시 도착으로 점프 */
-	public void arriveNow(String driverId) {
-		ensure(driverId).arriveNow();
-	}
-
-	/** MANUAL 모드에서 한 스텝만 전진 */
-	public void nudge(String driverId) {
-		ensure(driverId).step();
-	}
-
-	/** 현재 라우트 스냅샷(REST 폴백용) */
-	public RouteInfoDTO getCurrentRoute(String driverId) {
-		return ensure(driverId).snapshot();
-	}
-
 	public void setCurrentAssignment(String driverId, Long assignedId) {
 		currentAssignedId.put(driverId, assignedId);
+		// 경계에서 생기는 누락/혼입 방지를 위해 “상태만 초기화”
 		lastPersistedPos.remove(driverId);
 		lastPersistedAtMs.remove(driverId);
-		isBeforePickup.put(driverId, true);
+		// Phase는 여기서 건드리지 않음 (호출자에게 위임)
+	}
+
+	/** 서울역 → 픽업주소 (픽업 전, 로그 저장 안 함) */
+	public void startToPickup(String driverId, Long assignedId, String pickupAddress) {
+		setCurrentAssignment(driverId, assignedId);
+		phaseMap.put(driverId, Phase.TO_PICKUP); // ← 먼저 Phase 지정
+		var d = ensure(driverId);
+
+		var from = SEOUL_STATION;
+		var to = localClient.geocode(pickupAddress);
+		var poly = kakaoClient.requestRoute(from, to).getPolyline();
+
+		d.setRoute(poly);
+		d.setMode(DummyDriver.Mode.AUTO);
+		d.setPaused(false);
+	}
+
+	/** 본 운송 레그 시작: from→to (픽업 이후, 로그 저장 시작) */
+	public void prepareLeg(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto) {
+		setCurrentAssignment(driverId, assignedId);
+		phaseMap.put(driverId, Phase.IN_TRANSIT); // ← 먼저 Phase 전환 (레이스 제거)
+		var d = ensure(driverId);
+
+		var from = localClient.geocode(fromAddr);
+		var to = localClient.geocode(toAddr);
+		var poly = kakaoClient.requestRoute(from, to).getPolyline();
+
+		// 거리 누적 기준점을 픽업 위치로 ‘고정’ (원위치→픽업 포함 방지)
+		forcePersistAnchor(driverId, from);
+
+		d.setRoute(poly);
+		d.setMode(auto ? DummyDriver.Mode.AUTO : DummyDriver.Mode.MANUAL);
+		d.setPaused(false);
+	}
+
+	/** 도착 즉시 점프 (마지막 점 보정 저장 권장) */
+	public void arriveNow(String driverId) {
+		var d = ensure(driverId);
+		d.arriveNow();
+		var snap = d.snapshot();
+		if (snap != null && snap.getPolyline() != null && !snap.getPolyline().isEmpty()) {
+			var tail = snap.getPolyline().get(snap.getPolyline().size() - 1);
+			persist(driverId, tail, System.currentTimeMillis());
+		}
+	}
+
+	private void forcePersistAnchor(String driverId, LatLng anchor) {
+		persist(driverId, anchor, System.currentTimeMillis());
+	}
+
+	private void persist(String driverId, LatLng curr, long now) {
+		trackingLogService.save(driverId, currentAssignedId.get(driverId), curr);
+		lastPersistedPos.put(driverId, curr);
+		lastPersistedAtMs.put(driverId, now);
 	}
 
 	private void maybePersist(String driverId, LatLng curr) {
-		// 픽업 전 구간 전체 무시
-		if (!INCLUDE_PRE_PICKUP_LOGS && Boolean.TRUE.equals(isBeforePickup.get(driverId))) {
-			return;
+		// Phase 기반으로 저장 여부 결정
+		if (phaseMap.getOrDefault(driverId, Phase.IDLE) != Phase.IN_TRANSIT) {
+			return; // 픽업 전(TO_PICKUP)과 IDLE은 저장 안 함
 		}
 
 		long now = System.currentTimeMillis();
-		Long lastAt = lastPersistedAtMs.get(driverId);
-		if (lastAt != null && now - lastAt < MIN_INTERVAL_MS)
-			return;
-
 		var prev = lastPersistedPos.get(driverId);
+		Long lastT = lastPersistedAtMs.get(driverId);
+
+		// 첫 점 보장
 		if (prev == null) {
-			// 이제 픽업 이후 첫 점만 강제 저장
-			log.info("lat={}, scale={}", curr.getLat(), curr.getLat().scale());
-			trackingLogService.save(driverId, currentAssignedId.get(driverId), curr);
-			lastPersistedPos.put(driverId, curr);
-			lastPersistedAtMs.put(driverId, now);
+			persist(driverId, curr, now);
 			return;
 		}
 
 		double meters = haversineMeters(prev, curr);
-		if (meters >= PERSIST_THRESHOLD_METERS && meters < 300 /* 스파이크 컷 */) {
-			log.info("lat={}, scale={}", curr.getLat(), curr.getLat().scale());
-			trackingLogService.save(driverId, currentAssignedId.get(driverId), curr);
-			lastPersistedPos.put(driverId, curr);
-			lastPersistedAtMs.put(driverId, now);
+
+		// 시간 백업 저장 (거리와 무관하게 5초마다 1점)
+		if (lastT == null || now - lastT >= FORCE_SAVE_EVERY_MS) {
+			persist(driverId, curr, now);
+			return;
+		}
+
+		// 거리 조건 (20m 이상, 300m 이상 스파이크 컷)
+		if ((now - lastT) >= MIN_INTERVAL_MS && meters >= PERSIST_THRESHOLD_METERS && meters < 300) {
+			persist(driverId, curr, now);
 		}
 	}
 
 	// 하버사인 거리 구하기.
 	private static double haversineMeters(LatLng a, LatLng b) {
-	    double R = 6371000.0; // 지구 반지름(m)
+		double R = 6371000.0; // 지구 반지름(m)
 
-	    double latA = a.getLat().doubleValue();
-	    double latB = b.getLat().doubleValue();
-	    double lngA = a.getLng().doubleValue();
-	    double lngB = b.getLng().doubleValue();
+		double latA = a.getLat().doubleValue();
+		double latB = b.getLat().doubleValue();
+		double lngA = a.getLng().doubleValue();
+		double lngB = b.getLng().doubleValue();
 
-	    double dLat = Math.toRadians(latB - latA);
-	    double dLng = Math.toRadians(lngB - lngA);
-	    double lat1 = Math.toRadians(latA);
-	    double lat2 = Math.toRadians(latB);
+		double dLat = Math.toRadians(latB - latA);
+		double dLng = Math.toRadians(lngB - lngA);
+		double lat1 = Math.toRadians(latA);
+		double lat2 = Math.toRadians(latB);
 
-	    double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-	            + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-	    double c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-	    return R * c;
+		double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+				+ Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+		double c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+		return R * c;
 	}
 
+	public void pause(String driverId) {
+		var d = ensure(driverId);
+		d.setPaused(true); // 이동 스레드 멈춤
+	}
+
+	public void resumeAuto(String driverId) {
+		var d = ensure(driverId);
+		d.setMode(DummyDriver.Mode.AUTO);
+		d.setPaused(false);
+	}
+
+	public void finishAssignment(String driverId) {
+		phaseMap.put(driverId, Phase.IDLE);
+		currentAssignedId.remove(driverId);
+		lastPersistedPos.remove(driverId);
+		lastPersistedAtMs.remove(driverId);
+	}
+	
+	public RouteInfoDTO getCurrentRoute(String driverId) {
+	    return ensure(driverId).snapshot();
+	}
 }
