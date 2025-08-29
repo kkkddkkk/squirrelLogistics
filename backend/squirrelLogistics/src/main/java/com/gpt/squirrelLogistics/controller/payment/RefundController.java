@@ -37,6 +37,9 @@ public class RefundController {
 
     @Value("${portone.secret}")
     private String secret;
+
+    @Value("${portone.channelKey}")
+    private String channelKey;
     
     @PostMapping("/{paymentId}/cancel")
     public void cancelPayment(@PathVariable(name="paymentId") String impUid) {
@@ -47,6 +50,7 @@ public class RefundController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "PortOne " + secret);
+        headers.set("X-Channel-Key", channelKey);  // ← 이 줄 추가
 
         Map<String, String> body = new HashMap<>();
         body.put("reason", "고객 요청");

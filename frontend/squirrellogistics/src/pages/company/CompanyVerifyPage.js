@@ -9,9 +9,8 @@ const CompanyVerifyPage = () => {
   const navigate = useNavigate();
   const userInfo = useSelector((s) => s.company.userInfo);
 
-  // 로컬스토리지에서 사용자 정보 가져오기
-  const loginType = localStorage.getItem('loginType');
-  const userEmail = localStorage.getItem('userEmail');
+  // Redux 상태에서 사용자 정보 가져오기
+  const userEmail = userInfo?.email || "";
 
   // 로컬 인증용
   const [loginId, setLoginId] = useState("");
@@ -32,8 +31,8 @@ const CompanyVerifyPage = () => {
 
   // Redux 상태에서 소셜 로그인 여부 확인 (sns_login 필드 사용)
   const snsLogin = useSelector((s) => s.company.snsLogin);
-  // 로그인 타입에 따라 인증 방법 결정
-  const isSocialUser = snsLogin || !!(loginType && (loginType === 'google' || loginType === 'kakao'));
+  // Redux 상태에서 소셜 로그인 여부 확인
+  const isSocialUser = snsLogin;
 
   /* ===== 로컬 사용자 인증 ===== */
   const handleVerify = async (e) => {
@@ -169,9 +168,7 @@ const CompanyVerifyPage = () => {
         <div className="auth-method-info">
           {isSocialUser ? (
             <div className="method-item">
-              <span className="method-icon">
-                {loginType === 'google' ? '🔍' : '💬'}
-              </span>
+              <span className="method-icon">🔐</span>
               <span>
                 소셜 계정으로 재로그인하여 본인인증을 완료하세요.
               </span>

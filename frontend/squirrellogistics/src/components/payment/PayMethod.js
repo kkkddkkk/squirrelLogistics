@@ -7,7 +7,7 @@ export const PayMethod = ({paymentMethod, setPaymentMethod}) => {
         { value: 'html5_inicis', label: '신용카드' },
         { value: 'kakaopay', label: '카카오페이' },
         { value: 'danal', label: '휴대폰 소액결제' },
-        { value: 'tossPay', label: '토스페이' }
+        { value: 'tosspay', label: '토스페이' }
     ];
 
     function handlePaymentMethodChange(e) {
