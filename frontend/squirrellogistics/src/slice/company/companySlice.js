@@ -67,6 +67,8 @@ const initialState = {
   deliveryList: [],
   filteredList: [],
   myPageInfo: null, // 마이페이지 회원정보 추가
+  snsLogin: false, // 소셜 로그인 여부 추가
+  hasProfileInfo: false, // 회원정보 보유 여부 추가
   loading: false,
   error: null,
 
@@ -94,6 +96,8 @@ const companySlice = createSlice({
       state.deliveryList = [];
       state.filteredList = [];
       state.myPageInfo = null; // 마이페이지 정보도 초기화
+      state.snsLogin = false; // 소셜 로그인 상태도 초기화
+      state.hasProfileInfo = false; // 회원정보 보유 여부도 초기화
       state.loading = false;
       state.error = null;
       state.verifyOk = false;
@@ -143,7 +147,32 @@ const companySlice = createSlice({
       })
       .addCase(fetchCompanyMyPageInfo.fulfilled, (state, action) => {
         state.loading = false;
-        state.myPageInfo = action.payload;
+        
+
+        
+        // 새로운 응답 구조: { userInfo: {...}, sns_login: boolean }
+        if (action.payload && typeof action.payload === 'object') {
+          if (action.payload.userInfo) {
+            // 새로운 구조: userInfo와 sns_login 분리
+            state.myPageInfo = action.payload.userInfo;
+            state.snsLogin = action.payload.sns_login;
+            
+            // 회원정보 보유 여부 확인 (연락처, 계좌번호, 사업자번호, 주소 중 하나라도 있으면 true)
+            const userInfo = action.payload.userInfo;
+            state.hasProfileInfo = !!(userInfo.pnumber || userInfo.account || userInfo.businessN || userInfo.address);
+            
+
+          } else {
+            // 기존 구조: 직접 myPageInfo
+            state.myPageInfo = action.payload;
+            state.snsLogin = false; // 기본값
+            state.hasProfileInfo = false;
+          }
+        } else {
+          state.myPageInfo = action.payload;
+          state.snsLogin = false;
+          state.hasProfileInfo = false;
+        }
       })
       .addCase(fetchCompanyMyPageInfo.rejected, (state, action) => {
         state.loading = false;

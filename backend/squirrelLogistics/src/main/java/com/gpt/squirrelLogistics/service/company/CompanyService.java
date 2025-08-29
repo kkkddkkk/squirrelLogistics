@@ -86,4 +86,12 @@ public interface CompanyService {
      * @return 성공 여부
      */
     boolean withdrawAccount(Long userId);
+
+    /**
+     * 소셜 사용자 재인증 완료 처리
+     * @param userId 사용자 ID
+     * @param provider 소셜 제공자 ("google" 또는 "kakao")
+     * @return 성공 여부
+     */
+    boolean completeSocialVerification(Long userId, String provider);
 }

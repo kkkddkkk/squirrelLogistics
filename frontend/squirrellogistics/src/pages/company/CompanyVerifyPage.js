@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CompanyVerifyPage.css";
 import { verifyCredentials, requestPasswordReset } from "../../api/company/companyApi";
 import { useSelector } from "react-redux";
+import ReLoginModal from "../../components/company/ReLoginModal";
 
 const CompanyVerifyPage = () => {
   const navigate = useNavigate();
@@ -27,11 +28,12 @@ const CompanyVerifyPage = () => {
   const [success, setSuccess] = useState("");
 
   // 소셜 재인증용
-  const [socialLoading, setSocialLoading] = useState(false);
-  const popupRef = useRef(null);
+  const [showReLoginModal, setShowReLoginModal] = useState(false);
 
+  // Redux 상태에서 소셜 로그인 여부 확인 (sns_login 필드 사용)
+  const snsLogin = useSelector((s) => s.company.snsLogin);
   // 로그인 타입에 따라 인증 방법 결정
-  const isSocialUser = !!(loginType && (loginType === 'google' || loginType === 'kakao'));
+  const isSocialUser = snsLogin || !!(loginType && (loginType === 'google' || loginType === 'kakao'));
 
   /* ===== 로컬 사용자 인증 ===== */
   const handleVerify = async (e) => {
@@ -148,99 +150,9 @@ const CompanyVerifyPage = () => {
     }
   };
 
-  /* ===== 소셜 재인증 ===== */
-  const startSocialReauth = (provider) => {
-    setErr("");
-    setSuccess("");
-    setSocialLoading(true);
 
-    try {
-      let authUrl = '';
-      
-      if (provider === 'google') {
-        // Google OAuth URL (실제 클라이언트 ID로 교체 필요)
-        authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-          `client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID || 'your-google-client-id'}` +
-          `&redirect_uri=${encodeURIComponent(`${window.location.origin}/company/auth/social-complete`)}` +
-          `&scope=${encodeURIComponent('email profile')}` +
-          `&response_type=code` +
-          `&state=${encodeURIComponent(JSON.stringify({ provider, action: 'reauth' }))}`;
-      } else if (provider === 'kakao') {
-        // Kakao OAuth URL (실제 클라이언트 ID로 교체 필요)
-        authUrl = `https://kauth.kakao.com/oauth/authorize?` +
-          `client_id=${process.env.REACT_APP_KAKAO_CLIENT_ID || 'your-kakao-client-id'}` +
-          `&redirect_uri=${encodeURIComponent(`${window.location.origin}/company/auth/social-complete`)}` +
-          `&response_type=code` +
-          `&state=${encodeURIComponent(JSON.stringify({ provider, action: 'reauth' }))}`;
-      }
 
-      // 팝업으로 소셜 로그인 열기
-      const popup = window.open(
-        authUrl,
-        `${provider}Reauth`,
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-
-      if (popup) {
-        popupRef.current = popup;
-        
-        // 팝업에서 메시지 받기
-        const handleMessage = (event) => {
-          if (event.origin !== window.location.origin) return;
-          
-          if (event.data?.type === 'SOCIAL_REAUTH_SUCCESS') {
-            setSocialLoading(false);
-            setSuccess(`${provider === 'google' ? 'Google' : 'Kakao'} 재인증이 완료되었습니다.`);
-            sessionStorage.setItem("company_edit_verified", "true");
-            
-            // 1.5초 후 수정 페이지로 이동
-            setTimeout(() => {
-              navigate("/company/edit");
-            }, 1500);
-            
-            // 팝업 닫기
-            if (popupRef.current) {
-              popupRef.current.close();
-            }
-            
-            // 이벤트 리스너 제거
-            window.removeEventListener('message', handleMessage);
-          } else if (event.data?.type === 'SOCIAL_REAUTH_ERROR') {
-            setSocialLoading(false);
-            setErr(`${provider === 'google' ? 'Google' : 'Kakao'} 재인증에 실패했습니다.`);
-            
-            // 팝업 닫기
-            if (popupRef.current) {
-              popupRef.current.close();
-            }
-            
-            // 이벤트 리스너 제거
-            window.removeEventListener('message', handleMessage);
-          }
-        };
-
-        window.addEventListener('message', handleMessage);
-        
-        // 팝업 닫힘 감지
-        const checkClosed = setInterval(() => {
-          if (popupRef.current?.closed) {
-            clearInterval(checkClosed);
-            setSocialLoading(false);
-            window.removeEventListener('message', handleMessage);
-          }
-        }, 1000);
-      } else {
-        setSocialLoading(false);
-        setErr("팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.");
-      }
-    } catch (error) {
-      setSocialLoading(false);
-      setErr(`${provider === 'google' ? 'Google' : 'Kakao'} 재인증 시작 중 오류가 발생했습니다.`);
-      console.error('소셜 재인증 오류:', error);
-    }
-  };
-
-  const goBack = () => navigate("/company/mypage");
+  const goBack = () => navigate("/company");
   const onEnter = (e) => e.key === "Enter" && handleVerify();
 
   return (
@@ -261,7 +173,7 @@ const CompanyVerifyPage = () => {
                 {loginType === 'google' ? '🔍' : '💬'}
               </span>
               <span>
-                {loginType === 'google' ? 'Google' : 'Kakao'} 계정으로 재로그인하여 본인인증을 완료하세요.
+                소셜 계정으로 재로그인하여 본인인증을 완료하세요.
               </span>
             </div>
           ) : (
@@ -346,17 +258,9 @@ const CompanyVerifyPage = () => {
             <div className="social-row">
               <button
                 className="social-btn"
-                onClick={() => startSocialReauth("google")}
-                disabled={socialLoading}
+                onClick={() => setShowReLoginModal(true)}
               >
-                {socialLoading ? "인증 중..." : "구글로 재인증"}
-              </button>
-              <button
-                className="social-btn"
-                onClick={() => startSocialReauth("kakao")}
-                disabled={socialLoading}
-              >
-                {socialLoading ? "인증 중..." : "카카오로 재인증"}
+                소셜 재인증
               </button>
             </div>
             
@@ -370,6 +274,22 @@ const CompanyVerifyPage = () => {
         {err && <div className="error-text" aria-live="assertive">{err}</div>}
         {success && <div className="success-text" aria-live="assertive">{success}</div>}
       </div>
+
+      {/* ReLoginModal */}
+      <ReLoginModal
+        open={showReLoginModal}
+        onClose={() => setShowReLoginModal(false)}
+        onSuccess={(userData) => {
+          setSuccess("소셜 재인증이 완료되었습니다.");
+          sessionStorage.setItem("company_edit_verified", "true");
+          
+          // 1.5초 후 수정 페이지로 이동
+          setTimeout(() => {
+            navigate("/company/edit");
+          }, 1500);
+        }}
+        isSocialUser={true}
+      />
     </div>
   );
 };

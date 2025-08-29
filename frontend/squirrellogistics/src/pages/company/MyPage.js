@@ -11,12 +11,12 @@ import {
   logout,
   fetchCompanyMyPageInfo,
 } from '../../slice/company/companySlice';
-import { getMyPageInfo, getDeliveryList } from '../../api/company/companyApi';
+import { getMyPageInfo, getDeliveryList, withdrawAccount } from '../../api/company/companyApi';
 
 const MyPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { myPageInfo, isLoading, error } = useSelector((state) => state.company);
+  const { myPageInfo, isLoading, error, snsLogin, hasProfileInfo } = useSelector((state) => state.company);
 
   const {
     status,
@@ -88,11 +88,16 @@ const MyPage = () => {
     loadDeliveryData();
   }, [myPageInfo?.companyId]);
 
-  useEffect(() => {
-    if (myPageInfo) {
-      console.log('마이페이지 정보 로드됨:', myPageInfo);
-    }
-  }, [myPageInfo]);
+     useEffect(() => {
+     if (myPageInfo) {
+       console.log('마이페이지 정보 로드됨:', myPageInfo);
+       console.log('🔍 Redux 상태 확인:', {
+         snsLogin,
+         hasProfileInfo,
+         myPageInfo
+       });
+     }
+   }, [myPageInfo, snsLogin, hasProfileInfo]);
 
   useEffect(() => {
     if (error) {
@@ -138,19 +143,24 @@ const MyPage = () => {
 
   // 📌 회원탈퇴
   const handleWithdraw = async () => {
-    if (window.confirm('정말 회원 탈퇴하시겠습니까?')) {
+    if (window.confirm('정말 회원 탈퇴하시겠습니까?\n\n회원탈퇴 시 더 이상 서비스를 이용할 수 없습니다.')) {
       try {
-        // 회원탈퇴 API 호출
-        const response = await fetch('/api/company/withdraw', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // JWT 토큰이 있다면
-          },
-          body: JSON.stringify({
-            userId: myPageInfo?.userId
-          })
+        // JWT 토큰 상태 확인
+        const accessToken = localStorage.getItem('accessToken');
+        console.log('🔍 회원탈퇴 시도 - JWT 토큰 상태:', {
+          hasToken: !!accessToken,
+          tokenLength: accessToken ? accessToken.length : 0,
+          tokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : '없음'
         });
+
+        if (!accessToken) {
+          alert('로그인이 필요합니다. 다시 로그인해주세요.');
+          navigate('/login');
+          return;
+        }
+
+        // 회원탈퇴 API 호출
+        const response = await withdrawAccount();
 
         if (response.ok) {
           alert('회원탈퇴가 완료되었습니다.');
@@ -160,11 +170,19 @@ const MyPage = () => {
           sessionStorage.clear();
           navigate('/');
         } else {
-          alert('회원탈퇴 처리 중 오류가 발생했습니다.');
+          alert(response.message || '회원탈퇴 처리 중 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('회원탈퇴 실패:', error);
-        alert('회원탈퇴 처리 중 오류가 발생했습니다.');
+        
+        // 401 에러인 경우 로그인 페이지로 이동
+        if (error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          localStorage.removeItem('accessToken');
+          navigate('/login');
+        } else {
+          alert('회원탈퇴 처리 중 오류가 발생했습니다.');
+        }
       }
     }
   };
@@ -183,12 +201,45 @@ const MyPage = () => {
       <div className="info-section">
         <div className="info-header">
           <h3>회원정보</h3>
-          <img
-            src="/images/edit.png"
-            alt="수정"
-            className="edit-images"
-            onClick={() => navigate('/company/verify')}
-          />
+                     <img
+             src="/images/edit.png"
+             alt="수정"
+             className="edit-images"
+             onClick={() => {
+               // 디버깅: 상태 값 확인
+               console.log('🔍 Edit 클릭 시 상태:', {
+                 snsLogin,
+                 hasProfileInfo,
+                 myPageInfo: myPageInfo
+               });
+               
+               // 회원정보 보유 여부 직접 계산
+               const hasProfileInfoDirect = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
+               console.log('🔍 직접 계산한 hasProfileInfo:', hasProfileInfoDirect);
+               console.log('🔍 개별 필드 확인:', {
+                 pnumber: myPageInfo?.pnumber,
+                 account: myPageInfo?.account,
+                 businessN: myPageInfo?.businessN,
+                 address: myPageInfo?.address
+               });
+                // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
+               if (snsLogin) {
+                 const hasProfileInfo = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
+                 
+                 if (!hasProfileInfo) {
+                   console.log('✅ 소셜 사용자 + 회원정보 없음 → edit 페이지로 이동');
+                   navigate('/company/edit');
+                 } else {
+                   console.log('🔒 소셜 사용자 + 회원정보 있음 → verify 페이지로 이동 (소셜 재인증 필요)');
+                   navigate('/company/verify');
+                 }
+               } else {
+                 console.log('🔒 로컬 사용자 → verify 페이지로 이동');
+                 // 로컬 사용자만 본인인증 페이지로 이동
+                 navigate('/company/verify');
+               }
+             }}
+           />
         </div>
         
         {isLoading ? (
@@ -197,6 +248,15 @@ const MyPage = () => {
           <div className="error-message">데이터를 불러올 수 없습니다.</div>
         ) : (
           <>
+                         {/* 소셜 사용자 안내 메시지 */}
+             {snsLogin && (
+               <div className="social-notice">
+                 <p><strong>소셜 로그인 사용자</strong></p>
+                 <p>회원정보가 없으면 본인인증 없이 수정 가능합니다.</p>
+                 <p>회원정보가 있으면 소셜 재인증이 필요합니다.</p>
+               </div>
+             )}
+            
             <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} />
             <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} />
             <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} />

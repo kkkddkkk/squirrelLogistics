@@ -154,18 +154,13 @@
   color: white;
 }
 
-.social-btn:first-child:hover:not(:disabled) {
-  background-color: #3367d6;
-}
+
 
 .social-btn:last-child {
-  background-color: #fee500;
+  background-color: #d6d6d6;
   color: #000;
 }
 
-.social-btn:last-child:hover:not(:disabled) {
-  background-color: #fdd835;
-}
 
 .social-btn:disabled {
   background-color: #ccc;
