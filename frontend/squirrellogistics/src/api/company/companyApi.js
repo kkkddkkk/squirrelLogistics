@@ -15,12 +15,23 @@ const companyApi = axios.create({
 companyApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
+    console.log('🔍 companyApi 인터셉터 - 토큰 상태:', {
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      url: config.url,
+      method: config.method
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Authorization 헤더 추가됨');
+    } else {
+      console.log('⚠️ 토큰이 없어 Authorization 헤더 추가 안됨');
     }
     return config;
   },
   (error) => {
+    console.error('❌ companyApi 인터셉터 에러:', error);
     return Promise.reject(error);
   }
 );
@@ -77,7 +88,21 @@ export const requestPasswordReset = async (email) => {
   }
 };
 
-// ✅ 0-2) 회원정보 수정 저장 (JWT 토큰 기반)
+// ✅ 0-2) Google OAuth 재인증
+export const googleOAuthReauth = async (idToken) => {
+  try {
+    const res = await axios.post(`${API_SERVER_HOST}/api/auth/oauth/google`, {
+      idToken: idToken,
+      role: "COMPANY"
+    });
+    return res.data;
+  } catch (err) {
+    console.error("❌ Google OAuth 재인증 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ 0-3) 회원정보 수정 저장 (JWT 토큰 기반)
 export const updateCompanyProfile = async (payload) => {
   try {
     // JWT 토큰 가져오기
@@ -98,6 +123,55 @@ export const updateCompanyProfile = async (payload) => {
     return res.data;
   } catch (err) {
     console.error("❌ 회원정보 수정 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ 0-3) 소셜 사용자 본인인증 상태 확인
+export const checkSocialVerificationStatus = async () => {
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    
+    if (!accessToken) {
+      console.error("❌ JWT 토큰이 없습니다");
+      throw new Error("인증 토큰이 없습니다");
+    }
+    
+    const res = await axios.get(`${API_SERVER_HOST}/api/company/verify/status`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return res.data;
+  } catch (err) {
+    console.error("❌ 소셜 사용자 본인인증 상태 확인 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ 0-4) 소셜 사용자 재인증 완료 처리
+export const completeSocialVerification = async (provider, email) => {
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    
+    if (!accessToken) {
+      console.error("❌ JWT 토큰이 없습니다");
+      throw new Error("인증 토큰이 없습니다");
+    }
+    
+    const res = await axios.post(`${API_SERVER_HOST}/api/company/verify/social/complete`, {
+      provider,
+      email
+    }, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return res.data;
+  } catch (err) {
+    console.error("❌ 소셜 사용자 재인증 완료 처리 실패:", err);
     throw err;
   }
 };
@@ -139,15 +213,31 @@ export const getDeliveryList = async () => {
   }
 };
 
-// ✅ 1-1. 마이페이지 회원정보 불러오기 (JWT 토큰 기반)
+// ✅ 1-1. 회원탈퇴 (role을 ETC로 변경)
+export const withdrawAccount = async () => {
+  try {
+    const res = await companyApi.post(`/withdraw`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ 회원탈퇴 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ 1-2. 마이페이지 회원정보 불러오기 (JWT 토큰 기반)
 export const getMyPageInfo = async () => {
   try {
     // JWT 토큰 가져오기
     const accessToken = localStorage.getItem('accessToken');
     
     if (!accessToken) {
-      console.error("❌ JWT 토큰이 없습니다");
-      return null;
+      console.warn("⚠️ JWT 토큰이 없습니다. 로그인이 필요합니다.");
+      // 토큰이 없으면 로그인 페이지로 리다이렉트하거나 기본값 반환
+      return {
+        userInfo: null,
+        sns_login: false,
+        message: "로그인이 필요합니다."
+      };
     }
     
     // Authorization 헤더와 함께 요청 전송
@@ -161,6 +251,17 @@ export const getMyPageInfo = async () => {
   } catch (err) {
     console.error("❌ 마이페이지 정보 불러오기 실패:", err);
     console.error("❌ 에러 상세:", err.response?.data);
-    return null;
+    
+    // 401 에러 (인증 실패)인 경우 토큰 제거
+    if (err.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      console.warn("⚠️ 인증 실패로 토큰을 제거했습니다.");
+    }
+    
+    return {
+      userInfo: null,
+      sns_login: false,
+      message: "인증에 실패했습니다."
+    };
   }
 };

@@ -70,6 +70,109 @@ public class CompanyController {
     }
 
     /**
+     * 소셜 사용자 본인인증 상태 확인
+     */
+    @GetMapping("/verify/status")
+    public ResponseEntity<Map<String, Object>> checkVerificationStatus() {
+        try {
+            log.info("=== 소셜 사용자 본인인증 상태 확인 시작 ===");
+            
+            // JWT 토큰에서 userId 추출
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                log.warn("인증되지 않은 사용자");
+                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자입니다"));
+            }
+            
+            String username = auth.getName();
+            log.info("인증된 사용자: {}", username);
+            
+            // username으로 User 조회
+            User user = userRepository.findByLoginId(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
+            
+            // 소셜 로그인 여부 확인
+            boolean isSocialUser = user.isSns_login();
+            log.info("사용자 정보 - userId: {}, name: {}, sns_login: {}", 
+                    user.getUserId(), user.getName(), isSocialUser);
+            
+            if (!isSocialUser) {
+                log.warn("로컬 사용자 - 본인인증 필요");
+                return ResponseEntity.ok(Map.of("isSocialUser", false, "message", "로컬 사용자는 본인인증이 필요합니다."));
+            }
+            
+            // 소셜 사용자인 경우 회원정보 보유 여부 확인
+            Company company = companyRepository.findByUserId(user.getUserId()).orElse(null);
+            
+            boolean hasProfileInfo = !!(user.getPnumber() != null || user.getAccount() != null || user.getBusinessN() != null || 
+                                     (company != null && company.getAddress() != null));
+            
+            log.info("소셜 사용자 회원정보 확인 - hasProfileInfo: {}", hasProfileInfo);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("isSocialUser", true);
+            response.put("hasProfileInfo", hasProfileInfo);
+            response.put("message", hasProfileInfo ? "소셜 재인증이 필요합니다." : "본인인증 없이 수정 가능합니다.");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("=== 소셜 사용자 본인인증 상태 확인 실패 ===", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 소셜 사용자 재인증 완료 처리
+     */
+    @PostMapping("/verify/social/complete")
+    public ResponseEntity<Map<String, Object>> completeSocialVerification(@RequestBody Map<String, String> request) {
+        try {
+            log.info("=== 소셜 사용자 재인증 완료 처리 시작 ===");
+            
+            String provider = request.get("provider"); // "google" 또는 "kakao"
+            String email = request.get("email");
+            
+            log.info("소셜 재인증 완료 - provider: {}, email: {}", provider, email);
+            
+            if (provider == null || email == null) {
+                log.warn("필수 파라미터 누락 - provider: {}, email: {}", provider, email);
+                return ResponseEntity.badRequest().body(Map.of("error", "필수 파라미터가 누락되었습니다."));
+            }
+            
+            // 이메일로 사용자 확인
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+            
+            // 소셜 로그인 사용자인지 확인
+            if (!user.isSns_login()) {
+                log.warn("로컬 사용자 - 소셜 재인증 불가: {}", email);
+                return ResponseEntity.badRequest().body(Map.of("error", "소셜 로그인 사용자가 아닙니다."));
+            }
+            
+            // 소셜 재인증 완료 처리
+            boolean success = companyService.completeSocialVerification(user.getUserId(), provider);
+            
+            if (success) {
+                log.info("소셜 재인증 완료 성공 - userId: {}, provider: {}", user.getUserId(), provider);
+                return ResponseEntity.ok(Map.of(
+                    "ok", true, 
+                    "message", "소셜 재인증이 완료되었습니다.",
+                    "userId", user.getUserId(),
+                    "provider", provider
+                ));
+            } else {
+                log.warn("소셜 재인증 완료 실패 - userId: {}, provider: {}", user.getUserId(), provider);
+                return ResponseEntity.ok(Map.of("ok", false, "message", "소셜 재인증 처리에 실패했습니다."));
+            }
+            
+        } catch (Exception e) {
+            log.error("=== 소셜 사용자 재인증 완료 처리 실패 ===", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * 비밀번호 재설정 링크 요청
      */
     @PostMapping("/password/reset/request")
@@ -340,6 +443,11 @@ public class CompanyController {
             
             // 비밀번호가 제공된 경우 업데이트 (소셜 사용자 제외)
             if (password != null && !password.trim().isEmpty()) {
+                // 소셜 사용자인 경우 비밀번호 수정 제한
+                if (user.isSns_login()) {
+                    log.warn("소셜 사용자 비밀번호 수정 시도 - userId: {}", user.getUserId());
+                    return ResponseEntity.badRequest().body(Map.of("error", "소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다."));
+                }
                 user.setPassword(passwordEncoder.encode(password));
                 log.info("비밀번호 업데이트 완료");
             }
@@ -389,13 +497,27 @@ public class CompanyController {
             // username으로 User 조회
             User user = userRepository.findByLoginId(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
-            log.info("User 조회 성공 - userId: {}, name: {}", user.getUserId(), user.getName());
             
-            // userId로 Company 조회
+            // sns_login 값 강제 확인
+            boolean snsLoginValue = user.isSns_login();
+            log.info("User 조회 성공 - userId: {}, name: {}, sns_login: {} (직접 확인: {})", 
+                    user.getUserId(), user.getName(), user.isSns_login(), snsLoginValue);
+            
+            // sns_login이 true인 경우 추가 로그
+            if (snsLoginValue) {
+                log.info("🔍 소셜 로그인 사용자 확인됨 - loginId: {}", user.getLoginId());
+            }
+            
+            // userId로 Company 조회 (소셜 사용자는 company 정보가 없을 수 있음)
             log.info("CompanyRepository.findByUserId() 호출 시작");
             Company company = companyRepository.findByUserId(user.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Company not found for userId: " + user.getUserId()));
-            log.info("Company 조회 성공 - companyId: {}, address: {}", company.getCompanyId(), company.getAddress());
+                .orElse(null); // 소셜 사용자는 company 정보가 없을 수 있음
+            
+            if (company != null) {
+                log.info("Company 조회 성공 - companyId: {}, address: {}", company.getCompanyId(), company.getAddress());
+            } else {
+                log.info("Company 정보 없음 - 소셜 로그인 사용자일 수 있음");
+            }
             
             // CompanyMyPageResponseDTO로 변환
             CompanyMyPageResponseDTO myPageInfo = CompanyMyPageResponseDTO.builder()
@@ -406,14 +528,27 @@ public class CompanyController {
                 .Pnumber(user.getPnumber())  // Entity의 Pnumber -> DTO의 pnumber
                 .account(user.getAccount())
                 .businessN(user.getBusinessN())
-                .companyId(company.getCompanyId())
-                .address(company.getAddress())
-                .mainLoca(company.getMainLoca())
+                .companyId(company != null ? company.getCompanyId() : null)
+                .address(company != null ? company.getAddress() : null)
+                .mainLoca(company != null ? company.getMainLoca() : null)
                 .build();
             
             if (myPageInfo != null) {
-                log.info("마이페이지 정보 조회 성공 - name: {}, email: {}", myPageInfo.getName(), myPageInfo.getEmail());
-                return ResponseEntity.ok(myPageInfo);
+                log.info("마이페이지 정보 조회 성공 - name: {}, email: {}, sns_login: {}", 
+                        myPageInfo.getName(), myPageInfo.getEmail(), user.isSns_login());
+                
+                // 소셜 사용자 구분을 위한 응답 구조
+                Map<String, Object> response = new HashMap<>();
+                response.put("userInfo", myPageInfo);
+                response.put("sns_login", snsLoginValue); // 강제 확인된 값 사용
+                
+                log.info("응답 데이터 구조 - userInfo: {}, sns_login: {} (직접 확인: {})", 
+                        myPageInfo != null ? "존재함" : "null", user.isSns_login(), snsLoginValue);
+                
+                // 응답 데이터 전체 로그
+                log.info("🔍 최종 응답 데이터: {}", response);
+                
+                return ResponseEntity.ok(response);
             } else {
                 log.warn("마이페이지 정보를 찾을 수 없음 - userId: {}", user.getUserId());
                 return ResponseEntity.status(404).body(Map.of("error", "마이페이지 정보를 찾을 수 없습니다"));
@@ -541,17 +676,26 @@ public class CompanyController {
      * 회원탈퇴 (role을 ETC로 변경)
      */
     @PostMapping("/withdraw")
-    public ResponseEntity<Map<String, Object>> withdrawAccount(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> withdrawAccount() {
         try {
             log.info("=== 회원탈퇴 요청 시작 ===");
             
-            Long userId = Long.valueOf(request.get("userId").toString());
-            log.info("회원탈퇴 요청 - userId: {}", userId);
-            
-            if (userId == null) {
-                log.warn("사용자 ID가 null입니다.");
-                return ResponseEntity.badRequest().body(Map.of("error", "사용자 ID가 필요합니다."));
+            // JWT 토큰에서 userId 추출
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                log.warn("인증되지 않은 사용자");
+                return ResponseEntity.status(401).body(Map.of("error", "인증되지 않은 사용자입니다"));
             }
+            
+            String username = auth.getName();
+            log.info("인증된 사용자: {}", username);
+            
+            // username으로 User 조회
+            User user = userRepository.findByLoginId(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with loginId: " + username));
+            
+            Long userId = user.getUserId();
+            log.info("회원탈퇴 요청 - userId: {}", userId);
             
             boolean success = companyService.withdrawAccount(userId);
             

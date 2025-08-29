@@ -6,7 +6,8 @@ const MyPage = lazy(() => import("../../pages/company/MyPage"));
 const CompanyVerifyPage = lazy(() => import("../../pages/company/CompanyVerifyPage"));
 const CompanyEditPage = lazy(() => import("../../pages/company/CompanyEditPage"));
 const ResetPasswordPage = lazy(() => import("../../pages/company/ResetPasswordPage"));
-const SocialReauthComplete = lazy(() => import("../../pages/company/SocialReauthComplete"));
+//const SocialAuthCallback = lazy(() => import("../../pages/company/SocialAuthCallback"));
+const OAuthSuccess = lazy(() => import("../../pages/OAuthSuccess"));
 const Payment = lazy(() => import("../../pages/Payment/Payment"));
 const Success = lazy(() => import("../../pages/Payment/PaymentSuccess"));
 const History = lazy(() => import("../../pages/History/History"));
@@ -34,10 +35,15 @@ const companyRouter = () => {
       path: "/company/reset-password", // ✅ ③ 비밀번호 재설정
       element: <Suspense fallback={Loading}><ResetPasswordPage /></Suspense>,
     },
-    { 
-      path: "/company/auth/social-complete",
-      element: <Suspense fallback={Loading}><SocialReauthComplete /></Suspense> 
-    },    {
+    // { 
+    //   path: "/company/auth/social-complete",
+    //   element: <Suspense fallback={Loading}><SocialAuthCallback /></Suspense> 
+    // },
+    {
+      path: "/company/oauth/success", // OAuth 성공 페이지
+      element: <Suspense fallback={Loading}><OAuthSuccess /></Suspense>
+    },
+    {
       path: "payment",//결제
       element: <Suspense fallback={Loading}><Payment /></Suspense>,
     }, {

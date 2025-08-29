@@ -569,4 +569,40 @@ public class CompanyServiceImpl implements CompanyService {
             default:                   return null; // 알 수 없는 상태는 null 반환
         }
     }
+
+    @Override
+    @Transactional
+    public boolean completeSocialVerification(Long userId, String provider) {
+        try {
+            log.info("=== 소셜 사용자 재인증 완료 처리 시작 ===");
+            log.info("userId: {}, provider: {}", userId, provider);
+            
+            if (userId == null || provider == null) {
+                log.warn("필수 파라미터 누락 - userId: {}, provider: {}", userId, provider);
+                return false;
+            }
+            
+            // 사용자 존재 여부 확인
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null) {
+                log.warn("해당 사용자 ID로 가입된 사용자를 찾을 수 없음: {}", userId);
+                return false;
+            }
+            
+            // 소셜 로그인 사용자인지 확인
+            if (!user.isSns_login()) {
+                log.warn("로컬 사용자 - 소셜 재인증 불가: {}", userId);
+                return false;
+            }
+            
+            // 소셜 재인증 완료 처리 (예: 마지막 재인증 시간 업데이트 등)
+            // 현재는 단순히 성공으로 처리
+            log.info("=== 소셜 사용자 재인증 완료 성공 - userId: {}, provider: {} ===", userId, provider);
+            return true;
+            
+        } catch (Exception e) {
+            log.error("=== 소셜 사용자 재인증 완료 처리 실패 ===", e);
+            return false;
+        }
+    }
 }

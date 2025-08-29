@@ -6,11 +6,13 @@ import './CompanyEditPage.css';
 
 const CompanyEditPage = () => {
   const navigate = useNavigate();
-  const userInfo = useSelector((s) => s.company.userInfo);
-  
-  // 로컬스토리지에서 사용자 정보 가져오기
+  const { userInfo, myPageInfo, snsLogin } = useSelector((s) => s.company);
+   
+  // localStorage에서 사용자 정보 가져오기 (백업)
   const loginType = localStorage.getItem('loginType');
-  const isSocialUser = !!(loginType && (loginType === 'google' || loginType === 'kakao'));
+  const isSocialUser = snsLogin || !!(loginType && (loginType === 'google' || loginType === 'kakao'));
+  
+  
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -29,66 +31,115 @@ const CompanyEditPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // 초기 데이터 로드 - userInfo 우선, localStorage 백업
+  // 초기 데이터 로드 - myPageInfo 우선, userInfo 백업, localStorage 최후
   useEffect(() => {
-    console.log('🔄 useEffect 실행 - userInfo:', userInfo);
+    console.log('🔄 useEffect 실행 - myPageInfo:', myPageInfo, 'userInfo:', userInfo);
     
-    if (userInfo && Object.keys(userInfo).length > 0) {
-      console.log('✅ userInfo에서 데이터 로드:', userInfo);
-      setFormData({
-        password: '',
-        confirmPassword: '',
-        email: userInfo.email || '',
-        pnumber: userInfo.Pnumber || '', // Entity의 Pnumber (대문자 P)
-        businessN: userInfo.businessN || '', // Entity의 businessN
-        account: userInfo.account || '', // Entity의 account
-        address: userInfo.address || '', // Company Entity의 address
-        detailAddress: ''
-      });
+         if (myPageInfo && Object.keys(myPageInfo).length > 0) {
+       console.log('✅ myPageInfo에서 데이터 로드:', myPageInfo);
+       
+               // 소셜 사용자이고 회원정보가 없는 경우 localStorage 정리
+        if (isSocialUser) {
+          const hasProfileInfo = !!(myPageInfo.pnumber || myPageInfo.account || myPageInfo.businessN || myPageInfo.address);
+          console.log('🔍 소셜 사용자 localStorage 정리 확인:', {
+            hasProfileInfo,
+            pnumber: myPageInfo.pnumber,
+            account: myPageInfo.account,
+            businessN: myPageInfo.businessN,
+            address: myPageInfo.address
+          });
+          
+          if (!hasProfileInfo) {
+            console.log('🧹 소셜 사용자 + 회원정보 없음 → localStorage 정리 시작');
+            localStorage.removeItem('userPnumber');
+            localStorage.removeItem('userBusinessN');
+            localStorage.removeItem('userAccount');
+            localStorage.removeItem('userAddress');
+            console.log('🧹 localStorage 정리 완료');
+          } else {
+            console.log('✅ 소셜 사용자 + 회원정보 있음 → localStorage 정리 불필요');
+          }
+        }
+       
+       setFormData({
+         password: '',
+         confirmPassword: '',
+         email: myPageInfo.email || '',
+         pnumber: myPageInfo.pnumber || '', // myPageInfo의 pnumber (소문자 p)
+         businessN: myPageInfo.businessN || '', // myPageInfo의 businessN
+         account: myPageInfo.account || '', // myPageInfo의 account
+         address: myPageInfo.address || '', // myPageInfo의 address
+         detailAddress: ''
+       });
     } else {
-      console.log('⚠️ userInfo가 비어있음, localStorage에서 백업 데이터 로드');
-      // userInfo가 없으면 localStorage에서 기본 정보라도 가져오기
-      const storedUserInfo = {
-        email: localStorage.getItem('userEmail') || '',
-        Pnumber: localStorage.getItem('userPnumber') || '',
-        businessN: localStorage.getItem('userBusinessN') || '',
-        account: localStorage.getItem('userAccount') || '',
-        address: localStorage.getItem('userAddress') || ''
-      };
-      console.log('📦 localStorage에서 가져온 정보:', storedUserInfo);
+      console.log('⚠️ myPageInfo가 비어있음, 기본값으로 초기화');
       setFormData({
         password: '',
         confirmPassword: '',
-        email: storedUserInfo.email,
-        pnumber: storedUserInfo.Pnumber,
-        businessN: storedUserInfo.businessN,
-        account: storedUserInfo.account,
-        address: storedUserInfo.address,
+        email: '',
+        pnumber: '',
+        businessN: '',
+        account: '',
+        address: '',
         detailAddress: ''
       });
     }
-  }, [userInfo]);
+  }, [myPageInfo, userInfo]);
 
-  // 본인인증 확인
+  // 본인인증 확인 - 소셜 사용자 + 회원정보 없음인 경우 건너뛰기
   useEffect(() => {
     const isVerified = sessionStorage.getItem("company_edit_verified");
-    if (!isVerified) {
-      navigate("/company/verify");
-    }
-  }, [navigate]);
-
-  // 컴포넌트 마운트 시 데이터 로딩 상태 확인
-  useEffect(() => {
-    console.log('🚀 CompanyEditPage 마운트됨');
-    console.log('📊 초기 Redux 상태 - userInfo:', userInfo);
-    console.log('💾 localStorage 상태:', {
-      userEmail: localStorage.getItem('userEmail'),
-      userPnumber: localStorage.getItem('userPnumber'),
-      userBusinessN: localStorage.getItem('userBusinessN'),
-      userAccount: localStorage.getItem('userAccount'),
-      userAddress: localStorage.getItem('userAddress')
+    
+    console.log('🔍 본인인증 확인 로직 실행:', {
+      isSocialUser,
+      snsLogin,
+      loginType: localStorage.getItem('loginType'),
+      myPageInfo: !!myPageInfo,
+      isVerified: !!isVerified
     });
-  }, []);
+    
+    // myPageInfo가 로드되지 않았으면 대기
+    if (!myPageInfo) {
+      console.log('⏳ myPageInfo 로딩 대기 중...');
+      return;
+    }
+    
+              // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
+     if (isSocialUser) {
+       const hasProfileInfo = !!(myPageInfo.pnumber || myPageInfo.account || myPageInfo.businessN || myPageInfo.address);
+       console.log('🔍 소셜 사용자 회원정보 확인:', {
+         pnumber: myPageInfo.pnumber,
+         account: myPageInfo.account,
+         businessN: myPageInfo.businessN,
+         address: myPageInfo.address,
+         hasProfileInfo
+       });
+       
+       if (!hasProfileInfo) {
+         console.log('✅ 소셜 사용자 + 회원정보 없음 → 본인인증 건너뛰기');
+         // localStorage 정리
+         localStorage.removeItem('userPnumber');
+         localStorage.removeItem('userBusinessN');
+         localStorage.removeItem('userAccount');
+         localStorage.removeItem('userAddress');
+         console.log('🧹 localStorage 정리 완료');
+         return; // 본인인증 확인 건너뛰기
+       } else {
+         console.log('🔒 소셜 사용자 + 회원정보 있음 → 본인인증 필요 (소셜 재인증)');
+         // 회원정보가 있으면 본인인증 필요
+       }
+     }
+     
+     // 로컬 사용자이거나 회원정보가 있는 소셜 사용자는 본인인증 필요
+     if (!isVerified) {
+       console.log('🔒 본인인증 필요 → verify 페이지로 이동');
+       navigate("/company/verify");
+     } else {
+       console.log('✅ 본인인증 완료됨');
+     }
+  }, [navigate, isSocialUser, myPageInfo]);
+
+  
 
   // 전화번호 자동 포맷팅 함수
   const formatPhoneNumber = (numbersOnly) => {
@@ -207,35 +258,41 @@ const CompanyEditPage = () => {
         updateData.password = formData.password;
         hasChanges = true;
       }
+    } else {
+      // 소셜 사용자는 비밀번호 수정 시도 시 에러
+      if (formData.password || formData.confirmPassword) {
+        setError('소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다.');
+        return;
+      }
     }
 
          // 이메일 검증 및 수정 (빈 값이 아닌 경우에만)
-     if (formData.email !== '' && formData.email !== userInfo?.email) {
+     if (formData.email !== '' && formData.email !== myPageInfo?.email) {
        updateData.email = formData.email;
        hasChanges = true;
      }
 
      // 연락처 검증 및 수정 (빈 값이 아닌 경우에만)
-     if (formData.pnumber !== '' && formData.pnumber !== userInfo?.Pnumber) {
+     if (formData.pnumber !== '' && formData.pnumber !== myPageInfo?.pnumber) {
        updateData.pnumber = formData.pnumber;
        hasChanges = true;
      }
 
      // 사업자등록번호 검증 및 수정 (빈 값이 아닌 경우에만)
-     if (formData.businessN !== '' && formData.businessN !== userInfo?.businessN) {
+     if (formData.businessN !== '' && formData.businessN !== myPageInfo?.businessN) {
        updateData.businessN = formData.businessN;
        hasChanges = true;
      }
 
      // 계좌번호 검증 및 수정 (빈 값이 아닌 경우에만)
-     if (formData.account !== '' && formData.account !== userInfo?.account) {
+     if (formData.account !== '' && formData.account !== myPageInfo?.account) {
        updateData.account = formData.account;
        hasChanges = true;
      }
 
      // 주소 검증 및 수정 (빈 값이 아닌 경우에만)
      const fullAddress = formData.detailAddress ? `${formData.address} ${formData.detailAddress}` : formData.address;
-     if (fullAddress !== '' && fullAddress !== userInfo?.address) {
+     if (fullAddress !== '' && fullAddress !== myPageInfo?.address) {
        updateData.address = fullAddress;
        hasChanges = true;
      }
