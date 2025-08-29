@@ -36,6 +36,9 @@ public interface PaymentService {
 	//2차 결제 생공 시
 	void successSecondPayment(PaymentSuccessDTO paymentSuccessDTO);
 	
+	//2차 결제 환불 시
+	void successRefundPayment(RefundDTO refundDTO);
+	
 	//2차 결제 실패 시
 	void failureSecondPayment(PaymentFailureDTO paymentFailureDTO);
 	

@@ -38,6 +38,8 @@ export const getSecondPayBox = async ({ prepaidId, options = {} }) => {
 
 //1차 결제 성공
 export const successFirstPayment = async ({ paymentId, options = {}, successFirstPayment }) => {
+  if (successFirstPayment === undefined) return;
+  console.log(">>> 1차 결제 API 요청 시작", successFirstPayment);
   try {
     const res = await axios.put(`${API_SERVER_HOST}/first/${paymentId}/success`, {
       ...successFirstPayment,
@@ -45,7 +47,7 @@ export const successFirstPayment = async ({ paymentId, options = {}, successFirs
     }, {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accesstoken}` }
     });
-    console.log(res.data);
+    console.log(">>> 1차 결제 API 요청 도착", res.data);
     return res.data;
   } catch (err) {
     console.error(err);
@@ -54,6 +56,8 @@ export const successFirstPayment = async ({ paymentId, options = {}, successFirs
 
 //2차 결제 성공
 export const successSecondPayment = async ({ paymentId, options = {}, successSecondPayment }) => {
+  if (successSecondPayment === undefined) return;
+  console.log(">>> 2차 결제 API 요청 시작", successSecondPayment);
   try {
     const res = await axios.put(`${API_SERVER_HOST}/second/${paymentId}/success`, {
       ...successSecondPayment,
@@ -61,7 +65,25 @@ export const successSecondPayment = async ({ paymentId, options = {}, successSec
     }, {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accesstoken}` }
     });
-    console.log(res.data);
+    console.log(">>> 2차 결제 API 요청 도착", res.data);
+    return res.data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+//환불 성공
+export const successRefundPayment = async ({ paymentId, options = {}, refundPayment }) => {
+  if (refundPayment === undefined) return;
+  console.log(">>> 2차 결제 API 요청 시작", refundPayment);
+  try {
+    const res = await axios.put(`${API_SERVER_HOST}/refund/${paymentId}/success`, {
+      ...refundPayment,
+      ...options,  // 필요하면 옵션을 body에 병합
+    }, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accesstoken}` }
+    });
+    console.log(">>> 2차 결제 API 요청 도착", res.data);
     return res.data;
   } catch (err) {
     console.error(err);
@@ -116,47 +138,3 @@ export const getTransactionStatement = async ({ paymentId, options = {} }) => {
   }
 };
 
-//전체환불
-// export async function requestRefund(refundDTO) {
-//   try {
-//     const response = await fetch("http://localhost:8080/api/refund", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accesstoken}`, },
-//       body: JSON.stringify(refundDTO),
-//     });
-
-//     const result = await response.json();
-
-//     if (!response.ok) {
-//       throw new Error(result.error || "환불 실패");
-//     }
-
-//     return result;
-//   } catch (err) {
-//     console.error("환불 요청 중 오류:", err.message);
-//     throw err; // 호출한 쪽에서 catch 가능
-//   }
-// }
-
-export async function cancelPayment(impUid, reason = "고객 요청") {
-  try {
-    const response = await fetch(`/api/payments/${impUid}/cancel`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accesstoken}`
-      },
-      body: JSON.stringify({ reason }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`환불 실패: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error(err);
-    throw err; // 호출 쪽에서 catch 할 수 있도록
-  }
-}

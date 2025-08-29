@@ -1,4 +1,4 @@
-import { Box, Button, Grid, } from "@mui/material"
+import { Box, Button, Grid, Typography, } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
 import { useSearchParams } from "react-router-dom"
@@ -6,15 +6,19 @@ import { Layout } from "../../components/common/CommonForCompany"
 import { failureSecondPayment, successSecondPayment } from "../../api/company/paymentApi"
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
 
-export const showReciept = () => {
-    window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
-}
+// export const showReciept = () => {
+//     window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
+// }
 
 const PaymentSuccess = () => {
     const [params] = useSearchParams();
     const success = params.get("success");
     const paymentId = params.get("paymentId");
     const { moveToMain, moveToHistory, moveBack } = usePaymentMove();
+
+    const showReciept = () => {
+        window.open(`${window.location.origin}/company/reciept?paymentId=${paymentId}`, 'name', 'width=500, height=600');
+    }
 
     const PsButton = ({ children, func }) => {
         return (
@@ -41,7 +45,7 @@ const PaymentSuccess = () => {
     });
 
     useEffect(() => {
-        if (success==="true") {
+        if (success === "true") {
             successSecondPayment({ paymentId, paymentSuccessDTO })
                 .then(data => {
                     console.log("결제 성공 처리 성공");
@@ -75,6 +79,12 @@ const PaymentSuccess = () => {
                         src={Logo}
                     >
                     </Box>
+                    <Typography
+                        sx={{
+                            fontSize: "20px",
+                            marginTop: "5%"
+                        }}                    
+                    >{success==="true"?"결제가 완료되었습니다.":"결제에 실패하였습니다."}</Typography>
 
                     <Box
                         sx={{
@@ -82,7 +92,7 @@ const PaymentSuccess = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            margin: "15% 0"
+                            margin: "10% 0"
                         }}
                     >
                         <PsButton func={() => moveToMain()}>메인화면</PsButton>

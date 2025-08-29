@@ -19,6 +19,9 @@ import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
 import com.gpt.squirrelLogistics.external.dto.kakao.KakaoRouteResponseDTO;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @Component
 public class KakaoRouteClient {
 
@@ -92,24 +95,24 @@ public class KakaoRouteClient {
 	}
 
 	public String encodePolyline(List<LatLng> points) {
-	    StringBuilder out = new StringBuilder();
-	    long lastLat = 0, lastLng = 0;
+		StringBuilder out = new StringBuilder();
+		long lastLat = 0, lastLng = 0;
 
-	    for (LatLng p : points) {
-	        // BigDecimal → double 변환 후 1e5 배율 적용
-	        long lat = Math.round(p.getLat().doubleValue() * 1e5);
-	        long lng = Math.round(p.getLng().doubleValue() * 1e5);
+		for (LatLng p : points) {
+			// BigDecimal → double 변환 후 1e5 배율 적용
+			long lat = Math.round(p.getLat().doubleValue() * 1e5);
+			long lng = Math.round(p.getLng().doubleValue() * 1e5);
 
-	        long dLat = lat - lastLat;
-	        long dLng = lng - lastLng;
+			long dLat = lat - lastLat;
+			long dLng = lng - lastLng;
 
-	        encodeSigned(dLat, out);
+			encodeSigned(dLat, out);
 			encodeSigned(dLng, out);
 
-	        lastLat = lat;
-	        lastLng = lng;
-	    }
-	    return out.toString();
+			lastLat = lat;
+			lastLng = lng;
+		}
+		return out.toString();
 	}
 
 	private void encodeSigned(long v, StringBuilder out) {
@@ -149,40 +152,134 @@ public class KakaoRouteClient {
 		return requestRoute(start, end).getDuration();
 	}
 
-	//작성자: 고은설.
-	//기능: 실제 이동 좌표를 
-	public EncodedRouteSummary summarizeRecordedPath(List<LatLng> points) {
-		if (points == null || points.size() < 2) {
-			return new EncodedRouteSummary(0L, encodePolyline(points == null ? List.of() : points));
+	// 작성자: 고은설.
+	// 기능: 실제 이동 좌표를 경로 정보로 환산하여 이동 거리 및 폴리라인 제작.
+	public EncodedRouteSummary summarizeRecordedPath(List<LatLng> rawPoints) {
+		List<LatLng> pts = normalizeTrackPoints(rawPoints);
+
+		if (pts.size() < 2)
+			return new EncodedRouteSummary(0L, encodePolyline(pts));
+
+		long havTotal = 0;
+		long routedTotal = 0;
+		List<LatLng> finalPolyline = new ArrayList<>();
+
+		for (int i = 0; i < pts.size() - 1; i++) {
+			LatLng a = pts.get(i), b = pts.get(i + 1);
+			double gap = haversineMeters(a, b);
+
+			// 1) 중복/스파이크 제거
+			if (gap < 5)
+				continue; // 같은 좌표
+			if (gap > 2000) { // 2km 이상 튐
+				routedTotal += Math.round(gap);
+				continue;
+			}
+
+			// 2) 하버사인 기본
+			long havGap = Math.round(gap);
+			havTotal += havGap;
+
+			// 3) 라우팅 (gap >= 1000m)
+			if (gap >= 1000) {
+				try {
+					RouteInfoDTO leg = requestRoute(a, b);
+					long d = leg.getDistance();
+					long capped = Math.min(d, Math.round(gap * 1.5));
+					routedTotal += capped;
+					finalPolyline.addAll(leg.getPolyline());
+				} catch (Exception e) {
+					routedTotal += havGap;
+				}
+			} else {
+				routedTotal += havGap;
+				finalPolyline.add(a);
+			}
 		}
-		long total = 0L;
-		for (int i = 0; i < points.size() - 1; i++) {
-			total += haversineMeters(points.get(i), points.get(i + 1));
-		}
-		String encoded = encodePolyline(points);
-		return new EncodedRouteSummary(total, encoded);
+
+		// 4) 전역 보정
+		long globalCap = Math.round(havTotal * 1.2); // 최대 20% 오차 허용
+		long safeTotal = Math.min(routedTotal, globalCap);
+
+		return new EncodedRouteSummary(safeTotal, encodePolyline(finalPolyline));
 	}
 
 	// 작성자: 고은설.
-	// 기능: 좌표 기반 이동 거리 측정.
+	// 기능: 좌표 기반 단순 직선 거리 합 측정.
 	private long haversineMeters(LatLng a, LatLng b) {
-	    final double R = 6371000.0; // meters
-	    double rad = Math.PI / 180.0;
+		final double R = 6371000.0; // meters
+		double rad = Math.PI / 180.0;
 
-	    // BigDecimal → double 변환
-	    double latA = a.getLat().doubleValue();
-	    double lngA = a.getLng().doubleValue();
-	    double latB = b.getLat().doubleValue();
-	    double lngB = b.getLng().doubleValue();
+		// BigDecimal → double 변환
+		double latA = a.getLat().doubleValue();
+		double lngA = a.getLng().doubleValue();
+		double latB = b.getLat().doubleValue();
+		double lngB = b.getLng().doubleValue();
 
-	    double dLat = (latB - latA) * rad;
-	    double dLng = (lngB - lngA) * rad;
+		double dLat = (latB - latA) * rad;
+		double dLng = (lngB - lngA) * rad;
 
-	    double s1 = Math.sin(dLat / 2);
-	    double s2 = Math.sin(dLng / 2);
+		double s1 = Math.sin(dLat / 2);
+		double s2 = Math.sin(dLng / 2);
 
-	    double h = s1 * s1 + Math.cos(latA * rad) * Math.cos(latB * rad) * s2 * s2;
-	    double c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-	    return Math.round(R * c);
+		double h = s1 * s1 + Math.cos(latA * rad) * Math.cos(latB * rad) * s2 * s2;
+		double c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+		return Math.round(R * c);
+	}
+
+	// 작성자: 고은설.
+	// 기능: 초인근 좌표 제외 유의미한 이동좌표만을 추려 새 안전 위치 배열 제작.
+	private List<LatLng> normalizeTrackPoints(List<LatLng> raw) {
+		if (raw == null || raw.isEmpty())
+			return List.of();
+
+		final double EPS = 1e-6; // ~10cm 단위
+		List<LatLng> out = new ArrayList<>(raw.size());
+		LatLng prev = null;
+		for (LatLng p : raw) {
+			if (p == null || p.getLat() == null || p.getLng() == null)
+				continue;
+			if (prev == null || !almostSame(prev, p, EPS)) {
+				out.add(p);
+				prev = p;
+			}
+		}
+		return out;
+	}
+
+	// 작성자: 고은설.
+	// 기능: 지리적 같은 지점인지 아닌지 리턴.
+	private boolean almostSame(LatLng a, LatLng b, double eps) {
+		double dLat = Math.abs(a.getLat().doubleValue() - b.getLat().doubleValue());
+		double dLng = Math.abs(a.getLng().doubleValue() - b.getLng().doubleValue());
+		return dLat < eps && dLng < eps;
+	}
+
+	public List<LatLng> decimateByDistance(List<LatLng> points, double thresholdMeters) {
+		List<LatLng> result = new ArrayList<>();
+		if (points == null || points.isEmpty()) {
+			return result;
+		}
+
+		// 첫 점은 무조건 유지
+		result.add(points.get(0));
+		LatLng lastKept = points.get(0);
+
+		for (int i = 1; i < points.size(); i++) {
+			LatLng curr = points.get(i);
+			double dist = haversineMeters(lastKept, curr);
+
+			if (dist >= thresholdMeters) {
+				result.add(curr);
+				lastKept = curr;
+			}
+		}
+
+		// 마지막 점 보장 (경계 오차 방지)
+		if (!result.get(result.size() - 1).equals(points.get(points.size() - 1))) {
+			result.add(points.get(points.size() - 1));
+		}
+
+		return result;
 	}
 }

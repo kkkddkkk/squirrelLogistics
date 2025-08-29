@@ -99,6 +99,11 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
     try {
       setLoading(true);
       const { data } = await api.post("/api/auth/login", { loginId, password });
+      if (String(data?.role).toUpperCase() === "ETC") {
+        setErrors({ loginId: "", password: "탈퇴 처리된 계정입니다. 고객센터로 문의해 주세요." });
+        return; // 토큰 저장/진행 중단
+      }
+
       // 서버 응답 예: { accessToken, name, role }
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("userName", data.name || "");
@@ -136,7 +141,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         {/* 로고/인사 */}
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <img
-            src="/images/logo.png"
+            src="/images/squirrelLogisticsLogo.png"
             alt="logo"
             style={{ width: 80, marginBottom: 8 }}
           />
@@ -260,11 +265,16 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               onSuccess={async (cred) => {
                 try {
                   const idToken = cred.credential;
-                  // ✅ 역할 함께 전송
+                  // 역할 함께 전송
                   const { data } = await api.post("/api/auth/oauth/google", {
                     idToken,
                     role, // "DRIVER" | "COMPANY"
                   });
+                  console.log(data)
+                  if (String(data?.role).toUpperCase() === "ETC") {
+                    alert("탈퇴 처리된 계정입니다. 고객센터로 문의해 주세요.");
+                    return; // 토큰 저장/진행 중단
+                  }
 
                   localStorage.setItem("accessToken", data.accessToken);
                   if (data.name) localStorage.setItem("userName", data.name);
@@ -274,7 +284,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                   onClose();
                 } catch (e) {
                   console.error(e);
-                  alert("구글 로그인 처리 중 문제가 발생했습니다.");
+                  alert("탈퇴된 계정입니다.");
                 }
               }}
               onError={() => alert("구글 로그인에 실패했습니다.")}

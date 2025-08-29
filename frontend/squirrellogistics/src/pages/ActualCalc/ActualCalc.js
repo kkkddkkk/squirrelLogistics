@@ -80,11 +80,12 @@ const ActualCalc = () => {
 
     useEffect(() => {
         if (!estimateCalc) return; // 값 없으면 계산 안 함
-        let additionalFee;
+        let additionalFee = 0;
         if (estimateCalc.dropOrderNum) additionalFee = estimateCalc.dropOrderNum * 50000;
         if (estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3) additionalFee += 50000;
         if (estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3) additionalFee += 50000;
         setAdditionalRateEstimate(additionalFee);
+        console.log(additionalFee);
         setBaseRateEstimate(
             100000
             + (3000 * Math.ceil((estimateCalc.distance) / 1000))
@@ -108,7 +109,7 @@ const ActualCalc = () => {
                 }}
             >
                 <Box sx={{ width: "40%" }}>
-                    {/* <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap> */}
+                    <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap>
                 </Box>
                 <Box sx={{ width: "45%", aspectRatio: "1/1", overflow: "auto" }}>
                     <PayBox

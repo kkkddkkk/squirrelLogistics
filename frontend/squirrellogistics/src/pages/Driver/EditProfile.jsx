@@ -72,6 +72,10 @@ const EditProfile = () => {
     insuranceExpiryDate: "",
   });
 
+  // 비밀번호 필드 관리를 위한 추가 state
+  const [passwordPlaceholder, setPasswordPlaceholder] = useState("********"); // 현재 비밀번호 마스킹 표시
+  const [isPasswordChanged, setIsPasswordChanged] = useState(false); // 비밀번호 변경 여부
+
   // 로딩 상태 추가
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -108,8 +112,8 @@ const EditProfile = () => {
           birth: profileData.userDTO?.birthday || "",
           phone: profileData.userDTO?.pnumber || "",
           email: profileData.userDTO?.email || "",
-          password: "",
-          confirmPassword: "",
+          password: passwordPlaceholder, // 현재 비밀번호 마스킹 표시
+          confirmPassword: passwordPlaceholder, // 현재 비밀번호 마스킹 표시
           bankAccount: profileData.userDTO?.account || "",
           businessId: profileData.userDTO?.businessN || "",
           unavailableStart: "",
@@ -463,25 +467,50 @@ const EditProfile = () => {
     if (loginType === "EMAIL") {
       // 비밀번호 검증
       if (name === "password") {
-        // 비밀번호 정규식: 8자 이상, 영문 대소문자, 숫자, 특수문자 포함
-        const passwordRegex =
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        const isValidPassword = passwordRegex.test(value);
-        setPasswordError(
-          isValidPassword ? "" : "*비밀번호 형식이 올바르지 않습니다."
-        );
+        // 마스킹된 비밀번호 클리어 (사용자가 처음 입력할 때)
+        if (value !== passwordPlaceholder && !isPasswordChanged) {
+          setIsPasswordChanged(true);
+        }
 
-        // 비밀번호 확인 필드도 검증
-        if (form.confirmPassword && value !== form.confirmPassword) {
-          setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+        // 실제 비밀번호가 입력된 경우에만 검증
+        if (value !== passwordPlaceholder && value.length > 0) {
+          // 비밀번호 정규식: 8자 이상, 영문 대소문자, 숫자, 특수문자 포함
+          const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+          const isValidPassword = passwordRegex.test(value);
+          setPasswordError(
+            isValidPassword ? "" : "*비밀번호 형식이 올바르지 않습니다."
+          );
+
+          // 비밀번호 확인 필드도 검증
+          if (
+            form.confirmPassword &&
+            form.confirmPassword !== passwordPlaceholder &&
+            value !== form.confirmPassword
+          ) {
+            setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
+          } else {
+            setPasswordConfirmError("");
+          }
         } else {
-          setPasswordConfirmError("");
+          // 마스킹된 값이면 에러 없음
+          setPasswordError("");
         }
       }
 
       // 비밀번호 확인 검증
       if (name === "confirmPassword") {
-        if (form.password && value !== form.password) {
+        // 마스킹된 비밀번호 클리어 (사용자가 처음 입력할 때)
+        if (value !== passwordPlaceholder && !isPasswordChanged) {
+          setIsPasswordChanged(true);
+        }
+
+        if (
+          form.password &&
+          form.password !== passwordPlaceholder &&
+          value !== passwordPlaceholder &&
+          value !== form.password
+        ) {
           setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
         } else {
           setPasswordConfirmError("");
@@ -493,6 +522,16 @@ const EditProfile = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  // 비밀번호 필드 포커스 핸들러 (마스킹된 값 클리어)
+  const handlePasswordFocus = (fieldName) => {
+    if (!isPasswordChanged) {
+      setForm((prev) => ({
+        ...prev,
+        [fieldName]: "",
+      }));
+    }
   };
 
   // 도시 선택 핸들러
@@ -650,13 +689,21 @@ const EditProfile = () => {
       return;
     }
 
-    // 일반 로그인 사용자의 경우 비밀번호 검증
-    if (loginType === "EMAIL") {
-      if (!form.password || form.password.trim() === "") {
-        alert("비밀번호를 입력해주세요.");
+    // 일반 로그인 사용자의 경우 비밀번호 검증 (변경된 경우에만)
+    if (loginType === "EMAIL" && isPasswordChanged) {
+      if (
+        !form.password ||
+        form.password.trim() === "" ||
+        form.password === passwordPlaceholder
+      ) {
+        alert("새로운 비밀번호를 입력해주세요.");
         return;
       }
-      if (!form.confirmPassword || form.confirmPassword.trim() === "") {
+      if (
+        !form.confirmPassword ||
+        form.confirmPassword.trim() === "" ||
+        form.confirmPassword === passwordPlaceholder
+      ) {
         alert("비밀번호 확인을 입력해주세요.");
         return;
       }
@@ -708,11 +755,13 @@ const EditProfile = () => {
       // 프로필 정보 업데이트
       await updateDriverProfile(profileData);
 
-      // 일반 로그인 사용자의 경우 비밀번호 수정 처리
+      // 일반 로그인 사용자의 경우 비밀번호 수정 처리 (실제로 변경된 경우에만)
       if (
         loginType === "EMAIL" &&
+        isPasswordChanged &&
         form.password &&
-        form.password.trim() !== ""
+        form.password.trim() !== "" &&
+        form.password !== passwordPlaceholder
       ) {
         console.log("비밀번호 수정 시작");
         console.log("currentPassword:", currentPassword);
@@ -948,7 +997,9 @@ const EditProfile = () => {
                     type="password"
                     value={form.password}
                     onChange={handleChange}
+                    onFocus={() => handlePasswordFocus("password")}
                     error={!!passwordError}
+                    placeholder="비밀번호를 입력해주세요."
                     fullWidth
                   />
                   {passwordError && (
@@ -968,7 +1019,9 @@ const EditProfile = () => {
                     type="password"
                     value={form.confirmPassword}
                     onChange={handleChange}
+                    onFocus={() => handlePasswordFocus("confirmPassword")}
                     error={!!passwordConfirmError}
+                    placeholder="비밀번호를 다시 입력해주세요."
                     fullWidth
                   />
                   {passwordConfirmError && (
@@ -981,24 +1034,6 @@ const EditProfile = () => {
                     </Typography>
                   )}
                 </Box>
-              </Box>
-            )}
-
-            {/* SNS 로그인 사용자 안내 메시지 */}
-            {(loginType === "GOOGLE" || loginType === "KAKAO") && (
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: "#f5f5f5",
-                  borderRadius: 1,
-                  border: "1px solid #e0e0e0",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  SNS 로그인 사용자입니다. 비밀번호 설정 없이 정보를 수정할 수
-                  있습니다.
-                </Typography>
               </Box>
             )}
 

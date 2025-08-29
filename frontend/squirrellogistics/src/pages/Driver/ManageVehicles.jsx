@@ -77,11 +77,11 @@ export default function ManageVehicles() {
     mainLoca: "서울",
   });
 
-  // 토큰 가져오기
+  // 토큰 가져오기 (일반/OAuth 사용자 우선)
   const getToken = () => {
     return (
-      localStorage.getItem("token") ||
       localStorage.getItem("accessToken") ||
+      localStorage.getItem("token") ||
       "test-token"
     );
   };

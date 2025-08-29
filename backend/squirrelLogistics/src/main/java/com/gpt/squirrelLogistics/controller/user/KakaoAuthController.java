@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.controller.user;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,43 +28,58 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class KakaoAuthController {
 
-    private final KakaoOAuthService kakaoOAuthService;
-    private final JwtTokenProvider jwt;
-    private final KakaoUserService userService; // findOrCreate, updateLastLogin 등
+	private final KakaoOAuthService kakaoOAuthService;
+	private final JwtTokenProvider jwt;
+	private final KakaoUserService userService; // findOrCreate, updateLastLogin 등
 
-    // 카카오가 code를 전달하는 콜백
-    @GetMapping("/callback")
-    public ResponseEntity<?> callback(
-            @RequestParam("code") String code,
-            @RequestParam(value = "state", required = false) String state // ✅ 역할 전달받기
-    ) {
-        KakaoToken token = kakaoOAuthService.getToken(code);
-        KakaoUserProfile profile = kakaoOAuthService.getUserProfile(token.getAccessToken());
+	private static final String FRONT = "http://localhost:3000";
 
-        //  신규 가입 시 사용할 역할
-        UserRoleEnum desiredRole = toRole(state); // null이면 ETC
+	// 카카오가 code를 전달하는 콜백
+	@GetMapping("/callback")
+	public ResponseEntity<Void> callback(@RequestParam("code") String code,
+			@RequestParam(value = "state", required = false) String state) {
+		try {
+			KakaoToken token = kakaoOAuthService.getToken(code);
+			KakaoUserProfile profile = kakaoOAuthService.getUserProfile(token.getAccessToken());
 
-        //  서비스에서 역할을 반영하도록 오버로드(아래 서비스 수정 참고)
-        User user = userService.findOrCreateFromKakao(profile, desiredRole);
-        userService.updateLastLogin(user.getUserId());
+			UserRoleEnum desiredRole = toRole(state); // DRIVER | COMPANY | ETC
 
-        String accessToken = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
+			// 프론트에서 ETC로 들어오면 바로 실패 리다이렉트
+			if (desiredRole == UserRoleEnum.ETC) {
+				return redirectFail("withdrawn"); // 탈퇴/보류
+			}
 
-        URI redirect = URI.create("http://localhost:3000/oauth/success"
-                + "?token=" + accessToken
-                + "&name=" + URLEncoder.encode(user.getName(), StandardCharsets.UTF_8)
-                + "&role=" + user.getRole().name());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(redirect);
-        return new ResponseEntity<>(headers, HttpStatus.FOUND);
-    }
+			User user = userService.findOrCreateFromKakao(profile, desiredRole);
 
-    private UserRoleEnum toRole(String s) {
-        if (s == null) return UserRoleEnum.ETC;
-        switch (s.toUpperCase()) {
-            case "DRIVER":  return UserRoleEnum.DRIVER;
-            case "COMPANY": return UserRoleEnum.COMPANY;
-            default:        return UserRoleEnum.ETC;
-        }
-    }
+			// 이미 탈퇴(ETC) 계정인 경우도 실패로 보냄
+			if (user.getRole() == UserRoleEnum.ETC) {
+				return redirectFail("withdrawn");
+			}
+
+			String accessToken = jwt.generateToken(user.getLoginId(), user.getRole().name(), user.getUserId());
+
+			URI ok = URI.create(FRONT + "/oauth/success" + "?token=" + accessToken + "&name="
+					+ URLEncoder.encode(user.getName(), StandardCharsets.UTF_8) + "&role=" + user.getRole().name());
+
+			return ResponseEntity.status(HttpStatus.FOUND).location(ok).build();
+
+		} catch (Exception e) {
+			return redirectFail("kakao_error");
+		}
+	}
+
+	private ResponseEntity<Void> redirectFail(String reason) {
+		URI fail = URI.create(FRONT + "/oauth/failure?reason=" + reason);
+		return ResponseEntity.status(HttpStatus.FOUND).location(fail).build(); // 302
+	}
+
+	private UserRoleEnum toRole(String s) {
+		if (s == null)
+			return UserRoleEnum.ETC;
+		try {
+			return UserRoleEnum.valueOf(s.toUpperCase());
+		} catch (Exception e) {
+			return UserRoleEnum.ETC;
+		}
+	}
 }

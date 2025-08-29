@@ -6,7 +6,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { Layout, paymentFormat, SubTitle, Title } from "../../components/common/CommonForCompany";
-import { cancelPayment, getFirstPayBox, getSecondPayBox, refund, requestRefund, successFirstPayment, successSecondPayment } from "../../api/company/paymentApi";
+import { cancelPayment, getFirstPayBox, getSecondPayBox, refund, requestRefund, successFirstPayment, successRefundPayment, successSecondPayment } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
 import RemoveIcon from '@mui/icons-material/Remove';
 import HelpIcon from '@mui/icons-material/Help';
@@ -87,13 +87,13 @@ export const Payment = () => {
     }
     //#endregion
 
-    const { moveToSuccess } = usePaymentMove();
+    const { moveToSuccess, moveToHistory } = usePaymentMove();
     const { moveBack } = useCompanyMove();
 
     //데이터 생성용 useState
     const [refundDate, setRefundDate] = useState('3');
-    const [merchant_uid, setMerchant_uid] = useState('');
     const [paymentMethod, setPaymentMethod] = useState("");
+    const [isProcessing, setIsProcessing] = useState(false);
 
     //페이지 랜더링용 useState
     const [actualCalc, setActualCalc] = useState([]);
@@ -139,6 +139,7 @@ export const Payment = () => {
     //기본요금 + 추가요금, 총 요금 계산
     useEffect(() => {
         if (!actualCalc) return;
+        console.log("getTotalRateStart");
         let addThisRate = 0;
         if (actualCalc.dropOrder1) addThisRate += 50000;
         if (actualCalc.dropOrder2) addThisRate += 50000;
@@ -156,7 +157,8 @@ export const Payment = () => {
     }, [actualCalc])
 
     useEffect(() => {
-        if (!baseRate || !additionalRate) return;
+
+        if (baseRate == null || additionalRate == null) return;
         setTotalRate(baseRate + additionalRate);
     }, [baseRate, additionalRate])
 
@@ -178,7 +180,7 @@ export const Payment = () => {
 
     useEffect(() => {
         if (!actualCalc) return;
-        let additionalFee;
+        let additionalFee = 0;
         if (estimateCalc.dropOrderNum) additionalFee = estimateCalc.dropOrderNum * 50000;
         if (estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3) additionalFee += 50000;
         if (estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3) additionalFee += 50000;
@@ -192,10 +194,16 @@ export const Payment = () => {
     }, [estimateCalc]);
 
     function handleClickPayment() {
+        if (isProcessing) return;
+        setIsProcessing(true);
+        const isSecondPayment = prepaidId !== null && prepaidId !== undefined && prepaidId !== "0";
+        const merchant_uid = isSecondPayment ? actualCalc.paymentId : paymentId;
 
-        const merchant_uid = prepaidId ? actualCalc.paymentId : paymentId;
         const { IMP } = window;
         IMP.init("imp78074867");
+
+        console.log(paymentId);
+        console.log(prepaidId);
 
         IMP.request_pay(
             {
@@ -211,10 +219,18 @@ export const Payment = () => {
 
                 if (!merchant_uid) {
                     console.error("결제 ID가 없습니다.");
+                    setIsProcessing(false);
                     return;
                 }
+
                 if (response.success) {
-                    if (prepaidId) { // 2차 결제
+                    if (!response.imp_uid) {
+                        console.error("PortOne 결제 ID를 가져올 수 없습니다.");
+                        setIsProcessing(false);
+                        return;
+                    }
+
+                    if (isSecondPayment) { // 2차 결제
                         const secondPaymentBody = {
                             paymentId: actualCalc.paymentId,
                             prepaidId: prepaidId,
@@ -223,68 +239,56 @@ export const Payment = () => {
                             payStatus: "PROCESSING",
                             impUid: response.imp_uid
                         };
-                        await successSecondPayment({ paymentId: actualCalc.paymentId, successSecondPayment: secondPaymentBody });
+                        await successSecondPayment({
+                            paymentId: actualCalc.paymentId,
+                            successSecondPayment: secondPaymentBody
+                        });
                         moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
+                        setIsProcessing(false);
                     } else { // 1차 결제
                         const firstPaymentBody = {
                             paymentId: paymentId,
-                            payAmount: totalRate,
+                            payAmount: actualCalc.estimateFee,
                             payMethod: paymentMethod,
                             payStatus: "PROCESSING",
-                            impUid: response.paymentId
+                            impUid: response.imp_uid
                         };
-                        await successFirstPayment({ paymentId, successFirstPayment: firstPaymentBody });
-                        moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
+
+                        console.log(firstPaymentBody);
+                        await successFirstPayment({
+                            paymentId,
+                            successFirstPayment: firstPaymentBody
+                        });
+                        moveToSuccess({ state: true, paymentId: paymentId });
+                        setIsProcessing(false);
                     }
+
                 } else {
                     console.error("결제 실패 메시지:", response.error_msg);
                     moveToSuccess({ state: false, paymentId: actualCalc.paymentId });
                 }
-
             }
         );
-
     }
 
-    //     paymentId: prepaidId, // getPaymentByImpUid 결과 사용
-    // reason: "고객 요청",
-    // currentCancellableAmount: 1000000000,
-    // amount: actualCalc?.estimateFee
-    //     ? totalRate - actualCalc.estimateFee
-    //     : totalRate, // 반드시 양수
-
-
-    // async function cancelPayment() {
-    //     if (!actualCalc?.impUid) {
-    //         alert("환불할 결제 정보가 없습니다.");
-    //         return;
-    //     }
-
-    //     const refundDTO = {
-    //         impUid: actualCalc.impUid,
-    //         amount: actualCalc.estimateFee ? totalRate - actualCalc.estimateFee : totalRate,
-    //         reason: "고객 요청",
-    //     };
-
-    //     try {
-    //         const result = await requestRefund(refundDTO);
-    //         console.log("환불 성공:", result);
-    //         alert("환불이 완료되었습니다.");
-    //     } catch (err) {
-    //         alert("환불 중 오류가 발생했습니다: " + err.message);
-    //     }
-    // }
-
+    //환불
     const handleClickRefund = async () => {
-        try {
-            const result = await cancelPayment(actualCalc.impUid, "고객 요청");
-            console.log("환불 결과:", result);
-            alert("환불이 완료되었습니다!");
-        } catch (err) {
-            console.error("환불 실패:", err);
-            alert("환불 실패: " + err.message);
-        }
+        const refundPaymentBody = {
+            paymentId: actualCalc.paymentId,
+            amount: actualCalc?.estimateFee ? totalRate - actualCalc.estimateFee : totalRate
+        };
+        await successRefundPayment({
+            paymentId: actualCalc.paymentId,
+            refundPayment: refundPaymentBody
+        });
+        console.log("환불 완료");
+        moveToSuccess({ state: true, paymentId: paymentId });
     };
+
+    //정산금액 0원일 경우
+    const handleClickComplete = () => {
+        moveToHistory();
+    }
 
 
     return (
@@ -405,7 +409,7 @@ export const Payment = () => {
                                 variant="contained"
                                 sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
                                 onClick={handleClickPayment}
-                                disabled={!(checkedAll && (paymentMethod !== ''))}
+                                disabled={!(checkedAll && (paymentMethod !== '')) || isProcessing === true}
                             >
                                 결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
                             </Button> : <></>
@@ -417,6 +421,15 @@ export const Payment = () => {
                                 onClick={handleClickRefund}
                             >
                                 환불신청
+                            </Button> : <></>
+                        }
+                        {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) === 0) ?
+                            <Button
+                                variant="contained"
+                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
+                                onClick={handleClickComplete}
+                            >
+                                정산완료
                             </Button> : <></>
                         }
                     </Box>
