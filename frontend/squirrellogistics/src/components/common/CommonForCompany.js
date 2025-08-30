@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+import { theme } from "./CommonTheme";
 
 
 
@@ -43,7 +44,7 @@ export function SubTitle({ children }) {
 export const Layout = ({ title, children }) => {
     return (
         <Box
-            bgcolor={"#F5F7FA"}
+            bgcolor={theme.palette.background.default}
             display="flex"
             width={"100%"}
             // height={"100vh"}

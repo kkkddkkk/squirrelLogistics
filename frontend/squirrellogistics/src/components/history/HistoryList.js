@@ -131,8 +131,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                         borderRadius: "100%",
                                         marginTop: "2%"
                                     }}
-                                    alt="OtterImg"
-                                    // src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                                    alt="Img"
                                     src= {`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
                                 />
                                 <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}({todayContent.carName})</Typography>

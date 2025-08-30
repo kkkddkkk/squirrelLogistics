@@ -31,7 +31,7 @@ const root = createBrowserRouter([
                     </Suspense>
                 ),
                 // children: registRouter()
-            },{
+            }, {
                 path: "/oauth/success",
                 element: (
                     <Suspense fallback={Loading}>
@@ -39,7 +39,7 @@ const root = createBrowserRouter([
                     </Suspense>
                 )
                 // children: registRouter()
-            },{
+            }, {
                 path: "/oauth/failure",
                 element: (
                     <Suspense fallback={Loading}>
@@ -47,7 +47,7 @@ const root = createBrowserRouter([
                     </Suspense>
                 )
                 // children: registRouter()
-            },{
+            }, {
                 path: "/register",
                 element: (
                     <Suspense fallback={Loading}>
