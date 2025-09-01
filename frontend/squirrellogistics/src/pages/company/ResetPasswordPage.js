@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './CompanyVerifyPage.css';
+import { Grid } from '@mui/material';
+import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
+import CommonList from '../../components/common/CommonList';
+import { ButtonContainer, TwoButtonsAtRight } from '../../components/common/CommonButton';
+import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
 
 const ResetPasswordPage = () => {
+  applyThemeToCssVars(theme);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,7 +51,7 @@ const ResetPasswordPage = () => {
 
     try {
       setLoading(true);
-      
+
       const response = await fetch('http://localhost:8080/api/company/password/reset/complete', {
         method: 'POST',
         headers: {
@@ -61,7 +67,7 @@ const ResetPasswordPage = () => {
 
       if (response.ok && data.ok) {
         setSuccess('비밀번호가 성공적으로 재설정되었습니다.');
-        
+
         // 부모 창에 성공 메시지 전송
         if (window.opener && !window.opener.closed) {
           window.opener.postMessage({
@@ -69,7 +75,7 @@ const ResetPasswordPage = () => {
             message: '비밀번호가 성공적으로 재설정되었습니다.'
           }, window.location.origin);
         }
-        
+
         // 2초 후 팝업 자동 닫기
         setTimeout(() => {
           window.close();
@@ -99,56 +105,70 @@ const ResetPasswordPage = () => {
     );
   }
 
+  const handleClickSubmit = (event) => {
+    // form이 button 안에 있으면 currentTarget.form로 접근 가능
+    event.currentTarget.form.requestSubmit();  // form 제출
+  };
+
   return (
-    <div className="verify-wrap">
-      <h2 className="verify-title">비밀번호 재설정</h2>
+    <Grid container p={5}>
+      <Grid size={12}>
+        <CommonTitle>비밀번호 재설정</CommonTitle>
+        <CommonList padding={5}>
+          {/* <h3 className="section-title">새 비밀번호 설정</h3> */}
+          <CommonSmallerTitle>새 비밀번호 설정</CommonSmallerTitle>
+          <p className="verify-description">
+            새로운 비밀번호를 입력해주세요.
+          </p>
 
-      <div className="verify-card">
-        <h3 className="section-title">새 비밀번호 설정</h3>
-        <p className="verify-description">
-          새로운 비밀번호를 입력해주세요.
-        </p>
+          <form onSubmit={handleSubmit}>
+            <label className="field">
+              <CommonSmallerTitle>새 비밀번호</CommonSmallerTitle>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="새 비밀번호를 입력하세요 (4자 이상)"
+                minLength="4"
+                required
+                className='textInput'
+              />
+            </label>
 
-        <form onSubmit={handleSubmit}>
-          <label className="field">
-            <span>새 비밀번호</span>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="새 비밀번호를 입력하세요 (4자 이상)"
-              minLength="4"
-              required
-            />
-          </label>
+            <label className="field">
+              <CommonSmallerTitle>비밀번호 확인</CommonSmallerTitle>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="새 비밀번호를 다시 입력하세요"
+                minLength="4"
+                required
+                className='textInput'
+              />
+            </label>
 
-          <label className="field">
-            <span>비밀번호 확인</span>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="새 비밀번호를 다시 입력하세요"
-              minLength="4"
-              required
-            />
-          </label>
+            <ButtonContainer marginTop={5}>
+              <TwoButtonsAtRight
+                leftTitle={"취소"}
+                leftColor={theme.palette.text.secondary}
+                leftClickEvent={goBack}
 
-          <div className="action-row">
-            <button type="button" className="secondary" onClick={goBack}>
-              취소
-            </button>
-            <button type="submit" className="primary" disabled={loading}>
-              {loading ? '처리 중...' : '비밀번호 변경'}
-            </button>
-          </div>
-        </form>
+                rightTitle={loading ? '처리 중...' : '비밀번호 변경'}
+                rightClickEvent={handleClickSubmit}
 
-        {/* 에러 및 성공 메시지 */}
-        {error && <div className="error-text" aria-live="assertive">{error}</div>}
-        {success && <div className="success-text" aria-live="assertive">{success}</div>}
-      </div>
-    </div>
+                gap={2}
+              />
+            </ButtonContainer>
+
+          </form>
+
+          {/* 에러 및 성공 메시지 */}
+          {error && <div className="error-text" aria-live="assertive">{error}</div>}
+          {success && <div className="success-text" aria-live="assertive">{success}</div>}
+        </CommonList>
+      </Grid>
+    </Grid>
   );
 };
 

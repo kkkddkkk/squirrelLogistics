@@ -4,12 +4,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateCompanyProfile } from '../../api/company/companyApi';
 import { fetchCompanyMyPageInfo } from '../../slice/company/companySlice';
 import './CompanyEditPage.css';
+import { CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
+import { Grid } from '@mui/material';
+import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
+import LockIcon from '@mui/icons-material/Lock';
+import CallIcon from '@mui/icons-material/Call';
+import { ButtonContainer, OneButtonAtRight, TwoButtonsAtRight } from '../../components/common/CommonButton';
 
 const CompanyEditPage = () => {
+  applyThemeToCssVars(theme);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userInfo, myPageInfo, snsLogin } = useSelector((s) => s.company);
-   
+
   // 소셜 사용자 여부 확인
   const isSocialUser = snsLogin;
 
@@ -33,10 +40,10 @@ const CompanyEditPage = () => {
   // 초기 데이터 로드 - Redux 상태만 사용
   useEffect(() => {
     console.log('🔄 useEffect 실행 - myPageInfo:', myPageInfo);
-    
+
     if (myPageInfo && Object.keys(myPageInfo).length > 0) {
       console.log('✅ myPageInfo에서 데이터 로드:', myPageInfo);
-      
+
       setFormData({
         password: '',
         confirmPassword: '',
@@ -65,20 +72,20 @@ const CompanyEditPage = () => {
   // 본인인증 확인
   useEffect(() => {
     const isVerified = sessionStorage.getItem("company_edit_verified");
-    
+
     console.log('🔍 본인인증 확인 로직 실행:', {
       isSocialUser,
       snsLogin,
       myPageInfo: !!myPageInfo,
       isVerified: !!isVerified
     });
-    
+
     // myPageInfo가 로드되지 않았으면 대기
     if (!myPageInfo) {
       console.log('⏳ myPageInfo 로딩 대기 중...');
       return;
     }
-    
+
     // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
     if (isSocialUser) {
       const hasProfileInfo = !!(myPageInfo.pnumber || myPageInfo.account || myPageInfo.businessN || myPageInfo.address);
@@ -89,7 +96,7 @@ const CompanyEditPage = () => {
         address: myPageInfo.address,
         hasProfileInfo
       });
-      
+
       if (!hasProfileInfo) {
         console.log('✅ 소셜 사용자 + 회원정보 없음 → 본인인증 건너뛰기');
         return; // 본인인증 확인 건너뛰기
@@ -98,7 +105,7 @@ const CompanyEditPage = () => {
         // 회원정보가 있으면 본인인증 필요
       }
     }
-    
+
     // 로컬 사용자이거나 회원정보가 있는 소셜 사용자는 본인인증 필요
     if (!isVerified) {
       console.log('🔒 본인인증 필요 → verify 페이지로 이동');
@@ -113,18 +120,18 @@ const CompanyEditPage = () => {
     // 한국 전화번호 형식 정의
     const areaCodes = ['02', '031', '032', '033', '041', '043', '042', '044', '051', '052', '053', '054', '055', '061', '062', '063', '064', '070'];
     const mobileCodes = ['010', '011', '016', '017', '019'];
-    
+
     let formattedNumber = '';
-    
+
     if (numbersOnly.length === 0) {
       return '';
     }
-    
+
     // 지역번호 (02: 서울, 03x: 경기/인천, 04x: 강원/충청, 05x: 전라/부산/대구/울산, 06x: 경상/제주, 070: 인터넷전화)
     if (areaCodes.includes(numbersOnly.slice(0, 2)) || areaCodes.includes(numbersOnly.slice(0, 3))) {
       const areaCode = areaCodes.includes(numbersOnly.slice(0, 2)) ? numbersOnly.slice(0, 2) : numbersOnly.slice(0, 3);
       const remaining = numbersOnly.slice(areaCode.length);
-      
+
       if (remaining.length <= 3) {
         formattedNumber = `${areaCode}-${remaining}`;
       } else if (remaining.length <= 7) {
@@ -153,19 +160,19 @@ const CompanyEditPage = () => {
         formattedNumber = `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4, 8)}-${numbersOnly.slice(8, 12)}`;
       }
     }
-    
+
     return formattedNumber;
   };
 
   // 입력 필드 변경 핸들러
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // 연락처 자동 포맷팅
     if (name === 'pnumber') {
       const numbersOnly = value.replace(/\D/g, ''); // 숫자만 추출
       const formattedNumber = formatPhoneNumber(numbersOnly);
-      
+
       setFormData(prev => ({
         ...prev,
         [name]: formattedNumber
@@ -181,7 +188,7 @@ const CompanyEditPage = () => {
   // 주소 검색 핸들러
   const handleAddressSearch = () => {
     new window.daum.Postcode({
-      oncomplete: function(data) {
+      oncomplete: function (data) {
         setFormData(prev => ({
           ...prev,
           address: data.address
@@ -278,15 +285,15 @@ const CompanyEditPage = () => {
 
       // API 호출
       const response = await updateCompanyProfile(updateData);
-      
+
       if (response.ok) {
         setSuccess('회원정보가 성공적으로 수정되었습니다.');
-        
+
         console.log('✅ DB 업데이트 완료:', updateData);
-        
+
         // Redux 상태 자동 갱신
         dispatch(fetchCompanyMyPageInfo());
-        
+
         // 2초 후 company 메인 페이지로 이동
         setTimeout(() => {
           navigate("/company");
@@ -311,153 +318,166 @@ const CompanyEditPage = () => {
     }
   };
 
+  const handleClickSubmit = (event) => {
+    // form이 button 안에 있으면 currentTarget.form로 접근 가능
+    event.currentTarget.form.requestSubmit();  // form 제출
+  };
+
+
   const goBack = () => navigate("/company");
 
   return (
-    <div className="edit-wrap">
-      <h2 className="edit-title">회원정보 수정</h2>
-      <p className="edit-subtitle">수정하고 싶은 항목만 입력하세요. 빈 필드는 기존 정보가 유지됩니다.</p>
+    <Grid container marginBottom={"5%"}>
+      <Grid size={3} />
+      <Grid size={6}>
+        <CommonTitle>회원정보 수정</CommonTitle>
+        <p className="edit-subtitle">수정하고 싶은 항목만 입력하세요. 빈 필드는 기존 정보가 유지됩니다.</p>
 
-      <div className="edit-card">
-        <form onSubmit={handleSubmit}>
-          {/* 비밀번호 수정 (소셜 사용자 제외) */}
-          {!isSocialUser && (
-            <>
-              <label className="field">
-                <span>새 비밀번호</span>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="새 비밀번호를 입력하세요"
-                  minLength="4"
-                />
-              </label>
+        <div className="edit-card">
+          <form onSubmit={handleSubmit}>
+            {/* 비밀번호 수정 (소셜 사용자 제외) */}
+            {!isSocialUser && (
+              <>
+                <label className="field">
+                  <span>새 비밀번호</span>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="새 비밀번호를 입력하세요"
+                    minLength="4"
+                  />
+                </label>
 
-              <label className="field">
-                <span>비밀번호 확인</span>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="새 비밀번호를 다시 입력하세요"
-                  minLength="4"
-                />
-              </label>
-            </>
-          )}
+                <label className="field">
+                  <span>비밀번호 확인</span>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="새 비밀번호를 다시 입력하세요"
+                    minLength="4"
+                  />
+                </label>
+              </>
+            )}
 
-          {/* 소셜 사용자 비밀번호 수정 제한 안내 */}
-          {isSocialUser && (
-            <div className="social-notice">
-              <p>🔐 소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다.</p>
-              <p>비밀번호 변경이 필요한 경우 소셜 계정 설정에서 변경해주세요.</p>
-            </div>
-          )}
-
-          {/* 기본 정보 */}
-          <label className="field">
-            <span>이메일</span>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="example@company.com"
-            />
-          </label>
-
-          <label className="field">
-            <span>연락처</span>
-            <input
-              type="text"
-              name="pnumber"
-              value={formData.pnumber}
-              onChange={handleInputChange}
-              placeholder="01012345678 (숫자만 입력)"
-              maxLength="13"
-            />
-            <small className="field-hint">
-              숫자만 입력하면 자동으로 포맷팅됩니다.<br/>
-              📞 휴대폰: 010-1234-5678, 📞 지역번호: 02-1234-5678, 031-123-4567
-            </small>
-          </label>
-
-          <label className="field">
-            <span>사업자등록번호</span>
-            <input
-              type="text"
-              name="businessN"
-              value={formData.businessN}
-              onChange={handleInputChange}
-              placeholder="새 사업자등록번호를 입력하세요"
-            />
-          </label>
-
-          <label className="field">
-            <span>계좌번호</span>
-            <input
-              type="text"
-              name="account"
-              value={formData.account}
-              onChange={handleInputChange}
-              placeholder="새 계좌번호를 입력하세요"
-            />
-          </label>
-
-          {/* 주소 설정 */}
-          <div className="address-section">
-            <label className="field">
-              <span>주소</span>
-              <div className="address-input-group">
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="주소를 입력하세요"
-                  readOnly
-                />
-                <button
-                  type="button"
-                  className="address-search-btn"
-                  onClick={handleAddressSearch}
-                >
-                  주소 검색
-                </button>
+            {/* 소셜 사용자 비밀번호 수정 제한 안내 */}
+            {isSocialUser && (
+              <div className="social-notice">
+                <LockIcon />
+                <p> 소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다.</p>
+                <p>비밀번호 변경이 필요한 경우 소셜 계정 설정에서 변경해주세요.</p>
               </div>
-            </label>
+            )}
 
+            {/* 기본 정보 */}
             <label className="field">
-              <span>상세주소</span>
+              <span>이메일</span>
               <input
-                type="text"
-                name="detailAddress"
-                value={formData.detailAddress}
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleInputChange}
-                placeholder="상세주소를 입력하세요 (건물명, 호수 등)"
+                placeholder="example@company.com"
               />
             </label>
-          </div>
 
-          {/* 액션 버튼 */}
-          <div className="action-row">
-            <button type="button" className="secondary" onClick={goBack}>
-              취소
-            </button>
-            <button type="submit" className="primary" disabled={loading}>
-              {loading ? '저장 중...' : '변경하기'}
-            </button>
-          </div>
-        </form>
+            <label className="field">
+              <span>연락처</span>
+              <input
+                type="text"
+                name="pnumber"
+                value={formData.pnumber}
+                onChange={handleInputChange}
+                placeholder="01012345678 (숫자만 입력)"
+                maxLength="13"
+              />
+              <small className="field-hint">
+                숫자만 입력하면 자동으로 포맷팅됩니다.<br />
+                <CallIcon sx={{ fontSize: 12 }} /> 휴대폰: 010-1234-5678, &nbsp;
+                <CallIcon sx={{ fontSize: 12 }} /> 지역번호: 02-1234-5678, 031-123-4567
+              </small>
+            </label>
 
-        {/* 에러 및 성공 메시지 */}
-        {error && <div className="error-text" aria-live="assertive">{error}</div>}
-        {success && <div className="success-text" aria-live="assertive">{success}</div>}
-      </div>
-    </div>
+            <label className="field">
+              <span>사업자등록번호</span>
+              <input
+                type="text"
+                name="businessN"
+                value={formData.businessN}
+                onChange={handleInputChange}
+                placeholder="새 사업자등록번호를 입력하세요"
+              />
+            </label>
+
+            <label className="field">
+              <span>계좌번호</span>
+              <input
+                type="text"
+                name="account"
+                value={formData.account}
+                onChange={handleInputChange}
+                placeholder="새 계좌번호를 입력하세요"
+              />
+            </label>
+
+            {/* 주소 설정 */}
+            <div className="address-section">
+              <label className="field">
+                <span>주소</span>
+                <div className="address-input-group">
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="주소를 입력하세요"
+                    readOnly
+                  />
+                  <OneButtonAtRight clickEvent={handleAddressSearch}>
+                    주소 검색
+                  </OneButtonAtRight>
+                </div>
+              </label>
+
+              <label className="field">
+                <span>상세주소</span>
+                <input
+                  type="text"
+                  name="detailAddress"
+                  value={formData.detailAddress}
+                  onChange={handleInputChange}
+                  placeholder="상세주소를 입력하세요 (건물명, 호수 등)"
+                />
+              </label>
+            </div>
+
+            {/* 액션 버튼 */}
+            <ButtonContainer marginBottom={"5%"}>
+              <TwoButtonsAtRight
+                leftTitle={"취소"}
+                leftClickEvent={goBack}
+                leftColor={theme.palette.text.secondary}
+
+                rightTitle={loading ? '저장 중...' : '변경하기'}
+                rightDisabled={loading}
+                rightClickEvent={handleClickSubmit}
+
+                gap={2}
+              />
+            </ButtonContainer>-
+          </form>
+
+          {/* 에러 및 성공 메시지 */}
+          {error && <div className="error-text" aria-live="assertive">{error}</div>}
+          {success && <div className="success-text" aria-live="assertive">{success}</div>}
+        </div>
+      </Grid>
+      <Grid size={3} />
+    </Grid>
   );
 };
 

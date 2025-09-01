@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, MenuItem, FormHelperText
+    TextField, Button, MenuItem, FormHelperText,
+    Box
 } from "@mui/material";
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import { theme } from "../common/CommonTheme";
+import { ButtonContainer } from "../common/CommonButton";
 
 export default function CargoDialog({ open, onClose, onSave, options = [], initialCargo }) {
     const [description, setDescription] = useState("");
@@ -45,7 +49,7 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" >
             <DialogTitle>화물 정보 입력</DialogTitle>
             <DialogContent>
                 <TextField
@@ -80,14 +84,19 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
                 )}
 
                 <div style={{ margin: "20px 0" }}>
-                    <label>📦 무게 선택 (1톤 ~ 26톤)</label>
+                    <label style={{ display: "flex", alignItems: "center" }}>
+                        <Inventory2OutlinedIcon /> &nbsp;무게 선택 (1톤 ~ 26톤)
+                    </label>
                     <input
                         type="range"
                         min="1"
                         max="26"
                         value={weightTon}
                         onChange={(e) => setWeightTon(Number(e.target.value))}
-                        style={{ width: "92%", margin: "0 auto", display: "block", boxSizing: "border-box" }}
+                        style={{
+                            width: "92%", margin: "0 auto", display: "block", boxSizing: "border-box",
+                            accentColor: theme.palette.primary.main
+                        }}
                     />
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, width: "92%", margin: "0 auto" }}>
                         <span>1톤</span>
@@ -97,10 +106,14 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
                 </div>
             </DialogContent>
 
-            <DialogActions>
-                <Button onClick={onClose}>취소</Button>
-                <Button variant="contained" onClick={handleApply}>적용하기</Button>
-            </DialogActions>
+            <Box sx={{ margin: 2 }}>
+                <DialogActions>
+                    <Button onClick={onClose}>취소</Button>
+                    <Button variant="contained" onClick={handleApply}>적용하기</Button>
+                </DialogActions>
+            </Box>
+
+
         </Dialog>
     );
 }

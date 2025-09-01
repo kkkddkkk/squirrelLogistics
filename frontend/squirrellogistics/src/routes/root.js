@@ -15,6 +15,7 @@ const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
 const Company = lazy(() => import("../pages/company/CompanyLayout"));
 const Reciept = lazy(() => import("../pages/Payment/Reciept"));
 const TransactionStatement = lazy(() => import("../pages/Payment/TransactionStatement"));
+const ResetPasswordPage = lazy(() => import("../pages/company/ResetPasswordPage"));
 const OAuthSuccess = lazy(() => import("../api/user/OAuthSuccess"));
 const OAuthBridge = lazy(() => import("../pages/Layout/error/OAuthBridge"));
 
@@ -75,6 +76,13 @@ const root = createBrowserRouter([
                 element: (
                     <Suspense fallback={Loading}>
                         <TransactionStatement></TransactionStatement>
+                    </Suspense>
+                )
+            },  {
+                path: "/company/reset-password",
+                element: (
+                    <Suspense fallback={Loading}>
+                        <ResetPasswordPage></ResetPasswordPage>
                     </Suspense>
                 )
             }, {

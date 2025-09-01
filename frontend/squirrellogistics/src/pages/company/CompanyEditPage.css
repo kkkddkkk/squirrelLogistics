@@ -37,7 +37,7 @@
 
 .field > span {
   font-weight: 600;
-  color: #2A2A2A;
+  color: var(--text-primary);
   font-size: 0.9rem;
 }
 
@@ -48,16 +48,16 @@
   padding: 0 .8rem;
   font-size: 0.9rem;
   transition: border-color 0.3s ease;
+  outline: none;
 }
 
 .field input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: 2px solid var(--primary-main);
+  box-shadow: 0 0 3px var(--secondary-main);
 }
 
+
 .field input[readonly] {
-  background-color: #f8f9fa;
   cursor: pointer;
 }
 
@@ -72,7 +72,7 @@
 
 /* 소셜 사용자 안내 */
 .social-notice {
-  background: #e3f2fd;
+  background: var(--background-default);
   border: 1px solid #2196f3;
   border-radius: 8px;
   padding: 1rem;
@@ -161,7 +161,7 @@
 
 /* 에러 및 성공 메시지 */
 .error-text {
-  color: #e74c3c;
+  color: var(--error-main);
   font-size: .9rem;
   margin-top: .6rem;
   padding: 0.8rem;
@@ -173,7 +173,7 @@
 
 .success-text {
   background-color: #d4edda;
-  color: #155724;
+  color: var(--success-main);
   padding: 0.8rem;
   border-radius: 6px;
   margin-top: .6rem;

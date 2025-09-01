@@ -1,0 +1,8 @@
+.customInput{
+
+}
+
+.customInput:focus {
+  outline: none;
+  border: 2px solid var(--primary-main); /* 원하는 색 */
+}

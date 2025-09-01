@@ -1,6 +1,10 @@
 // src/components/driversearch/DriverCard.js
 import React from "react";
 import "./DriverCard.css";
+import { theme, applyThemeToCssVars } from "../common/CommonTheme";
+import { OneButtonAtRight } from "../common/CommonButton";
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
+import { Box } from "@mui/material";
 
 /**
  * 기사 카드 컴포넌트
@@ -12,7 +16,8 @@ import "./DriverCard.css";
 const DriverCard = ({ driver, onRequest }) => {
   // 디버깅: 받은 데이터 확인
   console.log("DriverCard received driver data:", driver);
-  
+  applyThemeToCssVars(theme);
+
   const handleClick = () => {
     // 중복된 confirm 제거 - DriverSearchForm에서 처리
     onRequest(driver.driverId);
@@ -29,9 +34,17 @@ const DriverCard = ({ driver, onRequest }) => {
   // 평점 표시 (소수점 1자리까지, Double 타입)
   const renderRating = () => {
     if (driver.averageRating && driver.averageRating > 0) {
-      return `⭐ ${driver.averageRating.toFixed(1)}`;
+      return (
+        <Box display={"flex"} alignItems={"center"}>
+          <StarOutlinedIcon /> &nbsp; ${driver.averageRating.toFixed(1)}
+        </Box>
+      );
     }
-    return "⭐ 0.0";
+    return (
+      <Box display={"flex"} alignItems={"center"}>
+        <StarOutlinedIcon /> &nbsp;0.0
+      </Box>
+    );
   };
 
   // 최대 적재량 표시 (kg → 톤 변환, Integer 타입)
@@ -75,7 +88,7 @@ const DriverCard = ({ driver, onRequest }) => {
         </div>
         {renderDrivableStatus()}
       </div>
-      <button className="request-button" onClick={handleClick}>요청</button>
+      <OneButtonAtRight clickEvent={handleClick}>요청</OneButtonAtRight>
     </div>
   );
 };

@@ -19,6 +19,13 @@ import {
 } from "../../api/estimate/estimateApi";
 import { searchDrivers } from "../../api/driversearch/driverSearchApi";
 import "./DriverSearchForm.css";
+import { CommonSubTitle, CommonTitle } from "../common/CommonText";
+import { Box, Grid } from "@mui/material";
+import CommonList from "../common/CommonList";
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import { theme, applyThemeToCssVars } from "../common/CommonTheme";
+import { ButtonContainer, OneButtonAtCenter, OneButtonAtLeft, OneButtonAtRight } from "../common/CommonButton";
+import LoadingComponent from '../common/LoadingComponent';
 
 const STORAGE_KEY = "deliveryFlow";
 
@@ -34,6 +41,7 @@ const convertAddressToCoords = (address, callback) => {
 };
 
 const DriverSearchForm = () => {
+  applyThemeToCssVars(theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -275,178 +283,195 @@ const DriverSearchForm = () => {
   };
 
   return (
-    <div className="driversearch-form">
-      {/* 기사검색 제목 - 맨 상단 가운데 */}
-      <h2 className="page-title">기사 검색</h2>
+    <Grid container marginBottom={5}>
+      <Grid size={3} />
+      <Grid size={6}>
+        <CommonTitle>기사 검색</CommonTitle>
 
-      {/* 예상금액 데이터 표시 */}
-      {flow && (
-        <div className="estimate-summary">
-          <h3>📋 배송 요청 정보</h3>
-          <div className="data-grid">
-            <div className="data-item">
-              <strong>출발지:</strong> {flow.requestDto?.startAddress || "미입력"}
-            </div>
-            <div className="data-item">
-              <strong>도착지:</strong> {flow.requestDto?.endAddress || "미입력"}
-            </div>
-            <div className="data-item">
-              <strong>경유지:</strong> {flow.requestDto?.waypoints?.length > 0 ? `${flow.requestDto.waypoints.length}개` : "없음"}
-            </div>
-            <div className="data-item">
-              <strong>화물 무게:</strong> {flow.requestDto?.totalCargoWeight ? `${Math.round(flow.requestDto.totalCargoWeight / 1000)}톤` : "미입력"}
-            </div>
-            <div className="data-item">
-              <strong>화물 종류:</strong> {flow.requestDto?.cargoTypes?.length > 0 ? flow.requestDto.cargoTypes.join(", ") : "미입력"}
-            </div>
-            <div className="data-item">
-              <strong>예상 금액:</strong> <span className="price-highlight">{flow.requestDto?.estimatedFee?.toLocaleString()}원</span>
-            </div>
-            <div className="data-item">
-              <strong>희망 출발일:</strong> {flow.requestDto?.wantToStart ? new Date(flow.requestDto.wantToStart).toLocaleDateString() : "미입력"}
-            </div>
-            <div className="data-item">
-              <strong>희망 도착일:</strong> {flow.requestDto?.wantToEnd ? new Date(flow.requestDto.wantToEnd).toLocaleDateString() : "미입력"}
-            </div>
-          </div>
-          {flow.requestDto?.memoToDriver && (
-            <div className="memo-section">
-              <strong>배송 메모:</strong> {flow.requestDto.memoToDriver}
+        <CommonList padding={5}>
+          {/* 예상금액 데이터 표시 */}
+          {flow && (
+            <div className="estimate-summary">
+              <Box display={"flex"} alignItems={"center"} marginBottom={2}>
+                <LocalShippingOutlinedIcon />
+                <CommonSubTitle>&nbsp; 배송 요청 정보</CommonSubTitle>
+              </Box>
+
+              <div className="data-grid">
+                <div className="data-item">
+                  <strong>출발지:</strong> {flow.requestDto?.startAddress || "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>도착지:</strong> {flow.requestDto?.endAddress || "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>경유지:</strong> {flow.requestDto?.waypoints?.length > 0 ? `${flow.requestDto.waypoints.length}개` : "없음"}
+                </div>
+                <div className="data-item">
+                  <strong>화물 무게:</strong> {flow.requestDto?.totalCargoWeight ? `${Math.round(flow.requestDto.totalCargoWeight / 1000)}톤` : "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>화물 종류:</strong> {flow.requestDto?.cargoTypes?.length > 0 ? flow.requestDto.cargoTypes.join(", ") : "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>예상 금액:</strong> <span className="price-highlight">{flow.requestDto?.estimatedFee?.toLocaleString()}원</span>
+                </div>
+                <div className="data-item">
+                  <strong>희망 출발일:</strong> {flow.requestDto?.wantToStart ? new Date(flow.requestDto.wantToStart).toLocaleDateString() : "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>희망 도착일:</strong> {flow.requestDto?.wantToEnd ? new Date(flow.requestDto.wantToEnd).toLocaleDateString() : "미입력"}
+                </div>
+              </div>
+              {flow.requestDto?.memoToDriver && (
+                <div className="memo-section">
+                  <strong>배송 메모:</strong> {flow.requestDto.memoToDriver}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* 검색 필터 */}
-      <div className="search-bar">
-        {/* 주소 API 버튼 - 검색란 왼쪽 */}
-        <button className="region-btn" onClick={openAddressPopup}>
-          주소 선택
-        </button>
-        {/* 키워드 검색 */}
-        <input
-          type="text"
-          className="keyword-input"
-          placeholder="기사명, 연락처 등으로 검색"
-          value={searchParams.keyword}
-          onChange={(e) => setSearchParams(prev => ({ ...prev, keyword: e.target.value }))}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        {/* 검색 실행 버튼 */}
-        <button className="search-btn" onClick={() => handleSearch()}>검색</button>
-      </div>
+          {/* 검색 필터 */}
+          <div className="search-bar">
+            {/* 주소 API 버튼 - 검색란 왼쪽 */}
+            <OneButtonAtLeft clickEvent={openAddressPopup}>
+              주소 선택
+            </OneButtonAtLeft>
+            {/* 키워드 검색 */}
+            <input
+              type="text"
+              className="keyword-input"
+              placeholder="기사명, 연락처 등으로 검색"
+              value={searchParams.keyword}
+              onChange={(e) => setSearchParams(prev => ({ ...prev, keyword: e.target.value }))}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            {/* 검색 실행 버튼 */}
+            <OneButtonAtRight clickEvent={() => handleSearch()}>검색</OneButtonAtRight>
+          </div>
 
-      {/* 필터 옵션들 */}
-      <div className="filter-bar">
-        {/* 즉시 배차 */}
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={searchParams.drivable}
-            onChange={handleDrivableToggle}
-          />
-          즉시 배차 가능
-        </label>
+          {/* 필터 옵션들 */}
+          <div className="filter-bar">
+            {/* 즉시 배차 */}
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={searchParams.drivable}
+                onChange={handleDrivableToggle}
 
-        {/* 최대 적재량 */}
-        <select
-          value={searchParams.maxWeight || ""}
-          onChange={(e) => handleMaxWeightChange(e.target.value)}
-        >
-          <option value="">최대 적재량</option>
-          <option value="1000">1톤 이상</option>
-          <option value="2500">2.5톤 이상</option>
-          <option value="5000">5톤 이상</option>
-          <option value="8000">8톤 이상</option>
-          <option value="10000">10톤 이상</option>
-          <option value="15000">15톤 이상</option>
-          <option value="25000">25톤 이상</option>
-        </select>
+              />
+              즉시 배차 가능
+            </label>
 
-        {/* 차량 종류 */}
-        <select
-          value={searchParams.vehicleTypeId || ""}
-          onChange={(e) => handleVehicleTypeChange(e.target.value)}
-        >
-          <option value="">차량 종류</option>
-          {vehicleTypes.map(type => (
-            <option key={type.id} value={type.id}>{type.name}</option>
-          ))}
-        </select>
-
-        {/* 정렬 옵션 */}
-        <select
-          value={searchParams.sortOption}
-          onChange={(e) => handleSortChange(e.target.value)}
-        >
-          <option value="">정렬</option>
-          <option value="rating">별점순</option>
-          <option value="distance">거리순</option>
-        </select>
-      </div>
-
-      {/* 검색 결과 */}
-      <div className="driver-list">
-        {isLoading ? (
-          <div className="no-result">검색 중...</div>
-        ) : (
-          <>
-            <div className="search-info">
-              총 {searchResult.totalElements}명의 기사님
-            </div>
-
-            {/* 기사 목록 */}
-            {searchResult.drivers.length > 0 ? (
-              searchResult.drivers.map((driver) => (
-                <DriverCard
-                  key={driver.driverId}
-                  driver={driver}
-                  onRequest={() => handleDriverRequest(driver.driverId)}
-                />
-              ))
-            ) : (
-              <div className="no-result">검색 결과가 없습니다.</div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* 페이징 */}
-      {searchResult.totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="page-btn"
-            onClick={() => handlePageChange(searchResult.currentPage - 1)}
-            disabled={!searchResult.hasPrevious}
-          >
-            이전
-          </button>
-
-          {Array.from({ length: searchResult.totalPages }, (_, i) => (
-            <button
-              key={i}
-              className={`page-btn ${i === searchResult.currentPage ? 'active' : ''}`}
-              onClick={() => handlePageChange(i)}
+            {/* 최대 적재량 */}
+            <select
+              value={searchParams.maxWeight || ""}
+              onChange={(e) => handleMaxWeightChange(e.target.value)}
             >
-              {i + 1}
-            </button>
-          ))}
+              <option value="">최대 적재량</option>
+              <option value="1000">1톤 이상</option>
+              <option value="2500">2.5톤 이상</option>
+              <option value="5000">5톤 이상</option>
+              <option value="8000">8톤 이상</option>
+              <option value="10000">10톤 이상</option>
+              <option value="15000">15톤 이상</option>
+              <option value="25000">25톤 이상</option>
+            </select>
 
-          <button
-            className="page-btn"
-            onClick={() => handlePageChange(searchResult.currentPage + 1)}
-            disabled={!searchResult.hasNext}
-          >
-            다음
-          </button>
-        </div>
-      )}
+            {/* 차량 종류 */}
+            <select
+              value={searchParams.vehicleTypeId || ""}
+              onChange={(e) => handleVehicleTypeChange(e.target.value)}
+            >
+              <option value="">차량 종류</option>
+              {vehicleTypes.map(type => (
+                <option key={type.id} value={type.id}>{type.name}</option>
+              ))}
+            </select>
 
-      {/* 돌아가기 버튼 - 맨 하단 */}
-      <button className="back-button" onClick={() => navigate(-1)}>
-        ← 예상금액 페이지로 돌아가기
-      </button>
-    </div>
+            {/* 정렬 옵션 */}
+            <select
+              value={searchParams.sortOption}
+              onChange={(e) => handleSortChange(e.target.value)}
+            >
+              <option value="">정렬</option>
+              <option value="rating">별점순</option>
+              <option value="distance">거리순</option>
+            </select>
+          </div>
+
+          {/* 검색 결과 */}
+          <div className="driver-list">
+            <LoadingComponent open={isLoading} text="운전 가능한 기사님을 검색 중..."></LoadingComponent>
+            {isLoading ? (
+              <div className="no-result">검색 중...</div>
+            ) : (
+              <>
+                <div className="search-info">
+                  총 {searchResult.totalElements}명의 기사님
+                </div>
+
+                {/* 기사 목록 */}
+                {searchResult.drivers.length > 0 ? (
+                  searchResult.drivers.map((driver) => (
+                    <DriverCard
+                      key={driver.driverId}
+                      driver={driver}
+                      onRequest={() => handleDriverRequest(driver.driverId)}
+                    />
+                  ))
+                ) : (
+                  <div className="no-result">검색 결과가 없습니다.</div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* 페이징 */}
+          {searchResult.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="page-btn"
+                onClick={() => handlePageChange(searchResult.currentPage - 1)}
+                disabled={!searchResult.hasPrevious}
+              >
+                이전
+              </button>
+
+              {Array.from({ length: searchResult.totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`page-btn ${i === searchResult.currentPage ? 'active' : ''}`}
+                  onClick={() => handlePageChange(i)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                className="page-btn"
+                onClick={() => handlePageChange(searchResult.currentPage + 1)}
+                disabled={!searchResult.hasNext}
+              >
+                다음
+              </button>
+            </div>
+          )}
+
+          {/* 돌아가기 버튼 - 맨 하단 */}
+          <ButtonContainer marginTop={5}>
+            <OneButtonAtCenter clickEvent={() => navigate(-1)}>
+              예상금액 페이지로 돌아가기
+            </OneButtonAtCenter>
+          </ButtonContainer>
+
+
+        </CommonList>
+
+      </Grid>
+      <Grid size={3} />
+    </Grid>
+
   );
 };
 

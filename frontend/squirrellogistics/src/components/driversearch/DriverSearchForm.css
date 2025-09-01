@@ -24,7 +24,7 @@
 }
 
 .estimate-summary .price-highlight {
-  color: #dc3545;
+  color: var(--error-main);
   font-weight: bold;
 }
 
@@ -88,6 +88,11 @@
   font-size: 1rem;
 }
 
+.keyword-input:focus {
+  outline: none;
+  border: 2px solid var(--primary-main); /* 원하는 색 */
+}
+
 .search-btn {
   background-color: #E8A93F;
   border: none;
@@ -99,6 +104,10 @@
   cursor: pointer;
   min-width: 60px;
   flex-shrink: 0;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--primary-main); /* 체크박스 색 */
 }
 
 

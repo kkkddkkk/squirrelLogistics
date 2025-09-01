@@ -44,7 +44,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 0 .8rem;
-  background: #eee;
+  background: var(--background-default);
 }
 
 .row-between {
@@ -62,13 +62,13 @@
 }
 
 .error-text {
-  color: #e74c3c;
+  color: var(--error-main);
   font-size: .9rem;
   margin-top: .6rem;
 }
 
 .social-box {
-  background: #f7f7f7;
+  background: var(--background-default);
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 1rem;
@@ -130,7 +130,7 @@
 .auth-method-info {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--background-default);
   border-radius: 8px;
   border: 1px solid #e9ecef;
 }
@@ -139,7 +139,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #495057;
+  color: var(--text-primary);
   font-weight: 500;
   justify-content: center;
 }
@@ -176,7 +176,7 @@
 .forgot-password-link {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--primary-main);
   font-size: 14px;
   text-decoration: underline;
   cursor: pointer;
@@ -186,13 +186,13 @@
 }
 
 .forgot-password-link:hover {
-  color: #5a6fd8;
+  color: var(--primary-main);
   text-decoration: none;
 }
 
 .forgot-password-link:focus {
   outline: none;
-  color: #5a6fd8;
+  color: var(--primary-main);
 }
 
 /* 비밀번호 재설정 폼 */
@@ -228,11 +228,11 @@
   box-sizing: border-box;
 }
 
-.reset-form .field input:focus {
+/* .reset-form .field input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
+} */
 
 .reset-btn {
   background: #667eea;
@@ -262,7 +262,7 @@
 /* 성공 메시지 */
 .success-text {
   background-color: #d4edda;
-  color: #155724;
+  color: var(--success-main);
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 1rem;
@@ -307,4 +307,13 @@
   .social-btn {
     width: 100%;
   }
+}
+
+.textInput{
+    outline: none; /* 기본 파란 테두리 제거 */
+}
+
+.textInput:focus {
+  outline: 2px solid var(--primary-main);
+  box-shadow: 0 0 3px var(--secondary-main);
 }

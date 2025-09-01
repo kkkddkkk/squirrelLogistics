@@ -3,6 +3,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfoItem from '../../components/company/InfoItem';
 import { useNavigate } from 'react-router-dom';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
+import LoadingComponent from '../../components/common/LoadingComponent';
 
 import useDeliveryFilter from '../../hook/company/useDeliveryFilter';
 import './MyPage.css';
@@ -12,8 +14,14 @@ import {
   fetchCompanyMyPageInfo,
 } from '../../slice/company/companySlice';
 import { getMyPageInfo, getDeliveryList, withdrawAccount } from '../../api/company/companyApi';
+import { Box, Grid, MenuItem, Paper, Select } from '@mui/material';
+import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
+import { ButtonContainer, OneButtonAtRight, TwoButtonsAtEnd } from '../../components/common/CommonButton';
+import CommonList from '../../components/common/CommonList';
+
 
 const MyPage = () => {
+  applyThemeToCssVars(theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { myPageInfo, isLoading, error, snsLogin, hasProfileInfo } = useSelector((state) => state.company);
@@ -27,8 +35,9 @@ const MyPage = () => {
     STATUS_OPTIONS,
   } = useDeliveryFilter();
 
-  const [showFullAccount, setShowFullAccount] = useState(false); 
-  
+  const [showFullAccount, setShowFullAccount] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
   // 배송 리스트 관련 state
   const [statusFilter, setStatusFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
@@ -36,7 +45,7 @@ const MyPage = () => {
   const [appliedNameFilter, setAppliedNameFilter] = useState('');
   const [deliveryList, setDeliveryList] = useState([]);
   const [deliveryLoading, setDeliveryLoading] = useState(false);
-  
+
   // 계좌번호 마스킹 처리
   const maskedAccount = useMemo(() => {
     if (!myPageInfo?.account) return '';
@@ -88,16 +97,16 @@ const MyPage = () => {
     loadDeliveryData();
   }, [myPageInfo?.companyId]);
 
-     useEffect(() => {
-     if (myPageInfo) {
-       console.log('마이페이지 정보 로드됨:', myPageInfo);
-       console.log('🔍 Redux 상태 확인:', {
-         snsLogin,
-         hasProfileInfo,
-         myPageInfo
-       });
-     }
-   }, [myPageInfo, snsLogin, hasProfileInfo]);
+  useEffect(() => {
+    if (myPageInfo) {
+      console.log('마이페이지 정보 로드됨:', myPageInfo);
+      console.log('🔍 Redux 상태 확인:', {
+        snsLogin,
+        hasProfileInfo,
+        myPageInfo
+      });
+    }
+  }, [myPageInfo, snsLogin, hasProfileInfo]);
 
   useEffect(() => {
     if (error) {
@@ -109,7 +118,7 @@ const MyPage = () => {
   const filteredDeliveries = useMemo(() => {
     if (!deliveryList || deliveryList.length === 0) return [];
     return deliveryList.filter(item => {
-      const matchesName = !appliedNameFilter || 
+      const matchesName = !appliedNameFilter ||
         (item.name && item.name.toLowerCase().includes(appliedNameFilter.toLowerCase()));
       const matchesStatus = !appliedStatusFilter || item.status === appliedStatusFilter;
       return matchesName && matchesStatus;
@@ -119,22 +128,58 @@ const MyPage = () => {
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
-  
+
   const handleNameChange = (e) => {
     setNameFilter(e.target.value);
   };
-  
+
   const handleSearch = () => {
     setAppliedStatusFilter(statusFilter);
     setAppliedNameFilter(nameFilter);
   };
-  
+
   const handleFilterReset = () => {
     setStatusFilter('');
     setNameFilter('');
     setAppliedStatusFilter('');
     setAppliedNameFilter('');
   };
+
+  //프로필 수정(김도경, 2025-08-30)
+  const handleEditProfile = () => {
+    // 디버깅: 상태 값 확인
+    console.log('🔍 Edit 클릭 시 상태:', {
+      snsLogin,
+      hasProfileInfo,
+      myPageInfo: myPageInfo
+    });
+
+    // 회원정보 보유 여부 직접 계산
+    const hasProfileInfoDirect = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
+    console.log('🔍 직접 계산한 hasProfileInfo:', hasProfileInfoDirect);
+    console.log('🔍 개별 필드 확인:', {
+      pnumber: myPageInfo?.pnumber,
+      account: myPageInfo?.account,
+      businessN: myPageInfo?.businessN,
+      address: myPageInfo?.address
+    });
+    // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
+    if (snsLogin) {
+      const hasProfileInfo = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
+
+      if (!hasProfileInfo) {
+        console.log('✅ 소셜 사용자 + 회원정보 없음 → edit 페이지로 이동');
+        navigate('/company/edit');
+      } else {
+        console.log('🔒 소셜 사용자 + 회원정보 있음 → verify 페이지로 이동 (소셜 재인증 필요)');
+        navigate('/company/verify');
+      }
+    } else {
+      console.log('🔒 로컬 사용자 → verify 페이지로 이동');
+      // 로컬 사용자만 본인인증 페이지로 이동
+      navigate('/company/verify');
+    }
+  }
 
   // 📌 이용기록 보기
   const moveToAnotherDay = () => {
@@ -174,7 +219,7 @@ const MyPage = () => {
         }
       } catch (error) {
         console.error('회원탈퇴 실패:', error);
-        
+
         // 401 에러인 경우 로그인 페이지로 이동
         if (error.response?.status === 401) {
           alert('인증이 만료되었습니다. 다시 로그인해주세요.');
@@ -190,155 +235,134 @@ const MyPage = () => {
 
 
   return (
-    <div className="mypage-container">
-      
-      {/* 페이지 제목 */}
-      <div className="mypage-title">
-        <h1>마이페이지</h1>
-      </div>
-      
-      {/* 회원정보 */}
-      <div className="info-section">
-        <div className="info-header">
-          <h3>회원정보</h3>
-                     <img
-             src="/images/edit.png"
-             alt="수정"
-             className="edit-images"
-             onClick={() => {
-               // 디버깅: 상태 값 확인
-               console.log('🔍 Edit 클릭 시 상태:', {
-                 snsLogin,
-                 hasProfileInfo,
-                 myPageInfo: myPageInfo
-               });
-               
-               // 회원정보 보유 여부 직접 계산
-               const hasProfileInfoDirect = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
-               console.log('🔍 직접 계산한 hasProfileInfo:', hasProfileInfoDirect);
-               console.log('🔍 개별 필드 확인:', {
-                 pnumber: myPageInfo?.pnumber,
-                 account: myPageInfo?.account,
-                 businessN: myPageInfo?.businessN,
-                 address: myPageInfo?.address
-               });
-                // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
-               if (snsLogin) {
-                 const hasProfileInfo = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
-                 
-                 if (!hasProfileInfo) {
-                   console.log('✅ 소셜 사용자 + 회원정보 없음 → edit 페이지로 이동');
-                   navigate('/company/edit');
-                 } else {
-                   console.log('🔒 소셜 사용자 + 회원정보 있음 → verify 페이지로 이동 (소셜 재인증 필요)');
-                   navigate('/company/verify');
-                 }
-               } else {
-                 console.log('🔒 로컬 사용자 → verify 페이지로 이동');
-                 // 로컬 사용자만 본인인증 페이지로 이동
-                 navigate('/company/verify');
-               }
-             }}
-           />
+    <Grid container>
+      <LoadingComponent open={deliveryLoading} text='마이페이지 정보를 불러오는 중...'></LoadingComponent>
+      <Grid size={3} />
+      <Grid size={6}>
+        {/* 페이지 제목 */}
+        <div className="mypage-title" style={{ marginTop: "5%" }}>
+          <h1>마이페이지</h1>
         </div>
-        
-        {isLoading ? (
-          <div className="loading-message">데이터를 불러오는 중...</div>
-        ) : error ? (
-          <div className="error-message">데이터를 불러올 수 없습니다.</div>
-        ) : (
-          <>
-                         {/* 소셜 사용자 안내 메시지 */}
-             {snsLogin && (
-               <div className="social-notice">
-                 <p><strong>소셜 로그인 사용자</strong></p>
-                 <p>회원정보가 없으면 본인인증 없이 수정 가능합니다.</p>
-                 <p>회원정보가 있으면 소셜 재인증이 필요합니다.</p>
-               </div>
-             )}
-            
-            <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} />
-            <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} />
-            <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} />
-            <InfoItem label="회사 주소" value={myPageInfo?.address || "정보 없음"} />
-            <InfoItem label="사업자 등록번호" value={myPageInfo?.businessN || "정보 없음"} />
 
-            {/* 계좌번호 */}
-            <div className="info-item">
-              <span className="info-label">계좌번호</span>
-              <span className="info-value">
-                {showFullAccount ? (myPageInfo?.account || "정보 없음") : (maskedAccount || "정보 없음")}
-                {myPageInfo?.account && (
-                  <button 
-                    className="mask-toggle" 
-                    onClick={() => setShowFullAccount(prev => !prev)}
-                    disabled={!myPageInfo?.account}
-                  >
-                    {showFullAccount ? "숨기기" : "보이기"}
-                  </button>
-                )}
-              </span>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* 배송 정보 */}
-      <div className="delivery-section">
-        <h3>배송 정보</h3>
-        
-        {/* 검색 및 필터 */}
-        <div className="delivery-filter">
-          <div className="filter-row">
-            <div className="filter-item">
-              <label htmlFor="name">기사명:</label>
-              <input
-                type="text"
-                id="name"
-                value={nameFilter}
-                onChange={handleNameChange}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="기사명을 입력하세요"
-              />
-            </div>
-            <div className="filter-item">
-              <label htmlFor="status">배송 상태:</label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={handleStatusChange}
-              >
-                <option value="">전체</option>
-                <option value="주문접수">주문접수</option>
-                <option value="배송중">배송중</option>
-                <option value="배송완료">배송완료</option>
-                <option value="취소">취소</option>
-              </select>
-            </div>
-            <button className="filter-search-btn" onClick={handleSearch}>
-              검색
-            </button>
-            <button className="filter-reset-btn" onClick={handleFilterReset}>
-              초기화
-            </button>
+        {/* 회원정보 */}
+        <CommonList padding={5}>
+          <div className="info-header">
+            <h3>회원정보</h3>
+            <EditDocumentIcon
+              onClick={handleEditProfile}
+              sx={{
+                color: theme.palette.primary.main,
+                cursor: "pointer"
+              }}
+            ></EditDocumentIcon>
           </div>
-        </div>
-        
-        {/* 배송 테이블 */}
-        <div className="delivery-table-container">
-          {deliveryLoading ? (
-            <div className="loading-message">배송 정보를 불러오는 중...</div>
+
+          {isLoading ? (
+            <div className="loading-message">데이터를 불러오는 중...</div>
+          ) : error ? (
+            <div className="error-message">데이터를 불러올 수 없습니다.</div>
           ) : (
-            <table className="delivery-table">
+            <>
+              {/* 소셜 사용자 안내 메시지 */}
+              {snsLogin && (
+                <div className="social-notice">
+                  <p><strong>소셜 로그인 사용자</strong></p>
+                  <p>회원정보가 없으면 본인인증 없이 수정 가능합니다.</p>
+                  <p>회원정보가 있으면 소셜 재인증이 필요합니다.</p>
+                </div>
+              )}
+
+              <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} />
+              <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} />
+              <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} />
+              <InfoItem label="회사 주소" value={myPageInfo?.address || "정보 없음"} />
+              <InfoItem label="사업자 등록번호" value={myPageInfo?.businessN || "정보 없음"} />
+
+              {/* 계좌번호 */}
+              <div className="info-item">
+                <span className="info-label">계좌번호</span>
+                <span className="info-value">
+                  {showFullAccount ? (myPageInfo?.account || "정보 없음") : (maskedAccount || "정보 없음")}
+                  {myPageInfo?.account && (
+                    <OneButtonAtRight
+                      clickEvent={() => setShowFullAccount(prev => !prev)}
+                      disabled={!myPageInfo?.account}
+                    >
+                      {showFullAccount ? "숨기기" : "보이기"}
+                    </OneButtonAtRight>
+                  )}
+                </span>
+              </div>
+            </>
+          )}
+        </CommonList>
+
+        {/* 배송 정보 */}
+        <CommonList padding={"5%"}>
+          {/* <h3></h3> */}
+          <div className="info-header">
+            <h3>배송정보</h3>
+          </div>
+
+          {/* 검색 및 필터 */}
+          <div className="delivery-filter">
+            <div className="filter-row" >
+              <Box display={"flex"} gap={3}>
+                <div className="filter-item">
+                  <label htmlFor="name">기사명:</label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={nameFilter}
+                    onChange={handleNameChange}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    placeholder="기사명을 입력하세요"
+                    className='searchInput'
+                    style={{
+                      width: "300px",
+                    }}
+                  />
+                </div>
+                <div className="filter-item">
+                  <label htmlFor="status">배송 상태:</label>
+                  <select
+                    id="status"
+                    value={statusFilter}
+                    onChange={handleStatusChange}
+                    className='searchInput'
+                  >
+                    <option value="">전체</option>
+                    <option value="주문접수">주문접수</option>
+                    <option value="배송중">배송중</option>
+                    <option value="배송완료">배송완료</option>
+                    <option value="취소">취소</option>
+                  </select>
+                </div>
+              </Box>
+              <ButtonContainer width={"22%"}>
+                <TwoButtonsAtEnd
+                  leftTitle={"검색"}
+                  leftClickEvent={handleSearch}
+                  rightTitle={"초기화"}
+                  rightClickEvent={handleFilterReset}
+                  rightColor={theme.palette.primary.dark}
+                />
+              </ButtonContainer>
+            </div>
+          </div>
+
+          {/* 배송 테이블 */}
+          <div className="delivery-table-container">
+            <table className="delivery-table" style={{ tableLayout: "fixed" }}>
               <thead>
                 <tr>
-                  <th>기사명</th>
-                  <th>화물 종류</th>
-                  <th>배송 상태</th>
-                  <th>결제 방법</th>
-                  <th>금액</th>
-                  <th>출발지</th>
-                  <th>도착지</th>
+                  <th style={{ width: "10%" }}>기사명</th>
+                  <th style={{ width: "13%" }}>화물 종류</th>
+                  <th style={{ width: "13%" }}>배송 상태</th>
+                  <th style={{ width: "15%" }}>결제 방법</th>
+                  <th style={{ width: "15%" }}>금액</th>
+                  <th style={{ width: "17%" }}>출발지</th>
+                  <th style={{ width: "17%" }}>도착지</th>
                 </tr>
               </thead>
               <tbody>
@@ -353,10 +377,8 @@ const MyPage = () => {
                     <tr key={i}>
                       <td>{item.name !== null ? item.name : '미배정'}</td>
                       <td>{item.cargoType !== null ? item.cargoType : '정보 없음'}</td>
-                      <td>
-                        <span className={`status-badge status-${item.status?.toLowerCase() || 'unknown'}`}>
-                          {item.status !== null ? item.status : '미배정'}
-                        </span>
+                      <td style={{ fontWeight: "bold" }}>
+                        {item.status !== null ? item.status : '미배정'}
                       </td>
                       <td>{item.payMethod !== null ? item.payMethod : '정보 없음'}</td>
                       <td className="price-cell">
@@ -381,20 +403,23 @@ const MyPage = () => {
                 )}
               </tbody>
             </table>
-          )}
-        </div>
-      </div>
+          </div>
+        </CommonList>
 
-      {/* 하단 버튼 */}
-      <div className="mypage-bottom-buttons">
-        <button className="bottom-btn review" onClick={moveToAnotherDay}>
-          이용기록
-        </button>
-        <button className="withdraw-link" onClick={handleWithdraw}>
-          회원탈퇴
-        </button>
-      </div>
-    </div>
+        {/* 하단 버튼 */}
+        <ButtonContainer marginBottom={"5%"} marginTop={"5%"} width={"100%"}>
+          <TwoButtonsAtEnd
+            leftTitle={"이 용 기 록"}
+            leftClickEvent={moveToAnotherDay}
+            rightTitle={"회 원 탈 퇴"}
+            rightColor={theme.palette.error.main}
+            rightClickEvent={handleWithdraw}
+          />
+        </ButtonContainer>
+
+      </Grid>
+      <Grid size={3} />
+    </Grid>
   );
 };
 

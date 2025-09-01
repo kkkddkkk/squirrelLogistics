@@ -13,11 +13,19 @@ import { setDistance } from "../../slice/estimate/estimateSlice";
 import CargoDialog from "./CargoDialog";
 import http from "../../api/user/api"; // 기본주소용 http 인스턴스
 import "./EstimateForm.css";
+import { Box, Grid } from "@mui/material";
+import { CommonSmallerTitle, CommonTitle } from "../common/CommonText";
+import CommonList from "../common/CommonList";
+import { ButtonContainer, OneButtonAtRight, Three100Buttons, ThreeButtons, Two100Buttons, TwoButtonsAtEnd } from "../common/CommonButton";
+import { theme, applyThemeToCssVars } from "../common/CommonTheme";
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import "./EstimateForm_new.css";
 
 const STORAGE_KEY = "deliveryFlow";
 const WAYPOINT_FEE_PER_ITEM = 50000;
 
 const EstimateForm_new = () => {
+  applyThemeToCssVars(theme);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -490,180 +498,190 @@ const EstimateForm_new = () => {
   const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
-    <div className="estimate-container">
-      <h2>🚚 예상 금액 계산</h2>
+    <Grid container>
+      <Grid size={3} />
+      <Grid size={6} marginBottom={"5%"}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
+          <CommonTitle>예상 금액 계산 &nbsp;</CommonTitle>
+          <LocalShippingOutlinedIcon sx={{ fontSize: "40px", color: theme.palette.primary.main }} />
+        </Box>
 
-      {/* 주소 입력 */}
-      <div className="address-row">
-        <button className="address-button" onClick={() => openAddressPopup(setHubAddress)}>
-          집하지 검색
-        </button>
-        <button className="address-button" onClick={() => openAddressPopup(setFinalAddress)}>
-          최종 목적지 검색
-        </button>
-        <button className="address-button" onClick={addWaypoint}>
-          경유지 추가
-        </button>
-      </div>
 
-      <div className="form-row">집하지: {hubAddress || "(미입력)"}</div>
+        <CommonList padding={5}>
+          {/* 주소 입력 */}
+          <ButtonContainer marginBottom={5}>
+            <Three100Buttons
+              leftTitle={"집하지 검색"}
+              leftClickEvent={() => openAddressPopup(setHubAddress)}
+              middleTitle={"최종 목적지 검색"}
+              middleClickEvent={() => openAddressPopup(setFinalAddress)}
+              rightTitle={"경유지 추가"}
+              rightClickEvent={addWaypoint}
 
-      {waypoints.map((w, i) => (
-        <div key={i} className="form-row">
-          {i + 1}번 경유지: {w.address || "주소 없음"} /{" "}
-          {w.cargo ? `${w.cargo.description}, ${w.cargo.weightKg}kg` : "화물 없음"}
-          <button className="address-button small waypoint-search" onClick={() => openWaypointAddress(i)}>
-            주소 검색
-          </button>
-          <button className="address-button small waypoint-search" onClick={() => setCargoDialogIdx(i)}>
-            화물 입력
-          </button>
-          <button
-            className="address-button small waypoint-search"
-            onClick={() => handleRemoveWaypoint(i)}
-            aria-label={`경유지 ${i + 1} 삭제`}
-            title="삭제"
-          >
-            경유지 삭제
-          </button>
-        </div>
-      ))}
+              gap={2}
+            />
+          </ButtonContainer>
 
-      <div className="form-row">
-        최종 목적지: {finalAddress || "(미입력)"}{" "}
-        {finalCargo ? `/ 화물: ${finalCargo.description}, ${finalCargo.weightKg}kg` : ""}
-        <button
-          className="address-button small waypoint-search"
-          onClick={() => setCargoDialogIdx("final")}
-          style={{ marginLeft: 8 }}
-        >
-          최종 목적지 화물 입력
-        </button>
-      </div>
+          <div className="form-row">집하지: {hubAddress || "(미입력)"}</div>
 
-      {/* 거리/요금 & 기본 주소 */}
-      <div className="button-row">
-        <button className="action-button small" onClick={handleCalculateDistance}>
-          거리 및 금액 계산
-        </button>
-        <button className="action-button small" onClick={saveDefaultAddress}>
-          기본주소로 설정
-        </button>
-      </div>
+          {waypoints.map((w, i) => (
+            <div key={i} className="form-row" style={{ display: "flex", justifyContent: "space-between" }}>
+              {i + 1}번 경유지: {w.address || "주소 없음"} /{" "}
+              {w.cargo ? `${w.cargo.description}, ${w.cargo.weightKg}kg` : "화물 없음"}
+              <ThreeButtons
+                leftTitle={"주소 입력"}
+                leftClickEvent={() => openWaypointAddress(i)}
 
-      {savedAddresses.length > 0 && (
-        <div className="info-section">
-          <p>📌 저장된 기본 주소</p>
-          {savedAddresses.map((addr) => (
-            <div key={addr.id}>
-              {addr.type}: {addr.value}
-              <button onClick={() => applySavedAddress(addr.value)} style={{ marginLeft: 8 }}>
-                적용
-              </button>
-              <button onClick={removeDefaultAddress} style={{ marginLeft: 8 }}>
-                삭제
-              </button>
+                middleTitle={"화물 입력"}
+                middleClickEvent={() => setCargoDialogIdx(i)}
+
+                rightTitle={"경유지 삭제"}
+                rightClickEvent={() => handleRemoveWaypoint(i)}
+                rightColor={theme.palette.error.main}
+
+                gap={1}
+              />
             </div>
+
           ))}
-        </div>
-      )}
 
-      {hasCalculated ? (
-        <div className="info-section">
-          <p>상세 운송 내역</p>
-          <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
-            <li>예상 거리: {Number(Math.floor(distance) || 0)} km</li>
-            <li>총 화물 개수: {totalCargoCount} 개</li>
-            <li>총 화물 무게: {totalCargoWeight} kg</li>
-          </ul>
+          <div className="form-row" style={{ display: "flex", justifyContent: "space-between" }}>
+            최종 목적지: {finalAddress || "(미입력)"}{" "}
+            {finalCargo ? `/ 화물: ${finalCargo.description}, ${finalCargo.weightKg}kg` : ""}
+            <OneButtonAtRight clickEvent={() => setCargoDialogIdx("final")}>
+              최종 목적지 화물 입력
+            </OneButtonAtRight>
+          </div>
 
-          <p>상세 요금 내역</p>
-          <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
-            <li>기본 요금: 100,000원</li>
-            <li>거리 요금: {distanceOnlyPrice.toLocaleString()}원</li>
-            <li>무게 요금 (톤당 30,000): {(weight * 30000).toLocaleString()}원</li>
-            {hasCareful && <li>취급주의 추가요금: +50,000원</li>}
-            {hasMountain && <li>산간지역 추가요금: +50,000원</li>}
-            {middleWaypointCount > 0 && (
-              <li>
-                경유지 추가요금 ({middleWaypointCount}개 × 50,000):{" "}
-                {(middleWaypointCount * 50000).toLocaleString()}원
-              </li>
-            )}
-          </ul>
+          {/* 거리/요금 & 기본 주소 */}
+          <ButtonContainer marginBottom={"5%"} marginTop={"5%"}>
+            <TwoButtonsAtEnd
+              leftTitle={"거리 및 금액 계산"}
+              leftClickEvent={handleCalculateDistance}
+              rightTitle={"기본주소로 설정"}
+              rightClickEvent={saveDefaultAddress}
+            />
+          </ButtonContainer>
 
-          <p style={{ marginTop: 8, fontWeight: 600 }}>
-            총 예상 금액: {Number(price || 0).toLocaleString()}원
-          </p>
-        </div>
-      ) : (
-        <div className="info-section">
-          <p>상세 운송/요금 내역</p>
-          <p style={{ color: "#666" }}>
-            집하지/최종 목적지를 입력하고 &ldquo;거리 및 금액 계산&rdquo;을 눌러주세요.
-          </p>
-        </div>
-      )}
 
-      {/* 차량 선택 */}
-      <div className="form-row">
-        <select value={vehicleTypeId} onChange={(e) => setVehicleTypeId(e.target.value)}>
-          <option value="">차량 선택</option>
-          {vehicleTypes.map((v) => (
-            <option
-              key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
-              value={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
-            >
-              {v.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          {savedAddresses.length > 0 && (
+            <div className="info-section">
+              <p>📌 저장된 기본 주소</p>
+              {savedAddresses.map((addr) => (
+                <div key={addr.id}>
+                  {addr.type}: {addr.value}
+                  <button onClick={() => applySavedAddress(addr.value)} style={{ marginLeft: 8 }}>
+                    적용
+                  </button>
+                  <button onClick={removeDefaultAddress} style={{ marginLeft: 8 }}>
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-      {/* 날짜 */}
-      <p className="delivery-label">배송 희망 날짜 :</p>
-      <div className="datepicker-row">
-        <DatePicker
-          selected={startDate}
-          onChange={(date) => setStartDate(date)}
-          placeholderText="출발 날짜"
-          showTimeSelect
-          dateFormat="yyyy-MM-dd HH:mm"
-        />
-        <DatePicker
-          selected={endDate}
-          onChange={(date) => setEndDate(date)}
-          placeholderText="도착 날짜"
-          showTimeSelect
-          dateFormat="yyyy-MM-dd HH:mm"
-        />
-      </div>
+          {hasCalculated ? (
+            <div className="info-section">
+              <CommonSmallerTitle>상세 운송 내역</CommonSmallerTitle>
+              <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
+                <li>예상 거리: {Number(Math.floor(distance) || 0)} km</li>
+                <li>총 화물 개수: {totalCargoCount} 개</li>
+                <li>총 화물 무게: {totalCargoWeight} kg</li>
+              </ul>
 
-      {/* 액션 */}
-      <div className="form-row">
-        <button className="driver-button" onClick={goDriverSearch}>
-          기사님 검색
-        </button>
-        <button className="submit-button" onClick={handleConfirmPayment}>
-          요청하기
-        </button>
-      </div>
+              <CommonSmallerTitle>상세 요금 내역</CommonSmallerTitle>
+              <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
+                <li>기본 요금: 100,000원</li>
+                <li>거리 요금: {distanceOnlyPrice.toLocaleString()}원</li>
+                <li>무게 요금 (톤당 30,000): {(weight * 30000).toLocaleString()}원</li>
+                {hasCareful && <li>취급주의 추가요금: +50,000원</li>}
+                {hasMountain && <li>산간지역 추가요금: +50,000원</li>}
+                {middleWaypointCount > 0 && (
+                  <li>
+                    경유지 추가요금 ({middleWaypointCount}개 × 50,000):{" "}
+                    {(middleWaypointCount * 50000).toLocaleString()}원
+                  </li>
+                )}
+              </ul>
 
-      {/* 다이얼로그 */}
-      {cargoDialogIdx != null && (
-        <CargoDialog
-          open={cargoDialogIdx != null}
-          onClose={() => setCargoDialogIdx(null)}
-          onSave={handleSaveCargo}
-          options={cargoTypeOptions}
-          initialCargo={
-            cargoDialogIdx === "final"
-              ? finalCargo || null
-              : (typeof cargoDialogIdx === "number" ? waypoints[cargoDialogIdx]?.cargo || null : null)
-          }
-        />
-      )}
-    </div>
+              <CommonSmallerTitle>
+                총 예상 금액: {Number(price || 0).toLocaleString()}원
+              </CommonSmallerTitle>
+            </div>
+          ) : (
+            <div className="info-section">
+              <p>상세 운송/요금 내역</p>
+              <p style={{ color: "#666" }}>
+                집하지/최종 목적지를 입력하고 &ldquo;거리 및 금액 계산&rdquo;을 눌러주세요.
+              </p>
+            </div>
+          )}
+
+          {/* 차량 선택 */}
+          <div className="form-row">
+            <select className="customInput" value={vehicleTypeId} onChange={(e) => setVehicleTypeId(e.target.value)}>
+              <option value="">차량 선택</option>
+              {vehicleTypes.map((v) => (
+                <option
+                  key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
+                  value={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}
+                >
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 날짜 */}
+          <p className="delivery-label">배송 희망 날짜 :</p>
+          <div className="datepicker-row">
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              placeholderText="출발 날짜"
+              showTimeSelect
+              dateFormat="yyyy-MM-dd HH:mm"
+              className="customInput"
+            />
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              placeholderText="도착 날짜"
+              showTimeSelect
+              dateFormat="yyyy-MM-dd HH:mm"
+              className="customInput"
+            />
+          </div>
+
+          {/* 액션 */}
+          <Two100Buttons
+            leftTitle={"기사님 검색"}
+            leftClickEvent={goDriverSearch}
+            rightTitle={"요청하기"}
+            rightClickEvent={handleConfirmPayment}
+
+            gap={1}
+          />
+
+          {/* 다이얼로그 */}
+          {cargoDialogIdx != null && (
+            <CargoDialog
+              open={cargoDialogIdx != null}
+              onClose={() => setCargoDialogIdx(null)}
+              onSave={handleSaveCargo}
+              options={cargoTypeOptions}
+              initialCargo={
+                cargoDialogIdx === "final"
+                  ? finalCargo || null
+                  : (typeof cargoDialogIdx === "number" ? waypoints[cargoDialogIdx]?.cargo || null : null)
+              }
+            />
+          )}
+        </CommonList>
+      </Grid>
+      <Grid size={3} />
+    </Grid>
   );
 };
 
