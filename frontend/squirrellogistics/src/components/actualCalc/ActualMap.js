@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { useRef, useEffect } from "react";
+import { useStaticRouteMapFromPolyline } from "../../hook/DeliveryMap/useKakaoRouteMap";
 // import { useStaticRouteMapFromPolyline } from "../../hook/DeliveryMap/useKakaoRouteMap";
 //카카오 맵 API용 자바스크립트 키 (지도 렌더링용).
 const KAKAO_JAVASCRIPT_KEY = "b6fc5753806ea3c0eb775a731ba0376b";
@@ -10,10 +11,10 @@ const ActualMap = ({ polyline }) => {
 
     const mapRef = useRef(null);
 
-    // useStaticRouteMapFromPolyline({
-    //     mapContainerRef: mapRef,
-    //     encodedPolyline: polyline ,
-    // });
+    useStaticRouteMapFromPolyline({
+        mapContainerRef: mapRef,
+        encodedPolyline: polyline ,
+    });
 
     // useEffect(() => {
     //     const script = document.createElement("script");
