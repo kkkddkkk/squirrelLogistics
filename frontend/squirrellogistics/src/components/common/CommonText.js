@@ -9,7 +9,7 @@ export const CommonTitle=({children})=>{
                 textAlign: "center",
                 color: theme.palette.primary.main,
                 fontWeight: "bold",
-                margin: "5% 0" 
+                margin: "3% 0" 
             }}
         >
             {children}

@@ -126,6 +126,51 @@ export const ThreeButtons = ({ leftTitle, rightTitle, middleTitle, leftClickEven
 
 
 //#region [twoButtons]
+export const Two100Buttons = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
+    leftDisabled, rightDisabled, leftColor, rightColor, gap}) => {
+
+    const safeLeftColor = leftColor || theme.palette.primary.main;
+    const safeRightColor = rightColor || theme.palette.primary.main;
+
+    return (
+        <Grid container spacing={gap}>
+            <Grid size={6}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                        backgroundColor: safeLeftColor,
+                        "&:hover": {
+                            backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
+                        },
+
+                    }}
+                    onClick={leftClickEvent}
+                    disabled={leftDisabled}
+                >
+                    {leftTitle}
+                </Button>
+            </Grid>
+            <Grid size={6}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                        backgroundColor: safeRightColor,
+                        "&:hover": {
+                            backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
+                        },
+                    }}
+                    onClick={rightClickEvent}
+                    disabled={rightDisabled}
+                >
+                    {rightTitle}
+                </Button>
+            </Grid>
+        </Grid>
+    );
+}
+
 export const TwoButtonsAtCenter = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
     leftDisabled, rightDisabled, leftColor, rightColor }) => {
 
