@@ -14,8 +14,12 @@ import {
   Box,
   Typography,
   Alert,
+  IconButton,
 } from "@mui/material";
-import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
+import {
+  ReportProblemOutlined as ReportProblemOutlinedIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 
 const EmergencyReportModal = ({ open, onClose, onReport }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -69,12 +73,34 @@ const EmergencyReportModal = ({ open, onClose, onReport }) => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle
-        sx={{ textAlign: "center", color: "#A20025", fontWeight: "bold" }}
+        sx={{
+          textAlign: "center",
+          color: "#A20025",
+          fontWeight: "bold",
+          position: "relative",
+          pb: 1,
+        }}
       >
         <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
           <ReportProblemOutlinedIcon sx={{ color: "#A20025" }} />
           <Typography variant="h6">긴급 신고</Typography>
         </Box>
+
+        {/* 우측 상단 X 버튼 */}
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: "#666",
+            "&:hover": {
+              bgcolor: "rgba(0, 0, 0, 0.04)",
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent>
@@ -136,21 +162,20 @@ const EmergencyReportModal = ({ open, onClose, onReport }) => {
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: "center", pb: 3, px: 3 }}>
-        <Button onClick={handleClose} variant="outlined" sx={{ mr: 2, px: 3 }}>
-          취소
-        </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{
             bgcolor: "#A20025",
             color: "white",
-            px: 3,
+            px: 4,
+            py: 1.2,
+            fontSize: "1rem",
+            fontWeight: "bold",
             "&:hover": {
               bgcolor: "#8B001F",
             },
           }}
-          startIcon={<ReportProblemOutlinedIcon />}
         >
           신고하기
         </Button>

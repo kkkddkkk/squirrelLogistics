@@ -2,6 +2,7 @@ import { Paper, Typography, Divider, Box } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDeliveryDTO } from "./deliveryFormatUtil";
 import { theme } from "../common/CommonTheme";
+import { CommonSmallerTitle } from "../common/CommonText";
 
 const DeliveryCard = ({ item }) => {
   const { driverId } = useParams();
@@ -33,9 +34,7 @@ const DeliveryCard = ({ item }) => {
         },
       }}
     >
-      <Typography variant="subtitle1" fontWeight="bold">
-        {formatted.title}
-      </Typography>
+      <CommonSmallerTitle>{formatted.title}</CommonSmallerTitle>
 
       <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
         {formatted.distance}

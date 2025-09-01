@@ -39,6 +39,7 @@ import { carApi, vehicleTypeApi } from "../../api/cars";
 import PreferredTimeBlock from "../../components/Time/PreferredTimeBlock";
 import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
 import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import { CommonSubTitle } from "../../components/common/CommonText";
 import dayjs from "dayjs";
 
 const C = { blue: "#113F67", gold: "#E8A93F" };
@@ -429,11 +430,11 @@ export default function ManageVehicles() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
+                gap: 2,
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 600, color: C.blue }}>
-                차량 목록
-              </Typography>
+              <CommonSubTitle sx={{ color: C.blue }}>차량 목록</CommonSubTitle>
               <Button
                 variant="outlined"
                 startIcon={<Add />}
@@ -441,13 +442,18 @@ export default function ManageVehicles() {
                 sx={{
                   borderColor: C.blue,
                   color: C.blue,
+                  minWidth: "auto",
+                  whiteSpace: "nowrap",
+                  px: 2,
+                  py: 1,
+                  fontSize: "0.875rem",
                   "&:hover": {
                     borderColor: C.blue,
                     bgcolor: "#f0f8ff",
                   },
                 }}
               >
-                차량 추가
+                추가
               </Button>
             </Box>
 
@@ -582,9 +588,9 @@ export default function ManageVehicles() {
           }}
         >
           <DialogTitle sx={{ pb: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <CommonSubTitle>
               {dialogMode === "create" ? "차량 등록" : "차량 수정"}
-            </Typography>
+            </CommonSubTitle>
           </DialogTitle>
           <DialogContent>
             <Box
@@ -592,9 +598,7 @@ export default function ManageVehicles() {
               sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
             >
               {/* 기본 정보 섹션 */}
-              <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
-                기본 정보
-              </Typography>
+              <CommonSubTitle sx={{ color: C.blue }}>기본 정보</CommonSubTitle>
 
               <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                 <div style={{ flex: "1 1 48%" }}>

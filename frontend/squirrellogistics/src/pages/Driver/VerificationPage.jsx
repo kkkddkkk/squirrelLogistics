@@ -12,6 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import LockIcon from "@mui/icons-material/Lock";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { CommonTitle } from "../../components/common/CommonText";
 import { verifyPassword } from "../../api/driver/driverApi";
 
 const VerificationPage = () => {
@@ -92,9 +93,7 @@ const VerificationPage = () => {
               }}
             >
               <LockIcon sx={{ fontSize: 40, color: "#113F67", mr: 2 }} />
-              <Typography variant="h4" fontWeight="bold" color="#113F67">
-                비밀번호 확인
-              </Typography>
+              <CommonTitle sx={{ color: "#113F67" }}>비밀번호 확인</CommonTitle>
             </Box>
 
             <Typography variant="body1" color="text.secondary">

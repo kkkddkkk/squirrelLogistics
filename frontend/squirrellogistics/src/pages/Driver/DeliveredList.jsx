@@ -6,24 +6,19 @@ import {
   TextField,
   Stack,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Pagination,
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { ChevronRight } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { fetchCompletedDeliveries } from "../../api/deliveryRequest/deliveryCompletedAPI";
-import dayjs from "dayjs";
 import { CommonTitle } from "../../components/common/CommonText";
 import { theme } from "../../components/common/CommonTheme";
-import LoadingComponent from "../../components/common/LoadingComponent";
+
 import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import dayjs from "dayjs";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -92,19 +87,24 @@ const DeliveredList = () => {
 
   if (loading) {
     return (
-      <LoadingComponent open={loading} text="운송 완료 목록을 불러오는 중..." />
+      <Box
+        sx={{
+          bgcolor: "#F5F7FA",
+          minHeight: "100vh",
+          py: 6,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Box
-        sx={{
-          bgcolor: theme.palette.background.default,
-          minHeight: "100vh",
-          py: 6,
-        }}
-      >
+      <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh", py: 6 }}>
         <Container maxWidth="lg">
           <Alert severity="error" sx={{ mb: 4 }}>
             {error}
@@ -115,7 +115,7 @@ const DeliveredList = () => {
   }
 
   return (
-    <Box>
+    <>
       <DriverHeader_Temp />
       <Box
         sx={{
@@ -135,17 +135,7 @@ const DeliveredList = () => {
               size="medium"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{
-                flex: 1,
-                "& .MuiOutlinedInput-root": {
-                  "&:hover fieldset": {
-                    borderColor: theme.palette.primary.main,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.palette.primary.main,
-                  },
-                },
-              }}
+              sx={{ flex: 1 }}
               InputProps={{ sx: { fontSize: "1.1rem", height: 50 } }}
               InputLabelProps={{ sx: { fontSize: "1rem" } }}
             />
@@ -155,17 +145,7 @@ const DeliveredList = () => {
               label="정렬"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              sx={{
-                width: 200,
-                "& .MuiOutlinedInput-root": {
-                  "&:hover fieldset": {
-                    borderColor: theme.palette.primary.main,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: theme.palette.primary.main,
-                  },
-                },
-              }}
+              sx={{ width: 200 }}
               InputProps={{ sx: { fontSize: "1.1rem", height: 50 } }}
               InputLabelProps={{ sx: { fontSize: "1rem" } }}
             >
@@ -175,8 +155,8 @@ const DeliveredList = () => {
             </TextField>
           </Stack>
 
-          {/* 운송 완료 목록 */}
-          <Stack spacing={2}>
+          {/* 리스트 */}
+          <Box>
             {paginatedData.map((row, idx) => {
               // 새로운 응답 구조에서 additionalInfo를 통해 필요한 데이터에 접근
               const additionalInfo = row.additionalInfo || {};
@@ -187,13 +167,12 @@ const DeliveredList = () => {
               const endAddress = additionalInfo.endAddress;
 
               return (
-                <Box
+                <Paper
                   key={idx}
                   onClick={() =>
                     navigate(`/driver/deliveredetail/${assignedId}`)
                   }
                   sx={{
-                    margin: 0,
                     p: 3,
                     mb: 2,
                     border: "0.8px solid",
@@ -215,122 +194,91 @@ const DeliveredList = () => {
                   <Box
                     sx={{
                       display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                     }}
                   >
-                    {/* 상단: 운송번호 + 배송완료/완료일자 */}
                     <Box
                       sx={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: 3,
+                        flexDirection: "column",
+                        gap: 1,
+                        flex: 1,
                       }}
                     >
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: "bold",
-                          color: theme.palette.primary.main,
-                        }}
-                      >
-                        운송번호 #{assignedId}
-                      </Typography>
+                      {/* 상단: 운송번호와 상태+날짜 */}
                       <Box
                         sx={{
                           display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 2,
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
                         }}
                       >
                         <Typography
-                          variant="body2"
+                          variant="h6"
+                          fontWeight="bold"
+                          color={theme.palette.primary.main}
+                        >
+                          운송번호 #{assignedId}
+                        </Typography>
+
+                        {/* 우측 상단: 상태 + 완료일자 */}
+                        <Box
                           sx={{
-                            bgcolor:
-                              status === "COMPLETED"
-                                ? theme.palette.success.main
-                                : theme.palette.text.secondary,
-                            color: "white",
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: "0.875rem",
-                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
                           }}
                         >
-                          {status === "COMPLETED" ? "배송완료" : status}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              px: 2,
+                              py: 0.5,
+                              borderRadius: 1,
+                              bgcolor:
+                                status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
+                              color:
+                                status === "COMPLETED" ? "#2e7d32" : "#666",
+                            }}
+                          >
+                            {status === "COMPLETED" ? "배송완료" : status}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {completedAt
+                              ? dayjs(completedAt).format("YYYY.MM.DD")
+                              : "-"}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* 하단: 출발지, 도착지 */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                          mt: 1,
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>출발지:</strong> {startAddress || "-"}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          color={theme.palette.text.secondary}
-                          sx={{ fontSize: "0.875rem" }}
-                        >
-                          완료일:{" "}
-                          {completedAt
-                            ? dayjs(completedAt).format("YYYY.MM.DD")
-                            : "-"}
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>도착지:</strong> {endAddress || "-"}
                         </Typography>
                       </Box>
                     </Box>
 
-                    {/* 하단: 출발지/도착지 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Box sx={{ display: "flex", gap: 4, flex: 1 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography
-                            variant="body2"
-                            color={theme.palette.text.secondary}
-                            sx={{ mb: 0.5 }}
-                          >
-                            출발지
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ fontWeight: "500" }}
-                          >
-                            {startAddress || "-"}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography
-                            variant="body2"
-                            color={theme.palette.text.secondary}
-                            sx={{ mb: 0.5 }}
-                          >
-                            도착지
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ fontWeight: "500" }}
-                          >
-                            {endAddress || "-"}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", ml: 3 }}
-                      >
-                        <Typography
-                          variant="h6"
-                          sx={{ color: theme.palette.primary.main }}
-                        >
-                          →
-                        </Typography>
-                      </Box>
-                    </Box>
+                    {/* 화살표 아이콘 */}
+                    <ChevronRight
+                      sx={{ color: theme.palette.text.secondary, fontSize: 24 }}
+                    />
                   </Box>
-                </Box>
+                </Paper>
               );
             })}
-          </Stack>
+          </Box>
 
           {/* 페이지네이션 */}
           {filteredData.length > ITEMS_PER_PAGE && (
@@ -341,33 +289,12 @@ const DeliveredList = () => {
                 onChange={(_, value) => setPage(value)}
                 color="primary"
                 size="large"
-                sx={{
-                  "& .MuiPaginationItem-root": {
-                    "&.Mui-selected": {
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.background.paper,
-                    },
-                    "&:hover": {
-                      backgroundColor: theme.palette.primary.light,
-                      color: theme.palette.background.paper,
-                    },
-                  },
-                }}
               />
             </Stack>
           )}
-
-          {/* 데이터가 없을 때 */}
-          {filteredData.length === 0 && !loading && (
-            <Box sx={{ textAlign: "center", py: 8 }}>
-              <Typography variant="h6" color={theme.palette.text.secondary}>
-                운송 완료 내역이 없습니다.
-              </Typography>
-            </Box>
-          )}
         </Container>
       </Box>
-    </Box>
+    </>
   );
 };
 

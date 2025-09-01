@@ -19,8 +19,6 @@ import { fetchDeliveryRequests } from "../../api/deliveryRequest/deliveryRequest
 import { fetchDeliveryProposals } from "../../api/deliveryRequest/deliveryProposalAPI";
 import DriverProposalComponent from "./DriverProposalComponent";
 import DatePicker from "react-datepicker";
-import { theme } from "../common/CommonTheme";
-import { CommonTitle } from "../common/CommonText";
 
 const SORT_MAP = {
   recent: "RECENT",
@@ -142,12 +140,14 @@ const ListComponent = () => {
       <Box width={"100%"}>
         <Grid
           sx={{
-            bgcolor: theme.palette.background.paper,
+            bgcolor: "white",
             minHeight: 190,
           }}
         >
           <Box pt={4}>
-            <CommonTitle>배송 요청</CommonTitle>
+            <Typography variant="h4" align="center" fontWeight="bold">
+              배송 요청
+            </Typography>
           </Box>
 
           <Grid
@@ -197,7 +197,7 @@ const ListComponent = () => {
         >
           {/* 좌측 필터 영역 */}
           <Grid item minWidth={200}>
-            <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
               정렬 기준 선택
             </Typography>
 
@@ -217,7 +217,7 @@ const ListComponent = () => {
               </FormControl>
             </Grid>
 
-            <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
               시작일 선택
             </Typography>
 

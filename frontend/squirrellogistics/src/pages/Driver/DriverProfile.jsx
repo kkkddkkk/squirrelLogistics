@@ -26,6 +26,7 @@ import ProfileImage from "../../components/driver/ProfileImage";
 import SNSReAuthModal from "../../components/driver/SNSReAuthModal";
 import EmergencyReportModal from "../../components/driver/EmergencyReportModal";
 import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import LoadingComponent from "../../components/common/LoadingComponent";
 import { theme } from "../../components/common/CommonTheme";
 import {
   CommonTitle,
@@ -257,16 +258,7 @@ const DriverProfile = () => {
   };
 
   if (loading) {
-    return (
-      <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-        <DriverHeader_Temp />
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Typography variant="h4" align="center">
-            프로필 정보를 불러오는 중...
-          </Typography>
-        </Container>
-      </Box>
-    );
+    return <LoadingComponent open={true} text="프로필 정보를 불러오는 중..." />;
   }
 
   if (error) {
@@ -476,7 +468,7 @@ const DriverProfile = () => {
                         >
                           생년월일
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography variant="body1" fontWeight="normal">
                           {driver.birth}
                         </Typography>
                       </Box>
@@ -488,7 +480,7 @@ const DriverProfile = () => {
                         >
                           연락처
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography variant="body1" fontWeight="normal">
                           {driver.phone}
                         </Typography>
                       </Box>
@@ -500,7 +492,7 @@ const DriverProfile = () => {
                         >
                           이메일
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography variant="body1" fontWeight="normal">
                           {driver.email}
                         </Typography>
                       </Box>
@@ -527,7 +519,7 @@ const DriverProfile = () => {
                         >
                           계좌번호
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography variant="body1" fontWeight="normal">
                           {driver.bankAccount}
                         </Typography>
                       </Box>
@@ -539,7 +531,7 @@ const DriverProfile = () => {
                         >
                           사업자번호
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography variant="body1" fontWeight="normal">
                           {driver.businessId}
                         </Typography>
                       </Box>

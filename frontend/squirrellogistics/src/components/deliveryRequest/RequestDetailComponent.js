@@ -452,7 +452,10 @@ const RequestDetailComponent = () => {
                       padding: "2px 8px",
                       fontSize: "18px",
                       lineHeight: 1.2,
-                      bgcolor: "#2A2A2A",
+                      bgcolor: "#A20025",
+                      "&:hover": {
+                        bgcolor: "#8B001F",
+                      },
                       p: 4,
                       pt: 0,
                       pb: 0,
