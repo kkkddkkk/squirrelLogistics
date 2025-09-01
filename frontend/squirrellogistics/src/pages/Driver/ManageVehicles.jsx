@@ -430,8 +430,6 @@ export default function ManageVehicles() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                flexWrap: "wrap",
-                gap: 2,
               }}
             >
               <CommonSubTitle sx={{ color: C.blue }}>차량 목록</CommonSubTitle>
@@ -442,18 +440,15 @@ export default function ManageVehicles() {
                 sx={{
                   borderColor: C.blue,
                   color: C.blue,
-                  minWidth: "auto",
+                  minWidth: "120px",
                   whiteSpace: "nowrap",
-                  px: 2,
-                  py: 1,
-                  fontSize: "0.875rem",
                   "&:hover": {
                     borderColor: C.blue,
                     bgcolor: "#f0f8ff",
                   },
                 }}
               >
-                추가
+                차량 추가
               </Button>
             </Box>
 
