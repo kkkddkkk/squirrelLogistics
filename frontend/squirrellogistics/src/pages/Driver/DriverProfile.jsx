@@ -19,10 +19,18 @@ import {
   Alert,
 } from "@mui/material";
 import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import EditCalendarIcon from "@mui/icons-material/EditCalendar";
 import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import SNSReAuthModal from "../../components/driver/SNSReAuthModal";
 import EmergencyReportModal from "../../components/driver/EmergencyReportModal";
+import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import { theme } from "../../components/common/CommonTheme";
+import {
+  CommonTitle,
+  CommonSubTitle,
+} from "../../components/common/CommonText";
 import {
   getDriverProfile,
   deleteAccount,
@@ -251,7 +259,7 @@ const DriverProfile = () => {
   if (loading) {
     return (
       <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-        <NavBar />
+        <DriverHeader_Temp />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Typography variant="h4" align="center">
             프로필 정보를 불러오는 중...
@@ -264,7 +272,7 @@ const DriverProfile = () => {
   if (error) {
     return (
       <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-        <NavBar />
+        <DriverHeader_Temp />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Typography variant="h4" align="center" color="error">
             {error}
@@ -358,9 +366,9 @@ const DriverProfile = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-      <NavBar />
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
+      <DriverHeader_Temp />
+      <Container sx={{ maxWidth: "500px", py: 6 }}>
         <Typography
           variant="h3"
           component="h1"
@@ -399,10 +407,8 @@ const DriverProfile = () => {
             수정하기
           </Button>
 
-          <Box display="flex" alignItems="center" gap={2} mb={4}>
-            <Typography variant="h4" fontWeight="bold" color="#113F67">
-              운전자 개인 정보
-            </Typography>
+          <Box mb={4}>
+            <CommonTitle>운전자 개인 정보</CommonTitle>
           </Box>
 
           {/* 2단 레이아웃 */}
@@ -448,7 +454,11 @@ const DriverProfile = () => {
               {hasUserInfo() ? (
                 <>
                   <Box sx={{ mb: 4 }}>
-                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+                    <Typography
+                      variant="h5"
+                      fontWeight="bold"
+                      sx={{ mb: 2, color: "white" }}
+                    >
                       개인 정보
                     </Typography>
                     <Box
@@ -642,19 +652,14 @@ const DriverProfile = () => {
             >
               {/* 차량 정보 */}
               <Box sx={{ mb: 5 }}>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="#113F67"
-                  sx={{ mb: 4 }}
-                >
-                  차량 정보
-                </Typography>
+                <Box sx={{ mb: 4 }}>
+                  <CommonSubTitle>차량 정보</CommonSubTitle>
+                </Box>
 
                 {/* 항상 "차량 조회하기" 버튼으로 표시 */}
                 <Box
                   sx={{
-                    p: 4,
+                    p: 10,
                     bgcolor: "#F5F7FA",
                     borderRadius: 3,
                     textAlign: "center",
@@ -672,17 +677,21 @@ const DriverProfile = () => {
                     })
                   }
                 >
-                  <Typography variant="h1" sx={{ mb: 2 }}>
-                    🚛
-                  </Typography>
+                  <LocalShippingIcon
+                    sx={{
+                      fontSize: 100,
+                      mb: 3,
+                      color: "#113F67",
+                    }}
+                  />
                   <Typography
-                    variant="h5"
+                    variant="h4"
                     color="text.secondary"
-                    sx={{ mb: 2 }}
+                    sx={{ mb: 3, fontWeight: "bold" }}
                   >
                     차량 조회하기
                   </Typography>
-                  <Typography variant="body1" color="text.secondary">
+                  <Typography variant="h6" color="text.secondary">
                     차량 정보를 조회하고 관리할 수 있습니다
                   </Typography>
                 </Box>
@@ -690,23 +699,16 @@ const DriverProfile = () => {
 
               {/* 일정 관리 */}
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="#113F67"
-                  sx={{ mb: 4 }}
-                >
-                  일정 관리
-                </Typography>
+                <Box sx={{ mb: 4 }}>
+                  <CommonSubTitle>일정 관리</CommonSubTitle>
+                </Box>
                 <Box
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    p: 3,
+                    p: 10,
                     bgcolor: "#F5F7FA",
                     borderRadius: 3,
+                    textAlign: "center",
+                    cursor: "pointer",
                     transition: "all 0.3s ease",
                     "&:hover": {
                       bgcolor: "#E8E8E8",
@@ -726,12 +728,23 @@ const DriverProfile = () => {
                     navigate(`/driver/${driverId}/calendar/${year}/${month}`);
                   }}
                 >
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <StaticDatePicker
-                      displayStaticWrapperAs="desktop"
-                      defaultValue={dayjs("2025-08-01")}
-                    />
-                  </LocalizationProvider>
+                  <EditCalendarIcon
+                    sx={{
+                      fontSize: 100,
+                      mb: 3,
+                      color: "#113F67",
+                    }}
+                  />
+                  <Typography
+                    variant="h4"
+                    color="text.secondary"
+                    sx={{ mb: 3, fontWeight: "bold" }}
+                  >
+                    일정 관리하기
+                  </Typography>
+                  <Typography variant="h6" color="text.secondary">
+                    달력에서 일정을 확인하고 관리할 수 있습니다
+                  </Typography>
                 </Box>
               </Box>
             </Box>

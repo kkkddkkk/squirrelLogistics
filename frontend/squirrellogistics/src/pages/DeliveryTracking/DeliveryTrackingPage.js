@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Alert } from '@mui/material';
-import DriverHeader_Temp from '../../components/deliveryRequest/DriverHeader_Temp';
-import DeliveryTrackingComponent from '../../components/deliveryTracking/DeliveryTrackingComponent';
-import EmptyDeliveryTrackingComponent from '../../components/deliveryTracking/EmptyDeliveryTrackingComponent';
-import { useParams } from 'react-router-dom';
-import { fetchTodayDelivery } from '../../api/deliveryRequest/deliveryAssignmentAPI';
-import LoadingComponent from '../../components/common/LoadingComponent';
+import React, { useCallback, useEffect, useState } from "react";
+import { Box, Alert } from "@mui/material";
+import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import DeliveryTrackingComponent from "../../components/deliveryTracking/DeliveryTrackingComponent";
+import EmptyDeliveryTrackingComponent from "../../components/deliveryTracking/EmptyDeliveryTrackingComponent";
+import { useParams } from "react-router-dom";
+import { fetchTodayDelivery } from "../../api/deliveryRequest/deliveryAssignmentAPI";
+import LoadingComponent from "../../components/common/LoadingComponent";
+import { theme } from "../../components/common/CommonTheme";
 
 export default function DeliveryTrackingPage() {
   const { driverId } = useParams();
@@ -13,25 +14,28 @@ export default function DeliveryTrackingPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
-  const refetch = useCallback((dataOverride) => {
-    if (dataOverride) {  
-      //최신 데이터 세팅.
-      setTrackData({ ...dataOverride });
-      return;
-    }
-    if (!driverId) return;
-    setLoading(true);
-    setErr(null);
-    fetchTodayDelivery(driverId)
-      .then((data) => {
-        setTrackData(data ? { ...data } : null);
-      })
-      .catch((e) => {
-        if (e?.name === 'CanceledError' || e?.name === 'AbortError') return;
-        setErr(e?.response?.data || e?.message || '에러가 발생했습니다.');
-      })
-      .finally(() => setLoading(false));
-  }, [driverId]);
+  const refetch = useCallback(
+    (dataOverride) => {
+      if (dataOverride) {
+        //최신 데이터 세팅.
+        setTrackData({ ...dataOverride });
+        return;
+      }
+      if (!driverId) return;
+      setLoading(true);
+      setErr(null);
+      fetchTodayDelivery(driverId)
+        .then((data) => {
+          setTrackData(data ? { ...data } : null);
+        })
+        .catch((e) => {
+          if (e?.name === "CanceledError" || e?.name === "AbortError") return;
+          setErr(e?.response?.data || e?.message || "에러가 발생했습니다.");
+        })
+        .finally(() => setLoading(false));
+    },
+    [driverId]
+  );
 
   useEffect(() => {
     if (!driverId) return;
@@ -47,8 +51,8 @@ export default function DeliveryTrackingPage() {
       })
       .catch((e) => {
         if (!mounted) return;
-        if (e?.name === 'CanceledError' || e?.name === 'AbortError') return;
-        setErr(e?.response?.data || e?.message || '에러가 발생했습니다.');
+        if (e?.name === "CanceledError" || e?.name === "AbortError") return;
+        setErr(e?.response?.data || e?.message || "에러가 발생했습니다.");
       })
       .finally(() => mounted && setLoading(false));
 
@@ -59,11 +63,18 @@ export default function DeliveryTrackingPage() {
   }, [driverId]);
 
   const compKey = trackData
-    ? `${trackData.assignedId}-${(trackData.lastStatusLog && trackData.lastStatusLog.status) || 'NONE'}-${(trackData.navigate && trackData.navigate[0] && trackData.navigate[0].waypointId) || 'start'}`
-    : 'empty';
+    ? `${trackData.assignedId}-${
+        (trackData.lastStatusLog && trackData.lastStatusLog.status) || "NONE"
+      }-${
+        (trackData.navigate &&
+          trackData.navigate[0] &&
+          trackData.navigate[0].waypointId) ||
+        "start"
+      }`
+    : "empty";
 
   return (
-    <Box>
+    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
       <DriverHeader_Temp />
 
       {err && (
@@ -74,8 +85,8 @@ export default function DeliveryTrackingPage() {
 
       {trackData ? (
         <DeliveryTrackingComponent
-          key={compKey}       // 상태 전이 시 리마운트 보장
-          data={trackData}    // 반드시 data 전달
+          key={compKey} // 상태 전이 시 리마운트 보장
+          data={trackData} // 반드시 data 전달
           onRefresh={refetch} // 자식에서 상태 변경 후 재요청
         />
       ) : (

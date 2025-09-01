@@ -127,7 +127,7 @@ public class CarController {
      * 기능: 차량 상세 조회
      */
     @GetMapping("/driver/{carId}")
-    public ResponseEntity<CarResponseDTO> getDriverCar(@PathVariable Long carId, 
+    public ResponseEntity<CarResponseDTO> getDriverCar(@PathVariable("carId") Long carId, 
                                                      @RequestHeader("Authorization") String authHeader) {
         try {
             log.info("=== getDriverCar 호출됨 - carId: {} ===", carId);
@@ -178,7 +178,7 @@ public class CarController {
      * 기능: 차량 수정
      */
     @PutMapping(value = "/driver/{carId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CarResponseDTO> updateDriverCar(@PathVariable Long carId,
+    public ResponseEntity<CarResponseDTO> updateDriverCar(@PathVariable("carId") Long carId,
                                                         @RequestBody CarRequestDTO carRequestDTO,
                                                         @RequestHeader("Authorization") String authHeader) {
         log.info("=== updateDriverCar 요청 시작 ===");
@@ -193,6 +193,7 @@ public class CarController {
         log.info("carRequestDTO.getInspection(): {}", carRequestDTO.getInspection());
         try {
             log.info("=== updateDriverCar 호출됨 - carId: {} ===", carId);
+            log.info("=== STEP 1: 토큰 추출 시작 ===");
             log.info("요청된 carRequestDTO: {}", carRequestDTO);
             log.info("carRequestDTO.getCarNum(): {}", carRequestDTO.getCarNum());
             log.info("carRequestDTO.getVehicleTypeId(): {}", carRequestDTO.getVehicleTypeId());
@@ -202,10 +203,10 @@ public class CarController {
             log.info("carRequestDTO.getCarStatus(): {}", carRequestDTO.getCarStatus());
             
             Long userId = extractUserIdFromToken(authHeader);
-            log.info("추출된 userId: {}", userId);
+            log.info("=== STEP 2: 토큰 추출 완료, userId: {} ===", userId);
             
             Long driverId = getDriverIdByUserId(userId);
-            log.info("조회된 driverId: {}", driverId);
+            log.info("=== STEP 3: 드라이버ID 조회 완료, driverId: {} ===", driverId);
             
             // 먼저 해당 차량이 자신의 차량인지 확인
             List<CarResponseDTO> cars = carService.getCarsByDriverId(driverId);
@@ -218,8 +219,9 @@ public class CarController {
                 throw new IllegalArgumentException("해당 차량을 수정할 권한이 없습니다. carId: " + carId);
             }
             
+            log.info("=== STEP 4: carService.updateCar 호출 시작 ===");
             CarResponseDTO updatedCar = carService.updateCar(carId, carRequestDTO);
-            log.info("차량 수정 완료 - carId: {}", updatedCar.getCarId());
+            log.info("=== STEP 5: 차량 수정 완료 - carId: {} ===", updatedCar.getCarId());
             
             return ResponseEntity.ok(updatedCar);
         } catch (Exception e) {
@@ -235,7 +237,7 @@ public class CarController {
      * 기능: 차량 삭제
      */
     @DeleteMapping("/driver/{carId}")
-    public ResponseEntity<Void> deleteDriverCar(@PathVariable Long carId,
+    public ResponseEntity<Void> deleteDriverCar(@PathVariable("carId") Long carId,
                                               @RequestHeader("Authorization") String authHeader) {
         try {
             log.info("=== deleteDriverCar 호출됨 - carId: {} ===", carId);
