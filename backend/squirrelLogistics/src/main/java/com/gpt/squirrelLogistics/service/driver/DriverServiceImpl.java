@@ -60,13 +60,25 @@ public class DriverServiceImpl implements DriverService {
         
         log.info("UserDTO 생성 완료 - Pnumber: {}", userDTO.getPnumber());
         
+        // 프로필 이미지: 파일명만 반환 (프론트에서 전체 URL 구성)
+        String profileImageFileName = null;
+        if (driver.getProfileImageUrl() != null && !driver.getProfileImageUrl().isEmpty()) {
+            // 전체 URL이 저장되어 있다면 파일명만 추출
+            if (driver.getProfileImageUrl().startsWith("/api/")) {
+                profileImageFileName = driver.getProfileImageUrl().substring(driver.getProfileImageUrl().lastIndexOf("/") + 1);
+            } else {
+                // 이미 파일명만 저장되어 있는 경우
+                profileImageFileName = driver.getProfileImageUrl();
+            }
+        }
+        
         return DriverResponseDTO.builder()
                 .driverId(driver.getDriverId())
                 .mainLoca(driver.getMainLoca())
                 .licenseNum(driver.getLicenseNum())
                 .drivable(driver.isDrivable())
                 .LicenseDT(driver.getLicenseDT() != null ? driver.getLicenseDT().atStartOfDay() : null)
-                .profileImageUrl(driver.getProfileImageUrl())
+                .profileImageUrl(profileImageFileName)
                 .userDTO(userDTO)
                 .build();
     }
@@ -213,6 +225,21 @@ public class DriverServiceImpl implements DriverService {
                 Files.createDirectories(uploadPath);
             }
             
+            // 기존 이미지 파일 삭제
+            String existingImageUrl = driver.getProfileImageUrl();
+            if (existingImageUrl != null && !existingImageUrl.isEmpty()) {
+                try {
+                    String existingFilename = existingImageUrl.substring(existingImageUrl.lastIndexOf("/") + 1);
+                    Path existingFilePath = Paths.get(uploadDir, existingFilename);
+                    if (Files.exists(existingFilePath)) {
+                        Files.delete(existingFilePath);
+                        log.info("기존 프로필 이미지 파일 삭제: {}", existingFilename);
+                    }
+                } catch (IOException e) {
+                    log.error("기존 프로필 이미지 파일 삭제 실패", e);
+                }
+            }
+            
             // 파일명 생성 (UUID + 원본 확장자)
             String originalFilename = image.getOriginalFilename();
             String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -222,12 +249,12 @@ public class DriverServiceImpl implements DriverService {
             Path filePath = uploadPath.resolve(filename);
             Files.copy(image.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             
-            // DB에 이미지 URL 저장
-            String imageUrl = "/api/images/profile/" + filename;
-            driver.setProfileImageUrl(imageUrl);
+            // DB에 파일명만 저장
+            driver.setProfileImageUrl(filename);
             driverRepository.save(driver);
             
-            return imageUrl;
+            // 프론트엔드에는 파일명만 반환 (프론트에서 전체 URL 구성)
+            return filename;
             
         } catch (IOException e) {
             log.error("프로필 이미지 업로드 실패", e);

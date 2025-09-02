@@ -599,12 +599,19 @@ const EditProfile = () => {
         // 백엔드 API 호출은 별도로 처리 (성공/실패와 관계없이 미리보기는 유지)
         try {
           console.log("API 호출 시작...");
-          const uploadedImageUrl = await uploadProfileImage(file);
-          console.log("API 응답:", uploadedImageUrl);
+          const uploadedFileName = await uploadProfileImage(file);
+          console.log("API 응답 (파일명):", uploadedFileName);
 
-          // API 성공 시 백엔드 URL도 저장 (선택사항)
-          if (uploadedImageUrl) {
-            localStorage.setItem("backendProfileImageUrl", uploadedImageUrl);
+          // API 성공 시 파일명 저장
+          if (uploadedFileName) {
+            const userId =
+              localStorage.getItem("userId") ||
+              localStorage.getItem("userLoginId") ||
+              "default";
+            localStorage.setItem(
+              `backendProfileImageFileName_${userId}`,
+              uploadedFileName
+            );
           }
         } catch (apiError) {
           console.error("백엔드 업로드 실패 (미리보기는 유지):", apiError);

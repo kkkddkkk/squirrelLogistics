@@ -16,13 +16,24 @@ const ProfileImage = ({
 
   // imageUrl prop이 변경될 때 previewUrl 업데이트
   useEffect(() => {
-    // imageUrl이 data URL이나 http URL인 경우에만 previewUrl 업데이트
-    if (
-      imageUrl &&
-      imageUrl.trim() !== "" &&
-      (imageUrl.startsWith("data:image") || imageUrl.startsWith("http"))
-    ) {
-      setPreviewUrl(imageUrl);
+    if (imageUrl && imageUrl.trim() !== "") {
+      // data URL인 경우 그대로 사용
+      if (imageUrl.startsWith("data:image")) {
+        setPreviewUrl(imageUrl);
+      }
+      // http URL인 경우 그대로 사용
+      else if (imageUrl.startsWith("http")) {
+        setPreviewUrl(imageUrl);
+      }
+      // 파일명만 있는 경우 전체 URL 구성
+      else if (!imageUrl.includes("/")) {
+        const fullUrl = `http://localhost:8080/api/images/profile/${imageUrl}`;
+        setPreviewUrl(fullUrl);
+      }
+      // 기타 경우
+      else {
+        setPreviewUrl("");
+      }
     } else {
       setPreviewUrl("");
     }

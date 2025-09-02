@@ -157,29 +157,21 @@ const DriverProfile = () => {
         // 프로필 이미지 설정
         if (driverData.profileImageUrl) {
           console.log(
-            "백엔드에서 받은 프로필 이미지 URL:",
+            "백엔드에서 받은 프로필 이미지 파일명:",
             driverData.profileImageUrl
           );
-          // 백엔드 URL이 data URL인 경우에만 사용
-          if (driverData.profileImageUrl.startsWith("data:image")) {
-            setProfileImageUrl(driverData.profileImageUrl);
-            localStorage.setItem("profileImageUrl", driverData.profileImageUrl);
+
+          // localStorage에서 data URL 우선 확인
+          const savedDataUrl = localStorage.getItem("profileImageUrl");
+          if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
+            console.log(
+              "localStorage에서 data URL 사용:",
+              savedDataUrl.substring(0, 50) + "..."
+            );
+            setProfileImageUrl(savedDataUrl);
           } else {
-            // 백엔드 URL이 data URL이 아닌 경우 localStorage에서 data URL 확인
-            const savedDataUrl = localStorage.getItem("profileImageUrl");
-            if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
-              console.log(
-                "localStorage에서 data URL 사용:",
-                savedDataUrl.substring(0, 50) + "..."
-              );
-              setProfileImageUrl(savedDataUrl);
-            } else {
-              setProfileImageUrl(driverData.profileImageUrl);
-              localStorage.setItem(
-                "profileImageUrl",
-                driverData.profileImageUrl
-              );
-            }
+            // 백엔드에서 받은 파일명 사용 (ProfileImage 컴포넌트에서 전체 URL 구성)
+            setProfileImageUrl(driverData.profileImageUrl);
           }
         } else {
           // 저장된 프로필 이미지 로드
