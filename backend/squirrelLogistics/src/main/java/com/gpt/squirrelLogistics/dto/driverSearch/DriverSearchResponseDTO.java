@@ -36,4 +36,8 @@ public class DriverSearchResponseDTO {
     // 거리 계산을 위한 좌표 (선택사항, 현재는 null)
     private Double latitude;          // 위도 (거리순 정렬 시 사용)
     private Double longitude;         // 경도 (거리순 정렬 시 사용)
+    
+    // 차량 정보 합치기용 필드
+    private String combinedVehicleInfo;  // 차량종류만 나열 (예: "1톤 트럭, 5톤 트럭")
+    private String maxCombinedWeight;    // 가장 큰 최대적재량 (예: "5톤")
 }

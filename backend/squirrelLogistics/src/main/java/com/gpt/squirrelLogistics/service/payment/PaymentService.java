@@ -1,6 +1,9 @@
 package com.gpt.squirrelLogistics.service.payment;
 
+
 import org.springframework.stereotype.Service;
+
+import com.gpt.squirrelLogistics.config.PaymentConfig;
 
 import com.gpt.squirrelLogistics.dto.actualCalc.ActualCalcDTO;
 import com.gpt.squirrelLogistics.dto.payment.PayBoxDTO;
@@ -41,6 +44,12 @@ public interface PaymentService {
 	
 	//2차 결제 실패 시
 	void failureSecondPayment(PaymentFailureDTO paymentFailureDTO);
+	
+	//결제 방법에 따른 계정 정보 검증
+	PaymentConfig.PaymentAccountInfo getPaymentAccountInfo(String payMethod);
+	
+	//결제 검증을 위한 로깅 및 계정 정보 확인
+	void logPaymentAccountInfo(String payMethod, String impUid);
 	
 	
 	//영수증 랜더링

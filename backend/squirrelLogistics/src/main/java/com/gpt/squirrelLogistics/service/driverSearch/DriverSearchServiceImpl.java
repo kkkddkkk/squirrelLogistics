@@ -28,6 +28,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.OptionalInt;
 
 /**
  * 기사 검색 서비스 구현체
@@ -70,18 +71,18 @@ public class DriverSearchServiceImpl implements DriverSearchService {
             int page = request.getPage() != null ? request.getPage() : 0;
             int size = request.getSize() != null ? request.getSize() : 10;
             
-            // 2. 모든 Driver 역할 사용자 조회 (페이징 없이 전체 조회)
-            List<User> allDriverUsers = userRepository.findAllByRole(UserRoleEnum.DRIVER);
-            System.out.println("전체 Driver 역할 사용자: " + allDriverUsers.size() + "명");
+            // 2. findDriverList()를 사용하여 기사 정보 조회 (프로필 이미지 포함)
+            List<Object[]> allDriverList = driverRepository.findDriverList();
+            System.out.println("전체 Driver 정보: " + allDriverList.size() + "명");
             
-            if (allDriverUsers.isEmpty()) {
-                System.out.println("경고: Driver 역할 사용자가 없습니다!");
+            if (allDriverList.isEmpty()) {
+                System.out.println("경고: Driver 정보가 없습니다!");
                 return createEmptyResponse(page, size);
             }
             
             // 3. Driver 정보로 변환 (DTO 변환 및 기본 필터링)
-            List<DriverSearchResponseDTO> allResults = allDriverUsers.stream()
-                .map(user -> buildDriverSearchResponse(user, request))
+            List<DriverSearchResponseDTO> allResults = allDriverList.stream()
+                .map(driverList -> buildDriverSearchResponseFromList(driverList, request))
                 .filter(dto -> dto != null)  // null인 경우 제외
                 .collect(Collectors.toList());
             System.out.println("Driver 정보 변환 후: " + allResults.size() + "명");
@@ -90,6 +91,9 @@ public class DriverSearchServiceImpl implements DriverSearchService {
                 System.out.println("경고: Driver 정보 변환 결과가 없습니다!");
                 return createEmptyResponse(page, size);
             }
+            
+            // 3-1. 같은 driver_id를 가진 항목들을 하나로 합치기
+            allResults = mergeDriverVehicles(allResults);
             
             // 4. 키워드 검색 적용 (기사명, 연락처, 지역 등)
             allResults = applyKeywordSearch(allResults, request);
@@ -141,6 +145,97 @@ public class DriverSearchServiceImpl implements DriverSearchService {
     }
     
     /**
+     * 같은 driver_id를 가진 항목들을 하나로 합치기
+     * 하나의 기사가 여러 차량을 가질 수 있으므로 차량 정보만 합침
+     */
+    private List<DriverSearchResponseDTO> mergeDriverVehicles(List<DriverSearchResponseDTO> drivers) {
+        // driver_id별로 그룹화
+        Map<Long, List<DriverSearchResponseDTO>> driverGroups = drivers.stream()
+            .collect(Collectors.groupingBy(DriverSearchResponseDTO::getDriverId));
+        
+        // 각 그룹을 하나의 DTO로 합치기
+        List<DriverSearchResponseDTO> mergedDrivers = driverGroups.values().stream()
+            .map(group -> mergeDriverGroup(group))
+            .filter(dto -> dto != null)  // null인 경우 제외
+            .collect(Collectors.toList());
+        
+        return mergedDrivers;
+    }
+    
+    /**
+     * 하나의 driver_id 그룹을 하나의 DTO로 합치기
+     * 차량 정보만 합치고 나머지는 첫 번째 항목 기준으로 설정
+     */
+    private DriverSearchResponseDTO mergeDriverGroup(List<DriverSearchResponseDTO> group) {
+        if (group.isEmpty()) {
+            return null;
+        }
+        
+        // 첫 번째 항목을 기본으로 사용
+        DriverSearchResponseDTO base = group.get(0);
+        
+        // 차량 정보들을 수집 (차량종류만)
+        List<String> vehicleTypes = group.stream()
+            .filter(driver -> driver.getVehicleTypeName() != null)
+            .map(driver -> driver.getVehicleTypeName())
+            .distinct()  // 중복 제거
+            .collect(Collectors.toList());
+        
+        // combinedVehicleInfo 생성 - 차량종류만 쉼표로 구분하여 나열
+        String combinedInfo = vehicleTypes.isEmpty() ? "정보 없음" : String.join(", ", vehicleTypes);
+        
+        // 보험 정보는 하나라도 true면 true
+        boolean hasInsurance = group.stream()
+            .anyMatch(driver -> driver.getInsurance() != null && driver.getInsurance());
+        
+        // 최대 적재량은 가장 큰 값으로 설정 (모든 차량 중 최대값)
+        Integer maxWeight = null;
+        OptionalInt maxWeightOpt = group.stream()
+            .filter(driver -> driver.getMaxWeight() != null)
+            .mapToInt(DriverSearchResponseDTO::getMaxWeight)
+            .max();
+        if (maxWeightOpt.isPresent()) {
+            maxWeight = maxWeightOpt.getAsInt();
+        }
+        
+        // maxCombinedWeight 생성 - 가장 큰 최대적재량을 포맷팅
+        String maxCombinedWeight = maxWeight != null ? formatMaxWeight(maxWeight) : "정보 없음";
+        
+        // 새로운 DTO 생성
+        return DriverSearchResponseDTO.builder()
+            .driverId(base.getDriverId())
+            .driverName(base.getDriverName())
+            .mainLoca(base.getMainLoca())
+            .drivable(base.getDrivable())
+            .profileImageUrl(base.getProfileImageUrl())
+            .vehicleTypeId(base.getVehicleTypeId())
+            .vehicleTypeName(base.getVehicleTypeName())
+            .maxWeight(maxWeight)  // 가장 큰 최대적재량
+            .insurance(hasInsurance)
+            .averageRating(base.getAverageRating())
+            .latitude(base.getLatitude())
+            .longitude(base.getLongitude())
+            .combinedVehicleInfo(combinedInfo)  // 차량종류만 쉼표로 구분
+            .maxCombinedWeight(maxCombinedWeight)  // 가장 큰 최대적재량
+            .build();
+    }
+    
+    /**
+     * 최대 적재량을 읽기 쉬운 형태로 포맷팅
+     */
+    private String formatMaxWeight(Integer maxWeight) {
+        if (maxWeight == null) {
+            return "정보 없음";
+        }
+        
+        if (maxWeight >= 1000) {
+            return (maxWeight / 1000) + "톤";
+        } else {
+            return maxWeight + "kg";
+        }
+    }
+    
+    /**
      * 빈 응답 생성 (에러 시 사용)
      */
     private DriverSearchPageResponseDTO createEmptyResponse(int page, int size) {
@@ -156,60 +251,69 @@ public class DriverSearchServiceImpl implements DriverSearchService {
     }
     
     /**
-     * 사용자 정보를 기사 검색 응답 DTO로 변환
+     * findDriverList() 결과를 기사 검색 응답 DTO로 변환
      * 
-     * 조인 구조:
-     * User (userId) → Driver (userId) → Car (driverId) → VehicleType (vehicleTypeId)
+     * driverList 배열 구조:
+     * [0: driverId, 1: driverName, 2: profileImageUrl, 3: vehicleTypeName, 4: maxWeight, 5: mainLoca, 6: drivable, 7: insurance]
      * 
-     * @param user 사용자 엔티티
+     * @param driverList findDriverList() 결과 배열
      * @param request 검색 요청 DTO
      * @return 기사 검색 응답 DTO
      */
-    private DriverSearchResponseDTO buildDriverSearchResponse(User user, DriverSearchRequestDTO request) {
+    private DriverSearchResponseDTO buildDriverSearchResponseFromList(Object[] driverList, DriverSearchRequestDTO request) {
         try {
-            // 1. 사용자 ID로 Driver 엔티티 조회
-            Driver driver = driverRepository.findByUserId(user.getUserId());
-            if (driver == null) return null;
+            // 1. 배열에서 데이터 추출
+            Long driverId = ((Number) driverList[0]).longValue();
+            String driverName = (String) driverList[1];
+            String profileImageUrl = (String) driverList[2];
+            String vehicleTypeName = (String) driverList[3];
+            Integer maxWeight = ((Number) driverList[4]).intValue();
+            String mainLoca = (String) driverList[5];
+            Boolean drivable = (Boolean) driverList[6];
+            Boolean insurance = (Boolean) driverList[7];
             
-            // 2. Driver의 차량 정보 조회 (List로 받아서 첫 번째 차량 사용)
-            List<Car> cars = carRepository.findByDriverDriverId(driver.getDriverId());
-            if (cars.isEmpty()) return null;
+            // 2. 프로필 이미지 URL 처리 (DeliveryAssignmentService와 동일한 방식)
+            String fileName = "default_profile.png";
+            if (profileImageUrl != null && !profileImageUrl.equals("") && !profileImageUrl.equals("null")) {
+                String path = profileImageUrl;
+                fileName = path.substring(path.lastIndexOf("/") + 1);
+            }
             
-            Car car = cars.get(0); // 첫 번째 차량 사용
+            // 3. 리뷰 평균 평점 계산 (캐시된 값 사용)
+            Double averageRating = getCachedAverageRating(driverId);
             
-            // 3. 차량 종류 정보 조회 (VehicleType 엔티티)
-            VehicleType vehicleType = car.getVehicleType();
-            if (vehicleType == null) return null;
+            // 4. 디버깅 정보
+            System.out.println("Driver " + driverId + " - DB에서 가져온 drivable: " + drivable + " (타입: " + (drivable != null ? drivable.getClass().getSimpleName() : "null") + ")");
+            System.out.println("Driver " + driverId + " - 원본 profileImageUrl: '" + profileImageUrl + "' (타입: " + (profileImageUrl != null ? profileImageUrl.getClass().getSimpleName() : "null") + ")");
+            System.out.println("Driver " + driverId + " - 추출된 fileName: " + fileName);
+            System.out.println("Driver " + driverId + " - 최종 profileImageUrl: " + "/api/public/driverImage/" + fileName);
             
-            // 4. 리뷰 평균 평점 계산 (캐시된 값 사용)
-            Double averageRating = getCachedAverageRating(driver.getDriverId());
-            
-            // 5. drivable 값 디버깅 (즉시 배차 가능 여부)
-            Boolean drivableValue = driver.isDrivable();
-            System.out.println("Driver " + driver.getDriverId() + " - DB에서 가져온 drivable: " + drivableValue + " (타입: " + (drivableValue != null ? drivableValue.getClass().getSimpleName() : "null") + ")");
-            
-            // 6. DTO 빌더로 응답 객체 생성
+            // 5. DTO 빌더로 응답 객체 생성
             return DriverSearchResponseDTO.builder()
-                .driverId(driver.getDriverId())
-                .driverName(user.getName())                    // User 엔티티에서 기사 이름
-                .mainLoca(driver.getMainLoca())               // Driver 엔티티에서 선호 지역
-                .drivable(drivableValue)                      // Driver 엔티티에서 즉시 배차 가능 여부
-                .profileImageUrl(null)                        // User 엔티티에 profileImageUrl 필드가 없으므로 null
-                .vehicleTypeId(vehicleType.getVehicleTypeId()) // VehicleType 엔티티에서 차량 종류 ID
-                .vehicleTypeName(vehicleType.getName())        // VehicleType 엔티티에서 차량 종류 이름
-                .maxWeight(vehicleType.getMaxWeight())         // VehicleType 엔티티에서 최대 적재량 (kg)
-                .insurance(car.isInsurance())                 // Car 엔티티에서 보험 여부
-                .averageRating(averageRating)                 // Review 테이블에서 계산된 평균 평점
-                .latitude(null)                               // 좌표 정보는 별도로 관리 필요
-                .longitude(null)                              // 좌표 정보는 별도로 관리 필요
+                .driverId(driverId)
+                .driverName(driverName)
+                .mainLoca(mainLoca)
+                .drivable(drivable)
+                .profileImageUrl("/api/public/driverImage/" + fileName) 
+                .vehicleTypeId(null)  // findDriverList에서 vehicleTypeId는 조회하지 않으므로 null
+                .vehicleTypeName(vehicleTypeName)
+                .maxWeight(maxWeight)
+                .insurance(insurance)
+                .averageRating(averageRating)
+                .latitude(null)  // 좌표 정보는 별도로 관리 필요
+                .longitude(null) // 좌표 정보는 별도로 관리 필요
+                .combinedVehicleInfo(vehicleTypeName != null ? vehicleTypeName : "정보 없음")
+                .maxCombinedWeight(maxWeight != null ? formatMaxWeight(maxWeight) : "정보 없음")
                 .build();
                 
         } catch (Exception e) {
             // 에러 발생 시 해당 사용자는 제외
-            System.out.println("Error building response for user " + user.getUserId() + ": " + e.getMessage());
+            System.out.println("Error building response from driverList: " + e.getMessage());
             return null;
         }
     }
+    
+
     
     /**
      * 리뷰 평점 캐시에서 평균 평점 조회

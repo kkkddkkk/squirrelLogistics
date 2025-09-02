@@ -41,6 +41,7 @@ import com.gpt.squirrelLogistics.repository.payment.PaymentRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
 import com.gpt.squirrelLogistics.service.deliveryWaypoint.DeliveryWaypointServiceImpl;
+import com.gpt.squirrelLogistics.config.PaymentConfig;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -59,7 +60,20 @@ public class PaymentServiceImpl implements PaymentService {
 
 	private final DeliveryAssignmentService deliveryAssignmentService;
 	private final DeliveryRequestService deliveryRequestService;
+	private final PaymentConfig paymentConfig;
 
+	@Override
+	public PaymentConfig.PaymentAccountInfo getPaymentAccountInfo(String payMethod) {
+		return paymentConfig.getPaymentAccountInfo(payMethod);
+	}
+	
+	@Override
+	public void logPaymentAccountInfo(String payMethod, String impUid) {
+		PaymentConfig.PaymentAccountInfo accountInfo = getPaymentAccountInfo(payMethod);
+	}
+
+
+	
 	@Override
 	public Long registerPayment(PaymentDTO paymentDTO) {
 		// TODO Auto-generated method stub
@@ -158,27 +172,75 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override // 1차 결제 성공 시
 	public void successFirstPayment(PaymentSuccessDTO paymentSuccessDTO) {
 
+		log.info("=== 1차 결제 성공 처리 시작 ===");
+		log.info("받은 데이터: paymentId={}, payMethod={}, payAmount={}, impUid={}", 
+			paymentSuccessDTO.getPaymentId(), 
+			paymentSuccessDTO.getPayMethod(), 
+			paymentSuccessDTO.getPayAmount(), 
+			paymentSuccessDTO.getImpUid());
+
+		// 결제 방법에 따른 계정 정보 로깅 및 검증
+		logPaymentAccountInfo(paymentSuccessDTO.getPayMethod(), paymentSuccessDTO.getImpUid());
+		
+		// 결제 검증: 결제 방법과 계정 정보 일치 여부 확인
+		PaymentConfig.PaymentAccountInfo accountInfo = getPaymentAccountInfo(paymentSuccessDTO.getPayMethod());
+		if (accountInfo == null || accountInfo.getImpKey() == null) {
+			log.error("결제 계정 정보를 찾을 수 없습니다. 결제 방법: {}", paymentSuccessDTO.getPayMethod());
+			throw new RuntimeException("Invalid payment account configuration");
+		}
+
 		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId())
 				.orElseThrow(() -> new RuntimeException("Payment not found!"));
+		
+		log.info("기존 Payment 엔티티: paymentId={}, payMethod={}, payStatus={}", 
+			payment.getPaymentId(), payment.getPayMethod(), payment.getPayStatus());
+		
+		// 결제 정보 설정
 		payment.setPayMethod(paymentSuccessDTO.getPayMethod());
 		payment.setPayAmount(paymentSuccessDTO.getPayAmount());
 		payment.setPayStatus(PayStatusEnum.COMPLETED);
 		payment.setPaid(LocalDateTime.now());
 		payment.setImpUid(paymentSuccessDTO.getImpUid());
 		
-		paymentRepository.saveAndFlush(payment); // flush 강제
+		log.info("설정된 Payment 엔티티: paymentId={}, payMethod={}, payAmount={}, payStatus={}, impUid={}", 
+			payment.getPaymentId(), payment.getPayMethod(), payment.getPayAmount(), 
+			payment.getPayStatus(), payment.getImpUid());
+		
+		// 결제 계정 정보 저장 (디버깅용)
+		log.info("1차 결제 성공 - Payment ID: {}, 결제 방법: {}, I'mport 계정: {}", 
+			payment.getPaymentId(), payment.getPayMethod(), accountInfo.getImpKey());
+		
+		Payment savedPayment = paymentRepository.saveAndFlush(payment); // flush 강제
+		log.info("저장된 Payment 엔티티: paymentId={}, payMethod={}, payAmount={}, payStatus={}, impUid={}", 
+			savedPayment.getPaymentId(), savedPayment.getPayMethod(), savedPayment.getPayAmount(), 
+			savedPayment.getPayStatus(), savedPayment.getImpUid());
+		
+		log.info("=== 1차 결제 성공 처리 완료 ===");
 	}
 
 	@Transactional
 	@Override // 2차 결제 성공 시
 	public void successSecondPayment(PaymentSuccessDTO paymentSuccessDTO) {
+		// 결제 방법에 따른 계정 정보 로깅 및 검증
+		logPaymentAccountInfo(paymentSuccessDTO.getPayMethod(), paymentSuccessDTO.getImpUid());
+		
+		// 결제 검증: 결제 방법과 계정 정보 일치 여부 확인
+		PaymentConfig.PaymentAccountInfo accountInfo = getPaymentAccountInfo(paymentSuccessDTO.getPayMethod());
+		if (accountInfo == null || accountInfo.getImpKey() == null) {
+			log.error("결제 계정 정보를 찾을 수 없습니다. 결제 방법: {}", paymentSuccessDTO.getPayMethod());
+			throw new RuntimeException("Invalid payment account configuration");
+		}
+
 		Payment payment = paymentRepository.findById(paymentSuccessDTO.getPaymentId()).orElseThrow();
 
 		payment.setPayStatus(PayStatusEnum.ALLCOMPLETED);
 		payment.setPaid(LocalDateTime.now());
 		payment.setImpUid(paymentSuccessDTO.getImpUid());
-		payment.setPayMethod(paymentSuccessDTO.getPayMethod());
-		payment.setPayAmount(paymentSuccessDTO.getPayAmount());
+		
+		// 결제 계정 정보 저장 (디버깅용)
+		log.info("2차 결제 성공 - Payment ID: {}, 결제 방법: {}, I'mport 계정: {}", 
+			payment.getPaymentId(), payment.getPayMethod(), accountInfo.getImpKey());
+		
 		paymentRepository.save(payment);
 		paymentRepository.flush();
 
@@ -199,6 +261,16 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override // 결제 실패 시
 	public void failureSecondPayment(PaymentFailureDTO paymentFailureDTO) {
 		Payment payment = paymentRepository.findById(paymentFailureDTO.getPaymentId()).orElseThrow();
+
+		// 결제 실패 시에도 계정 정보 확인 (기존 결제 방법 정보 사용)
+		String payMethod = payment.getPayMethod();
+		if (payMethod != null) {
+			logPaymentAccountInfo(payMethod, payment.getImpUid());
+			log.warn("2차 결제 실패 - Payment ID: {}, 결제 방법: {}", 
+				payment.getPaymentId(), payMethod);
+		} else {
+			log.warn("2차 결제 실패 - Payment ID: {}, 결제 방법 정보 없음", payment.getPaymentId());
+		}
 
 		payment.setPayStatus(PayStatusEnum.FAILED);
 		payment.setPaid(LocalDateTime.now());
@@ -231,6 +303,7 @@ public class PaymentServiceImpl implements PaymentService {
 		return recieptDTO;
 
 	}
+
 
 	@Override // 거래명세서
 	public TransactionStatementDTO getTransaction(Long paymentId) {
@@ -271,5 +344,6 @@ public class PaymentServiceImpl implements PaymentService {
 
 		return transactionStatementDTO;
 	}
+
 
 }

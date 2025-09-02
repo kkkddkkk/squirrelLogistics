@@ -25,8 +25,22 @@ const DriverCard = ({ driver, onRequest }) => {
 
   // 프로필 이미지 표시
   const renderProfileImage = () => {
-    if (driver.profileImageUrl) {
-      return <img src={driver.profileImageUrl} alt="프로필" className="driver-profile-img" />;
+    if (driver.profileImageUrl && driver.profileImageUrl.trim() !== "") {
+      return (
+        <>
+          <img
+            src={`http://localhost:8080${driver.profileImageUrl}`}
+            alt="프로필"
+            className="driver-profile-img"
+            onError={(e) => {
+              console.log("이미지 로딩 실패:", driver.profileImageUrl);
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+          <div className="driver-img-placeholder" style={{ display: 'none' }}>👤</div>
+        </>
+      );
     }
     return <div className="driver-img-placeholder">👤</div>;
   };
