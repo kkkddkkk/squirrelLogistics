@@ -171,7 +171,7 @@ const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
                 },
               }}
             >
-              {isLoading ? "인증 중..." : "Kakao로 재인증"}
+              {isLoading ? "인증 중..." : "Kakao 계정으로 재인증"}
             </Button>
           )}
         </Box>

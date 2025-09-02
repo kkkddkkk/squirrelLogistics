@@ -25,6 +25,8 @@ import {
   Avatar,
   Divider,
   Snackbar,
+  Container,
+  Stack,
 } from "@mui/material";
 import {
   Edit,
@@ -34,15 +36,17 @@ import {
   CheckCircle,
   Warning,
   Error,
+  ChevronRight,
 } from "@mui/icons-material";
 import { carApi, vehicleTypeApi } from "../../api/cars";
 import PreferredTimeBlock from "../../components/Time/PreferredTimeBlock";
 import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
 import { CommonSubTitle } from "../../components/common/CommonText";
+import CommonList from "../../components/common/CommonList";
+import { theme } from "../../components/common/CommonTheme";
 import dayjs from "dayjs";
-import Header from "../Layout/Header"
-import Footer from "../Layout/Footer"
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 
 const C = { blue: "#113F67", gold: "#E8A93F" };
 
@@ -341,135 +345,86 @@ export default function ManageVehicles() {
   }
 
   return (
-    <Box>
+    <>
       <Header />
-      <Box sx={{ p: 3, bgcolor: "#f5f5f5", minHeight: "100vh" }}>
-        {/* 헤더 */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={4}
-        >
-          <Box>
-            <Typography
-              variant="h4"
-              sx={{ color: C.blue, fontWeight: 700, mb: 1 }}
-            >
-              내 차량 관리
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              등록된 차량 {cars.length}대
-            </Typography>
-          </Box>
-        </Box>
+      <Box
+        sx={{
+          bgcolor: theme.palette.background.default,
+          minHeight: "100vh",
+          py: 6,
+        }}
+      >
+        <Container maxWidth="lg">
+          <CommonSubTitle sx={{ color: C.blue, mb: 4 }}>
+            내 차량 관리
+          </CommonSubTitle>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* 차량 목록 */}
-        {cars.length === 0 ? (
-          <Paper
-            sx={{
-              p: 8,
-              textAlign: "center",
-              bgcolor: "white",
-              borderRadius: 3,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
+          {/* 추가 버튼 */}
+          <Box
+            sx={{ display: "flex", justifyContent: "flex-end", mb: 4, mx: 3 }}
           >
-            <DirectionsCar
-              sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
-            />
-            <Typography variant="h6" sx={{ color: "text.secondary", mb: 1 }}>
-              등록된 차량이 없습니다
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
-              새로운 차량을 등록해보세요
-            </Typography>
             <Button
               variant="contained"
               startIcon={<Add />}
               onClick={() => handleOpenDialog("create")}
               sx={{
                 bgcolor: C.blue,
+                minWidth: 140,
+                height: 50,
                 "&:hover": { bgcolor: "#0d2f4f" },
-                px: 4,
-                py: 2,
-                borderRadius: 3,
-                fontSize: "1.1rem",
-                fontWeight: 600,
-                boxShadow: "0 4px 12px rgba(17, 63, 103, 0.3)",
-                "&:hover": {
-                  bgcolor: "#0d2f4f",
-                  boxShadow: "0 6px 16px rgba(17, 63, 103, 0.4)",
-                  transform: "translateY(-2px)",
-                },
-                transition: "all 0.3s ease",
               }}
             >
-              차량 등록하기
+              차량 추가
             </Button>
-          </Paper>
-        ) : (
-          <Paper
-            sx={{
-              bgcolor: "white",
-              borderRadius: 3,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              overflow: "hidden",
-            }}
-          >
-            {/* 목록 헤더 */}
-            <Box
-              sx={{
-                p: 3,
-                borderBottom: "1px solid #e0e0e0",
-                bgcolor: "#fafafa",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <CommonSubTitle sx={{ color: C.blue }}>차량 목록</CommonSubTitle>
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog("create")}
-                sx={{
-                  borderColor: C.blue,
-                  color: C.blue,
-                  minWidth: "120px",
-                  whiteSpace: "nowrap",
-                  "&:hover": {
-                    borderColor: C.blue,
-                    bgcolor: "#f0f8ff",
-                  },
-                }}
-              >
-                차량 추가
-              </Button>
-            </Box>
+          </Box>
 
-            {/* 차량 목록 테이블 */}
-            <Box sx={{ overflow: "auto" }}>
-              {cars.map((car, index) => (
-                <Box
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* 리스트 */}
+          <Box>
+            {cars.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 8 }}>
+                <DirectionsCar
+                  sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ color: "text.secondary", mb: 1 }}
+                >
+                  등록된 차량이 없습니다
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  새로운 차량을 등록해보세요
+                </Typography>
+              </Box>
+            ) : (
+              cars.map((car) => (
+                <Paper
                   key={car.carId}
-                  sx={{
-                    p: 3,
-                    borderBottom:
-                      index < cars.length - 1 ? "1px solid #f0f0f0" : "none",
-                    transition: "background-color 0.2s",
-                    "&:hover": {
-                      bgcolor: "#f8f9fa",
-                    },
-                    cursor: "pointer",
-                  }}
                   onClick={() => handleOpenDialog("edit", car)}
+                  sx={{
+                    p: 1.8,
+                    mb: 3,
+                    border: "0.8px solid",
+                    borderColor: theme.palette.primary.light,
+                    boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
+                    borderRadius: 1.5,
+                    fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    bgcolor: theme.palette.background.paper,
+                    mx: 3,
+                    "&:hover": {
+                      bgcolor: theme.palette.background.default,
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+                      borderColor: theme.palette.primary.main,
+                    },
+                  }}
                 >
                   <Box
                     sx={{
@@ -478,298 +433,287 @@ export default function ManageVehicles() {
                       alignItems: "center",
                     }}
                   >
-                    {/* 왼쪽: 차량 정보 */}
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
+                        flexDirection: "column",
                         gap: 3,
-                        flex: 1,
+                        flex: 8,
                       }}
                     >
-                      {/* 차량 아이콘 */}
-                      <Avatar
+                      {/* 상단: 차량번호와 상태 */}
+                      <Box
                         sx={{
-                          bgcolor: C.blue,
-                          width: 56,
-                          height: 56,
-                          fontSize: "1.5rem",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
                         }}
                       >
-                        <DirectionsCar />
-                      </Avatar>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Avatar
+                            sx={{
+                              bgcolor: C.blue,
+                              width: 32,
+                              height: 32,
+                              fontSize: "1rem",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <DirectionsCar />
+                          </Avatar>
+                          <Typography
+                            variant="h6"
+                            fontWeight="bold"
+                            color={C.blue}
+                          >
+                            {car.carNum}
+                          </Typography>
+                        </Box>
 
-                      {/* 차량 기본 정보 */}
-                      <Box sx={{ flex: 1 }}>
+                        {/* 우측 상단: 상태 */}
                         <Box
                           sx={{
                             display: "flex",
                             alignItems: "center",
                             gap: 2,
-                            mb: 1,
                           }}
                         >
-                          <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 600, color: C.blue }}
-                          >
-                            {car.carNum}
-                          </Typography>
                           {getStatusChip(car.carStatus)}
                         </Box>
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "text.secondary" }}
-                        >
-                          {car.vehicleType?.name} •{" "}
+                      </Box>
+
+                      {/* 하단: 차량 정보 */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                          mt: 1,
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>차종:</strong> {car.vehicleType?.name || "-"}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>주행거리:</strong>{" "}
                           {car.mileage?.toLocaleString()}km
                         </Typography>
+                        {car.inspection && (
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>점검일:</strong>{" "}
+                            {dayjs(car.inspection).format("MM/DD")}
+                          </Typography>
+                        )}
                       </Box>
                     </Box>
 
-                    {/* 중앙: 추가 정보 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 3,
-                        mr: 3,
-                      }}
-                    >
-                      {car.inspection && (
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "text.secondary" }}
-                        >
-                          점검일: {dayjs(car.inspection).format("MM/DD")}
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {/* 오른쪽: 삭제 버튼 */}
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCar(car.carId);
-                        }}
-                        sx={{
-                          borderColor: "error.main",
-                          color: "error.main",
-                          "&:hover": {
-                            borderColor: "error.main",
-                            bgcolor: "error.50",
-                          },
-                        }}
-                      >
-                        차량 삭제
-                      </Button>
-                    </Box>
+                    {/* 화살표 아이콘 */}
+                    <ChevronRight
+                      sx={{ color: theme.palette.text.secondary, fontSize: 24 }}
+                    />
                   </Box>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        )}
-
-        {/* 차량 등록/수정 Dialog */}
-        <Dialog
-          open={dialogOpen}
-          onClose={handleCloseDialog}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            sx: { borderRadius: 3 },
-          }}
-        >
-          <DialogTitle sx={{ pb: 1 }}>
-            <CommonSubTitle>
-              {dialogMode === "create" ? "차량 등록" : "차량 수정"}
-            </CommonSubTitle>
-          </DialogTitle>
-          <DialogContent>
-            <Box
-              component="form"
-              sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
-            >
-              {/* 기본 정보 섹션 */}
-              <CommonSubTitle sx={{ color: C.blue }}>기본 정보</CommonSubTitle>
-
-              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <div style={{ flex: "1 1 48%" }}>
-                  <TextField
-                    label="차량번호"
-                    fullWidth
-                    value={form.carNum}
-                    onChange={(e) => handleFormChange("carNum", e.target.value)}
-                    disabled={dialogMode === "edit"}
-                    helperText=" "
-                    FormHelperTextProps={helperProps}
-                  />
-                </div>
-                <div style={{ flex: "1 1 48%" }}>
-                  <TextField
-                    label="차량등록일"
-                    type="date"
-                    fullWidth
-                    value={form.regDate || ""}
-                    onChange={(e) =>
-                      handleFormChange("regDate", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    disabled
-                    sx={{
-                      "& .MuiInputBase-input.Mui-disabled": {
-                        color: "#000000",
-                        WebkitTextFillColor: "#000000",
-                      },
-                    }}
-                    helperText=" "
-                    FormHelperTextProps={helperProps}
-                  />
-                </div>
-              </Box>
-
-              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <div style={{ flex: "1 1 48%" }}>
-                  <FormControl fullWidth required>
-                    <InputLabel>차종 *</InputLabel>
-                    <Select
-                      value={form.vehicleTypeId}
-                      onChange={(e) =>
-                        handleFormChange("vehicleTypeId", e.target.value)
-                      }
-                      label="차종 *"
-                    >
-                      {vehicleTypes.map((type) => (
-                        <MenuItem
-                          key={type.vehicleTypeId}
-                          value={type.vehicleTypeId}
-                        >
-                          {type.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-                <div style={{ flex: "1 1 48%" }}>
-                  <TextField
-                    label="차량 상태"
-                    fullWidth
-                    value={form.carStatus}
-                    disabled
-                    sx={{
-                      "& .MuiInputBase-input.Mui-disabled": {
-                        color: "#000000",
-                        WebkitTextFillColor: "#000000",
-                      },
-                    }}
-                  />
-                </div>
-              </Box>
-
-              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <div style={{ flex: "1 1 48%" }}>
-                  <TextField
-                    label="다음 정비 예정일"
-                    type="date"
-                    fullWidth
-                    value={form.nextInspection || ""}
-                    onChange={(e) =>
-                      handleFormChange("nextInspection", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    helperText=" "
-                    FormHelperTextProps={helperProps}
-                  />
-                </div>
-                <div style={{ flex: "1 1 48%" }}>
-                  <TextField
-                    label="차량마지막점검일"
-                    type="date"
-                    fullWidth
-                    value={form.inspection}
-                    onChange={(e) =>
-                      handleFormChange("inspection", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    helperText=" "
-                    FormHelperTextProps={helperProps}
-                  />
-                </div>
-              </Box>
-
-              <Divider />
-
-              {/* 선호시간대 섹션 */}
-              <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
-                선호시간대
-              </Typography>
-              <PreferredTimeBlock />
-
-              <Divider />
-
-              {/* 운행선호지역 섹션 */}
-              <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
-                운행선호지역
-              </Typography>
-              <PreferredAreasSelect
-                value={form.preferredAreas}
-                onChange={(areas) => handleFormChange("preferredAreas", areas)}
-                label="운행선호지역"
-              />
-
-              <Divider />
-
-              {/* 기타사항 */}
-              <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
-                기타사항
-              </Typography>
-              <TextField
-                label="기타사항"
-                fullWidth
-                value={form.etc}
-                onChange={(e) => handleFormChange("etc", e.target.value)}
-                multiline
-                rows={3}
-                helperText=" "
-                FormHelperTextProps={helperProps}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button onClick={handleCloseDialog} variant="outlined">
-              취소
-            </Button>
-            <Button
-              onClick={handleSaveCar}
-              variant="contained"
-              sx={{ bgcolor: C.blue }}
-            >
-              {dialogMode === "create" ? "등록" : "저장"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Snackbar */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+                </Paper>
+              ))
+            )}
+          </Box>
+        </Container>
       </Box>
-      <Footer/>
-    </Box>
+
+      {/* 차량 등록/수정 Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <CommonSubTitle>
+            {dialogMode === "create" ? "차량 등록" : "차량 수정"}
+          </CommonSubTitle>
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            component="form"
+            sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
+          >
+            {/* 기본 정보 섹션 */}
+            <CommonSubTitle sx={{ color: C.blue }}>기본 정보</CommonSubTitle>
+
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량번호"
+                  fullWidth
+                  value={form.carNum}
+                  onChange={(e) => handleFormChange("carNum", e.target.value)}
+                  disabled={dialogMode === "edit"}
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량등록일"
+                  type="date"
+                  fullWidth
+                  value={form.regDate || ""}
+                  onChange={(e) => handleFormChange("regDate", e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  disabled
+                  sx={{
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      color: "#000000",
+                      WebkitTextFillColor: "#000000",
+                    },
+                  }}
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <FormControl fullWidth required>
+                  <InputLabel>차종 *</InputLabel>
+                  <Select
+                    value={form.vehicleTypeId}
+                    onChange={(e) =>
+                      handleFormChange("vehicleTypeId", e.target.value)
+                    }
+                    label="차종 *"
+                  >
+                    {vehicleTypes.map((type) => (
+                      <MenuItem
+                        key={type.vehicleTypeId}
+                        value={type.vehicleTypeId}
+                      >
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량 상태"
+                  fullWidth
+                  value={form.carStatus}
+                  disabled
+                  sx={{
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      color: "#000000",
+                      WebkitTextFillColor: "#000000",
+                    },
+                  }}
+                />
+              </div>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="다음 정비 예정일"
+                  type="date"
+                  fullWidth
+                  value={form.nextInspection || ""}
+                  onChange={(e) =>
+                    handleFormChange("nextInspection", e.target.value)
+                  }
+                  InputLabelProps={{ shrink: true }}
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량마지막점검일"
+                  type="date"
+                  fullWidth
+                  value={form.inspection}
+                  onChange={(e) =>
+                    handleFormChange("inspection", e.target.value)
+                  }
+                  InputLabelProps={{ shrink: true }}
+                  helperText=" "
+                  FormHelperTextProps={helperProps}
+                />
+              </div>
+            </Box>
+
+            <Divider />
+
+            {/* 선호시간대 섹션 */}
+            <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
+              선호시간대
+            </Typography>
+            <PreferredTimeBlock />
+
+            <Divider />
+
+            {/* 운행선호지역 섹션 */}
+            <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
+              운행선호지역
+            </Typography>
+            <PreferredAreasSelect
+              value={form.preferredAreas}
+              onChange={(areas) => handleFormChange("preferredAreas", areas)}
+              label="운행선호지역"
+            />
+
+            <Divider />
+
+            {/* 기타사항 */}
+            <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
+              기타사항
+            </Typography>
+            <TextField
+              label="기타사항"
+              fullWidth
+              value={form.etc}
+              onChange={(e) => handleFormChange("etc", e.target.value)}
+              multiline
+              rows={3}
+              helperText=" "
+              FormHelperTextProps={helperProps}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={handleCloseDialog} variant="outlined">
+            취소
+          </Button>
+          <Button
+            onClick={handleSaveCar}
+            variant="contained"
+            sx={{ bgcolor: C.blue }}
+          >
+            {dialogMode === "create" ? "등록" : "저장"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+      <Footer />
+    </>
   );
 }

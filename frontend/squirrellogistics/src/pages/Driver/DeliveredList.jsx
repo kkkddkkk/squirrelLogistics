@@ -16,8 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { fetchCompletedDeliveries } from "../../api/deliveryRequest/deliveryCompletedAPI";
 import { CommonTitle } from "../../components/common/CommonText";
 import { theme } from "../../components/common/CommonTheme";
-import Header from "../Layout/Header"
-import Footer from "../Layout/Footer"
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 import dayjs from "dayjs";
 
 const ITEMS_PER_PAGE = 10;
@@ -65,16 +65,12 @@ const DeliveredList = () => {
       const additionalInfoB = b.additionalInfo || {};
       const completedAtA = additionalInfoA.completedAt;
       const completedAtB = additionalInfoB.completedAt;
-      const startAddressA = additionalInfoA.startAddress || "";
-      const startAddressB = additionalInfoB.startAddress || "";
 
       switch (sort) {
         case "latest":
           return new Date(completedAtB) - new Date(completedAtA);
         case "oldest":
           return new Date(completedAtA) - new Date(completedAtB);
-        case "product":
-          return startAddressA.localeCompare(startAddressB);
         default:
           return 0;
       }
@@ -151,7 +147,6 @@ const DeliveredList = () => {
             >
               <MenuItem value="latest">최신순</MenuItem>
               <MenuItem value="oldest">오래된순</MenuItem>
-              <MenuItem value="product">출발지순</MenuItem>
             </TextField>
           </Stack>
 

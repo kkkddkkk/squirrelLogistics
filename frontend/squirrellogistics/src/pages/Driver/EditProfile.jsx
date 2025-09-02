@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
-import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import {
   getDriverProfile,
@@ -857,7 +856,7 @@ const EditProfile = () => {
   if (error) {
     return (
       <Box>
-       <Header />
+        <Header />
         <Container maxWidth="sm" sx={{ py: 4 }}>
           <Typography
             variant="h4"

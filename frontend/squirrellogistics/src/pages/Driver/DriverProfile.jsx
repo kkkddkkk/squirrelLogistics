@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import EditIcon from "@mui/icons-material/Edit";
 import dayjs from "dayjs";
 import {
   Box,
@@ -21,12 +22,11 @@ import {
 import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import EditCalendarIcon from "@mui/icons-material/EditCalendar";
-import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import SNSReAuthModal from "../../components/driver/SNSReAuthModal";
 import EmergencyReportModal from "../../components/driver/EmergencyReportModal";
-import Header from "../Layout/Header"
-import Footer from "../Layout/Footer"
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { theme } from "../../components/common/CommonTheme";
 import {
@@ -146,10 +146,6 @@ const DriverProfile = () => {
           unavailableStart: "", // API에 없는 필드
           unavailableEnd: "", // API에 없는 필드
           deliveryArea: driverData.mainLoca || "",
-          rating: 0, // API에 없는 필드
-          // 보험 관련 필드는 백엔드에 아직 구현되지 않음
-          // insurance: driverData.insurance || false,
-          // insuranceRenewalDate: driverData.insuranceRenewalDate || "",
         });
 
         console.log("설정된 driver 상태:", {
@@ -208,9 +204,17 @@ const DriverProfile = () => {
           loginId.startsWith("google_") || loginId.startsWith("kakao_");
 
         if (isSnsLogin) {
-          setLoginType("GOOGLE"); // SNS 로그인 사용자
+          // 카카오와 구글 로그인 구분
+          if (loginId.startsWith("kakao_")) {
+            console.log("카카오 로그인 사용자로 설정:", loginId);
+            setLoginType("KAKAO"); // 카카오 로그인 사용자
+          } else if (loginId.startsWith("google_")) {
+            console.log("구글 로그인 사용자로 설정:", loginId);
+            setLoginType("GOOGLE"); // 구글 로그인 사용자
+          }
           setHasSetPassword(false); // SNS 로그인 사용자는 비밀번호 설정 여부 확인 필요
         } else {
+          console.log("일반 로그인 사용자로 설정:", loginId);
           setLoginType("EMAIL"); // 일반 로그인 사용자
           setHasSetPassword(true); // 일반 로그인 사용자는 비밀번호가 있음
         }
@@ -271,7 +275,7 @@ const DriverProfile = () => {
             {error}
           </Typography>
         </Container>
-        <Footer/>
+        <Footer />
       </Box>
     );
   }
@@ -362,7 +366,7 @@ const DriverProfile = () => {
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
       <Header />
-      <Container sx={{ maxWidth: "500px", py: 6 }}>
+      <Container sx={{ maxWidth: "1000px", py: 6 }}>
         <Typography
           variant="h3"
           component="h1"
@@ -543,16 +547,6 @@ const DriverProfile = () => {
               ) : (
                 /* 개인정보가 없는 경우 등록 버튼 표시 */
                 <Box sx={{ mb: 4, textAlign: "center" }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      mb: 3,
-                      color: "rgba(255,255,255,0.8)",
-                      fontWeight: "normal",
-                    }}
-                  >
-                    아직 개인정보가 등록되지 않았습니다
-                  </Typography>
                   <Button
                     onClick={() => {
                       if (loginType === "GOOGLE" || loginType === "KAKAO") {
@@ -576,7 +570,7 @@ const DriverProfile = () => {
                       fontSize: "1.1rem",
                     }}
                   >
-                    개인정보를 등록해주세요
+                    개인정보를 등록해주세요 <EditIcon sx={{ fontSize: 23 }} />
                   </Button>
                 </Box>
               )}
@@ -594,7 +588,7 @@ const DriverProfile = () => {
                     sx={{
                       color: "white",
                       borderColor: "white",
-                      borderWidth: 2,
+                      borderWidth: 1,
                       py: 2,
                       "&:hover": {
                         backgroundColor: "white",
@@ -745,7 +739,6 @@ const DriverProfile = () => {
         <Box display="flex" justifyContent="center">
           <Button
             variant="outlined"
-            color="error"
             onClick={handleWithdraw}
             sx={{
               mt: 3,
@@ -753,7 +746,14 @@ const DriverProfile = () => {
               py: 2,
               fontSize: "1.1rem",
               fontWeight: "bold",
-              borderWidth: 2,
+              borderWidth: 1,
+              borderColor: "#A20025",
+              color: "#A20025",
+              "&:hover": {
+                borderColor: "#8B001F",
+                color: "#8B001F",
+                bgcolor: "rgba(162, 0, 37, 0.04)",
+              },
             }}
           >
             회원 탈퇴
