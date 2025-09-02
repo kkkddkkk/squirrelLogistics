@@ -186,7 +186,8 @@ export default function Header() {
                   <MenuItem
                     onClick={() => {
                       closeMenu();
-                      navigate("/mypage");
+                      {user.role === 'COMPANY' ? navigate("/company") : navigate("/driver/profile")}
+                      
                     }}
                   >
                     내 정보

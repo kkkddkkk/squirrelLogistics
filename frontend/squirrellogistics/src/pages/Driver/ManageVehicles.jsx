@@ -41,6 +41,8 @@ import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
 import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
 import { CommonSubTitle } from "../../components/common/CommonText";
 import dayjs from "dayjs";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 
 const C = { blue: "#113F67", gold: "#E8A93F" };
 
@@ -340,7 +342,7 @@ export default function ManageVehicles() {
 
   return (
     <Box>
-      <DriverHeader_Temp />
+      <Header />
       <Box sx={{ p: 3, bgcolor: "#f5f5f5", minHeight: "100vh" }}>
         {/* 헤더 */}
         <Box
@@ -767,6 +769,7 @@ export default function ManageVehicles() {
           </Alert>
         </Snackbar>
       </Box>
+      <Footer/>
     </Box>
   );
 }

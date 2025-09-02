@@ -32,7 +32,7 @@ public class KakaoLocalClient {
 	private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String LOCAL_API_URL = "https://dapi.kakao.com/v2/local/search/address.json";
-    private static final String KAKAO_REST_API_KEY = "KakaoAK a9b27d11d11d4f05e7134f9de285845d";
+    private static final String KAKAO_REST_API_KEY = "KakaoAK 866375a2baec52acc22ae2904599355c";
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)

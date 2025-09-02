@@ -33,7 +33,7 @@ public class KakaoRouteClient {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	private static final String NAVI_API_URL = "https://apis-navi.kakaomobility.com/v1/directions";
-	private static final String KAKAO_REST_API_KEY = "KakaoAK a9b27d11d11d4f05e7134f9de285845d";
+	private static final String KAKAO_REST_API_KEY = "KakaoAK 866375a2baec52acc22ae2904599355c";
 
 	public static class RouteResult {
 		private final List<LatLng> polyline;
