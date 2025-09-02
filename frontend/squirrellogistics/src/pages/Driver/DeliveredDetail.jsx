@@ -18,8 +18,11 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useNavigate, useParams } from "react-router-dom";
 import DeliveryRouteMap from "../../components/driver/DeliveryRouteMap";
 import { fetchDeliveryDetail } from "../../api/deliveryRequest/deliveryCompletedAPI";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 import dayjs from "dayjs";
+import PolylineMapComponent from "../../components/deliveryMap/PolylineMapComponent";
+
 import { theme } from "../../components/common/CommonTheme";
 import {
   CommonTitle,
@@ -48,8 +51,8 @@ const DeliveredDetail = () => {
         // 운송 상세 정보 조회 (기존 DTO들을 조합한 Map 사용)
         const data = await fetchDeliveryDetail(assignedId);
 
-        console.log("=== API 응답 데이터 ===");
-        console.log("전체 데이터:", data);
+        // console.log("=== API 응답 데이터 ===");
+        // console.log("전체 데이터:", data);
 
         // 새로운 응답 구조에서 데이터 추출
         const additionalInfo = data?.additionalInfo || {};
@@ -57,11 +60,11 @@ const DeliveredDetail = () => {
         const actualDelivery = data?.actualDelivery || {};
         const waypoints = data?.waypoints || [];
 
-        console.log("additionalInfo:", additionalInfo);
-        console.log("request:", request);
-        console.log("actualDelivery:", actualDelivery);
-        console.log("waypoints:", waypoints);
-        console.log("URL 파라미터 assignedId:", assignedId);
+        // console.log("additionalInfo:", additionalInfo);
+        // console.log("request:", request);
+        // console.log("actualDelivery:", actualDelivery);
+        // console.log("waypoints:", waypoints);
+        // console.log("URL 파라미터 assignedId:", assignedId);
 
         setDeliveryData(data);
         setDistanceWeight({
@@ -70,8 +73,8 @@ const DeliveredDetail = () => {
         });
         setWaypoints(waypoints.map((wp) => wp.address || wp.waypointId));
       } catch (err) {
-        console.error("운송 상세 정보 로드 실패:", err);
-        console.error("오류 상세:", err.response?.data || err.message);
+        // console.error("운송 상세 정보 로드 실패:", err);
+        // console.error("오류 상세:", err.response?.data || err.message);
         setError(`운송 상세 정보를 불러오는데 실패했습니다: ${err.message}`);
       } finally {
         setLoading(false);
@@ -169,8 +172,10 @@ const DeliveredDetail = () => {
       <Box
         sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
       >
-        <DriverHeader_Temp />
+        <Header />
         <LoadingComponent />
+        <Footer />
+
       </Box>
     );
   }
@@ -180,12 +185,13 @@ const DeliveredDetail = () => {
       <Box
         sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
       >
-        <DriverHeader_Temp />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="error" sx={{ mb: 4 }}>
             {error}
           </Alert>
         </Container>
+        <Footer />
       </Box>
     );
   }
@@ -195,10 +201,11 @@ const DeliveredDetail = () => {
       <Box
         sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
       >
-        <DriverHeader_Temp />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="warning">운송 데이터를 찾을 수 없습니다.</Alert>
         </Container>
+        <Footer />
       </Box>
     );
   }
@@ -214,7 +221,7 @@ const DeliveredDetail = () => {
       "상차지 정보 없음";
     const startTime = formatTime(
       deliveryData.assignment?.assignedAt ||
-        deliveryData.additionalInfo?.assignedAt
+      deliveryData.additionalInfo?.assignedAt
     );
 
     info.push({
@@ -242,7 +249,7 @@ const DeliveredDetail = () => {
       "하차지 정보 없음";
     const endTime = formatTime(
       deliveryData.assignment?.completedAt ||
-        deliveryData.additionalInfo?.completedAt
+      deliveryData.additionalInfo?.completedAt
     );
 
     info.push({
@@ -309,13 +316,13 @@ const DeliveredDetail = () => {
               borderRadius: "50%",
               ...(isCompleted
                 ? {
-                    bgcolor: "#4CAF50",
-                    color: "white",
-                  }
+                  bgcolor: "#4CAF50",
+                  color: "white",
+                }
                 : {
-                    bgcolor: "#757575",
-                    color: "white",
-                  }),
+                  bgcolor: "#757575",
+                  color: "white",
+                }),
               zIndex: 2,
               position: "relative",
             }}
@@ -427,7 +434,7 @@ const DeliveredDetail = () => {
 
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
-      <DriverHeader_Temp />
+      <Header />
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
@@ -568,8 +575,8 @@ const DeliveredDetail = () => {
                             {index === 0
                               ? "상차 완료"
                               : index === routeInfo.length - 1
-                              ? "하차 완료"
-                              : `경유지 ${item.waypointNumber}`}
+                                ? "하차 완료"
+                                : `경유지 ${item.waypointNumber}`}
                           </Typography>
                           <Typography
                             variant="body1"
@@ -632,8 +639,9 @@ const DeliveredDetail = () => {
                 }}
               >
                 {window.kakao && window.kakao.maps ? (
-                  <DeliveryRouteMap
-                    locations={routeInfo.map((r) => r.location)}
+                    <PolylineMapComponent
+                    polyline={deliveryData.actualDelivery.actualPolyline}
+                    waypoints={waypoints}
                   />
                 ) : (
                   <Box
@@ -918,6 +926,7 @@ const DeliveredDetail = () => {
           </Box>
         </Container>
       </Box>
+      <Footer />
     </Box>
   );
 };

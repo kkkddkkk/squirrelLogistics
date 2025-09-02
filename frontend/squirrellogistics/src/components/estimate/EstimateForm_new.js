@@ -547,7 +547,7 @@ const EstimateForm_new = () => {
   const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
-    <Grid container sx={{ bgcolor: theme.palette.background.default}}>
+    <Grid container sx={{ bgcolor: theme.palette.background.default }}>
       <Grid size={3} />
       <Grid size={6} marginBottom={"5%"}>
         <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
@@ -703,6 +703,18 @@ const EstimateForm_new = () => {
             />
           </div>
 
+          <p className="delivery-label">기사에게 메모 ({memoToDriver.length}/200)</p>
+          <div className="form-row">
+            <textarea
+              id="memoToDriver"
+              className="memo-input"
+              placeholder="예: 경비실에 맡겨주세요/ 골목이 좁아 1톤 이하만 진입 가능"
+              rows={3}
+              maxLength={200}
+              value={memoToDriver}
+              onChange={(e) => setMemoToDriver(e.target.value)}
+            />
+          </div>
           {/* 액션 */}
           <Two100Buttons
             leftTitle={"기사님 검색"}

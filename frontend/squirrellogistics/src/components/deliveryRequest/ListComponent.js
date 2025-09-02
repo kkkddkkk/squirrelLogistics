@@ -12,13 +12,15 @@ import {
   Pagination,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import DeliveryCard from "./DeliveryCard";
 import LoadingComponent from "../common/LoadingComponent";
 import { fetchDeliveryRequests } from "../../api/deliveryRequest/deliveryRequestAPI";
 import { fetchDeliveryProposals } from "../../api/deliveryRequest/deliveryProposalAPI";
 import DriverProposalComponent from "./DriverProposalComponent";
 import DatePicker from "react-datepicker";
+import TwoButtonPopupComponent from './TwoButtonPopupComponent';
+import OneButtonPopupComponent from './OneButtonPopupComponent';
 
 const SORT_MAP = {
   recent: "RECENT",
@@ -40,7 +42,8 @@ const ListComponent = () => {
   const [proposals, setProposals] = useState([]);
   const [openToast, setOpenToast] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  const [errpopupOpen, setErrpopupOpen] = useState(false);
+  const navigate = useNavigate();
   // 페이지, 필터용
   const [pageReq, setPageReq] = useState({
     page: 1,
@@ -65,9 +68,14 @@ const ListComponent = () => {
     setErr(null);
     fetchDeliveryRequests(pageReq)
       .then(setPageData)
-      .catch((e) => setErr(e?.response?.data || e.message))
+      .catch(e => {
+        const errBody = e.response?.data;
+        setErr(errBody?.message ?? e.message);
+        setErrpopupOpen(true);
+      })
       .finally(() => setLoading(false));
   }, [pageReq]);
+
 
   //날짜 필터 적용 이벤트 핸들러.
   const applyFilters = () => {
@@ -100,12 +108,8 @@ const ListComponent = () => {
 
   // 지명 제안 조회 + 토스트 열기
   useEffect(() => {
-    const idNum = Number(driverId);
-    if (!driverId || Number.isNaN(idNum)) {
-      return;
-    }
     const ctrl = new AbortController();
-    fetchDeliveryProposals(driverId, { signal: ctrl.signal })
+    fetchDeliveryProposals({ signal: ctrl.signal })
       .then((list) => {
         const arr = Array.isArray(list) ? list : [];
         setProposals(arr);
@@ -114,7 +118,11 @@ const ListComponent = () => {
           setOpenToast(true);
         }
       })
-      .catch();
+      .catch(e => {
+        const errBody = e.response?.data;
+        setErr(errBody?.message ?? e.message);
+        setErrpopupOpen(true);
+      })
 
     return () => ctrl.abort();
   }, [driverId]);
@@ -122,7 +130,26 @@ const ListComponent = () => {
   if (loading && !pageData) {
     return <LoadingComponent open text="요청 목록을 불러오는 중..." />;
   }
-  if (err) return <div>에러: {String(err)}</div>;
+  if (err) {
+    const mess = (
+      <>
+        {String(err)}
+        <br />
+        [확인] 클릭 시, 메인 화면으로 이동합니다.
+      </>
+    );
+    return (
+      <OneButtonPopupComponent
+        open={errpopupOpen}
+        onClick={() => {
+          setErrpopupOpen(false);
+          navigate("/");
+        }}
+        title={"올바르지 않은 접근"}
+        content={mess}
+      />
+    );
+  }
   if (!pageData) return null;
 
   const { dtoList, totalPage, current } = pageData;

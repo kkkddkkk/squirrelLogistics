@@ -1,58 +1,58 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Alert } from "@mui/material";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 import DeliveryTrackingComponent from "../../components/deliveryTracking/DeliveryTrackingComponent";
 import EmptyDeliveryTrackingComponent from "../../components/deliveryTracking/EmptyDeliveryTrackingComponent";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchTodayDelivery } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { theme } from "../../components/common/CommonTheme";
+import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonPopupComponent";
 
 export default function DeliveryTrackingPage() {
-  const { driverId } = useParams();
   const [trackData, setTrackData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
+  const [errpopupOpen, setErrpopupOpen] = useState(false);
+  const navigate = useNavigate();
+  const refetch = useCallback((dataOverride) => {
+    if (dataOverride) {
+      //최신 데이터 세팅.
+      setTrackData({ ...dataOverride });
+      return;
+    }
+    setLoading(true);
+    setErr(null);
+    fetchTodayDelivery()
+      .then((data) => {
+        setTrackData(data ? { ...data } : null);
+      })
+      .catch((e) => {
+        const errBody = e.response?.data;
+        setErr(errBody?.message ?? e.message);
+        setErrpopupOpen(true);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const refetch = useCallback(
-    (dataOverride) => {
-      if (dataOverride) {
-        //최신 데이터 세팅.
-        setTrackData({ ...dataOverride });
-        return;
-      }
-      if (!driverId) return;
-      setLoading(true);
-      setErr(null);
-      fetchTodayDelivery(driverId)
-        .then((data) => {
-          setTrackData(data ? { ...data } : null);
-        })
-        .catch((e) => {
-          if (e?.name === "CanceledError" || e?.name === "AbortError") return;
-          setErr(e?.response?.data || e?.message || "에러가 발생했습니다.");
-        })
-        .finally(() => setLoading(false));
-    },
-    [driverId]
-  );
 
   useEffect(() => {
-    if (!driverId) return;
     let mounted = true;
     const controller = new AbortController();
 
     setLoading(true);
     setErr(null);
-    fetchTodayDelivery(driverId, { signal: controller.signal })
+    fetchTodayDelivery({ signal: controller.signal })
       .then((data) => {
         if (!mounted) return;
         setTrackData(data ? { ...data } : null);
       })
       .catch((e) => {
         if (!mounted) return;
-        if (e?.name === "CanceledError" || e?.name === "AbortError") return;
-        setErr(e?.response?.data || e?.message || "에러가 발생했습니다.");
+        const errBody = e.response?.data;
+        setErr(errBody?.message ?? e.message);
+        setErrpopupOpen(true);
       })
       .finally(() => mounted && setLoading(false));
 
@@ -60,40 +60,58 @@ export default function DeliveryTrackingPage() {
       mounted = false;
       controller.abort();
     };
-  }, [driverId]);
+  }, []);
+
+
+  const runActionWithPageLoading = useCallback(async (fn) => {
+    setLoading(true);
+    try {
+      await fn();
+      await refetch();
+    } finally {
+      setLoading(false);
+    }
+  }, [refetch]);
 
   const compKey = trackData
-    ? `${trackData.assignedId}-${
-        (trackData.lastStatusLog && trackData.lastStatusLog.status) || "NONE"
-      }-${
-        (trackData.navigate &&
-          trackData.navigate[0] &&
-          trackData.navigate[0].waypointId) ||
-        "start"
-      }`
-    : "empty";
+    ? `${trackData.assignedId}-${(trackData.lastStatusLog && trackData.lastStatusLog.status) || 'NONE'}-${(trackData.navigate && trackData.navigate[0] && trackData.navigate[0].waypointId) || 'start'}`
+    : 'empty';
 
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
-      <DriverHeader_Temp />
+      <Header />
 
       {err && (
-        <Box px={2} mb={1}>
-          <Alert severity="error">{String(err)}</Alert>
-        </Box>
+        <OneButtonPopupComponent
+          open={errpopupOpen}
+          onClick={() => {
+            setErrpopupOpen(false);
+            navigate("/");
+          }}
+          title={"올바르지 않은 접근"}
+          content={
+            <>
+              {String(err)}
+              <br />
+              [확인] 클릭 시, 메인 화면으로 이동합니다.
+            </>
+          }
+        />
       )}
 
       {trackData ? (
         <DeliveryTrackingComponent
-          key={compKey} // 상태 전이 시 리마운트 보장
-          data={trackData} // 반드시 data 전달
-          onRefresh={refetch} // 자식에서 상태 변경 후 재요청
+          key={compKey}   
+          data={trackData}   
+          onRefresh={refetch}
+          onActionRun={runActionWithPageLoading} 
         />
       ) : (
         <EmptyDeliveryTrackingComponent />
       )}
 
       <LoadingComponent open={loading} text="오늘의 배송 불러오는 중..." />
+      <Footer />
     </Box>
   );
 }

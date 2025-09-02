@@ -1,28 +1,43 @@
 import { Button, Grid, Stack } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { postDriverAction } from '../../api/deliveryRequest/deliveryAssignmentAPI';
+import TwoButtonPopupComponent from '../deliveryRequest/TwoButtonPopupComponent'; // 경로는 프로젝트 구조에 맞춰 조정
 
-// props: data(=trackData), onRefresh()
-export function ActionButtons({ data, onRefresh }) {
+// props: data(=trackData), onRefresh(), onActionRun(fn) // onActionRun은 페이지 로딩 오버레이 래퍼
+export function ActionButtons({ data, onRefresh, onActionRun }) {
   const last = data?.lastStatusLog || null;
   const status = last?.status || null;
 
   const legs = Array.isArray(data?.navigate) ? data.navigate : [];
   const finalNodeIndex = legs.length; // START=0 ... DEST=finalNodeIndex
-  const lastVisited = Number.isInteger(last?.lastVisitedWaypoint)
-    ? last.lastVisitedWaypoint
-    : null;
+  const lastVisited = Number.isInteger(last?.lastVisitedWaypoint) ? last.lastVisitedWaypoint : null;
+  const signature = `${last?.status || 'NONE'}|${Number.isInteger(last?.lastVisitedWaypoint) ? last.lastVisitedWaypoint : -1}`;
 
+  // 전이 잠금 상태
+  const [transitLock, setTransitLock] = useState(false);
+  const [nextConfirm, setNextConfirm] = useState(null);
+  const prevSignatureRef = useRef(signature);
   const atFinalNode = lastVisited === finalNodeIndex;
-  const destHasCargo =
-    legs.length > 0 && Array.isArray(legs[legs.length - 1]?.cargos) && legs[legs.length - 1].cargos.length > 0;
 
   // ---- 연타 방지 상태 ----
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [open, setOpen] = useState(false);
+
+  // ---- 확인 팝업 상태 ----
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmContent, setConfirmContent] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [confirmMode, setConfirmMode] = useState('confirm');
   const lastActionRef = useRef(null);
   const lastSentAtRef = useRef(0);
   const MIN_INTERVAL_MS = 800;
+
+  useEffect(() => {
+    if (prevSignatureRef.current !== signature) {
+      prevSignatureRef.current = signature;
+      setTransitLock(false); // ← 새 상태 반영됨, 잠금 해제
+    }
+  }, [signature]);
 
   // ---- 버튼 활성 규칙 ----
   const rules = {
@@ -35,13 +50,9 @@ export function ActionButtons({ data, onRefresh }) {
       status === 'ARRIVED_AT_WAYPOINT' &&
       lastVisited != null &&
       lastVisited >= 1 &&
-      (lastVisited < finalNodeIndex || (lastVisited === finalNodeIndex)),
-    complete:
-      (status === 'DROPPED_AT_WAYPOINT') &&
-      atFinalNode,
-    skip:
-      status === 'MOVING_TO_WAYPOINT' &&
-      (lastVisited ?? 0) + 1 < legs.length,
+      (lastVisited <= finalNodeIndex),
+    complete: status === 'DROPPED_AT_WAYPOINT' && atFinalNode,
+    skip: status === 'MOVING_TO_WAYPOINT' && (lastVisited ?? 0) + 1 < legs.length,
   };
 
   // ---- 라벨 유틸 ----
@@ -53,56 +64,99 @@ export function ActionButtons({ data, onRefresh }) {
 
   const arriveTargetIndex =
     status === 'MOVING_TO_WAYPOINT' ? Math.min((lastVisited ?? -1) + 1, finalNodeIndex) : null;
-
   const dropTargetIndex = status === 'ARRIVED_AT_WAYPOINT' ? lastVisited : null;
 
   const arriveLabel =
-    rules.arrived && arriveTargetIndex != null
-      ? `${labelForNode(arriveTargetIndex)} 도착`
-      : '하차지 도착';
-
+    rules.arrived && arriveTargetIndex != null ? `${labelForNode(arriveTargetIndex)} 도착` : '하차지 도착';
   const dropLabel =
-    rules.dropped && dropTargetIndex != null
-      ? `${labelForNode(dropTargetIndex)} 하차 완료`
-      : '하차 완료';
+    rules.dropped && dropTargetIndex != null ? `${labelForNode(dropTargetIndex)} 하차 완료` : '하차 완료';
 
   const assignedId = data?.assignedId;
 
-  // ---- 공통 클릭 핸들러 ----
-  const click = async (action) => {
+  // ---- 공통 실행기 ----
+  const doAction = async (action, detour = false) => {
+    // 연타 방지 + 동일 액션 최소 간격
     if (!assignedId || isSubmitting) return;
-
     const now = Date.now();
-    if (now - lastSentAtRef.current < MIN_INTERVAL_MS && lastActionRef.current === action) {
-      return;
-    }
+    if (now - lastSentAtRef.current < MIN_INTERVAL_MS && lastActionRef.current === action) return;
 
     setIsSubmitting(true);
+    setTransitLock(true);
     lastActionRef.current = action;
     lastSentAtRef.current = now;
 
     try {
-      await postDriverAction(assignedId, action);
-      onRefresh();
+      if (onActionRun) {
+        // 페이지 로딩 포함 래퍼 사용 (postDriverAction + refetch를 안에서 수행)
+        await onActionRun(async () => {
+          await postDriverAction(assignedId, action, { detour });
+        });
+      } else {
+        // 폴백: 여기서 직접 호출 후 onRefresh
+        await postDriverAction(assignedId, action, { detour });
+        await onRefresh?.();
+      }
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        '요청 처리 중 오류가 발생했습니다.';
-      alert(`처리 실패: ${msg}`);
+      console.error('postDriverAction failed:', err?.response?.status, err?.response?.data || err?.message);
+      setTransitLock(false);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const askAndClick = (action, message) => {
-    const ok = window.confirm(
-      `${message}\n\n해당 조치는 회사에서도 모니터링되며 추후 정산에 반영될 수 있습니다. 진행할까요?`
-    );
-    if (ok) click(action);
+  const openNextConfirmIfAny = () => {
+    if (!nextConfirm) return false;
+    setConfirmTitle(nextConfirm.title || '확인');
+    setConfirmContent(nextConfirm.content || '이 작업을 진행할까요?');
+    setConfirmMode(nextConfirm.mode || 'confirm');
+    setConfirmOpen(true);
+    setNextConfirm(null);
+    return true;
   };
 
-  const disabledAll = isSubmitting;
+  // ---- 확인 팝업 트리거 ----
+  const showConfirm = (action, { title, content, mode = 'confirm', next = null }) => {
+    setPendingAction(action);
+    setConfirmTitle(title || '확인');
+    setConfirmContent(content || '이 작업을 진행할까요?');
+    setConfirmMode(mode);
+    setNextConfirm(next);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmLeft = async () => {
+    const action = pendingAction;
+    setConfirmOpen(false);
+    if (!action) return;
+
+    if (confirmMode === 'routeChoice') {
+      // 정상 경로 선택
+      await doAction(action, false);
+    } // confirm 모드의 좌(취소)는 아무것도 안 함
+  };
+
+  const handleConfirmRight = async () => {
+    const action = pendingAction;
+    setConfirmOpen(false);
+    if (!action) return;
+
+    if (confirmMode === 'routeChoice') {
+      // 이탈 경로 선택
+      await doAction(action, true);
+    } else {
+      const moved = openNextConfirmIfAny(); // step2로 전환
+      if (!moved) {
+        await doAction(action);
+      }
+    }
+  };
+
+  const buildNextRouteChoice = () => ({
+    mode: 'routeChoice',
+    title: '경로 선택 (개발자 모드)',
+    content: <>다음 경로 이동을 시작합니다. 유형을 선택해주세요.</>,
+  });
+
+  const disabledAll = isSubmitting || confirmOpen || transitLock;
 
   // ---- JSX ----
   return (
@@ -114,7 +168,7 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.startToPickup}
-            onClick={() => click('START_TO_PICKUP')}
+            onClick={() => doAction('START_TO_PICKUP')}
           >
             집하지 이동 시작
           </Button>
@@ -124,7 +178,15 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.pickupCompleted}
-            onClick={() => click('PICKUP_COMPLETED')}
+            // onClick={() => doAction('PICKUP_COMPLETED')}
+            onClick={() =>
+              showConfirm('PICKUP_COMPLETED', {
+                mode: 'confirm',
+                title: '집하 완료',
+                content: <>화물 집하 완료 처리하시겠습니까?</>,
+                next: legs.length > 1 ? buildNextRouteChoice() : null,
+              })
+            }
           >
             화물 집하 완료
           </Button>
@@ -134,7 +196,12 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.arrived}
-            onClick={() => click('ARRIVED_AT_WAYPOINT')}
+            onClick={() =>
+              showConfirm('ARRIVED_AT_WAYPOINT', {
+                title: '도착 처리',
+                content: <>{arriveLabel} 처리하시겠습니까?</>,
+              })
+            }
           >
             {arriveLabel}
           </Button>
@@ -148,7 +215,14 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.dropped}
-            onClick={() => click('DROPPED_AT_WAYPOINT')}
+            onClick={() =>
+              showConfirm('DROPPED_AT_WAYPOINT', {
+                mode: 'confirm',
+                title: '하차 완료',
+                content: <>{dropLabel} 처리하시겠습니까?</>,
+                next: !atFinalNode ? buildNextRouteChoice() : null,
+              })
+            }
           >
             {dropLabel}
           </Button>
@@ -158,10 +232,18 @@ export function ActionButtons({ data, onRefresh }) {
             fullWidth
             variant="outlined"
             disabled={disabledAll || !rules.complete}
-            onClick={async ({ mountainous, caution }) => {
-              await postDriverAction(assignedId, "COMPLETE", { mountainous, caution });
-              onRefresh();
-            }}
+            onClick={() =>
+              showConfirm('COMPLETE', {
+                title: '전체 운송 완료',
+                content: (
+                  <>
+                    전체 운송을 완료 처리합니다.
+                    <br />
+                    완료 처리 후에는 되돌릴 수 없습니다. 진행하시겠습니까?
+                  </>
+                ),
+              })
+            }
           >
             전체 운송 완료
           </Button>
@@ -173,7 +255,20 @@ export function ActionButtons({ data, onRefresh }) {
               color="error"
               sx={{ flex: 1 }}
               disabled={disabledAll || !rules.skip}
-              onClick={() => askAndClick('SKIPPED_WAYPOINT', '다음 하차지 건너뛰기')}
+              onClick={() =>
+                showConfirm('SKIPPED_WAYPOINT', {
+                  title: '하차지 건너뛰기',
+                  content: (
+                    <>
+                      다음 하차지를 건너뜁니다.
+                      <br />
+                      해당 조치는 회사에서도 모니터링되며
+                      <br />
+                      정산에 반영될 수 있습니다. 진행하시겠습니까?
+                    </>
+                  ), next: buildNextRouteChoice() ,
+                })
+              }
             >
               다음 하차지 건너뛰기
             </Button>
@@ -182,7 +277,20 @@ export function ActionButtons({ data, onRefresh }) {
               color="error"
               sx={{ flex: 1 }}
               disabled={disabledAll}
-              onClick={() => askAndClick('PAUSE', '정지/사고 발생 처리')}
+              onClick={() =>
+                showConfirm('PAUSE', {
+                  title: '정지/사고 발생',
+                  content: (
+                    <>
+                      운송을 일시 정지 처리합니다.
+                      <br />
+                      해당 조치는 의뢰자에게도 모니터링되며
+                      <br />
+                      정산에 반영될 수 있습니다. 진행하시겠습니까?
+                    </>
+                  ),
+                })
+              }
             >
               정지/사고 발생
             </Button>
@@ -190,6 +298,18 @@ export function ActionButtons({ data, onRefresh }) {
         </Grid>
       </Grid>
 
+      {/* 확인 팝업 */}
+      {confirmOpen && (
+        <TwoButtonPopupComponent
+          open={confirmOpen}
+          leftTxt={confirmMode === 'routeChoice' ? '정상경로' : '취소'}
+          rightTxt={confirmMode === 'routeChoice' ? '이탈경로' : '확인'}
+          onLeftClick={handleConfirmLeft}
+          onRightClick={handleConfirmRight}
+          title={confirmTitle}
+          content={confirmContent}
+        />
+      )}
     </Grid>
   );
 }

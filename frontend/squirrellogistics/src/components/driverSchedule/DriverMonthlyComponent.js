@@ -37,6 +37,7 @@ import {
 import MontlyDetailPopupComponent from "./MontlyDetailPopupComponent";
 import { fetchDriverMonthlySchedule } from "./../../api/deliveryRequest/deliveryAssignmentAPI";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import OneButtonPopupComponent from "../deliveryRequest/OneButtonPopupComponent";
 
 const RBC_OVERRIDE_STYLE_ID = "rbc-overrides-inline";
 
@@ -84,24 +85,36 @@ const localizer = dateFnsLocalizer({
 //실데이터 연결 캘린더에 특정일 이벤트 추가.
 function buildEventsFromSchedules(dtos, year, month) {
   return (dtos ?? [])
-    .filter((dto) => {
+    .filter(dto => {
       const s = new Date(dto.wantToStart);
-      return s.getFullYear() === year && s.getMonth() + 1 === month;
+      return s.getFullYear() === year && (s.getMonth() + 1) === month;
     })
-    .map((dto) => {
+    .map(dto => {
       // 백엔드 직렬화가 isCompleted → completed.
       const completed = dto.isCompleted ?? dto.completed ?? false;
+      const failed = dto.isFailed ?? dto.failed ?? false;
+
       const start = new Date(dto.wantToStart);
       const end = new Date(dto.wantToStart);
 
+      let title, type;
+      if (completed) {
+        title = `#REQ-${dto.deliveryRequestId} (완료)`;
+        type = "completed";
+      } else if (failed) {
+        title = `#REQ-${dto.deliveryRequestId} (미운송)`;
+        type = "failed";
+      } else {
+        title = `#REQ-${dto.deliveryRequestId} (예약)`;
+        type = "transport";
+      }
+
       return {
-        title: completed
-          ? `운송 #REQ-${dto.deliveryRequestId} (완료)`
-          : `운송 #REQ-${dto.deliveryRequestId} (예약)`,
+        title,
         start,
         end,
         allDay: true,
-        type: completed ? "completed" : "transport",
+        type,
         assignedId: dto.assignedId,
         deliveryRequestId: dto.deliveryRequestId,
         raw: dto,
@@ -147,11 +160,10 @@ export default function DriverMonthlyComponent() {
   const initial = useMemo(() => {
     const now = new Date();
     return {
-      driverId: params.driverId ?? "99999",
       year: params.year ? Number(params.year) : now.getFullYear(),
       month: params.month ? Number(params.month) : now.getMonth() + 1,
     };
-  }, [params.driverId, params.year, params.month]);
+  }, [params.year, params.month]);
 
   //상태값 감지용 useState변수들.
   const [currentYM, setCurrentYM] = useState({
@@ -161,6 +173,10 @@ export default function DriverMonthlyComponent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [err, setErr] = useState(null);
+  const [errKind, setErrKind] = useState(null);
+  const [errpopupOpen, setErrpopupOpen] = useState(false);
 
   const [openPicker, setOpenPicker] = useState(false);
   const [pickYear, setPickYear] = useState(initial.year);
@@ -175,28 +191,27 @@ export default function DriverMonthlyComponent() {
   //캘린더의 기사 일정 이벤트 마커 추가 => setEvents로 start와 end지정.
   const loadEvents = useCallback(async () => {
     setLoading(true);
-    setErrorMsg("");
+    setErr(null);
+
     const controller = new AbortController();
     try {
       const list = await fetchDriverMonthlySchedule(
-        initial.driverId,
-        currentYM.year,
-        currentYM.month,
+        Number(currentYM.year),
+        Number(currentYM.month),
         { signal: controller.signal }
       );
-      const evts = buildEventsFromSchedules(
-        list,
-        currentYM.year,
-        currentYM.month
-      ).map((e) => ({
+      const evts = buildEventsFromSchedules(list, currentYM.year, currentYM.month).map(e => ({
         ...e,
         start: ensureDate(e.start),
         end: ensureDate(e.end),
       }));
       setEvents(evts);
+      console.log(list)
     } catch (err) {
-      console.error(err);
-      setErrorMsg("일정 데이터를 불러오지 못했습니다.");
+      const errBody = err.response?.data;
+      setErr(errBody?.message ?? err.message);
+      setErrKind('forbidden');
+      setErrpopupOpen(true);
       setEvents([]);
     } finally {
       setLoading(false);
@@ -209,12 +224,7 @@ export default function DriverMonthlyComponent() {
   }, [loadEvents]);
 
   useEffect(() => {
-    navigate(
-      `/driver/${initial.driverId}/calendar/${currentYM.year}/${pad2(
-        currentYM.month
-      )}`,
-      { replace: true }
-    );
+    navigate(`/driver/calendar/${currentYM.year}/${pad2(currentYM.month)}`, { replace: true });
   }, [currentYM, initial.driverId, navigate]);
 
   //이전달, 다음달 이동 버튼 클릭 함수 => currentDate +1 혹은 -1.
@@ -236,11 +246,25 @@ export default function DriverMonthlyComponent() {
   //완료 일정 / 미완료 일정 마커 색상 구분.
   const eventPropGetter = useCallback((event) => {
     const isCompleted = event.type === "completed";
+    const isFailed = event.type === "failed";
+
+    let backgroundColor, borderColor;
+    if (isCompleted) {
+      backgroundColor = "#606060"; // 회색 (완료)
+      borderColor = "#525252";
+    } else if (isFailed) {
+      backgroundColor = "#7F0000"; // 빨강 (실패)
+      borderColor = "#600000ff";
+    } else {
+      backgroundColor = "#113F67"; // 파랑 (예약/진행중)
+      borderColor = "#051829";
+    }
+
     return {
       style: {
-        backgroundColor: isCompleted ? "#606060" : "#113F67",
+        backgroundColor,
         color: "#fff",
-        border: `1px solid ${isCompleted ? "#525252" : "#051829"}`,
+        border: `1px solid ${borderColor}`,
         borderRadius: 999,
         lineHeight: 1.2,
         paddingTop: 2,
@@ -285,12 +309,19 @@ export default function DriverMonthlyComponent() {
 
   // 이벤트 클릭 시 요청 정보 전달(팝업에서 추가 조회 필요, assignedId/deliveryRequestId 넘김)
   const handleSelectEvent = useCallback((ev) => {
-    setSelectedDto({
-      requestId: ev.deliveryRequestId,
-      assignedId: ev.assignedId,
-      completed: ev.type === "completed",
-    });
-    setDialogOpen(true);
+    if (ev.raw.isFailed === true) {
+      console.log("Failed: " + ev.raw.wantToEnd);
+      setErr("미운송(실패)으로 신고 처리된 운송 건입니다.");
+      setErrKind('failed_delivery');
+      setErrpopupOpen(true);
+    } else {
+      setSelectedDto({
+        requestId: ev.deliveryRequestId,
+        assignedId: ev.assignedId,
+        completed: ev.type === "completed",
+      });
+      setDialogOpen(true);
+    }
   }, []);
 
   const handleCloseDialog = useCallback(() => {
@@ -305,7 +336,7 @@ export default function DriverMonthlyComponent() {
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <Box width={"100%"} justifyItems={"center"}>
+    <Box width={"100%"} justifyItems={"center"} mb={4}>
       <GlobalStyles
         styles={{
           ".rbc-calendar": {
@@ -423,10 +454,36 @@ export default function DriverMonthlyComponent() {
       </Grid>
 
       {/* 에러/로딩 간단 표시 */}
-      {errorMsg && (
-        <Typography color="error" align="center" sx={{ mt: 2 }}>
-          {errorMsg}
-        </Typography>
+      {err && (
+        <OneButtonPopupComponent
+          open={errpopupOpen}
+          onClick={() => {
+            setErrpopupOpen(false);
+            setErr(null);
+            setErrKind(null);
+
+            if (errKind === "forbidden") {
+              navigate("/");
+            }
+          }}
+          title={errKind === "forbidden" ? "올바르지 않은 접근" : "안내"}
+          content={
+            <>
+              {String(err)}
+              {errKind === "forbidden" ? (
+                <>
+                  <br />
+                  [확인] 클릭 시, 메인 화면으로 이동합니다.
+                </>
+              ) : (
+                <>
+                  <br />
+                  이의 제기를 희망하시는 경우 고객센터로 문의 주시길 바랍니다.
+                </>
+              )}
+            </>
+          }
+        />
       )}
 
       {loading && (

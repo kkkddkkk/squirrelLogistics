@@ -1,6 +1,5 @@
 package com.gpt.squirrelLogistics.controller.deliveryRequest;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -17,20 +16,21 @@ import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
-import com.gpt.squirrelLogistics.dto.page.PageRequestDTO;
-import com.gpt.squirrelLogistics.dto.page.PageResponseDTO;
 import com.gpt.squirrelLogistics.dto.page.RequestPageRequestDTO;
 import com.gpt.squirrelLogistics.dto.page.RequestPageResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
-import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
-import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
 import com.gpt.squirrelLogistics.repository.user.UserRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.deliveryOrchestrator.DeliveryOrchestrator;
 import com.gpt.squirrelLogistics.service.deliveryRequest.DeliveryRequestService;
+import com.gpt.squirrelLogistics.service.driverAuth.AuthErrorCode;
+import com.gpt.squirrelLogistics.service.driverAuth.AuthOutcome;
+import com.gpt.squirrelLogistics.service.driverAuth.DriverAuthException;
+import com.gpt.squirrelLogistics.service.driverAuth.DriverTokenValidService;
+import com.gpt.squirrelLogistics.service.driverAuth.ErrorResponse;
 import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
 import com.sun.istack.NotNull;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
@@ -50,14 +50,14 @@ public class DeliveryRequestController {
 	private final DeliveryOrchestrator deliveryOrchestrator;
 	private final FindUserByTokenService findUserByTokenService;
 	private final UserRepository userRepository;
-	public record CreatRequest(
-			@jakarta.validation.Valid PaymentDTO payment,
+
+	private final DriverTokenValidService tokenValidService;
+
+	public record CreatRequest(@jakarta.validation.Valid PaymentDTO payment,
 			@jakarta.validation.Valid DeliveryRequestRequestDTO request) {
 	}
 
-	public record ProposeRequest(
-			@Valid PaymentDTO payment, 
-			@Valid DeliveryRequestRequestDTO request, 
+	public record ProposeRequest(@Valid PaymentDTO payment, @Valid DeliveryRequestRequestDTO request,
 			@NotNull Long driverId) {
 	}
 
@@ -70,11 +70,22 @@ public class DeliveryRequestController {
 
 	// 단건 조회 (상세 응답 사용 권장)
 	@GetMapping("/{id}")
-	@TimedEndpoint("request_detail") // ★ 상세만 타겟팅
-	public ResponseEntity<DeliveryRequestResponseDTO> read(@PathVariable("id") Long id,
-			@RequestParam(value = "driverId", required = false) Long driverId) throws NotFoundException {
+	@TimedEndpoint("request_detail")
+	public ResponseEntity<?> read(@PathVariable("id") Long id,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		Long driverId = ((AuthOutcome.Success) outcome).driverId();
 
 		DeliveryRequestResponseDTO dto = requestService.readFullSafe(id, driverId);
+
+		if (dto == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.REQUEST_NOT_FOUND.toString());
+		}
+
 		return ResponseEntity.ok(dto);
 	}
 
@@ -105,12 +116,18 @@ public class DeliveryRequestController {
 //		PageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.list(pageReq);
 //		return ResponseEntity.ok(page);
 //	}
-	
+
 	@GetMapping
 	@TimedEndpoint("request_list")
-	public ResponseEntity<RequestPageResponseDTO<DeliveryRequestCardSlimDTO>> list(@ModelAttribute RequestPageRequestDTO pageReq) {
+	public ResponseEntity<?> list(@ModelAttribute RequestPageRequestDTO pageReq,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
 		RequestPageResponseDTO<DeliveryRequestCardSlimDTO> page = requestService.listWithFilter(pageReq);
-	    return ResponseEntity.ok(page);
+		return ResponseEntity.ok(page);
 	}
 
 	/** 목록 - Spring 표준 Pageable(Page<T>) */
@@ -121,50 +138,75 @@ public class DeliveryRequestController {
 
 	// 요청 승낙
 	@PutMapping("/{id}/accept")
-	public ResponseEntity<Map<String, String>> accept(@PathVariable("id") Long requestId,
-			@RequestParam("driverId") Long driverId) {
+	public ResponseEntity<?> accept(@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@PathVariable("id") Long requestId) {
 
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		Long driverId = ((AuthOutcome.Success) outcome).driverId();
 		Map<String, String> result = assignmentService.accept(requestId, driverId);
 
 		if (result.containsKey("FAILED")) {
-			HttpStatus s = switch (result.get("FAILED")) {
-			case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
-			case "REQUEST_ALREADY_TAKEN", "VEHICLE_TYPE_MISMATCH", "SCHEDULE_CONFLICT" -> HttpStatus.CONFLICT;
-			default -> HttpStatus.BAD_REQUEST;
-			};
-			return ResponseEntity.status(s).body(result);
+		    switch (result.get("FAILED")) {
+		        case "REQUEST_NOT_FOUND":
+		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		                                 .body(AuthErrorCode.REQUEST_NOT_FOUND.toString());
+		        case "DRIVER_NOT_FOUND":
+		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		                                 .body(AuthErrorCode.DRIVER_NOT_FOUND.toString());
+		        case "REQUEST_ALREADY_TAKEN":
+		            return ResponseEntity.status(HttpStatus.GONE)
+		                                 .body(AuthErrorCode.REQUEST_ALREADY_TAKEN.toString());
+		        case "VEHICLE_TYPE_MISMATCH":
+		            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+		                                 .body(AuthErrorCode.VEHICLE_TYPE_MISMATCH.toString());
+		        case "SCHEDULE_CONFLICT":
+		            return ResponseEntity.status(HttpStatus.CONFLICT)
+		                                 .body(AuthErrorCode.SCHEDULE_CONFLICT.toString());
+		        case "ALREADY_ACCEPTED":
+		            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+		                                 .body(AuthErrorCode.ALREADY_ACCEPTED.toString());
+		        default:
+		            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+		                                 .body(AuthErrorCode.UNKNOWN.toString());
+		    }
 		}
+
+		// 성공 케이스
 		return ResponseEntity.ok(result);
 	}
 
 	// 요청 생성과 동시에 지명 제안, 물류회사 전용.
 	@PostMapping("/propose")
-	public CreatedRequestPaymentInfoDTO createAndPropose(@Valid @RequestBody ProposeRequest payload,
+	public ResponseEntity<?> createAndPropose(@Valid @RequestBody ProposeRequest payload,
 			@RequestHeader("Authorization") String token) {
 
 		Long userId = findUserByTokenService.getUserIdByToken(token);
-		
-		if (userId == null ) {
-			log.info("[ERROR] 토큰으로부터 유저 아이디 추출에 실패하였습니다: " + token);
-			return null;
+
+		if (userId == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.TOKEN_INVALID.toString());
 		}
-		
+
 		User user = userRepository.getReferenceById(userId);
-		
+
 		if (user == null) {
-			log.info("[ERROR] 해당 아이디의 유저가 발견되지 않았습니다: " + userId);
-			return null;
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.USER_NOT_FOUND.toString());
 		}
-		
+
 		if (user.getRole() != UserRoleEnum.COMPANY) {
-			log.info("[ERROR] 회사계정이 아닌 회읜은 요청을 넣을 수 없습니다: " + user.getRole());
-			return null;
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.NOT_COMPANY.toString());
 		}
 
 		CreatedRequestPaymentInfoDTO result = deliveryOrchestrator.createAndPropose(payload.request(),
 				payload.payment(), payload.driverId());
 
-		return result;
+		if (result == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthErrorCode.UNKNOWN.toString());
+		}
+
+		return ResponseEntity.ok(result);
 	}
 
 	// 특정 요청에 지명된 기사 정보 조회 (작성자: 정윤진)
@@ -184,25 +226,25 @@ public class DeliveryRequestController {
 		return ResponseEntity.ok(results);
 	}
 
-	// 기사 지명 제안 (작성자: 정윤진)
-	@PostMapping("/{id}/propose")
-	public ResponseEntity<Map<String, Object>> proposeToDriver(@PathVariable("id") Long requestId,
-			@RequestParam("driverId") Long driverId) {
-
-		Map<String, Object> result = assignmentService.propose(requestId, driverId);
-
-		if (result.containsKey("FAILED")) {
-			String error = (String) result.get("FAILED");
-			HttpStatus status = switch (error) {
-			case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
-			case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
-			default -> HttpStatus.BAD_REQUEST;
-			};
-			return ResponseEntity.status(status).body(result);
-		}
-
-		return ResponseEntity.ok(result);
-	}
+//	// 기사 지명 제안 (작성자: 정윤진)
+//	@PostMapping("/{id}/propose")
+//	public ResponseEntity<Map<String, Object>> proposeToDriver(@PathVariable("id") Long requestId,
+//			@RequestParam("driverId") Long driverId) {
+//
+//		Map<String, Object> result = assignmentService.propose(requestId, driverId);
+//
+//		if (result.containsKey("FAILED")) {
+//			String error = (String) result.get("FAILED");
+//			HttpStatus status = switch (error) {
+//			case "REQUEST_NOT_FOUND", "DRIVER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+//			case "ALREADY_ASSIGNED", "ALREADY_PROPOSED_TO_DRIVER" -> HttpStatus.CONFLICT;
+//			default -> HttpStatus.BAD_REQUEST;
+//			};
+//			return ResponseEntity.status(status).body(au);
+//		}
+//
+//		return ResponseEntity.ok(result);
+//	}
 
 	/* ============== 기사 지명 요청 관련 엔드포인트들 ============== */
 
@@ -351,5 +393,10 @@ public class DeliveryRequestController {
 		public void setPaymentId(Long paymentId) {
 			this.paymentId = paymentId;
 		}
+	}
+
+	// ================================================[프론트 알림용 예외처리]
+	private ResponseEntity<ErrorResponse> toError(AuthOutcome.Failure f) {
+		return ResponseEntity.status(f.status()).body(ErrorResponse.of(f.code().name(), f.message()));
 	}
 }

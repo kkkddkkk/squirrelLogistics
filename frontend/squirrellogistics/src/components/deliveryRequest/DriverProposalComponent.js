@@ -30,7 +30,7 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
     const navigate = useNavigate();
 
     const handleClick = (requestId, refundDate) => {
-        navigate(`/driver/${driverId}/detail/${requestId}`, {
+        navigate(`/driver/detail/${requestId}`, {
             state: { isProposed: true, refundDate: refundDate }
         });
     };

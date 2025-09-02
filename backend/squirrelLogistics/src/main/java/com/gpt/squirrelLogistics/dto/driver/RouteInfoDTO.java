@@ -17,4 +17,7 @@ public class RouteInfoDTO {
 	    private List<LatLng> visited;
 	    private List<LatLng> expected;
 	    private LatLng currentPosition;     // 현재 위치
+	    
+	    private Boolean outOfWay;          // 300m 이상 이탈 여부
+	    private Double  deviationMeters;  // 예상 경로와의 최단 거리(m)
 }

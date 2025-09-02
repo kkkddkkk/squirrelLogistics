@@ -9,7 +9,7 @@ const EmptyDeliveryTrackingComponent = () => {
   const navigate = useNavigate();
 
   const onClickMove = () => {
-    navigate(`/driver/${driverId}/list`);
+    navigate(`/driver/list`);
   };
 
   return (

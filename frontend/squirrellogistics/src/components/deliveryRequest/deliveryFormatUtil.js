@@ -6,40 +6,56 @@ export function formatAddress(address) {
   return address.length > 15 ? address.slice(0, 15) + '...' : address;
 }
 
-function formatCreatedAt(createdAt) {
-  const now = new Date();
+function formatCreatedAt(createdAt, now = new Date()) {
   const created = new Date(createdAt);
-  const diffMs = now - created;
+  if (Number.isNaN(created.getTime())) return '등록: -';
+
+  let diffMs = now - created;
+  if (diffMs < 0) diffMs = 0; // 미래값 보호
+
   const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 1) {
+    return '등록: 방금 전';
+  }
+
+  const MIN_PER_HOUR = 60;
+  const MIN_PER_DAY = 1440;
+
+  if (diffMin >= MIN_PER_DAY) {
+    const days = Math.floor(diffMin / MIN_PER_DAY);
+    return `등록: ${days}일 전`;
+  }
+
+  if (diffMin >= MIN_PER_HOUR) {
+    const hours = Math.floor(diffMin / MIN_PER_HOUR);
+    const mins = diffMin % MIN_PER_HOUR;
+    return `등록: ${hours}시간${mins ? ` ${mins}분` : ''} 전`;
+  }
+
   return `등록: ${diffMin}분 전`;
 }
 
 const HANDLING_COLORS = {
-  1: '#31A04F',    // 신선 식품
-  2: '#ab0d08ff',  // 취급 주의
-  3: '#34699A',    // 생물 화물
-  4: '#8d0505ff',    // 위험물
-  5: '#a36700ff',    // 고가품
-  6: '#595959ff',    // 대형 화물
-  7: '#179174ff',    // 온도 민감
-  8: '#0053a1ff',    // 액체 화물
-  9: '#075800ff',    // 장거리 운송
-
+  1: '#ab0d08ff',  // 취급 주의
+  3: '#31A04F',    // 산간 지역
+  2: '#34699A',    // 취급 + 산간
+  4: '#595959ff',    //없음
 };
 
-export function renderSingleTag(handlingId,handlingTags) {
-  const tagSet = new Map();
-  const color = HANDLING_COLORS[handlingId];
-  if (color && !tagSet.has(handlingId)) {
-    tagSet.set(handlingId, color);
-  }
+export function renderSingleTag(handlingId, handlingTags) {
+  // handlingId/handlingTags가 null이면 4번(없음)으로 대체
+  const effectiveId = handlingId ?? 4;
+  const effectiveTags = handlingTags ?? '없음';
+
+  const color = HANDLING_COLORS[effectiveId];
 
   return (
     <Typography
       component="span"
       sx={{ color, fontWeight: 'bold', fontSize: '0.8rem' }}
     >
-      [{handlingTags}]
+      [{effectiveTags}]
     </Typography>
   );
 }
@@ -55,7 +71,6 @@ export function renderWarningTags(waypoints) {
       </Typography>
     )
   };
-
   const tagSet = new Map();
 
   waypoints.forEach(wp => {
@@ -91,7 +106,6 @@ export function formatDeliveryDTO(dto) {
     title: `${formatAddress(dto.startAddress)} → ${formatAddress(dto.endAddress)}`,
     distance: `${formatDistanceKm(dto.distance)}`,
 
-    warning: renderWarningTags(dto.waypoints), // ← 이제 JSX 배열
     profit: `수익: ${dto.estimatedFee.toLocaleString()}원`,
     registered: formatCreatedAt(dto.createAt),
   };

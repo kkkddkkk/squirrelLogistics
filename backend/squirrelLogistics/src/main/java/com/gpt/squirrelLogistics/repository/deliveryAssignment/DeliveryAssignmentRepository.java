@@ -136,8 +136,8 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	// paymentId로 deliveryAssignment 찾기
 	@Query("SELECT da FROM DeliveryAssignment da " + "JOIN da.payment p " + "WHERE p.paymentId = :paymentId")
 	DeliveryAssignment findDeliveryAssignmentByPaymentId(@Param("paymentId") Long paymentId);
-	
-	//paymentID로 deliveryAssignmentId 찾기
+
+	// paymentID로 deliveryAssignmentId 찾기
 	@Query("SELECT da.assignedId FROM DeliveryAssignment da " + "JOIN da.payment p " + "WHERE p.paymentId = :paymentId")
 	Long findIdByPaymentId(@Param("paymentId") Long paymentId);
 
@@ -149,11 +149,9 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			    join a.deliveryRequest r
 			    where a.driver.driverId = :driverId
 			      and a.status in :blockingStatuses
-			      and r.wantToStart < :endAt
-			      and r.wantToEnd   > :startAt
+			      and date(r.wantToStart) = date(:startAt)
 			""")
-	boolean existsOverlappingByRequestWindow(@Param("driverId") Long driverId, @Param("startAt") LocalDateTime startAt,
-			@Param("endAt") LocalDateTime endAt,
+	boolean existsOverlappingByRequestDay(@Param("driverId") Long driverId, @Param("startAt") LocalDateTime startAt,
 			@Param("blockingStatuses") Collection<com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum> blockingStatuses);
 
 	// 작성자: 고은설.
@@ -179,7 +177,6 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			  SET a.status = 'IN_PROGRESS'
 			  WHERE a.status = 'ASSIGNED'
 			    AND r.want_to_start <= :now
-			    AND r.want_to_end   >= :now
 			""", nativeQuery = true)
 	int markAssignedToInProgress(@Param("now") LocalDateTime now);
 
@@ -319,35 +316,36 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	// 작성자: 고은설.
 	// 기능: 운전자 현 배송 상태 화면 제작에 필요한 부분만 발췌.
 	@Query("""
-			select new com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingHeaderDTO(
-			  da.assignedId,
-			  dr.requestId,
-			  dr.startAddress,
-			  dr.memoToDriver,
-			  dr.wantToStart,
-			  dr.wantToEnd
-			)
-			from DeliveryAssignment da
-			join da.deliveryRequest dr
-			where da.driver.driverId = :driverId
-			  and da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
-			  and :now between dr.wantToStart and coalesce(dr.wantToEnd, dr.wantToStart)
-			order by dr.wantToStart asc
+			  select new com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingHeaderDTO(
+			    da.assignedId,
+			    dr.requestId,
+			    dr.startAddress,
+			    dr.memoToDriver,
+			    dr.wantToStart,
+			    dr.wantToEnd
+			  )
+			  from DeliveryAssignment da
+			  join da.deliveryRequest dr
+			  where da.driver.driverId = :driverId
+			    and da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			  order by dr.wantToStart asc
 			""")
 	List<DeliveryAssignmentTrackingHeaderDTO> findCurrentTrackingHead(@Param("driverId") Long driverId,
-			@Param("now") java.time.LocalDateTime now, org.springframework.data.domain.Pageable pageable);
+			@Param("now") java.time.LocalDateTime now, // 사용 안 해도 시그니처 유지 가능
+			org.springframework.data.domain.Pageable pageable);
 
 	// 작성자: 고은설.
 	// 기능: IN_PROGRESS 상태로 전환까지 된 assign데이터 중 종료 일이 지나도록 완료처리 안된 미완수건 검수.
 	@Query("""
-			  select a
-			  from DeliveryAssignment a
-			  join a.deliveryRequest r
-			  where a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
-			    and r.wantToEnd is not null
-			    and r.wantToEnd < :threshold
+			    select a
+			    from DeliveryAssignment a
+			    join a.deliveryRequest r
+			    where (a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			           or a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED)
+			      and r.wantToEnd is not null
+			      and r.wantToEnd < :threshold
 			""")
-	List<DeliveryAssignment> findInProgressPastEnd(@Param("threshold") LocalDateTime threshold);
+	List<DeliveryAssignment> findInProgressOrAssignedPastEnd(@Param("threshold") LocalDateTime threshold);
 
 	// 작성자: 고은설.
 	// 기능: 특정 기사에게 할당된 해당 연·월 운송 일정(하루 1건: assignedAt 최솟값만) 조회
@@ -356,6 +354,7 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			  a.assignedId,
 			  r.requestId,
 			  case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED then true else false end,
+			  case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.FAILED then true else false end,
 			  r.wantToStart,
 			  r.wantToEnd
 			)
@@ -487,8 +486,6 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 //			""")
 //	List<DeliveryStatusLogSlimResponseDTO> findLogsByAssignId(@Param("assignId") Long assignId);
 
-
-
 	@Query("""
 			select new com.gpt.squirrelLogistics.dto.deliveryStatusLog.DeliveryStatusLogSlimResponseDTO(
 			    log.statusId,
@@ -502,5 +499,27 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			order by log.createdAt asc
 			""")
 	List<DeliveryStatusLogSlimResponseDTO> findLogsByAssignId(@Param("assignId") Long assignId);
+
+	// 작성자: 고은설.
+	// 기능: requestId를 가진 Assignment 엔티티 1건 가져오기
+	@Query("""
+			  select da
+			  from DeliveryAssignment da
+			  where da.deliveryRequest.requestId = :requestId
+			    and da.status in (
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			    )
+			    and da.assignedAt = (
+			      select max(da2.assignedAt)
+			      from DeliveryAssignment da2
+			      where da2.deliveryRequest.requestId = :requestId
+			        and da2.status in (
+			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
+			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			        )
+			    )
+			""")
+	Optional<DeliveryAssignment> findLatestActiveByRequestId(@Param("requestId") Long requestId);
 
 }

@@ -6,3 +6,11 @@
   outline: none;
   border: 2px solid var(--primary-main); /* 원하는 색 */
 }
+
+.memo-input{
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}

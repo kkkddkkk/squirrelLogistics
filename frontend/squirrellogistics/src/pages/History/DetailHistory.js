@@ -1,42 +1,114 @@
 import { Box, Modal, Typography } from "@mui/material";
 import ActualMap from "../../components/actualCalc/ActualMap";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layout, paymentFormat, SubTitle, Title, TwoBtns } from "../../components/common/CommonForCompany";
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import PlaceIcon from "@mui/icons-material/Place";
+import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import { useSearchParams } from "react-router-dom";
 import { getDetailHistory } from "../../api/company/historyApi";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
-import { useDriverStream } from "../../api/deliveryRequest/driverStreamAPI";
+import { useCompanyStream, useDriverStream } from "../../api/deliveryRequest/driverStreamAPI";
+import { buildWaypointViews, buildMainStatus } from "./trackingUtil";
+
+//작성자: 고은설.
+//기능: 폴링 쿨타임 셋업용.
+const POLL_INTERVAL = 30; // 30초
 
 const DetailHistory = () => {
-    const { moveToSecondPayment, moveBack } = usePaymentMove();
+    const { moveToActualCalc, moveBack } = usePaymentMove();
 
-    //작성자: 고은설.
-    //설명: 기사의 실시간 위치를 출력하는 'LiveMapComponent'을 사용하는 법.
-    //1. LiveMapComponent는 백엔드 서버가 보내주는 live데이터라는것을 받아서 지도로 그리고 있습니다!
-    //2. 그 live데이터는 제가 만들어둔 useDriverStream api에 해당 할당 운송을 담당하는 기사 아이디를 넣어 아래처럼 얻을 수 있습니다!
-    //3. detailContent로 운전기사 id 가져오는 부분이 추가된 다음 아래처럼 쓰실 수 있습니다!
-    //4. useEffect를 통해 운전기사 id가 받기 전이라면 useDriverStream에서 오류가 뜰 가능성이 높아서 useEffect를통해 들어온 데이터가 null이 아닐때까지 로딩화면등으로 대체한면 안전할 것 같습니다!
-    //5. 다만 문제는 현대 웹소켓 송수신 구조가 통신 경량화를 위해 이동중인 경로랑 좌표만을 보내고 있어서 저 지도를 가져오는 것 만으로는 운송의 실시간 최신 상태를 받아올 수 없습니다...
-    //6. 따라서 해당 컴포넌트를 매 10-15초마다 새로고침하는 폴링 구조를 사용하시거나, ㅅㅈ
-    const live = useDriverStream(27);
 
     const [params] = useSearchParams();
     const assignedId = params.get("assignId");
     const [detailContent, setDetailContent] = useState([]);
 
-    useEffect(() => {
+    //고은설: 쿨타임 차감용.
+    const [cooldown, setCooldown] = useState(POLL_INTERVAL);
+    const colorOf = (state) => {
+        switch (state) {
+            case "집하 완료":
+            case "운송 완료":
+                return "#31A04F";
+            case "도착":
+                return "#34699A";
+            case "이동중":
+                return "#F59E0B";
+            case "정지":
+                return "#D14343";
+            default:
+                return "#9AA5B1";
+        }
+    };
+
+    const iconOf = (state) => {
+        switch (state) {
+            case "집하 완료":
+            case "운송 완료":
+                return <CheckBoxIcon sx={{ color: colorOf(state) }} />;
+            case "도착":
+                return <PlaceIcon sx={{ color: colorOf(state) }} />;
+            case "이동중":
+                return <DirectionsCarIcon sx={{ color: colorOf(state) }} />;
+            case "정지":
+                return <PauseCircleIcon sx={{ color: colorOf(state) }} />;
+            default:
+                return <MoreHorizIcon sx={{ color: colorOf(state) }} />;
+        }
+    };
+
+    //고은설: 상태값 가져오기.
+    const fetchDetail = () => {
         if (!assignedId) return;
         getDetailHistory({ assignedId })
-            .then(data => {
+            .then((data) => {
                 setDetailContent(data || {});
-                console.log(data);
+                setCooldown(POLL_INTERVAL); // 성공 시 타이머 리셋
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error("데이터 가져오기 실패", err);
+                setCooldown(POLL_INTERVAL);
             });
+    };
+
+
+    useEffect(() => {
+        fetchDetail();
     }, [assignedId]);
+
+    //고은설: 폴링 타이머.
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCooldown((prev) => {
+                if (prev <= 1) {
+                    fetchDetail(); // 자동 새로고침
+                    return POLL_INTERVAL;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [assignedId]);
+
+    useEffect(() => {
+        if (!detailContent?.statuses || detailContent.statuses.length === 0) return;
+
+        const lastStatus = detailContent.statuses[detailContent.statuses.length - 1]?.status;
+
+        if (lastStatus === "COMPLETED") {
+            moveToActualCalc({
+                assignedId,
+                reported: false,
+            });
+        }
+    }, [detailContent, assignedId, moveToActualCalc]);
+
+    //고은설: 경유지 운송 상태값 가공.
+    const views = buildWaypointViews(detailContent?.waypoints, detailContent?.statuses);
 
     const handleCancel = () => {
         /* eslint-disable no-restricted-globals */
@@ -45,6 +117,19 @@ const DetailHistory = () => {
         }
     }
 
+    const live = useCompanyStream(
+        () => localStorage.getItem("accessToken"),
+        detailContent?.driverId // 조회할 기사 driverId
+    );
+    const mergedRoute = useMemo(() => {
+        if (!detailContent?.driverId) return null;
+
+        return {
+            ...live, // 실시간 위치, visited/expected
+            waypoints: detailContent.waypoints || [],
+            statuses: detailContent.statuses || [],
+        };
+    }, [detailContent, live]);
     return (
         <Layout title={"세부내역"}>
             <Box
@@ -57,39 +142,64 @@ const DetailHistory = () => {
             >
                 <Box sx={{ width: "40%" }}>
                     {/* <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap> */}
-                    <LiveMapComponent route={live} onRefresh />
+                    <LiveMapComponent route={mergedRoute} onRefresh />
                 </Box>
                 <Box sx={{ width: "50%", aspectRatio: "1/1", overflowY: "auto", overflowX: "hidden" }}>
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
+                    {/* <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
                         {detailContent?.status === "ASSIGNED" ?
                             <Title> 출발 예정: {detailContent?.wantToStart}</Title> :
                             <Title> 화물이 운송 중입니다.</Title>
                         }
-
-                    </Box>
+                    </Box> */}
 
                     <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
+                        <Title>{buildMainStatus(detailContent?.statuses, detailContent?.waypoints)}</Title>
+                    </Box>
+
+                    {/* <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
                         <SubTitle>출발지: {detailContent?.startAddress}</SubTitle>
                         <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box>
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <SubTitle>경유지1: {detailContent?.dropOrder1}</SubTitle>
-                        <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box>
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <SubTitle>경유지2: {detailContent?.dropOrder2}</SubTitle>
-                        <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box>
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <SubTitle>경유지3: {detailContent?.dropOrder3}</SubTitle>
-                        <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box>
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <SubTitle>도착지: {detailContent?.endAddress}</SubTitle>
-                        <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box>
-                    <Box display={"flex"} justifyContent={"end"} marginTop={"5%"}>
-                        <TwoBtns children1={"예약 취소"} func1={handleCancel} children2={"뒤로가기"} func2={() => moveBack()}></TwoBtns>
+                    </Box> */}
+                    {views.map((v) => (
+                        <Box
+                            key={v.index}
+                            width="100%"
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mb="5%"
+                        >
+                            <SubTitle>
+                                {v.role}: {v.address}
+                            </SubTitle>
+                            <Box display="flex" alignItems="center" gap="8px">
+                                {iconOf(v.state)}
+                                <Typography sx={{ fontSize: "0.85rem", fontWeight: "bold", color: colorOf(v.state) }}>
+                                    {v.state}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    ))}
+                    <Box display="flex" justifyContent="space-between" mt="5%">
+                        <button
+                            onClick={fetchDetail}
+                            style={{
+                                padding: "8px 12px",
+                                background: "#34699A",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            새로고침 ({cooldown}s)
+                        </button>
+                        <TwoBtns
+                            children1={"예약 취소"}
+                            func1={() => alert("예약취소")}
+                            children2={"뒤로가기"}
+                            func2={() => moveBack()}
+                        />
                     </Box>
 
                 </Box>

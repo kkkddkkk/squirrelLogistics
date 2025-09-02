@@ -25,7 +25,8 @@ import NavBar from "../../components/driver/NavBar";
 import ProfileImage from "../../components/driver/ProfileImage";
 import SNSReAuthModal from "../../components/driver/SNSReAuthModal";
 import EmergencyReportModal from "../../components/driver/EmergencyReportModal";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { theme } from "../../components/common/CommonTheme";
 import {
@@ -264,12 +265,13 @@ const DriverProfile = () => {
   if (error) {
     return (
       <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-        <DriverHeader_Temp />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Typography variant="h4" align="center" color="error">
             {error}
           </Typography>
         </Container>
+        <Footer/>
       </Box>
     );
   }
@@ -359,7 +361,7 @@ const DriverProfile = () => {
 
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
-      <DriverHeader_Temp />
+      <Header />
       <Container sx={{ maxWidth: "500px", py: 6 }}>
         <Typography
           variant="h3"
@@ -584,9 +586,7 @@ const DriverProfile = () => {
                 <Stack spacing={3}>
                   <Button
                     onClick={() => {
-                      // driverId는 localStorage에서 가져오거나 기본값 사용
-                      const driverId = localStorage.getItem("userId") || "1";
-                      navigate(`/driver/${driverId}/review`);
+                      navigate(`/driver/review`);
                     }}
                     variant="outlined"
                     fullWidth
@@ -715,9 +715,7 @@ const DriverProfile = () => {
                       2,
                       "0"
                     );
-                    // driverId는 localStorage에서 가져오거나 기본값 사용
-                    const driverId = localStorage.getItem("userId") || "1";
-                    navigate(`/driver/${driverId}/calendar/${year}/${month}`);
+                    navigate(`/driver/calendar/${year}/${month}`);
                   }}
                 >
                   <EditCalendarIcon
@@ -834,6 +832,7 @@ const DriverProfile = () => {
         onClose={() => setShowEmergencyReportModal(false)}
         onReport={handleEmergencyReport}
       />
+      <Footer />
     </Box>
   );
 };

@@ -10,10 +10,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gpt.squirrelLogistics.common.LatLng;
+import com.gpt.squirrelLogistics.common.RouteJson;
 import com.gpt.squirrelLogistics.dto.driver.RouteInfoDTO;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoLocalClient;
 import com.gpt.squirrelLogistics.external.api.kakao.KakaoRouteClient;
+import com.gpt.squirrelLogistics.repository.deliveryRequest.DeliveryRequestRepository;
 import com.gpt.squirrelLogistics.service.deliveryTrackingLog.DeliveryTrackingLogService;
 
 import lombok.AllArgsConstructor;
@@ -37,8 +43,9 @@ public class DummyTracker {
 	private final KakaoLocalClient localClient;
 	private final SimpMessagingTemplate messaging;
 	private final DeliveryTrackingLogService trackingLogService;
+	private final DeliveryRequestRepository requestRepository;
 
-	// 스케줄러는 공유 스레드풀 1~2개면 충분
+	// 스레드풀 2개
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
 	private final Map<String, DummyDriver> driverMap = new ConcurrentHashMap<>();
@@ -55,7 +62,13 @@ public class DummyTracker {
 	private DummyDriver ensure(String driverId) {
 		return driverMap.computeIfAbsent(driverId, id -> {
 			var d = new DummyDriver(id, kakaoClient, scheduler, SEOUL_STATION);
-			d.setBroadcaster(route -> messaging.convertAndSend("/topic/driver/" + id, route));
+			d.setBroadcaster(route -> {
+				// 운전자 전용 (기존)
+				messaging.convertAndSendToUser(id, "/queue/driver", route);
+				messaging.convertAndSend("/topic/driver/" + id, route);
+			});
+			// d.setBroadcaster(route -> messaging.convertAndSend("/topic/driver/" + id,
+			// route));
 			d.setMoveHook(pos -> maybePersist(id, pos));
 			d.start();
 			phaseMap.put(id, Phase.IDLE);
@@ -86,25 +99,101 @@ public class DummyTracker {
 		d.setPaused(false);
 	}
 
-	/** 본 운송 레그 시작: from→to (픽업 이후, 로그 저장 시작) */
-	public void prepareLeg(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto) {
+	// 정상 경로용 다음 경로 셋업.
+//	public void prepareLeg(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto) {
+//		setCurrentAssignment(driverId, assignedId);
+//		phaseMap.put(driverId, Phase.IN_TRANSIT); // ← 먼저 Phase 전환 (레이스 제거)
+//		var d = ensure(driverId);
+//
+//		var from = localClient.geocode(fromAddr);
+//		var to = localClient.geocode(toAddr);
+//
+//		List<LatLng> plannedFull = requestRepository.findExpectedPolylineByAssignedId(assignedId).orElse(null);
+//		if (plannedFull == null || plannedFull.size() < 2) {
+//			// 임시 카카오 경로.
+//			plannedFull = kakaoClient.requestRoute(from, to).getPolyline();
+//		}
+//
+//		// 레그에 해당하는 구간만 슬라이스.
+//		List<LatLng> plannedLeg = PolyUtil.sliceSubpath(plannedFull, from, to);
+//
+//		// 이탈 판정용 예상경로 세팅.
+//		d.setExpectedRoute(plannedLeg);
+//
+//		var poly = kakaoClient.requestRoute(from, to).getPolyline();
+//
+//		// 거리 누적 기준점을 픽업 위치로 ‘고정’ (원위치→픽업 포함 방지)
+//		forcePersistAnchor(driverId, from);
+//
+//		d.setRoute(poly);
+//		d.setMode(auto ? DummyDriver.Mode.AUTO : DummyDriver.Mode.MANUAL);
+//		d.setPaused(false);
+//	}
+
+	private List<LatLng> loadPlannedFull(Long assignedId, LatLng from, LatLng to) {
+		String json = requestRepository.findExpectedPolylineByAssignedId(assignedId).orElse(null);
+		List<LatLng> plannedFull = RouteJson.parseOrEmpty(json);
+		if (plannedFull.size() < 2) {
+			plannedFull = kakaoClient.requestRoute(from, to).getPolyline();
+		}
+		return plannedFull;
+	}
+
+	public void prepareLeg(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto,
+			boolean detour) {
+		if (detour) {
+			prepareLegWithDetour(driverId, assignedId, fromAddr, toAddr, auto, 5, 10);
+			return;
+		}
 		setCurrentAssignment(driverId, assignedId);
-		phaseMap.put(driverId, Phase.IN_TRANSIT); // ← 먼저 Phase 전환 (레이스 제거)
+		phaseMap.put(driverId, Phase.IN_TRANSIT);
 		var d = ensure(driverId);
 
 		var from = localClient.geocode(fromAddr);
 		var to = localClient.geocode(toAddr);
-		var poly = kakaoClient.requestRoute(from, to).getPolyline();
 
-		// 거리 누적 기준점을 픽업 위치로 ‘고정’ (원위치→픽업 포함 방지)
+		// 예상 경로 로드(문자열 → List) + 레그 슬라이스
+		List<LatLng> plannedFull = loadPlannedFull(assignedId, from, to);
+		List<LatLng> plannedLeg = PolyUtil.sliceSubpath(plannedFull, from, to);
+		d.setExpectedRoute(plannedLeg);
+
+		// 실제 주행 경로(카카오)
+		var driving = kakaoClient.requestRoute(from, to).getPolyline();
 		forcePersistAnchor(driverId, from);
-
-		d.setRoute(poly);
+		d.setRoute(driving);
 		d.setMode(auto ? DummyDriver.Mode.AUTO : DummyDriver.Mode.MANUAL);
 		d.setPaused(false);
 	}
 
-	/** 도착 즉시 점프 (마지막 점 보정 저장 권장) */
+	
+
+	// 경로 이탈용 다음 경로 셋업.
+	public void prepareLegWithDetour(String driverId, Long assignedId, String fromAddr, String toAddr, boolean auto,
+			double extraKmMin, double extraKmMax) {
+		setCurrentAssignment(driverId, assignedId);
+	    phaseMap.put(driverId, Phase.IN_TRANSIT);
+	    var d = ensure(driverId);
+
+	    var from = localClient.geocode(fromAddr);
+	    var to   = localClient.geocode(toAddr);
+
+	    // 예상 경로(문자열 → List) + 레그 슬라이스
+	    List<LatLng> plannedFull = loadPlannedFull(assignedId, from, to);
+	    List<LatLng> plannedLeg  = PolyUtil.sliceSubpath(plannedFull, from, to);
+	    d.setExpectedRoute(plannedLeg);
+
+	    // 실제 주행 경로(카카오) + 디툴 삽입
+	    List<LatLng> driving = kakaoClient.requestRoute(from, to).getPolyline();
+	    double targetExtraM = (extraKmMin + Math.random() * (extraKmMax - extraKmMin)) * 1000.0;
+	    List<LatLng> drivingDetour = DetourMutator.addExtraDistance(driving, targetExtraM);
+
+	    forcePersistAnchor(driverId, from);
+	    d.setRoute(drivingDetour);
+	    d.setMode(auto ? DummyDriver.Mode.AUTO : DummyDriver.Mode.MANUAL);
+	    d.setPaused(false);
+	}
+
+	// 도착 => 즉시 점프해서 마지막으로 이동(디버그 모드).
 	public void arriveNow(String driverId) {
 		var d = ensure(driverId);
 		d.arriveNow();
@@ -126,6 +215,8 @@ public class DummyTracker {
 	}
 
 	private void maybePersist(String driverId, LatLng curr) {
+		if (currentAssignedId.get(driverId) == null)
+			return;
 		// Phase 기반으로 저장 여부 결정
 		if (phaseMap.getOrDefault(driverId, Phase.IDLE) != Phase.IN_TRANSIT) {
 			return; // 픽업 전(TO_PICKUP)과 IDLE은 저장 안 함
@@ -191,9 +282,13 @@ public class DummyTracker {
 		currentAssignedId.remove(driverId);
 		lastPersistedPos.remove(driverId);
 		lastPersistedAtMs.remove(driverId);
+
+		var d = ensure(driverId);
+		d.stop();
+		d.reset(DummyTracker.SEOUL_STATION);
 	}
-	
+
 	public RouteInfoDTO getCurrentRoute(String driverId) {
-	    return ensure(driverId).snapshot();
+		return ensure(driverId).snapshot();
 	}
 }

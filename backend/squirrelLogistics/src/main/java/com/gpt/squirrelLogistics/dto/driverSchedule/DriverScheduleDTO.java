@@ -22,6 +22,7 @@ public class DriverScheduleDTO {
 	public Long assignedId;//할당 아이디.
 	public Long deliveryRequestId;//할당 전 원 요청 아이디.
 	public boolean isCompleted;//완료된 일정인지.
+	public boolean isFailed;//미운송된 일정인지.
 	public LocalDateTime wantToStart;//일정 시작일.
 	public LocalDateTime wantToEnd;//일정 종료일.
 }

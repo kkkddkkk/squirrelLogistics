@@ -47,7 +47,7 @@ const driverRouter = () => {
 
   return [
     {
-      path: ":driverId/list",
+      path: "list",
       element: (
         <Suspense fallback={Loading}>
           <RequestList />
@@ -55,7 +55,7 @@ const driverRouter = () => {
       ),
     },
     {
-      path: ":driverId/detail/:requestId",
+      path: "detail/:requestId",
       element: (
         <Suspense fallback={Loading}>
           <RequestDetail />
@@ -63,7 +63,7 @@ const driverRouter = () => {
       ),
     },
     {
-      path: ":driverId/ongoing",
+      path: "ongoing",
       element: (
         <Suspense fallback={Loading}>
           <OnGoing />
@@ -71,7 +71,7 @@ const driverRouter = () => {
       ),
     },
     {
-      path: ":driverId/review",
+      path: "review",
       element: (
         <Suspense fallback={Loading}>
           <Review />
@@ -87,7 +87,7 @@ const driverRouter = () => {
     //     )
     // },
     {
-      path: ":driverId/calendar/:year/:month",
+      path: "calendar/:year/:month",
       element: (
         <Suspense fallback={Loading}>
           <Calender />
@@ -95,7 +95,7 @@ const driverRouter = () => {
       ),
     },
     {
-      path: ":driverId/schedule/:scheduleId",
+      path: "schedule/:scheduleId",
       element: (
         <Suspense fallback={Loading}>
           <Schedule />

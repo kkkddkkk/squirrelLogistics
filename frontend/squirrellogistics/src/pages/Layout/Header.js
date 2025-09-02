@@ -85,15 +85,17 @@ export default function Header() {
       { label: "회사소개", path: "/about" },
     ],
     COMPANY: [
+      { label: "홈", path: "/" },
       { label: "배송신청", path: "/estimate" },
       { label: "이용 기록", path: "/company/history" },
       { label: "마이페이지", path: "/company" },
     ],
     DRIVER: [
-      // 필요 경로로 자유롭게 교체하세요
+      { label: "홈", path: "/" },
       { label: "요청 목록", path: "/driver/list" },
-      { label: "이용 기록", path: "/history" },
-      { label: "마이페이지", path: "/mypage" },
+      { label: "진행 중 운송", path: "/driver/ongoing" },
+      { label: "운송 기록", path: "/driver/deliveredlist" },
+      { label: "마이페이지", path: "/driver/profile" },
     ],
     ADMIN: [
       // 대시보드 없이 일반 메뉴 예시

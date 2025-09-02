@@ -28,7 +28,7 @@ public interface DeliveryRequestService {
 	// 개별 운송 요청 자세히 읽기(작성자: 고은설).
 	DeliveryRequestResponseDTO readFull(Long requestId);
 
-	DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId) throws NotFoundException;
+	DeliveryRequestResponseDTO readFullSafe(Long requestId, Long driverId);
 
 	// 개별 운송 요청 간략하게 읽기(작성자 고은설).
 	DeliveryRequestSlimResponseDTO readSlim(Long requestId);

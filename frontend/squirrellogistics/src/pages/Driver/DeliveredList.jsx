@@ -16,8 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { fetchCompletedDeliveries } from "../../api/deliveryRequest/deliveryCompletedAPI";
 import { CommonTitle } from "../../components/common/CommonText";
 import { theme } from "../../components/common/CommonTheme";
-
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 import dayjs from "dayjs";
 
 const ITEMS_PER_PAGE = 10;
@@ -116,7 +116,7 @@ const DeliveredList = () => {
 
   return (
     <>
-      <DriverHeader_Temp />
+      <Header />
       <Box
         sx={{
           bgcolor: theme.palette.background.default,
@@ -294,6 +294,7 @@ const DeliveredList = () => {
           )}
         </Container>
       </Box>
+      <Footer />
     </>
   );
 };

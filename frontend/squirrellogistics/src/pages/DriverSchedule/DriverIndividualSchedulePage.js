@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
 
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
 import DriverIndividualScheduleComponent from "../../components/driverSchedule/DriverIndividualScheduleComponent";
 import { useLocation, useParams } from "react-router-dom";
+import Header from "../Layout/Header";
 
 const DriverIndividualSchedulePage = () => {
     const { driverId, scheduleId } = useParams();     
@@ -11,7 +11,7 @@ const DriverIndividualSchedulePage = () => {
 
     return (
         <Box>
-            <DriverHeader_Temp />
+            <Header />
             <DriverIndividualScheduleComponent event={event} />
         </Box>
     );

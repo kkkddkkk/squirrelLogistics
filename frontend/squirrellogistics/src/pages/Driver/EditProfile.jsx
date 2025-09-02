@@ -32,6 +32,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Header from "../Layout/Header";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -830,7 +831,7 @@ const EditProfile = () => {
   if (loading) {
     return (
       <Box>
-        <NavBar />
+        <Header />
         <Container maxWidth="sm" sx={{ py: 4 }}>
           <Typography
             variant="h4"
@@ -856,7 +857,7 @@ const EditProfile = () => {
   if (error) {
     return (
       <Box>
-        <NavBar />
+       <Header />
         <Container maxWidth="sm" sx={{ py: 4 }}>
           <Typography
             variant="h4"
@@ -883,7 +884,7 @@ const EditProfile = () => {
 
   return (
     <Box>
-      <NavBar />
+      <Header />
       <Container maxWidth="sm" sx={{ py: 4 }}>
         <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
           회원 정보 수정

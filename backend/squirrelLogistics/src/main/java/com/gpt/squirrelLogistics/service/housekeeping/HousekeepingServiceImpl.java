@@ -37,30 +37,25 @@ public class HousekeepingServiceImpl implements HousekeepingService {
 	private final ReportRepository reportRepo;
 	
 	private final PlatformTransactionManager txm;
-	private static final long MAX_ALLOW_TIME = 30; //30분까지 봐줌.
+	private static final long MAX_ALLOW_TIME = 720; //12시간까지 봐줌.
 	
 	@Override
 	public void sweep() {
 
 		// 운송 요청, 운송 할당 CRUD이전에 선행되어야 하는 상태값 전환 로직 모음.
-
+		//final var now = java.time.LocalDateTime.now(java.time.Clock.systemUTC());
 	    final var now = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime();
-
-
-	    // ========= 제안된 기간 내 매칭 실패한 요청 게시글 정리.
+	    log.info("now={}", now);
 	    
-	    // 만기 요청에 대한 선결제 환불 처리.
+	    // ========= 제안된 기간 내 매칭 실패한 요청 게시글 정리.
+	    // 만기 요청 취소 처리.
 	    runStep("CANCEL_PROPOSALS",                  assignmentRepo::cancelExpiredProposals,                now);
-//	    runStep("REFUND_PAYMENTS",                   paymentRepo::refundForRequestsWithoutActiveProposals,  now);
 	    // 지명 제안 만기된 운송 요청 제안됨 => 공개됨으로 상태 전환.
 	    runStep("REOPEN_AND_DETACH",                 requestRepo::reopenAndDetachPaymentForRequestsNative,  now);
-	    
 	    // 약속된 마감일까지 complete안된 건 fail처리 및 신고 접수.
         runStep("FAIL_OVERDUE_INPROGRESS", this::failOverdueInProgress, now);
-
 	    // 금일 시작일로 예정된 운송 할당, 할당됨 => 진행중으로 전환.
 	    runStep("MARK_IN_PROGRESS",                  assignmentRepo::markAssignedToInProgress,              now);
-	    //runStep("FAIL_EXPIRED_REQUESTS",             requestRepo::failExpiredUnassignedRequests,            now);
 	}
 
 	private int runStep(String name, Function<LocalDateTime, Integer> step, LocalDateTime now) {
@@ -85,20 +80,15 @@ public class HousekeepingServiceImpl implements HousekeepingService {
 	            });
 	            int affected = n != null ? n : 0;
 	            long ms = System.currentTimeMillis() - t0;
-	            log.info("[SWEEP] {} affected={} ({} ms)", name, affected, ms);
 	            return affected;
 	        } catch (DeadlockLoserDataAccessException | CannotAcquireLockException e) {
 	            if (attempt == MAX_RETRY) {
-	                log.error("[SWEEP] {} failed after {} retries: {}", name, MAX_RETRY, e.getMessage(), e);
 	                return 0;
 	            }
 	            try { Thread.sleep(BACKOFF_MS * attempt); } catch (InterruptedException ignored) {}
-	            log.warn("[SWEEP] {} retrying... attempt={}", name, attempt + 1);
 	        } catch (DataAccessException e) {
-	            log.error("[SWEEP] {} data access error: {}", name, e.getMessage(), e);
 	            return 0;
 	        } catch (RuntimeException e) {
-	            log.error("[SWEEP] {} failed: {}", name, e.getMessage(), e);
 	            return 0;
 	        }
 	    }
@@ -112,7 +102,7 @@ public class HousekeepingServiceImpl implements HousekeepingService {
         // wantToEnd < (now - GRACE)  ≡  wantToEnd + GRACE < now
         var threshold = now.minusMinutes(MAX_ALLOW_TIME);
 
-        var list = assignmentRepo.findInProgressPastEnd(threshold);
+        var list = assignmentRepo.findInProgressOrAssignedPastEnd(threshold);
         int affected = 0;
 
         for (var a : list) {

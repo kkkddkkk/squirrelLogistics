@@ -291,7 +291,7 @@ public class DeliveryRequestServiceImpl implements DeliveryRequestService {
 
 	@Transactional(readOnly = true)
 	public DeliveryRequestResponseDTO readFullSafe(Long id, Long driverId) {
-		var dr = repository.findDetailHead(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		var dr = repository.findDetailHead(id).orElseGet(null);
 		// 권한 체크 로직 그대로…
 
 		var waypoints = waypointRepository.findAllByRequestIdOrderByDrop(id);

@@ -1,13 +1,15 @@
 import {Box} from '@mui/material';
 import ListComponent from '../../components/deliveryRequest/ListComponent';
-import DriverHeader_Temp from '../../components/deliveryRequest/DriverHeader_Temp';
+import Header from '../Layout/Header';
+import Footer from "../Layout/Footer"
 
 
 const ListPage = () => {
     return (
         <Box>
-            <DriverHeader_Temp/>
+            <Header/>
             <ListComponent/>
+            <Footer />
         </Box>
     );
 }

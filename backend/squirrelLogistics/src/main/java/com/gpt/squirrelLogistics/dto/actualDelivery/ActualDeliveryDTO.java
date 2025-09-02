@@ -17,4 +17,8 @@ public class ActualDeliveryDTO {
 	private boolean mountainous;//산간지역 여부
 	private boolean caution;//취급주의 여부
 	private Long actualFee;//총 금액
+	
+	//작성자: 고은설.
+	private String actualPolyline;//예상 폴리라인
+
 }

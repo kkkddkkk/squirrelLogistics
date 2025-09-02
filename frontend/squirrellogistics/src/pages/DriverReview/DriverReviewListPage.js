@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
+import Header from "../Layout/Header"
+import Footer from "../Layout/Footer"
 import { useParams } from "react-router-dom";
 import ReviewListComponent from "../../components/driverReview/ReviewListComponent";
 import { theme } from "../../components/common/CommonTheme";
@@ -9,8 +10,9 @@ const DriverReviewListPage = () => {
 
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
-      <DriverHeader_Temp />
+      <Header />
       <ReviewListComponent driverId={driverId} />
+      <Footer />
     </Box>
   );
 };

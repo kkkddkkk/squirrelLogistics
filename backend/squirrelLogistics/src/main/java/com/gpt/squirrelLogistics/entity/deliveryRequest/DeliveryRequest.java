@@ -2,6 +2,7 @@ package com.gpt.squirrelLogistics.entity.deliveryRequest;
 
 import java.time.LocalDateTime;
 
+import com.gpt.squirrelLogistics.common.LatLngListJsonConverter;
 import com.gpt.squirrelLogistics.entity.company.Company;
 import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.entity.payment.Payment;
@@ -9,6 +10,7 @@ import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
 import com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

@@ -10,7 +10,7 @@ const DeliveryCard = ({ item }) => {
   const formatted = formatDeliveryDTO(item); // 여기서 포맷 수행
 
   const handleClick = () => {
-    navigate(`/driver/${driverId}/detail/${item.requestId}`);
+    navigate(`/driver/detail/${item.requestId}`);
   };
   return (
     <Paper
@@ -40,10 +40,11 @@ const DeliveryCard = ({ item }) => {
         {formatted.distance}
       </Typography>
 
-      <Box display="flex" flexWrap="wrap" gap={1} mb={1}>
-        {formatted.warning}
-      </Box>
+    
 
+      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+        총 하차지: {item.waypointCount -1}곳
+      </Typography>
       <Divider sx={{ my: 1 }} />
 
       <Box display="flex" justifyContent="space-between">

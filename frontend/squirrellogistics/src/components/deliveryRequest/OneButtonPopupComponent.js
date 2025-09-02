@@ -5,14 +5,12 @@ import {
     Grid
 } from '@mui/material';
 
-function TwoButtonPopupComponent({
+function OneButtonPopupComponent({
     open,
     title,
     content,
-    leftTxt = '취소',
-    rightTxt = '확인',
-    onLeftClick = () => { },
-    onRightClick = () => { },
+    btnTxt = '확인',
+    onClick = () => { },
     maxWidth = 'xs',
 }) {
     const handleGuardedClose = (event, reason) => {
@@ -26,7 +24,7 @@ function TwoButtonPopupComponent({
             disableEscapeKeyDown
             maxWidth={maxWidth}
             fullWidth
-            PaperProps={{ sx: { borderRadius: 3 } }}
+            PaperProps={{ sx: { borderRadius: 3, border: '1px solid #5e5e5eff'} }}
         >
             {title && (
                 <DialogTitle sx={{ pt: 2, pb: 4 }}>
@@ -48,7 +46,7 @@ function TwoButtonPopupComponent({
             )}
 
             {content && (
-                <DialogContent sx={{pb:4}}>
+                <DialogContent sx={{ pb: 4 }}>
                     <Box display="flex" alignItems="center">
                         <Typography
                             sx={{
@@ -68,24 +66,15 @@ function TwoButtonPopupComponent({
 
             <DialogActions sx={{ px: 2.5, pb: 2.5, justifyContent: "space-around" }}>
                 <Button
-                    variant="outlined"
-                    size='large'
-                    onClick={onLeftClick}
-                    sx={{ minWidth: 120, borderColor: '#113F67', color: '#113F67' }}
-                >
-                    {leftTxt}
-                </Button>
-
-                <Button
                     variant="contained"
-                    onClick={onRightClick}
+                    onClick={onClick}
                     sx={{ minWidth: 120, bgcolor: '#113F67' }}
                 >
-                    {rightTxt}
+                    {btnTxt}
                 </Button>
             </DialogActions>
         </Dialog>
     );
 }
 
-export default TwoButtonPopupComponent;
+export default OneButtonPopupComponent;

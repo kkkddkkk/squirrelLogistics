@@ -57,8 +57,8 @@ public class DeliveryOrchestrator {
 
 		// 요청 정보 기반으로 운전자 중복 일정 방지.
 		if (requestDTO.getWantToStart() != null && requestDTO.getWantToEnd() != null) {
-			boolean overlaps = assignmentRepository.existsOverlappingByRequestWindow(driverId,
-					requestDTO.getWantToStart(), requestDTO.getWantToEnd(),
+			boolean overlaps = assignmentRepository.existsOverlappingByRequestDay(driverId,
+					requestDTO.getWantToStart(),
 					List.of(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
 							com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS));
 			if (overlaps) {

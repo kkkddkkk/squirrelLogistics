@@ -18,6 +18,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   acceptDeliveryRequest,
   fetchDeliveryRequest,
+  msg,
 } from "../../api/deliveryRequest/deliveryRequestAPI";
 import MontlyDetailPopupComponent from "../driverSchedule/MontlyDetailPopupComponent";
 import DeliveryWaypointPopupComponent from "./DeliveryWaypointPopupComponent";
@@ -27,9 +28,12 @@ import {
   declineDeliveryProposal,
 } from "../../api/deliveryRequest/deliveryProposalAPI";
 import TwoButtonPopupComponent from "./TwoButtonPopupComponent";
+import OneButtonPopupComponent from "./OneButtonPopupComponent";
+
 import LoadingComponent from "../common/LoadingComponent";
 import { theme } from "../common/CommonTheme";
 import { CommonTitle } from "../common/CommonText";
+import { cancelDeliveryReservation } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 
 const RequestDetailComponent = () => {
   const navigate = useNavigate();
@@ -38,13 +42,20 @@ const RequestDetailComponent = () => {
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
+  const [errKind, setErrKind] = useState(null);
+
   const [waypointOpen, setWaypointOpen] = useState(false);
   const location = useLocation();
   const { isProposed = false, refundDate } = location.state ?? {};
   const [proposed, setProposed] = useState(!!isProposed);
+  const { isSchedule, ...rest } = location.state || {};
+  const [scheduled, setScheduled] = useState(!!isSchedule);
+
   const [pathMoveOpen, setPathMoveOpen] = useState(false);
   const [popupTitle, setPopupTitle] = useState("");
   const [popupContent, setPopupContent] = useState("");
+  const [errpopupOpen, setErrpopupOpen] = useState(false);
+  const unautorized = false;
 
   const [deliveryData, setDeliveryData] = useState({
     request_id: null,
@@ -74,8 +85,9 @@ const RequestDetailComponent = () => {
         setRequestData(data);
       })
       .catch((e) => {
-        if (e.name === "CanceledError" || e.name === "AbortError") return;
-        setErr(e?.response?.data || e.message);
+        const errBody = e.response?.data;
+        setErr(errBody?.message ?? e.message);
+        setErrpopupOpen(true);
       })
       .finally(() => setLoading(false));
 
@@ -118,6 +130,16 @@ const RequestDetailComponent = () => {
     setDeliveryData(mapped);
   }, [requestData]);
 
+  const runWithLoading = async (fn) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await fn();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelectWaypointEvent = useCallback(() => {
     setWaypointOpen(true);
   }, []);
@@ -131,71 +153,74 @@ const RequestDetailComponent = () => {
   }, []);
 
   async function handleAccept() {
-    try {
-      if (isProposed) {
-        const res = await acceptDeliveryProposal(requestId, driverId);
-        if (res.SUCCESS) {
-          setPopupTitle("지명 요청 수락");
-          setPopupContent(
-            "기사님께 제안된 운송 요청이 성공적으로 수락되었습니다."
-          );
-          setPathMoveOpen(true);
-        } else if (res.FAILED) {
-          alert("실패: " + res.FAILED);
-        }
+    await runWithLoading(async () => {
+      const call = isProposed ? acceptDeliveryProposal : acceptDeliveryRequest;
+      const result = await call(requestId /*, driverId 필요없으면 제거 */, driverId);
+
+      if (result.ok) {
+        setPopupTitle(isProposed ? "지명 요청 수락" : "운송 요청 수락");
+        setPopupContent(msg(result.code)); // SUCCESS / ALREADY_ACCEPTED
+        setPathMoveOpen(true);
       } else {
-        const res = await acceptDeliveryRequest(requestId, driverId);
-        if (res.SUCCESS) {
-          setPopupTitle("운송 요청 수락");
-          setPopupContent("운송 요청이 성공적으로 수락되었습니다.");
-
-          setPathMoveOpen(true);
-        } else if (res.FAILED) {
-          alert("실패: " + res.FAILED);
-        }
+        // 실패 케이스
+        setErr(msg(result.code));           
+        setErrKind(result.httpStatus >= 500 ? "server" : "forbidden");
+        setErrpopupOpen(true);
       }
-    } catch (err) {
-      const status = err.response?.status;
-      const body = err.response?.data;
-
-      // 우리 컨트롤러 포맷 우선
-      const code = body?.FAILED || body?.code || body?.error || "UNKNOWN";
-
-      // 코드 → 사용자 문구 매핑
-      const messages = {
-        REQUEST_NOT_FOUND: "요청을 찾을 수 없어요.",
-        DRIVER_NOT_FOUND: "기사를 찾을 수 없어요.",
-        REQUEST_ALREADY_TAKEN: "이미 다른 기사에게 배정됐어요.",
-        VEHICLE_TYPE_MISMATCH: "요청 차량과 보유 차량이 일치하지 않아요.",
-        SCHEDULE_CONFLICT: "해당 기간에 이미 일정이 있어요.",
-        UNKNOWN: `처리 실패 (status ${status})`,
-      };
-
-      alert("에러: " + messages[code]);
-    }
+    });
   }
+
 
   async function handleDecline() {
-    try {
+    await runWithLoading(async () => {
       const res = await declineDeliveryProposal(requestId, driverId);
       if (res.SUCCESS) {
-        setProposed(false);
-        setPathMoveOpen(true);
-        setPopupTitle("지명 요청 거절");
-        setPopupContent(
-          "기사님께 제안된 운송 요청이 성공적으로 거절되었습니다."
-        );
-      } else if (res.FAILED) {
-        alert("실패: " + res.FAILED);
-      }
-    } catch (err) {
-      const body = err.response?.data;
-      const code = body?.FAILED || body?.code || body?.error || "UNKNOWN";
 
-      alert("FAILED: " + code);
+        setProposed(false);
+        setErr("기사님께 제안된 운송 요청이 성공적으로 거절되었습니다.");
+        setErrKind('decline');
+        setErrpopupOpen(true);
+
+      } else if (res.FAILED) {
+        setErr(res.FAILED);
+        setErrKind('forbidden');
+        setErrpopupOpen(true);
+      }
+    });
+  }
+  async function handleCancel() {
+    // 3일 미만 체크 먼저(로딩 시작 전에)
+    if (isWithin3Days()) {
+      setErr("시작일까지 남은 기일이 3일 미만인 예약은 취소할 수 없습니다.");
+      setErrpopupOpen(true);
+      return;
     }
+
+    await runWithLoading(async () => {
+      const res = await cancelDeliveryReservation(requestId);
+      if (res?.SUCCESS || res === 1 || res === true) {
+        setProposed(false);
+        setPopupTitle("예약 취소 완료");
+        setPopupContent("예약된 기사님 운송 일정이 성공적으로 취소되었습니다.");
+        setPathMoveOpen(true);
+        setScheduled(false); // 화면 상태 반영(선택)
+      } else if (res?.FAILED) {
+        setErr(res.FAILED);
+        setErrpopupOpen(true);
+      } else {
+        setErr("처리 결과를 해석할 수 없습니다.");
+        setErrpopupOpen(true);
+      }
+    });
   }
 
+  const isWithin3Days = () => {
+    const start = deliveryData?.estimated_start_at;
+    if (!start) return false;
+    const startDt = new Date(String(start).replace(" ", "T"));
+    const diffDays = (startDt - new Date()) / (1000 * 60 * 60 * 24);
+    return diffDays < 3;
+  };
   const textSx = {
     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
     color: "#2A2A2A",
@@ -207,12 +232,12 @@ const RequestDetailComponent = () => {
     return isNaN(dt)
       ? "-"
       : dt.toLocaleString("ko-KR", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
   };
 
   const formatWon = (n) => (Number(n) || 0).toLocaleString("ko-KR") + "원";
@@ -220,6 +245,53 @@ const RequestDetailComponent = () => {
 
   return (
     <Box width={"100%"}>
+      {err && (
+        <OneButtonPopupComponent
+          open={errpopupOpen}
+          onClick={() => {
+            setErrpopupOpen(false);
+            // 클릭 후 이동 분기
+            if (errKind === "forbidden") {
+              navigate("/");
+            } else if (errKind === "decline") {
+              navigate("/driver/list");
+            }
+            // 상태 초기화
+            setErr(null);
+            setErrKind(null);
+          }}
+          title={
+            errKind === "forbidden"
+              ? "올바르지 않은 접근"
+              : errKind === "decline"
+                ? "지명 요청 거절"
+                : "안내"
+          }
+          content={
+            <>
+              {String(err)}
+              {errKind === "forbidden" && (
+                <>
+                  <br />
+                  [확인] 클릭 시, 메인 화면으로 이동합니다.
+                </>
+              )}
+              {errKind === "decline" && (
+                <>
+                  <br />
+                  [확인] 클릭 시, 목록으로 이동합니다.
+                </>
+              )}
+              {!errKind && (
+                <>
+                  <br />
+                  고객센터로 문의 주시길 바랍니다.
+                </>
+              )}
+            </>
+          }
+        />
+      )}
       <Grid
         width={"100%"}
         sx={{
@@ -228,11 +300,11 @@ const RequestDetailComponent = () => {
         }}
       >
         <Box pt={4}>
-          <CommonTitle>요청 정보</CommonTitle>
+          <CommonTitle>{scheduled ? "예약된 운송 정보" : "운송 요청 정보"}</CommonTitle>
         </Box>
 
         <Grid container m={4} mb={1} justifySelf="center" width={"80%"}>
-          {isProposed && (
+          {proposed && (
             <Paper
               variant="outlined"
               sx={{
@@ -392,78 +464,80 @@ const RequestDetailComponent = () => {
               <Grid
                 container
                 direction={"row"}
-                justifyContent="space-between"
+                justifyContent="space-around"
                 mt={4}
                 width={"100%"}
               >
-                <Grid item>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    onClick={handleAccept}
-                    sx={{
-                      minWidth: "auto",
-                      height: "48px",
-                      padding: "2px 8px",
-                      fontSize: "18px",
-                      lineHeight: 1.2,
-                      bgcolor: "#113F67",
-                      p: 6,
-                      pt: 0,
-                      pb: 0,
-                    }}
-                  >
-                    운송 수락하기
-                  </Button>
-                </Grid>
-                {isProposed && (
+                {scheduled ? (
+                  // 1) 일정인 건: 취소 버튼만
                   <Grid item>
                     <Button
                       variant="contained"
                       color="primary"
                       size="large"
-                      onClick={handleDecline}
+                      onClick={handleCancel}
+                      disabled={loading}
                       sx={{
-                        minWidth: "auto",
-                        height: "48px",
-                        padding: "2px 8px",
-                        fontSize: "18px",
+                        minWidth: 'auto',
+                        height: '48px',
+                        padding: '2px 8px',
+                        fontSize: '18px',
                         lineHeight: 1.2,
-                        bgcolor: "#671111ff",
-                        p: 6,
-                        pt: 0,
-                        pb: 0,
+                        bgcolor: '#113F67',
+                        p: 6, pt: 0, pb: 0,
                       }}
                     >
-                      지명 거절하기
+                      예약 취소하기
                     </Button>
                   </Grid>
-                )}
+                ) : (
+                  // 2) 일정이 아닌 건: 기본 수락 버튼 + (proposed면) 거절 버튼 추가
+                  <>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        onClick={handleAccept}
+                        disabled={loading}
+                        sx={{
+                          minWidth: 'auto',
+                          height: '48px',
+                          padding: '2px 8px',
+                          fontSize: '18px',
+                          lineHeight: 1.2,
+                          bgcolor: '#113F67',
+                          p: 6, pt: 0, pb: 0,
+                        }}
+                      >
+                        운송 수락하기
+                      </Button>
+                    </Grid>
 
-                <Grid item>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    sx={{
-                      minWidth: "auto",
-                      height: "48px",
-                      padding: "2px 8px",
-                      fontSize: "18px",
-                      lineHeight: 1.2,
-                      bgcolor: "#A20025",
-                      "&:hover": {
-                        bgcolor: "#8B001F",
-                      },
-                      p: 4,
-                      pt: 0,
-                      pb: 0,
-                    }}
-                  >
-                    신고하기
-                  </Button>
-                </Grid>
+                    {proposed && (
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="large"
+                          onClick={handleDecline}
+                          disabled={loading}
+                          sx={{
+                            minWidth: 'auto',
+                            height: '48px',
+                            padding: '2px 8px',
+                            fontSize: '18px',
+                            lineHeight: 1.2,
+                            bgcolor: '#671111ff',
+                            p: 6, pt: 0, pb: 0,
+                          }}
+                        >
+                          지명 거절하기
+                        </Button>
+                      </Grid>
+                    )}
+                  </>
+                )}
               </Grid>
             </Grid>
           </Grid>
@@ -492,7 +566,7 @@ const RequestDetailComponent = () => {
                       <Typography variant="body2" mb={1} sx={textSx}>
                         <strong>하차지 수: </strong>
                         {!deliveryData.waypoints ||
-                        deliveryData.waypoints.length - 1 === 0
+                          deliveryData.waypoints.length - 1 === 0
                           ? "하차지 없음"
                           : `${deliveryData.waypoints.length - 1}곳`}
                       </Typography>
@@ -616,10 +690,21 @@ const RequestDetailComponent = () => {
           open={pathMoveOpen}
           leftTxt="목록으로 이동"
           rightTxt="캘린더로 이동"
-          onLeftClick={() => navigate(`/driver/${driverId}/list`)}
-          onRightClick={() => navigate(`/driver/${driverId}/calendar`)}
+          onLeftClick={() => navigate(`/driver/list`)}
+          onRightClick={() => {
+            const wantToStart = deliveryData?.estimated_start_at;
+            console.log(deliveryData?.estimated_start_at);
+            if (!wantToStart) {
+              return;
+            }
+            const startDate = new Date(wantToStart.replace(" ", "T"));
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, "0");
+            navigate(`/driver/calendar/${year}/${month}`);
+          }}
+
           title={popupTitle}
-          children={popupContent}
+          content={popupContent}
         />
       )}
       <LoadingComponent open={loading} text="상세 정보를 불러오는 중..." />

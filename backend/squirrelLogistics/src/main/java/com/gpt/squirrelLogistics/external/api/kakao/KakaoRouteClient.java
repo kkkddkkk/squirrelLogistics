@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -34,30 +35,46 @@ public class KakaoRouteClient {
 	private static final String NAVI_API_URL = "https://apis-navi.kakaomobility.com/v1/directions";
 	private static final String KAKAO_REST_API_KEY = "KakaoAK a9b27d11d11d4f05e7134f9de285845d";
 
-	// 출잘지-도착지 버전.
-	public RouteInfoDTO requestRoute(LatLng start, LatLng end) {
+	public static class RouteResult {
+		private final List<LatLng> polyline;
+		private final Long distanceMeters; // nullable
+		private final Long durationSec; // nullable
+		private final String source; // "kakao" or "fallback"
 
-		String url = UriComponentsBuilder.fromHttpUrl(NAVI_API_URL)
-				.queryParam("origin", start.getLng() + "," + start.getLat())
-				.queryParam("destination", end.getLng() + "," + end.getLat()).toUriString();
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", KAKAO_REST_API_KEY);
-		HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-		ResponseEntity<KakaoRouteResponseDTO> response = restTemplate.exchange(url, HttpMethod.GET, entity,
-				KakaoRouteResponseDTO.class);
-
-		KakaoRouteResponseDTO body = response.getBody();
-		if (body == null || body.getRoutes() == null || body.getRoutes().isEmpty()) {
-			throw new IllegalStateException("카카오 경로 응답 없음");
+		public RouteResult(List<LatLng> polyline, Long distanceMeters, Long durationSec, String source) {
+			this.polyline = (polyline != null ? polyline : List.of());
+			this.distanceMeters = distanceMeters;
+			this.durationSec = durationSec;
+			this.source = (source != null ? source : "kakao");
 		}
 
-		Long distance = (long) body.getRoutes().get(0).getSummary().getDistance();
-		Long duration = (long) body.getRoutes().get(0).getSummary().getDuration();
-		List<LatLng> polyline = extractPolyline(body);
+		public List<LatLng> getPolyline() {
+			return polyline;
+		}
 
-		return RouteInfoDTO.builder().polyline(polyline).distance(distance).duration(duration).build();
+		public Long getDistanceMeters() {
+			return distanceMeters;
+		}
+
+		public Long getDurationSec() {
+			return durationSec;
+		}
+
+		public String getSource() {
+			return source;
+		}
+	}
+
+	// 출잘지-도착지 버전.
+	public RouteInfoDTO requestRoute(LatLng start, LatLng end) {
+		RouteResult rr = requestRouteSafe(start, end);
+		return RouteInfoDTO.builder().polyline(rr.getPolyline())
+				.distance(rr.getDistanceMeters() != null ? rr.getDistanceMeters()
+						: Math.round(haversineSum(rr.getPolyline())))
+				.duration(rr.getDurationSec() != null ? rr.getDurationSec()
+						: estimateDurationSec(rr.getDistanceMeters() != null ? rr.getDistanceMeters()
+								: Math.round(haversineSum(rr.getPolyline()))))
+				.build();
 	}
 
 	// 경유지 포함 버전 (구간 합산).
@@ -65,25 +82,73 @@ public class KakaoRouteClient {
 		if (waypoints == null || waypoints.size() < 2) {
 			throw new IllegalArgumentException("경로 계산을 위해서는 최소 2개 이상의 좌표가 필요합니다.");
 		}
-
 		List<LatLng> pts = new ArrayList<>();
 		long totalDist = 0;
 		long totalDur = 0;
 
-		// 연속된 두 지점씩 끊어서 경로를 요청
 		for (int i = 0; i < waypoints.size() - 1; i++) {
 			LatLng from = waypoints.get(i);
 			LatLng to = waypoints.get(i + 1);
 
-			RouteInfoDTO leg = requestRoute(from, to);
-			if (leg != null) {
-				pts.addAll(leg.getPolyline());
-				totalDist += leg.getDistance();
-				totalDur += leg.getDuration();
-			}
+			RouteResult leg = requestRouteSafe(from, to);
+			pts.addAll(leg.getPolyline());
+			long d = (leg.getDistanceMeters() != null ? leg.getDistanceMeters()
+					: Math.round(haversineSum(leg.getPolyline())));
+			long s = (leg.getDurationSec() != null ? leg.getDurationSec() : estimateDurationSec(d));
+			totalDist += d;
+			totalDur += s;
 		}
 
 		return RouteInfoDTO.builder().polyline(pts).distance(totalDist).duration(totalDur).build();
+	}
+
+	public RouteResult requestRouteSafe(LatLng start, LatLng end) {
+		try {
+			String url = UriComponentsBuilder.fromHttpUrl(NAVI_API_URL)
+					.queryParam("origin", start.getLng() + "," + start.getLat())
+					.queryParam("destination", end.getLng() + "," + end.getLat()).toUriString();
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", KAKAO_REST_API_KEY);
+			HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+			ResponseEntity<KakaoRouteResponseDTO> response = restTemplate.exchange(url, HttpMethod.GET, entity,
+					KakaoRouteResponseDTO.class);
+
+			KakaoRouteResponseDTO body = response.getBody();
+			if (body == null || body.getRoutes() == null || body.getRoutes().isEmpty()) {
+				log.warn("[KAKAO] empty routes. fallback");
+				return fallback(start, end, "empty-routes");
+			}
+
+			var r0 = body.getRoutes().get(0);
+			// summary가 null일 수 있음 → NPE 방지
+			Long dist = (r0.getSummary() != null ? (long) r0.getSummary().getDistance() : null);
+			Long dura = (r0.getSummary() != null ? (long) r0.getSummary().getDuration() : null);
+
+			List<LatLng> polyline = extractPolyline(body);
+			if (polyline == null || polyline.isEmpty()) {
+				log.warn("[KAKAO] empty polyline. fallback");
+				return fallback(start, end, "empty-polyline");
+			}
+			return new RouteResult(polyline, dist, dura, "kakao");
+
+		} catch (HttpClientErrorException e) {
+			// -10 (limit exceeded) 포함 4xx
+			log.warn("[KAKAO] http error {} body={}", e.getStatusCode(), e.getResponseBodyAsString());
+			return fallback(start, end, "http-" + e.getStatusCode());
+		} catch (Exception e) {
+			log.warn("[KAKAO] exception: {}", e.toString());
+			return fallback(start, end, "exception");
+		}
+	}
+
+	private RouteResult fallback(LatLng start, LatLng end, String reason) {
+		List<LatLng> line = straightLine(start, end);
+		long dist = Math.round(haversineSum(line));
+		long sec = estimateDurationSec(dist);
+		log.warn("[KAKAO-FALLBACK] reason={}, dist={}m, dur={}s", reason, dist, sec);
+		return new RouteResult(line, dist, sec, "fallback");
 	}
 
 	public String toJsonRoute(List<LatLng> points) {
@@ -204,6 +269,20 @@ public class KakaoRouteClient {
 		return new EncodedRouteSummary(safeTotal, encodePolyline(finalPolyline));
 	}
 
+	private List<LatLng> straightLine(LatLng from, LatLng to) {
+		int N = 32;
+		var out = new ArrayList<LatLng>(N + 1);
+		for (int i = 0; i <= N; i++) {
+			double t = i / (double) N;
+			var lat = from.getLat().multiply(BigDecimal.valueOf(1 - t))
+					.add(to.getLat().multiply(BigDecimal.valueOf(t)));
+			var lng = from.getLng().multiply(BigDecimal.valueOf(1 - t))
+					.add(to.getLng().multiply(BigDecimal.valueOf(t)));
+			out.add(new LatLng(lat, lng));
+		}
+		return out;
+	}
+
 	// 작성자: 고은설.
 	// 기능: 좌표 기반 단순 직선 거리 합 측정.
 	private long haversineMeters(LatLng a, LatLng b) {
@@ -229,7 +308,7 @@ public class KakaoRouteClient {
 
 	// 작성자: 고은설.
 	// 기능: 초인근 좌표 제외 유의미한 이동좌표만을 추려 새 안전 위치 배열 제작.
-	private List<LatLng> normalizeTrackPoints(List<LatLng> raw) {
+	public List<LatLng> normalizeTrackPoints(List<LatLng> raw) {
 		if (raw == null || raw.isEmpty())
 			return List.of();
 
@@ -245,6 +324,19 @@ public class KakaoRouteClient {
 			}
 		}
 		return out;
+	}
+
+	private double haversineSum(List<LatLng> line) {
+		double sum = 0;
+		for (int i = 0; i + 1 < line.size(); i++) {
+			sum += haversineMeters(line.get(i), line.get(i + 1));
+		}
+		return sum;
+	}
+
+	private static long estimateDurationSec(long distanceMeters) {
+		double avgKmh = 35.0; // 정책값(도시부 평균) 필요시 설정화
+		return Math.max(60, Math.round(distanceMeters / 1000.0 / avgKmh * 3600));
 	}
 
 	// 작성자: 고은설.

@@ -169,13 +169,13 @@ public class DeliveryAssignmentService {
 		List<Object[]> driver = deliveryAssignmentRepository.findDriverById(assignedId);
 		Object[] driverList = driver != null && !driver.isEmpty() ? driver.get(0) : new Object[] { "", "", "" };
 
-    	String path ="";
-    	String fileName = "default_profile.png";
-		if((String) driverList[2]!="" && (String) driverList[2] !=null) {
-	    	path = (String) driverList[2];
-	    	fileName = path.substring(path.lastIndexOf("/") + 1);
+		String path = "";
+		String fileName = "default_profile.png";
+		if ((String) driverList[2] != "" && (String) driverList[2] != null) {
+			path = (String) driverList[2];
+			fileName = path.substring(path.lastIndexOf("/") + 1);
 		}
-    	
+
 		// 리뷰 정보(리뷰 아이디, 별점, 사유)
 		List<Object[]> reviewList = deliveryAssignmentRepository.findReviewById(assignedId);
 		Object[] reviewListArr = reviewList != null && !reviewList.isEmpty() ? reviewList.get(0)
@@ -210,24 +210,49 @@ public class DeliveryAssignmentService {
 
 	// 작성자: 김도경
 	// 기능: detailHistory(예약, 운송중 세부내역 확인)
+	// 수정일: 2025.09.01 고은설 => 상태값 및 경유지 정보 가져오는 구조로 수정.
 	public DetailHistoryDTO getDetailHistory(Long assignedId) {
-		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
+		
+		DeliveryAssignment assignmentRef = deliveryAssignmentRepository.getReferenceById(assignedId);
 
-		List<String> dropOrders = new ArrayList<>();
-		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
-			dropOrders = waypointList.subList(1, waypointList.size() - 1);
+		if(assignmentRef == null) {
+			return null;
 		}
+		
+		// Status
+		List<DeliveryWaypointSlimResponseDTO> wps = deliveryAssignmentRepository
+				.findWaypointsByRequest(assignmentRef.getDeliveryRequest());
 
-		Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
+		// Logs
+		List<DeliveryStatusLogSlimResponseDTO> logs = deliveryAssignmentRepository.findLogsByAssignId(assignedId);
 
-		LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
-
-		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
-				.dropOrder1(dropOrders.get(0)).dropOrder2(dropOrders.get(1)).dropOrder3(dropOrders.get(2))
-				.startAddress(startEnd[0].toString()).endAddress(startEnd[1].toString()).wantToStart(startDate)
-				.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0)).build();
+		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder()
+				.assignedId(assignedId)
+				.driverId(assignmentRef.getDriver().getDriverId())
+				.waypoints(wps)
+				.statuses(logs)
+				.build();
 
 		return detailHistoryDTO;
+		
+		
+//		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
+//		
+//		List<String> dropOrders = new ArrayList<>();
+//		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
+//			dropOrders = waypointList.subList(1, waypointList.size() - 1);
+//		}
+//		
+//		Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
+//		
+//		LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
+
+//		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
+//				.dropOrder1(dropOrders.get(0)).dropOrder2(dropOrders.get(1)).dropOrder3(dropOrders.get(2))
+//				.startAddress(startEnd[0].toString()).endAddress(startEnd[1].toString()).wantToStart(startDate)
+//				.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0)).build();
+		
+		
 	}
 
 	// 작성자: 고은설.
@@ -255,7 +280,7 @@ public class DeliveryAssignmentService {
 			var active = activeOpt.get();
 			if (Objects.equals(active.getDriver().getDriverId(), driverId)) {
 				// 동일 기사 재요청.
-				return Map.of("SUCCESS", "ALREADY_ACCEPTED");
+				return Map.of("FAILED", "ALREADY_ACCEPTED");
 			}
 			return Map.of("FAILED", "REQUEST_ALREADY_TAKEN");
 		}
@@ -292,7 +317,7 @@ public class DeliveryAssignmentService {
 			return "REQUEST_ALREADY_TAKEN_2";
 
 		// 요청에 명시된 차량 운전자 소지 여부 확인.
-		boolean isCarAvailable = carRepository.existsByDriverDriverIdAndVehicleTypeVehicleTypeId(driver.getDriverId(),
+		boolean isCarAvailable = carRepository.hasEligibleCar(driver.getDriverId(),
 				req.getVehicleType().getVehicleTypeId());
 		if (!isCarAvailable)
 			return "VEHICLE_TYPE_MISMATCH";
@@ -306,10 +331,12 @@ public class DeliveryAssignmentService {
 		}
 
 		LocalDateTime start = req.getWantToStart();
-		LocalDateTime end = req.getWantToEnd();
 
-		boolean hasConflict = deliveryAssignmentRepository.existsOverlappingByRequestWindow(driver.getDriverId(), start,
-				end, blocking);
+		boolean hasConflict = deliveryAssignmentRepository.existsOverlappingByRequestDay(
+			    driver.getDriverId(),
+			    start,
+			    blocking
+			);
 		if (hasConflict)
 			return "SCHEDULE_CONFLICT";
 
@@ -570,8 +597,8 @@ public class DeliveryAssignmentService {
 	}
 
 	@Transactional
-	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action, boolean mountainous,
-			boolean caution) {
+	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action, 
+			boolean detour) {
 		var assignment = deliveryAssignmentRepository.findById(assignedId)
 				.orElseThrow(() -> new IllegalArgumentException("배차 없음: " + assignedId));
 
@@ -605,7 +632,7 @@ public class DeliveryAssignmentService {
 				dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
 						points.get(0).getAddress(), // from (픽업)
 						points.get(1).getAddress(), // to (첫 경유지)
-						true // AUTO
+						true, detour // AUTO
 				);
 			}
 		}
@@ -628,7 +655,7 @@ public class DeliveryAssignmentService {
 				dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
 						points.get(k).getAddress(), // from (방금 드랍한 곳)
 						points.get(k + 1).getAddress(), // to (다음 경유/도착)
-						true);
+						true, detour);
 			}
 		}
 
@@ -638,7 +665,7 @@ public class DeliveryAssignmentService {
 					|| status == DeliveryStatusEnum.DROPPED_AT_WAYPOINT) && lastVisited == lastIdx, "완료 가능한 상태/위치가 아님");
 			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
 
-			completeAssignment(assignment, now, mountainous, caution);
+			completeAssignment(assignment, now);
 
 			// 운송 종료: 더미 상태/캐시 정리 (이후 로그 저장 방지)
 			dummyTracker.finishAssignment(assignment.getDriver().getDriverId().toString());
@@ -655,13 +682,14 @@ public class DeliveryAssignmentService {
 
 			insertLog(assignment, DeliveryStatusEnum.MOVING_TO_WAYPOINT, skipIdx, now.plusNanos(1));
 			dummyTracker.prepareLeg(assignment.getDriver().getDriverId().toString(), assignedId,
-					points.get(skipIdx).getAddress(), points.get(skipIdx + 1).getAddress(), true);
+					points.get(skipIdx).getAddress(), points.get(skipIdx + 1).getAddress(), true, detour);
 		}
 		}
 
 		// 최신 상태 패킷 재조립.
 		return getTodayAssignments(assignment.getDriver().getDriverId());
 	}
+
 
 	private void insertLog(DeliveryAssignment assignment, DeliveryStatusEnum status, int lastVisited,
 			LocalDateTime at) {
@@ -703,7 +731,7 @@ public class DeliveryAssignmentService {
 
 	// 운송 완료 처리
 	@Transactional
-	private void completeAssignment(DeliveryAssignment a, LocalDateTime now, boolean mountainous, boolean caution) {
+	private void completeAssignment(DeliveryAssignment a, LocalDateTime now) {
 		if (a == null)
 			return;
 		if (a.getStatus() == com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED)
@@ -832,6 +860,50 @@ public class DeliveryAssignmentService {
 		dto.setLogs(logs);
 
 		return dto;
+	}
+
+	// 작성자: 고은설
+	// 기능: 이미 할당된 운송 정보 취소.
+	@Transactional
+	public Map<String, Object> cancelDeliveryReservation(Long requestId, Long requesterDriverId) {
+
+		// 배정 엔티티 조회
+		Optional<DeliveryAssignment> optAssign = deliveryAssignmentRepository.findLatestActiveByRequestId(requestId);
+		
+		//DeliveryAssignment assignment = deliveryAssignmentRepository.findById(assignId).orElse(null);
+		if (optAssign.isEmpty()) {
+			return Map.of("FAILED", "ASSIGNMENT_NOT_FOUND");
+		}
+		
+		DeliveryAssignment assignment = optAssign.get();
+		
+		// 요청 엔티티 확인
+		DeliveryRequest request = assignment.getDeliveryRequest();
+		if (request == null) {
+			return Map.of("FAILED", "REQUEST_NOT_FOUND");
+		}
+		
+		//본인 배차만 취소 가능
+	    if (requesterDriverId != null) {
+	        Long ownerDriverId = assignment.getDriver() != null ? assignment.getDriver().getDriverId() : null;
+	        if (!Objects.equals(ownerDriverId, requesterDriverId)) {
+	            return Map.of("FAILED", "FORBIDDEN"); // 본인 배정만 취소 가능
+	        }
+	    }
+	    
+		// 배정 삭제
+		deliveryAssignmentRepository.delete(assignment);
+
+		// 상태 전이: ASSIGNED -> REGISTERED
+		int updated = requestRepository.turnCanceledReservationIntoRegistered(request.getRequestId());
+
+		if (updated == 0) {
+			// 이미 다른 상태인 경우 등
+			return Map.of("FAILED", "INVALID_STATUS");
+		}
+
+		return Map.of("SUCCESS", updated);
+
 	}
 
 }

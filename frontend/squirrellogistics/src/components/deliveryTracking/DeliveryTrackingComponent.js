@@ -26,7 +26,7 @@ import { renderSingleTag } from "../deliveryRequest/deliveryFormatUtil";
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
 
-const DeliveryTrackingComponent = ({ data, onRefresh }) => {
+const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
   const { driverId } = useParams();
   const {
     leg: activeLeg,
@@ -37,25 +37,12 @@ const DeliveryTrackingComponent = ({ data, onRefresh }) => {
   } = pickActiveLeg(data);
   const hasNextLeg = activeLeg != null; // 다음으로 달릴 구간이 있나
 
-  console.log(
-    "isLastLeg: " +
-      isLastLeg +
-      ",isBeforePickup: " +
-      isBeforePickup +
-      ",isLastDropped: " +
-      isLastDropped
-  );
-
   // 웹소켓으로 들어오는 실시간 경로
-  const live = useDriverStream(driverId);
-  // 남은 거리/시간 UI 표시용 (웹소켓 payload에 distance, duration이 오면 그대로 사용)
-  const distanceKm =
-    live?.distance != null ? (live.distance / 1000).toFixed(1) : null; // 서버 단위가 m라고 가정
-  const durationMin =
-    live?.duration != null ? Math.round(live.duration / 60) : null; // 서버 단위가 s라고 가정
+  const live = useDriverStream(() => localStorage.getItem('token') || localStorage.getItem('accessToken'));
+  const distanceKm = live?.distance != null ? (live.distance / 1000).toFixed(1) : null;
+  const durationMin = live?.duration != null ? Math.round(live.duration / 60) : null;
 
   const items = computeWaypointStatuses(data);
-  console.log(activeLeg);
   return (
     <Box width={"100%"} sx={{ bgcolor: theme.palette.background.default }}>
       {/* 페이지 최상단 제목 */}
@@ -466,7 +453,10 @@ const DeliveryTrackingComponent = ({ data, onRefresh }) => {
             </Grid>
 
             {/* 하단 버튼 영역 */}
-            <ActionButtons data={data} onRefresh={onRefresh} />
+            <ActionButtons
+              data={data}
+              onRefresh={onRefresh}
+              onActionRun={onActionRun} />
           </Grid>
         </Grid>
       </Box>

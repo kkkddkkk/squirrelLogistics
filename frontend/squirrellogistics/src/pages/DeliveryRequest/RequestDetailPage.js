@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import DriverHeader_Temp from "../../components/deliveryRequest/DriverHeader_Temp";
 import RequestDetailComponent from "../../components/deliveryRequest/RequestDetailComponent";
 import { useLocation, useParams } from "react-router-dom";
+import Header from "../Layout/Header";
 
 
 const RequestDetailPage = () => {
@@ -11,7 +11,7 @@ const RequestDetailPage = () => {
 
     return (
         <Box>
-            <DriverHeader_Temp />
+            <Header />
             <RequestDetailComponent item={item}/>
         </Box>
     );

@@ -11,9 +11,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 
+import com.gpt.squirrelLogistics.common.LatLng;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestCardSlimDTO;
 import com.gpt.squirrelLogistics.entity.deliveryRequest.DeliveryRequest;
 
@@ -365,5 +368,27 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			""")
 	List<Object[]> findCompanyDeliveriesWithAllInfo(@Param("companyId") Long companyId, @Param("name") String name,
 			@Param("status") String status);
+
+	// 작성자: 고은설
+	// 기능: 특정 ID의 운송 요청 상태값 ASSIGNED에서 REGISTERED로 변경.
+	@Modifying
+	@Transactional
+	@Query("""
+			    update DeliveryRequest dr
+			       set dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+			     where dr.requestId = :requestId
+			       and dr.status = com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.ASSIGNED
+			""")
+	int turnCanceledReservationIntoRegistered(@Param("requestId") Long requestId);
+
+	// 작성자: 고은설
+	// 기능: 특정 ID의 운송 요청의 예상 경로 추출하기.
+	@Query("""
+			    select r.expectedRoute
+			    from DeliveryAssignment a
+			    join a.deliveryRequest r
+			    where a.assignedId = :assignedId
+			""")
+	Optional<String> findExpectedPolylineByAssignedId(@Param("assignedId") Long assignedId);
 
 }

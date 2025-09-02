@@ -26,6 +26,8 @@ public class DummyDriver {
 	private final Object lock = new Object();
 
 	private List<LatLng> route = new ArrayList<>(); // 현재 레그 polyline
+	private List<LatLng> expectedRoute = List.of();
+
 	private int index = 0; // route 내 진행 인덱스
 	private LatLng current = null; // 현재 좌표(빈 경로일 때도 유지)
 	private Mode mode = Mode.AUTO;
@@ -35,16 +37,32 @@ public class DummyDriver {
 	private int stepPerTick = 1; // 틱당 몇 포인트 전진
 	private ScheduledFuture<?> task; // 주행 작업 핸들
 
+	// 이탈 판정용 히스테리시스(노이즈 방지)
+	private static final double OUT_ENTER_M = 300.0; // 진입 임계값
+	private static final double OUT_EXIT_M = 200.0; // 해제 임계값
+	private static final int OUT_CONSEC_REQUIRED = 3; // 연속 틱 카운트
+	private int outConsec = 0;
+	private boolean outOfWay = false;
+
 	// 각 틱마다 스냅샷을 푸시할 콜백 (Tracker가 주입)
 	private java.util.function.Consumer<RouteInfoDTO> broadcaster = r -> {
 	};
+
+	// 중복 노이즈 덜어내기.
+	public void setExpectedRoute(List<LatLng> polyline) {
+		synchronized (lock) {
+			var norm = kakaoClient.normalizeTrackPoints(polyline != null ? polyline : List.of());
+			this.expectedRoute = new ArrayList<>(norm);
+		}
+		broadcast();
+	}
 
 	public DummyDriver(String driverId, KakaoRouteClient kakaoClient, ScheduledExecutorService scheduler,
 			LatLng initialPosition) {
 		this.driverId = driverId;
 		this.kakaoClient = kakaoClient;
 		this.scheduler = scheduler;
-		this.current = Objects.requireNonNullElseGet(initialPosition, 
+		this.current = Objects.requireNonNullElseGet(initialPosition,
 				() -> new LatLng(new BigDecimal("37.5546785"), new BigDecimal("126.9706069"))); // 서울시청
 	}
 
@@ -78,7 +96,7 @@ public class DummyDriver {
 			if (!this.route.isEmpty())
 				this.current = this.route.get(0);
 		}
-		notifyMoved(); 
+		notifyMoved();
 		broadcast();
 	}
 
@@ -91,7 +109,7 @@ public class DummyDriver {
 			index = next;
 			current = route.get(index);
 		}
-		notifyMoved(); 
+		notifyMoved();
 		broadcast();
 	}
 
@@ -103,7 +121,7 @@ public class DummyDriver {
 			index = route.size() - 1;
 			current = route.get(index);
 		}
-		notifyMoved(); 
+		notifyMoved();
 		broadcast();
 	}
 
@@ -124,6 +142,18 @@ public class DummyDriver {
 		restartAutoIfNeeded();
 	}
 
+	public void reset(LatLng startPos) {
+		synchronized (lock) {
+			this.route = new ArrayList<>();
+			this.index = 0;
+			this.current = (startPos != null ? startPos : this.current);
+			this.outConsec = 0;
+			this.outOfWay = false;
+		}
+		notifyMoved();
+		broadcast();
+	}
+
 	/** 자동 주행 시작(스케줄 등록) */
 	public void start() {
 		if (task != null && !task.isCancelled())
@@ -137,7 +167,7 @@ public class DummyDriver {
 							current = route.get(index);
 						}
 					}
-					notifyMoved(); 
+					notifyMoved();
 					broadcast();
 				}
 			} catch (Throwable t) {
@@ -167,23 +197,42 @@ public class DummyDriver {
 		List<LatLng> visited;
 		List<LatLng> expected;
 		LatLng curr;
+		List<LatLng> polyline;
 		synchronized (lock) {
 			int safeIndex = Math.max(0, Math.min(index, Math.max(0, route.size() - 1)));
 			curr = (route.isEmpty() ? current : route.get(safeIndex));
 			visited = route.isEmpty() ? List.of() : new ArrayList<>(route.subList(0, safeIndex + 1));
-			expected = (route.isEmpty() || safeIndex + 1 >= route.size()) ? List.of()
-					: new ArrayList<>(route.subList(safeIndex + 1, route.size()));
+			expected = new ArrayList<>(expectedRoute);
+
+			polyline = route.isEmpty() ? List.of() : new ArrayList<>(route);
 		}
 
 		long distance = 0L, duration = 0L;
+		LatLng etaTarget = null;
 		if (!expected.isEmpty()) {
-			LatLng to = expected.get(expected.size() - 1);
-			distance = kakaoClient.calculateTotalDistance(curr, to);
-			duration = kakaoClient.estimateDuration(curr, to);
+			etaTarget = expected.get(expected.size() - 1);
+		} else if (!polyline.isEmpty()) {
+			etaTarget = polyline.get(polyline.size() - 1);
+		}
+		if (etaTarget != null) {
+			distance = kakaoClient.calculateTotalDistance(curr, etaTarget);
+			duration = kakaoClient.estimateDuration(curr, etaTarget);
+		}
+
+		// 이탈편차 추출.
+		double devM = deviationFromExpectedMeters(curr, expectedRoute);
+
+		// 정상 복귀 임계값 지정.
+		if (devM >= OUT_ENTER_M) {
+			if (++outConsec >= OUT_CONSEC_REQUIRED)
+				outOfWay = true;
+		} else if (devM <= OUT_EXIT_M) {
+			outConsec = 0;
+			outOfWay = false;
 		}
 
 		return RouteInfoDTO.builder().visited(visited).expected(expected).currentPosition(curr).distance(distance)
-				.duration(duration).build();
+				.duration(duration).polyline(polyline).outOfWay(outOfWay).deviationMeters(devM).build();
 	}
 
 	private void broadcast() {
@@ -197,4 +246,58 @@ public class DummyDriver {
 	public String getDriverId() {
 		return driverId;
 	}
+
+	// 점과 예상 경로를 이은 선분 간 최단거리 추출.
+	private static double deviationFromExpectedMeters(LatLng p, List<LatLng> path) {
+		if (p == null || path == null || path.size() < 2)
+			return Double.NaN;
+		double min = Double.POSITIVE_INFINITY;
+		for (int i = 0; i < path.size() - 1; i++) {
+			double d = pointToSegmentMeters(p, path.get(i), path.get(i + 1));
+			if (d < min)
+				min = d;
+			// 성능 최적화가 필요하면: 근처 구간만 검사(슬라이딩 윈도우), R-Tree, 다운샘플링 등
+		}
+		return min;
+	}
+
+	// equirectangular 근사 기반 점-선분 거리(m)
+	private static double pointToSegmentMeters(LatLng p, LatLng a, LatLng b) {
+		final double R = 6371000.0;
+
+		double lat0 = Math.toRadians(p.getLat().doubleValue());
+		// 라디안
+		double latA = Math.toRadians(a.getLat().doubleValue());
+		double lonA = Math.toRadians(a.getLng().doubleValue());
+		double latB = Math.toRadians(b.getLat().doubleValue());
+		double lonB = Math.toRadians(b.getLng().doubleValue());
+		double latP = Math.toRadians(p.getLat().doubleValue());
+		double lonP = Math.toRadians(p.getLng().doubleValue());
+
+		// local ENU(근사): x = R * cos(lat0) * dLon, y = R * dLat
+		double xA = R * Math.cos(lat0) * (lonA - lonP);
+		double yA = R * (latA - latP);
+		double xB = R * Math.cos(lat0) * (lonB - lonP);
+		double yB = R * (latB - latP);
+		double x0 = 0.0, y0 = 0.0; // P를 원점으로 둠
+
+		// 선분 AB에 대한 P(원점)의 수선 발
+		double vx = xB - xA, vy = yB - yA;
+		double wx = x0 - xA, wy = y0 - yA;
+		double c1 = vx * wx + vy * wy;
+		double c2 = vx * vx + vy * vy;
+
+		double t = (c2 <= 0.0 ? 0.0 : c1 / c2); // degenerate 보호
+		if (t < 0.0)
+			t = 0.0;
+		else if (t > 1.0)
+			t = 1.0;
+
+		double projX = xA + t * vx;
+		double projY = yA + t * vy;
+
+		// P(0,0)와 투영점의 거리
+		return Math.hypot(projX, projY);
+	}
+
 }

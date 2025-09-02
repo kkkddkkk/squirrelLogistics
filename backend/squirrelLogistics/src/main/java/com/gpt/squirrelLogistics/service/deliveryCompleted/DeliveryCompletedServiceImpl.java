@@ -84,6 +84,7 @@ public class DeliveryCompletedServiceImpl implements DeliveryCompletedService {
     public Map<String, Object> getDeliveryDetail(Long assignedId, Long driverId) {
         List<DeliveryAssignment> allAssignments = deliveryAssignmentRepository.findAll();
         
+        log.info("assignedId: {}, driverId: {}", assignedId, driverId);
         DeliveryAssignment targetAssignment = allAssignments.stream()
             .filter(assignment -> assignment.getDriver().getDriverId().equals(driverId))
             .filter(assignment -> assignment.getStatus() == com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED)
@@ -123,6 +124,7 @@ public class DeliveryCompletedServiceImpl implements DeliveryCompletedService {
                     .mountainous(actualDelivery.isMountainous())
                     .caution(actualDelivery.isCaution())
                     .actualFee(actualDelivery.getActualFee())
+                    .actualPolyline(actualDelivery.getActualPolyline())
                     .build();
                 result.put("actualDelivery", actualDeliveryDTO);
             }
