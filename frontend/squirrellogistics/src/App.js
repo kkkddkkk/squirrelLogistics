@@ -4,7 +4,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import root from "./routes/root";
 import useAuthSession from "./api/user/useAuthSession";
 import { ThemeProvider } from "@mui/material";
-import { theme } from "./components/common/CommonTheme";
+import { darkTheme, theme } from "./components/common/CommonTheme";
+import { createContext, useState } from "react";
+import { DarkModeProvider } from "./DarkModeContext";
 
 //const CLIENT_ID = "86450001711-...apps.googleusercontent.com";
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
@@ -19,12 +21,14 @@ function App() {
       window.location.href = "/";
     },
   });
+
   return (
-    <ThemeProvider theme={theme}>
+    <DarkModeProvider >
       <GoogleOAuthProvider clientId={clientId}>
         <RouterProvider router={root} />
       </GoogleOAuthProvider>
-    </ThemeProvider>
+    </DarkModeProvider>
+
   );
 }
 

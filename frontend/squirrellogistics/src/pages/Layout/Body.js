@@ -9,6 +9,7 @@ import {
     Chip,
     Stack,
     useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -31,6 +32,8 @@ export default function Body({ fullBleed = false }) {
     const [current, setCurrent] = useState(0);
     const [autoplay, setAutoplay] = useState(true);
     const isSm = useMediaQuery("(max-width:900px)");
+
+    const thisTheme = useTheme();
 
     const sliderSettings = useMemo(
         () => ({

@@ -36,7 +36,7 @@ const DriverCard = ({ driver, onRequest }) => {
     if (driver.averageRating && driver.averageRating > 0) {
       return (
         <Box display={"flex"} alignItems={"center"}>
-          <StarOutlinedIcon /> &nbsp; ${driver.averageRating.toFixed(1)}
+          <StarOutlinedIcon /> &nbsp; {driver.averageRating.toFixed(1)}
         </Box>
       );
     }

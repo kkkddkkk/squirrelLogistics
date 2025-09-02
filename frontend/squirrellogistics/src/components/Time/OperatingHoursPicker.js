@@ -1,6 +1,6 @@
 // src/components/OperatingHoursPicker.jsx
 import { useMemo } from "react";
-import { Box, Chip, TextField, FormHelperText } from "@mui/material";
+import { Box, Chip, TextField, FormHelperText, useTheme } from "@mui/material";
 import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -23,6 +23,8 @@ export default function OperatingHoursPicker({
 
     const setPreset = (s, e) => onChange({ start: s, end: e });
 
+    const thisTheme = useTheme();
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "flex-start" }}>
@@ -37,7 +39,12 @@ export default function OperatingHoursPicker({
                             error,
                             helperText: helperText || " ",
                             sx: { minWidth: 200 },
-                        },
+                            InputProps: {
+                                sx: {
+                                    "& .MuiSvgIcon-root": { color: thisTheme.palette.text.primary } // 아이콘 색상 변경
+                                }
+                            },
+                        }
                     }}
                 />
                 <TimePicker
@@ -51,6 +58,11 @@ export default function OperatingHoursPicker({
                             error,
                             helperText: helperText || (overnight ? "익일 종료" : " "),
                             sx: { minWidth: 200 },
+                            InputProps: {
+                                sx: {
+                                    "& .MuiSvgIcon-root": { color: thisTheme.palette.text.primary } // 아이콘 색상 변경
+                                }
+                            },
                         },
                     }}
                 />

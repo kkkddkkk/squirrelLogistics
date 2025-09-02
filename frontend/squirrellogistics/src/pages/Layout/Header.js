@@ -10,13 +10,21 @@ import {
   Menu,
   MenuItem,
   Divider,
+  useTheme,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useEffect, useState } from "react";
 import LoginModal from "./LoginModal";
 import { useNavigate } from "react-router-dom";
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
+import BedtimeOutlinedIcon from '@mui/icons-material/BedtimeOutlined';
+import { theme } from "../../components/common/CommonTheme";
+import { useOutletContext } from "react-router-dom";
+import { useDarkMode } from "../../DarkModeContext";
 
 export default function Header() {
+
+  const { darkMode, setDarkMode } = useDarkMode();
   const navigate = useNavigate();
 
   const [loginOpen, setLoginOpen] = useState(false);
@@ -104,9 +112,10 @@ export default function Header() {
 
   const leftNav = NAV[navKey];
 
+  const thisTheme = useTheme();
   return (
     <>
-      <AppBar position="static" color="default">
+      <AppBar position="static" color={thisTheme.palette.background.default}>
         <Toolbar className={styles.headerContainer}>
           {/* 로고 */}
           <Typography
@@ -132,6 +141,18 @@ export default function Header() {
 
           {/* 우측 사용자 영역 */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {darkMode ? (
+              <LightModeOutlinedIcon
+                sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
+                onClick={() => setDarkMode(prev => !prev)}
+              />
+            ) : (
+              <BedtimeOutlinedIcon
+                sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
+                onClick={() => setDarkMode(prev => !prev)}
+              />
+            )}
+
             {!isAuthed ? (
               <>
                 <Button color="inherit" onClick={() => setLoginOpen(true)}>

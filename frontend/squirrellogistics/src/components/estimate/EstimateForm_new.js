@@ -13,7 +13,7 @@ import { setDistance } from "../../slice/estimate/estimateSlice";
 import CargoDialog from "./CargoDialog";
 import http from "../../api/user/api"; // 기본주소용 http 인스턴스
 import "./EstimateForm.css";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
 import { CommonSmallerTitle, CommonTitle } from "../common/CommonText";
 import CommonList from "../common/CommonList";
 import { ButtonContainer, OneButtonAtRight, Three100Buttons, ThreeButtons, Two100Buttons, TwoButtonsAtEnd } from "../common/CommonButton";
@@ -25,7 +25,9 @@ const STORAGE_KEY = "deliveryFlow";
 const WAYPOINT_FEE_PER_ITEM = 50000;
 
 const EstimateForm_new = () => {
-  applyThemeToCssVars(theme);
+  const thisTheme = useTheme();
+  applyThemeToCssVars(thisTheme);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -498,7 +500,7 @@ const EstimateForm_new = () => {
   const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
-    <Grid container>
+    <Grid container sx={{ bgcolor: theme.palette.background.default}}>
       <Grid size={3} />
       <Grid size={6} marginBottom={"5%"}>
         <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>

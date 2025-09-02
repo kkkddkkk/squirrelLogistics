@@ -7,6 +7,9 @@ import axios from "axios";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { getTodayContent } from "../../api/company/historyApi";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+import LoadingComponent from "../common/LoadingComponent";
+import { TwoButtonsAtLeft, TwoButtonsAtRight } from "../common/CommonButton";
+import { theme } from "../common/CommonTheme";
 
 export const Buttons = ({ children, func, disabled }) => {
     return (
@@ -30,6 +33,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     const [todayContent, setTodayContent] = useState([]);
     const [changed, setChanged] = useState(false);
     const [reported, setReported] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [review, setReview] = useState({
         reviewId: 0,
         assignedId: assignedId,
@@ -42,6 +46,8 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
 
     useEffect(() => {
         if (!isExpand) return;
+        setLoading(true);
+        console.log("loading: " + loading);
         getTodayContent({ assignedId })
             .then(data => {
                 setTodayContent(data || {});
@@ -49,7 +55,8 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
             })
             .catch(err => {
                 console.error("데이터 가져오기 실패", err);
-            });
+            })
+            .finally(() => setLoading(false));
     }, [isExpand, changed]);
 
     const [scope, setScope] = useState(0);
@@ -64,9 +71,6 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const showReport = () => {
-        if (todayContent.reportId) {
-
-        }
         window.open(
             `${window.location.origin}/company/report?id=${assignedId}&rId=${todayContent?.reportId}&token=${accesstoken}`,
             'reportWindow',
@@ -101,60 +105,71 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
 
     return (
         <ListBoxContainer id={assignedId} header={`${start} → ${end}`} useButton={true}
-            assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand}>
+            assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand} loading={loading}>
+            <LoadingComponent open={loading} text="이용기록을 불러오는 중..." />
             {!isExpand ? <></> :
                 <Grid sx={{ margin: "2%" }} size={12}>
-                    <Grid container sx={{ margin: "2%" }}>
-                        {todayContent.dropOrder1 ? <Grid size={12}>경유지1: {todayContent.dropOrder1}</Grid> : <></>}
-                        {todayContent.dropOrder2 ? <Grid size={12}>경유지2: {todayContent.dropOrder2}</Grid> : <></>}
-                        {todayContent.dropOrder3 ? <Grid size={12}>경유지3: {todayContent.dropOrder3}</Grid> : <></>}
-                        {todayContent.caution ? <Grid size={12}><br />취급주의물품 포함</Grid> : <></>}
-                        {todayContent.mountainous ? <Grid size={12}>{!todayContent.caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
-                        <Grid size={12} sx={{
-                            borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
-                            , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
-                            margin: "8px 0"
-                        }}>
-                            <TwoBtns
-                                children1={"명세서"} func1={showTransactionStatement}
-                                children2={"영수증"} func2={showReciept}
-                            />
-                            <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee ? paymentFormat(todayContent.actualFee) : paymentFormat(todayContent.estimatedFee)} 원</Typography>
-                        </Grid>
-                        <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                                <Box
-                                    component="img"
-                                    sx={{
-                                        height: "40px",
-                                        aspectRatio: "1/1",
-                                        borderRadius: "100%",
-                                        marginTop: "2%"
-                                    }}
-                                    alt="Img"
-                                    src= {`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
+                    {isExpand && !loading ?
+                        <Grid container sx={{ margin: "2%" }}>
+                            {todayContent.dropOrder1 ? <Grid size={12}>경유지1: {todayContent.dropOrder1}</Grid> : <></>}
+                            {todayContent.dropOrder2 ? <Grid size={12}>경유지2: {todayContent.dropOrder2}</Grid> : <></>}
+                            {todayContent.dropOrder3 ? <Grid size={12}>경유지3: {todayContent.dropOrder3}</Grid> : <></>}
+                            {todayContent.caution ? <Grid size={12}><br />취급주의물품 포함</Grid> : <></>}
+                            {todayContent.mountainous ? <Grid size={12}>{!todayContent.caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
+                            <Grid size={12} sx={{
+                                borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
+                                , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
+                                margin: "8px 0"
+                            }}>
+                                <TwoButtonsAtLeft
+                                    leftTitle={"명세서"}
+                                    leftClickEvent={showTransactionStatement}
+                                    rightTitle={"영수증"}
+                                    rightClickEvent={showReciept}
+                                    gap={1}
                                 />
-                                <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}({todayContent.carName})</Typography>
-                            </Box>
-                            {assignStatus === "배송완료" && todayContent.rating != 0 ? <StarRate scope={scope} setScope={setScope} /> : <></>}
+                                <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee ? paymentFormat(todayContent.actualFee) : paymentFormat(todayContent.estimatedFee)} 원</Typography>
+                            </Grid>
+                            <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <Box
+                                        component="img"
+                                        sx={{
+                                            height: "40px",
+                                            aspectRatio: "1/1",
+                                            borderRadius: "100%",
+                                            marginTop: "2%"
+                                        }}
+                                        alt="Img"
+                                        src={`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
+                                    />
+                                    <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}<br/>({todayContent.carName})</Typography>
+                                </Box>
+                                {assignStatus === "배송완료" && todayContent.rating != 0 ? <StarRate scope={scope} setScope={setScope} /> : <></>}
 
-                        </Grid>
-                        <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
-                            {assignStatus === "배송완료" ?
-                                <TwoBtns
-                                    children1={todayContent.reportId != 0 ? "신고 완료" : "신고"} func1={showReport} disabled1={todayContent.reportId != 0}
-                                    children2={todayContent.reviewId != 0 ? "리뷰 수정" : "리뷰 작성"} func2={openModal}
-                                /> : (assignStatus === "배송중" || assignStatus === "예약" ?
-                                    <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
-                                        세부내역 확인
-                                    </OneBtnAtRight> : (assignStatus === "미정산" ?
-                                        <OneBtnAtRight func={handleSecondPayment}>
-                                            정&nbsp;&nbsp;&nbsp;산
-                                        </OneBtnAtRight> : <></>))
-                            }
-
-                        </Grid>
-                    </Grid>
+                            </Grid>
+                            <Grid size={12} sx={{ display: "flex", justifyContent: "end", margin: "5px 0" }}>
+                                {assignStatus === "배송완료" ?
+                                    <TwoButtonsAtRight
+                                        leftTitle={todayContent.reportId != 0 ? "신고 내역" : "신고"}
+                                        leftClickEvent={showReport}
+                                        leftColor={theme.palette.error.main}
+                                        rightTitle={todayContent.reviewId != 0 ? "리뷰 수정" : "리뷰 작성"}
+                                        rightClickEvent={openModal}
+                                        gap={1}
+                                    />
+                                    
+                                    : (assignStatus === "배송중" || assignStatus === "예약" ?
+                                        <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
+                                            세부내역 확인
+                                        </OneBtnAtRight> : (assignStatus === "미정산" ?
+                                            <OneBtnAtRight func={handleSecondPayment}>
+                                                정&nbsp;&nbsp;&nbsp;산
+                                            </OneBtnAtRight> : <></>))
+                                }
+                            </Grid>
+                        </Grid> : <></>
+                    }
                 </Grid>
             }
             <ReviewModal
@@ -167,6 +182,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                 setReview={setReview}
                 changed={changed}
                 setChanged={setChanged}
+                driverImg={todayContent.driverImg}
             ></ReviewModal>
         </ListBoxContainer>
 

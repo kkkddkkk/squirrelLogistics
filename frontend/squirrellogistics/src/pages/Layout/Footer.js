@@ -10,10 +10,12 @@ import {
 } from "@mui/material";
 import { Facebook, Instagram, LinkedIn } from "@mui/icons-material";
 import styles from "../../css/Footer.module.css";
+import { theme, applyThemeToCssVars } from "../../components/common/CommonTheme";
 
 export default function Footer() {
+    applyThemeToCssVars(theme);
     return (
-        <Box component="footer" sx={{ bgcolor: "#0B1220", color: "rgba(255,255,255,.88)"}}>
+        <Box component="footer" sx={{ bgcolor: "#0B1220", color: "rgba(255,255,255,.88)" }}>
             {/* 본문 */}
             <Container maxWidth="lg" sx={{ py: 6 }}>
                 <Grid container columnSpacing={6} rowSpacing={6} alignItems="flex-start">

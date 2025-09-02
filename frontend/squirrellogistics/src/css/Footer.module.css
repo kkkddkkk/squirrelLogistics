@@ -9,25 +9,25 @@
 }
 
 .footerLink {
-  color: rgba(255,255,255,.92);
+  color: var(--secondary-main) !important;
   transition: all .18s ease;
 }
 .footerLink:hover {
-  color: #8ab4ff;           /* 은은한 포커스 색 */
+  color: var(--background-default) !important;           /* 은은한 포커스 색 */
   transform: translateX(2px);
 }
 
 .footerSmallLink {
-  color: rgba(255,255,255,.7);
+  color: var(--secondary-main) !important;
   transition: color .18s ease;
 }
 .footerSmallLink:hover {
-  color: rgba(255,255,255,.95);
+  color: var(--background-default) !important;
 }
 
 .snsBtn {
   color: rgba(255,255,255,.9) !important;
-  background: rgba(255,255,255,.08) !important;
+  background: var(--primary-dark) !important;
   border-radius: 10px !important;
   width: 36px !important;
   height: 36px !important;

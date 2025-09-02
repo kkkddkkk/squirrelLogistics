@@ -5,10 +5,16 @@ import ReviewContent from "../../components/review/ReviewContent";
 import axios from "axios";
 import ReviewModalForList from "../../components/review/ReviewModalForList";
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
+import LoadingComponent from "../../components/common/LoadingComponent";
+import { CommonTitle } from "../../components/common/CommonText";
 
 const ReviewList = () => {
     const accesstoken = localStorage.getItem('accessToken');
 
+    const [loading, setLoading] = useState(false);
+    const { moveBack } = useHistoryMove();
     const [scope, setScope] = useState(0);
     const [modal, setModal] = useState(false);
     const [reviewList, setReviewList] = useState([]);
@@ -18,6 +24,7 @@ const ReviewList = () => {
     const [dataLengths, setDataLengths] = useState(0);
 
     useEffect(() => {
+        setLoading(true);
         axios.get(`http://localhost:8080/api/review/list`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -29,7 +36,7 @@ const ReviewList = () => {
                 const dateSet = [...new Set(res.data.map(report => report.regDate.toString().slice(0, 10)))];
                 setDates(dateSet);
                 setDataLengths(res.data.length);
-            })
+            }).finally(() => setLoading(false));
     }, [changed])
 
     const handleDelReview = (review) => {
@@ -53,9 +60,10 @@ const ReviewList = () => {
     }
 
     return (
-        <Layout title={"내 리뷰목록"}>
-
-            <Grid container width={"100%"}>
+        <>
+        <CommonTitle>내 리뷰목록</CommonTitle>
+            <Grid  container width={"100%"} marginBottom={5} minHeight={"100vh"}>
+                <LoadingComponent open={loading} text="내 리뷰목록을 불러오는 중..." />
                 <Grid size={3} />
                 <Grid size={6}>
                     {dataLengths == 0 ?
@@ -65,24 +73,22 @@ const ReviewList = () => {
                                 <SubTitle>{date}</SubTitle>
                                 {reviewList.map((review, idx) => (
                                     review.regDate.toString().slice(0, 10) == date ?
-                                        <>
-                                            <ReviewContent
-                                                key={idx}
-                                                header={`${review.startAddress.toString().slice(0, 15)}... > ${review.endAddress.toString().slice(0, 15)}...`}
-                                                driverImg={"https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"}
-                                                driverName={review.driverName}
-                                                content={review.reason}
-                                                setModal={setModal}
-                                                scope={review.rating}
-                                                setScope={setScope}
-                                                review={thisReview}
-                                                setReview={() => setThisReview(review)}
-                                                assignedId={review.assignedId}
-                                                reviewId={review.reviewId}
-                                                delReviewFunc={() => handleDelReview(review)}
-                                                modiReviewFunc={() => handleModiReview(review)}
-                                            ></ReviewContent>
-                                        </>
+                                        <ReviewContent
+                                            key={idx}
+                                            header={`${review.startAddress} → ${review.endAddress}`}
+                                            driverImg={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
+                                            driverName={review.driverName}
+                                            content={review.reason}
+                                            setModal={setModal}
+                                            scope={review.rating}
+                                            setScope={setScope}
+                                            review={thisReview}
+                                            setReview={() => setThisReview(review)}
+                                            assignedId={review.assignedId}
+                                            reviewId={review.reviewId}
+                                            delReviewFunc={() => handleDelReview(review)}
+                                            modiReviewFunc={() => handleModiReview(review)}
+                                        ></ReviewContent>
                                         : <></>
                                 ))
                                 }
@@ -97,12 +103,16 @@ const ReviewList = () => {
                         setReview={setThisReview}
                         changed={changed}
                         setChanged={setChanged}
-
+                        
                     ></ReviewModalForList>
+
+                    <ButtonContainer marginTop={10} marginBottom={5}>
+                        <One100ButtonAtCenter height={50} clickEvent={() => moveBack()}>뒤로가기</One100ButtonAtCenter>
+                    </ButtonContainer>
                 </Grid>
                 <Grid size={3} />
             </Grid>
-        </Layout >
+        </>
     )
 }
 export default ReviewList;

@@ -40,6 +40,13 @@ public class ReviewService {
 			List <Object[]> addressList = deliveryAssignmentRepository.findStartEndAddressById(review.getDeliveryAssignment().getAssignedId());
 			List<Object[]> driverList = deliveryAssignmentRepository.findDriverById(review.getDeliveryAssignment().getAssignedId());
 			
+	    	String path ="";
+	    	String fileName = "default_profile.png";
+			if((String) driverList.get(0)[2]!="" && (String) driverList.get(0)[2] !=null) {
+		    	path = (String) driverList.get(0)[2];
+		    	fileName = path.substring(path.lastIndexOf("/") + 1);
+			}
+			
 			map.put("assignedId", review.getDeliveryAssignment().getAssignedId());
 			map.put("reviewId", review.getReviewId());
 			map.put("rating", review.getRating());
@@ -48,6 +55,7 @@ public class ReviewService {
 			map.put("startAddress", addressList.get(0)[0]);
 			map.put("endAddress", addressList.get(0)[1]);
 			map.put("driverName", driverList.get(0)[0]);
+			map.put("profileImg", fileName);
 			
 			return map;
 		}).toList();
@@ -72,7 +80,7 @@ public class ReviewService {
 		for (Object o : reviewListArr) reviewContent[pos++] = o;
 		for (Object o : driverList) reviewContent[pos++] = o;
 		
-		String[] keys= {"reviewId", "rating", "reason", "driverName", "carName"};
+		String[] keys= {"reviewId", "rating", "reason", "driverName", "carName", "profileImageUrl"};
 		
 	    Map<String, Object> map = new LinkedHashMap<>();
 		for(int i=0;i<reviewContent.length;i++) {

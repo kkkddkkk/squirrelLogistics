@@ -3,22 +3,27 @@ import React, { useEffect, useRef, useState } from "react"
 import { Layout, paymentFormat } from "../../components/common/CommonForCompany"
 import { useSearchParams } from "react-router-dom";
 import { getReciept } from "../../api/company/paymentApi";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 export const Reciept = () => {
     const [params] = useSearchParams();
     const paymentId = params.get("paymentId");
     const [reciept, setReciept] = useState([]);
     const [method, setMethod] = useState(null);
+    const [prepaidMethod, setPrepaidMethod] = useState("");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (paymentId != 0 && paymentId != null) {
+            setLoading(true);
             getReciept({ paymentId })
                 .then(data => {
                     setReciept(data);
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
-                });
+                })
+                .finally(() => setLoading(false));
         }
     }, []);
 
@@ -37,6 +42,20 @@ export const Reciept = () => {
                 break;
             default:
                 setMethod("토스페이");
+        }
+
+        switch (reciept.prepaidMethod) {
+            case 'html5_inicis':
+                setPrepaidMethod("신용카드 결제");
+                break;
+            case 'kakaopay':
+                setPrepaidMethod("카카오페이");
+                break;
+            case 'danal':
+                setPrepaidMethod("휴대폰 소액결제");
+                break;
+            default:
+                setPrepaidMethod("토스페이");
         }
     }, [reciept])
 
@@ -144,9 +163,10 @@ export const Reciept = () => {
                                     flexWrap: "wrap"
                                 }}
                             >영 수 증
+                                <LoadingComponent open={loading} text="영수증을 불러오는 중..." />
 
                                 <RecieptBox title={"결제정보"}>
-                                    <ReceiptContents title={"거래종류"} content={reciept.prepaidMethod} />
+                                    <ReceiptContents title={"거래종류"} content={prepaidMethod} />
                                     <ReceiptContents title={"거래일시"} content={reciept.prepaidPaid} />
                                 </RecieptBox>
                                 <RecieptBox title={"구매정보"}>

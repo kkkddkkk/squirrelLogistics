@@ -41,13 +41,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PaymentController {
 	private final PaymentRepository paymentRepository;
 	private final PaymentService paymentService;
-	
-    @PostMapping
-    public Map<String, Long> createReview(@RequestBody PaymentDTO paymentDTO ) {
-//    	Long reviewId = reviewService.regiReview(reviewDTO);
 
-        return null;
-    }
     
     //1차 결제 payment row 생성
     @PostMapping("/firstTry/{paymentId}")

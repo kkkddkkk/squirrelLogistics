@@ -10,14 +10,14 @@
   padding: 12px;
   font-size: 16px;
   cursor: pointer;
-  border: 1px solid #ccc;
-  background-color: white;
+  border: 1px solid var(--text-secondary) !important;
+  background-color: var(--background-default) !important;
   transition: 0.2s;
 }
 
 .activeTab {
   /* #34699A, #113F67, #58A0C8, #007aff */
-  background-color: #34699A;
+  background-color: var(--primary-main) !important;
   color: white;
   font-weight: bold;
 }

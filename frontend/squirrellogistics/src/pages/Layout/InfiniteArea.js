@@ -8,7 +8,10 @@ import {
     Typography,
     Card,
     CardContent,
+    useTheme,
 } from "@mui/material";
+import { TwoButtonsAtLeft } from "../../components/common/CommonButton";
+import { theme, applyThemeToCssVars } from "../../components/common/CommonTheme";
 
 /** ● 작은 불릿 한 줄 */
 function FeatureLine({ text }) {
@@ -90,18 +93,22 @@ function FeatureRow({
 }
 
 export default function HomeLanding() {
+    applyThemeToCssVars(theme);
+    const thisTheme = useTheme();
     return (
-        <Box component="main" sx={{ bgcolor: "background.default" }}>
+        <Box component="main" sx={{ backgroundColor: thisTheme.palette.background.default }}>
             {/* HERO (원하시면 삭제 가능) */}
             <Box
                 sx={{
                     py: 8,
-                    background:
-                        "radial-gradient(1200px 500px at 80% 0%, #e8f3ff 0%, transparent 60%), linear-gradient(180deg, #f7fbff 0%, #ffffff 100%)",
+                    // background:
+                    //     `radial-gradient(1200px 500px at 80% 0%, #e8f3ff 0%, transparent 60%), linear-gradient(180deg, #f7fbff 0%, #ffffff 100%)`,
+
                     mb: 6,
+                    backgroundColor: thisTheme.palette.background.default
                 }}
             >
-                <Container maxWidth="lg">
+                <Container maxWidth="lg" sx={{ bgcolor: thisTheme.palette.background.default }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <Box sx={{ flex: "1 1 0" }}>
                             <Stack spacing={2}>
@@ -205,7 +212,7 @@ export default function HomeLanding() {
                 />
             </Container>
             {/* 4) 서비스 그리드 */}
-            <Box sx={{ bgcolor: "grey.50", py: { xs: 8, md: 10 } }}>
+            <Box sx={{ backgroundColor: thisTheme.palette.background.default }}>
                 <Container maxWidth="lg">
                     <Typography variant="h5" fontWeight={800} gutterBottom>
                         다람로지틱스의 차별화된 서비스

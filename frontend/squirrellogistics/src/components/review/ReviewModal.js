@@ -4,14 +4,89 @@ import { OneBigBtn, SubTitle, TwoBtns } from "../common/CommonForCompany";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import StarRateMemo from "./StarRate";
+import { ButtonContainer, One100ButtonAtCenter, Two100Buttons, TwoButtonsAtCenter } from "../common/CommonButton";
 
 
-const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged }) => {
+const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged, driverImg }) => {
 
     const accesstoken = localStorage.getItem('accessToken');
 
+    const [localReview, setLocalReview] = useState({
+        reason: "",
+        rating: 0,
+        reviewId: 0,
+        driverName: "",
+        carName: "",
+        assignedId: assignedId ?? 0
+    });
+
+    // useEffect(() => {
+    //     if(!assignedId) return;
+    //     setLocalReview(prev => ({ ...prev, assignedId }));
+    // }, [assignedId]);
+    const [scope, setScope] = useState(localReview.rating);
+
+    // useEffect(() => {
+    //     if (review) {
+    //         setLocalReview({
+    //             reviewId: review.reviewId ?? 0,
+    //             reason: review.reason ?? "",
+    //             rating: review.rating ?? 0,
+    //             driverName: review.driverName ?? "",
+    //             carName: review.carName ?? "",
+    //             assignedId: assignedId
+    //         });
+    //         setScope(review.rating ?? 0);
+    //     }
+    // }, [review]);
+
+    useEffect(() => {
+        if (!modal || !assignedId) return;
+
+        if (review) {
+            // 수정 모드
+            setLocalReview({
+                reviewId: review.reviewId,
+                reason: review.reason ?? "",
+                rating: review.rating ?? 0,
+                driverName: review.driverName ?? "",
+                carName: review.carName ?? "",
+                assignedId
+            });
+            setScope(review.rating ?? 0);
+        } else {
+            // 신규 등록
+            setLocalReview({
+                reviewId: 0,
+                reason: "",
+                rating: 0,
+                driverName: "",
+                carName: "",
+                assignedId
+            });
+            setScope(0);
+        }
+    }, [modal, assignedId, review]);
+
+    const writingReview = (e) => {
+        const { name, value } = e.target;
+        setLocalReview(prev => ({ ...prev, [name]: value })); // null 체크 제거
+    };
+
     const regiReview = () => {//등록
-        axios.post(`http://localhost:8080/api/review`, review, {
+        if (scope == 0) {
+            alert('별점을 등록해주세요.')
+            return;
+        }
+        if (localReview.reason.length < 5) {
+            alert("5자 이상의 리뷰를 등록해주세요.");
+            return;
+        }
+        const payload = {
+            ...localReview,  // TextField 등 입력값
+            rating: scope    // 사용자가 선택한 별점
+        };
+        axios.post(`http://localhost:8080/api/review`, payload, {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -26,7 +101,11 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     }
 
     const modiReview = () => {//수정
-        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, review, {
+        const payload = {
+            ...localReview,  // TextField 등 입력값
+            rating: scope    // 사용자가 선택한 별점
+        };
+        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, payload, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -50,25 +129,6 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                 setModal(false);
             }).catch(err => console.error('삭제 실패', err));
     }
-
-    const writingReview = (e => {//인풋 수정 시 review set
-        review[e.target.name] = e.target.value;
-        setReview({ ...review });
-    })
-
-    const [scope, setScope] = useState(review.rating);
-    useEffect(() => {//별점 동기화
-        if (review.rating != null) {
-            setScope(review.rating);
-        }
-    }, [review.rating]);
-
-    useEffect(() => {//별점 클릭 시 별점 변동
-        setReview(prev => ({
-            ...prev,
-            rating: scope
-        }));
-    }, [scope])
 
     return (
         <Modal open={modal} onClose={() => setModal(false)}
@@ -109,10 +169,10 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                                 borderRadius: "100%",
                                 marginBottom: "5%"
                             }}
-                            alt="OtterImg"
-                            src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                            alt="profile"
+                            src={`http://localhost:8080/api/public/driverImage/${driverImg}`}
                         />
-                        <Typography sx={{ marginBottom: "10%" }}>{review.driverName}({review.carName})</Typography>
+                        <Typography sx={{ marginBottom: "10%" }}>{localReview.driverName}({localReview.carName})</Typography>
                         <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                             <StarRate modifying={true} scope={scope} setScope={setScope} />
                         </Box>
@@ -121,10 +181,23 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                     </Box>
 
                 </Box>
-                <TextField name="reason" rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0" }} value={review.reason} onChange={writingReview}></TextField>
+                <TextField name="reason" rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0" }} value={localReview.reason ?? ""} onChange={writingReview}></TextField>
                 <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
-                    {review.reviewId == 0 ? <OneBigBtn func={regiReview}>리뷰등록</OneBigBtn> :
-                        <TwoBtns children1={"리뷰 삭제"} func1={delReview} children2={"리뷰 수정"} func2={modiReview}></TwoBtns>}
+                    <ButtonContainer width={"100%"}>
+                        {localReview.reviewId == 0 ?
+                            <One100ButtonAtCenter clickEvent={regiReview}>리뷰등록</One100ButtonAtCenter> :
+                            <Two100Buttons
+                                leftTitle={"리뷰 삭제"}
+                                leftClickEvent={delReview}
+                                rightTitle={"리뷰 수정"}
+                                rightClickEvent={modiReview}
+
+                                gap={3}
+                            />
+                        }
+                    </ButtonContainer>
+
+
                 </Box>
 
             </Box>

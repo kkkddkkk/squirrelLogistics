@@ -14,14 +14,16 @@ import {
   fetchCompanyMyPageInfo,
 } from '../../slice/company/companySlice';
 import { getMyPageInfo, getDeliveryList, withdrawAccount } from '../../api/company/companyApi';
-import { Box, Grid, MenuItem, Paper, Select } from '@mui/material';
+import { Box, Grid, MenuItem, Paper, Select, useTheme } from '@mui/material';
 import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
 import { ButtonContainer, OneButtonAtRight, TwoButtonsAtEnd } from '../../components/common/CommonButton';
 import CommonList from '../../components/common/CommonList';
+import { CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
 
 
 const MyPage = () => {
-  applyThemeToCssVars(theme);
+  const thisTheme = useTheme();
+  applyThemeToCssVars(thisTheme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { myPageInfo, isLoading, error, snsLogin, hasProfileInfo } = useSelector((state) => state.company);
@@ -235,23 +237,21 @@ const MyPage = () => {
 
 
   return (
-    <Grid container>
+    <Grid container sx={{backgroundColor: thisTheme.palette.background.default}}>
       <LoadingComponent open={deliveryLoading} text='마이페이지 정보를 불러오는 중...'></LoadingComponent>
       <Grid size={3} />
       <Grid size={6}>
         {/* 페이지 제목 */}
-        <div className="mypage-title" style={{ marginTop: "5%" }}>
-          <h1>마이페이지</h1>
-        </div>
+        <CommonTitle>마이페이지</CommonTitle>
 
         {/* 회원정보 */}
         <CommonList padding={5}>
           <div className="info-header">
-            <h3>회원정보</h3>
+            <CommonSubTitle>회원정보</CommonSubTitle>
             <EditDocumentIcon
               onClick={handleEditProfile}
               sx={{
-                color: theme.palette.primary.main,
+                color: thisTheme.palette.primary.main,
                 cursor: "pointer"
               }}
             ></EditDocumentIcon>
@@ -272,16 +272,16 @@ const MyPage = () => {
                 </div>
               )}
 
-              <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} />
-              <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} />
-              <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} />
-              <InfoItem label="회사 주소" value={myPageInfo?.address || "정보 없음"} />
-              <InfoItem label="사업자 등록번호" value={myPageInfo?.businessN || "정보 없음"} />
+              <InfoItem label="이름" value={myPageInfo?.name || "정보 없음"} color={thisTheme.palette.text.primary}/>
+              <InfoItem label="이메일" value={myPageInfo?.email || "정보 없음"} color={thisTheme.palette.text.primary} />
+              <InfoItem label="연락처" value={myPageInfo?.pnumber || "정보 없음"} color={thisTheme.palette.text.primary} />
+              <InfoItem label="회사 주소" value={myPageInfo?.address || "정보 없음"} color={thisTheme.palette.text.primary} />
+              <InfoItem label="사업자 등록번호" value={myPageInfo?.businessN || "정보 없음"} color={thisTheme.palette.text.primary} />
 
               {/* 계좌번호 */}
               <div className="info-item">
-                <span className="info-label">계좌번호</span>
-                <span className="info-value">
+                <span className="info-label" style={{color: thisTheme.palette.text.primary}}>계좌번호</span>
+                <span className="info-value" style={{color: thisTheme.palette.text.primary}}>
                   {showFullAccount ? (myPageInfo?.account || "정보 없음") : (maskedAccount || "정보 없음")}
                   {myPageInfo?.account && (
                     <OneButtonAtRight
@@ -300,16 +300,17 @@ const MyPage = () => {
         {/* 배송 정보 */}
         <CommonList padding={"5%"}>
           {/* <h3></h3> */}
-          <div className="info-header">
-            <h3>배송정보</h3>
-          </div>
+          <CommonSubTitle>배송정보</CommonSubTitle>
 
           {/* 검색 및 필터 */}
-          <div className="delivery-filter">
+          <div className="delivery-filter"  style={{
+            backgroundColor: thisTheme.palette.background.default,
+            borderColor: thisTheme.palette.background.default
+            }}>
             <div className="filter-row" >
               <Box display={"flex"} gap={3}>
                 <div className="filter-item">
-                  <label htmlFor="name">기사명:</label>
+                  <label htmlFor="name" style={{color: thisTheme.palette.text.primary}}>기사명:</label>
                   <input
                     type="text"
                     id="name"
@@ -320,16 +321,22 @@ const MyPage = () => {
                     className='searchInput'
                     style={{
                       width: "300px",
+                      backgroundColor: thisTheme.palette.background.paper,
+                      color: thisTheme.palette.text.secondary
                     }}
                   />
                 </div>
                 <div className="filter-item">
-                  <label htmlFor="status">배송 상태:</label>
+                  <label htmlFor="status" style={{color: thisTheme.palette.text.primary}}>배송 상태:</label>
                   <select
                     id="status"
                     value={statusFilter}
                     onChange={handleStatusChange}
                     className='searchInput'
+                    style={{
+                      backgroundColor: thisTheme.palette.background.paper,
+                      color: thisTheme.palette.text.secondary
+                    }}
                   >
                     <option value="">전체</option>
                     <option value="주문접수">주문접수</option>
@@ -345,7 +352,7 @@ const MyPage = () => {
                   leftClickEvent={handleSearch}
                   rightTitle={"초기화"}
                   rightClickEvent={handleFilterReset}
-                  rightColor={theme.palette.primary.dark}
+                  rightColor={theme.palette.warning.main}
                 />
               </ButtonContainer>
             </div>
@@ -356,32 +363,32 @@ const MyPage = () => {
             <table className="delivery-table" style={{ tableLayout: "fixed" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "10%" }}>기사명</th>
-                  <th style={{ width: "13%" }}>화물 종류</th>
-                  <th style={{ width: "13%" }}>배송 상태</th>
-                  <th style={{ width: "15%" }}>결제 방법</th>
-                  <th style={{ width: "15%" }}>금액</th>
-                  <th style={{ width: "17%" }}>출발지</th>
-                  <th style={{ width: "17%" }}>도착지</th>
+                  <th style={{ width: "10%", color: thisTheme.palette.text.primary }}>기사명</th>
+                  <th style={{ width: "13%", color: thisTheme.palette.text.primary }}>화물 종류</th>
+                  <th style={{ width: "13%", color: thisTheme.palette.text.primary }}>배송 상태</th>
+                  <th style={{ width: "15%", color: thisTheme.palette.text.primary }}>결제 방법</th>
+                  <th style={{ width: "15%", color: thisTheme.palette.text.primary }}>금액</th>
+                  <th style={{ width: "17%", color: thisTheme.palette.text.primary }}>출발지</th>
+                  <th style={{ width: "17%", color: thisTheme.palette.text.primary }}>도착지</th>
                 </tr>
               </thead>
               <tbody>
                 {(!filteredDeliveries || filteredDeliveries.length === 0) ? (
                   <tr>
-                    <td colSpan={7} className="no-delivery">
+                    <td colSpan={7} className="no-delivery" style={{color: thisTheme.palette.text.primary}}>
                       배송 정보가 없습니다.
                     </td>
                   </tr>
                 ) : (
                   filteredDeliveries.map((item, i) => (
                     <tr key={i}>
-                      <td>{item.name !== null ? item.name : '미배정'}</td>
-                      <td>{item.cargoType !== null ? item.cargoType : '정보 없음'}</td>
-                      <td style={{ fontWeight: "bold" }}>
+                      <td style={{color: thisTheme.palette.text.primary}}>{item.name !== null ? item.name : '미배정'}</td>
+                      <td style={{color: thisTheme.palette.text.primary}}>{item.cargoType !== null ? item.cargoType : '정보 없음'}</td>
+                      <td style={{ fontWeight: "bold", color: thisTheme.palette.text.primary }}>
                         {item.status !== null ? item.status : '미배정'}
                       </td>
-                      <td>{item.payMethod !== null ? item.payMethod : '정보 없음'}</td>
-                      <td className="price-cell">
+                      <td style={{color: thisTheme.palette.text.primary}}>{item.payMethod !== null ? item.payMethod : '정보 없음'}</td>
+                      <td className="price-cell" style={{color: thisTheme.palette.text.primary}}>
                         {(() => {
                           if (item.displayFee && item.displayFee > 0) {
                             if (item.status === '배송완료') {
@@ -396,8 +403,8 @@ const MyPage = () => {
                           }
                         })()}
                       </td>
-                      <td>{item.startAddress || '정보 없음'}</td>
-                      <td>{item.endAddress || '정보 없음'}</td>
+                      <td style={{color: thisTheme.palette.text.primary}}>{item.startAddress || '정보 없음'}</td>
+                      <td style={{color: thisTheme.palette.text.primary}}>{item.endAddress || '정보 없음'}</td>
                     </tr>
                   ))
                 )}

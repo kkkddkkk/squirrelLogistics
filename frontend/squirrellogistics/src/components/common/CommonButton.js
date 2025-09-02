@@ -1,6 +1,6 @@
 import { Box, Button, Grid, Typography } from "@mui/material"
 import { theme } from "./CommonTheme";
-import { lighten } from "@mui/material/styles";
+import { lighten, useTheme } from "@mui/material/styles";
 
 
 export const ButtonContainer = ({ children, width, marginTop, marginBottom }) => {
@@ -17,10 +17,10 @@ export const ButtonContainer = ({ children, width, marginTop, marginBottom }) =>
 //#region[ThreeButtons]
 export const Three100Buttons = ({ leftTitle, rightTitle, middleTitle, leftClickEvent, rightClickEvent, middleClickEvent,
     leftDisabled, rightDisabled, middleDisabled, leftColor, rightColor, middleColor, gap }) => {
-
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
-    const safeMiddleColor = middleColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
+    const safeMiddleColor = middleColor || thisTheme.palette.primary.main;
     return (
         <Box display={"flex"} justifyContent={"center"} gap={gap}>
             <Button
@@ -74,9 +74,10 @@ export const Three100Buttons = ({ leftTitle, rightTitle, middleTitle, leftClickE
 export const ThreeButtons = ({ leftTitle, rightTitle, middleTitle, leftClickEvent, rightClickEvent, middleClickEvent,
     leftDisabled, rightDisabled, middleDisabled, leftColor, rightColor, middleColor, gap }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
-    const safeMiddleColor = middleColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
+    const safeMiddleColor = middleColor || thisTheme.palette.primary.main;
     return (
         <Box display={"flex"} justifyContent={"center"} gap={gap}>
             <Button
@@ -127,10 +128,11 @@ export const ThreeButtons = ({ leftTitle, rightTitle, middleTitle, leftClickEven
 
 //#region [twoButtons]
 export const Two100Buttons = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
-    leftDisabled, rightDisabled, leftColor, rightColor, gap}) => {
+    leftDisabled, rightDisabled, leftColor, rightColor, gap }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
         <Grid container spacing={gap}>
@@ -174,8 +176,10 @@ export const Two100Buttons = ({ leftTitle, rightTitle, leftClickEvent, rightClic
 export const TwoButtonsAtCenter = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
     leftDisabled, rightDisabled, leftColor, rightColor }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
     return (
         <Grid container>
             <Grid size={6} display={"flex"} justifyContent={"center"}>
@@ -215,8 +219,10 @@ export const TwoButtonsAtCenter = ({ leftTitle, rightTitle, leftClickEvent, righ
 export const TwoButtonsAtEnd = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
     leftDisabled, rightDisabled, leftColor, rightColor }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
         <Grid container>
@@ -258,8 +264,10 @@ export const TwoButtonsAtEnd = ({ leftTitle, rightTitle, leftClickEvent, rightCl
 export const TwoButtonsAtRight = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
     leftDisabled, rightDisabled, leftColor, rightColor, gap }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
         <Box display={"flex"} justifyContent={"end"} gap={gap}>
@@ -297,8 +305,10 @@ export const TwoButtonsAtRight = ({ leftTitle, rightTitle, leftClickEvent, right
 export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
     leftDisabled, rightDisabled, leftColor, rightColor, gap }) => {
 
-    const safeLeftColor = leftColor || theme.palette.primary.main;
-    const safeRightColor = rightColor || theme.palette.primary.main;
+    const thisTheme = useTheme();
+
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
         <Box display={"flex"} justifyContent={"-moz-initial"} gap={gap}>
@@ -337,7 +347,10 @@ export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightC
 
 //#region [oneButton]
 export const One100ButtonAtCenter = ({ children, disabled, clickEvent, color, height, fontSize }) => {
-    const safeColor = color || theme.palette.primary.main;
+
+    const thisTheme = useTheme();
+
+    const safeColor = color || thisTheme.palette.primary.main;
     return (
         <Grid container>
             <Grid size={12} display="flex" justifyContent="center">
@@ -367,7 +380,10 @@ export const One100ButtonAtCenter = ({ children, disabled, clickEvent, color, he
 }
 
 export const OneButtonAtCenter = ({ children, disabled, clickEvent, color }) => {
-    const safeColor = color || theme.palette.primary.main;
+
+    const thisTheme = useTheme();
+
+    const safeColor = color || thisTheme.palette.primary.main;
     return (
         <Grid container>
             <Grid size={12} display="flex" justifyContent="center">
@@ -392,7 +408,9 @@ export const OneButtonAtCenter = ({ children, disabled, clickEvent, color }) => 
 }
 
 export const OneButtonAtRight = ({ children, disabled, clickEvent, color }) => {
-    const safeColor = color || theme.palette.primary.main;
+
+    const thisTheme = useTheme();
+    const safeColor = color || thisTheme.palette.primary.main;
     return (
         <Grid container>
             <Grid size={12} display="flex" justifyContent="end">
@@ -417,7 +435,8 @@ export const OneButtonAtRight = ({ children, disabled, clickEvent, color }) => {
 }
 
 export const OneButtonAtLeft = ({ children, disabled, clickEvent, color }) => {
-    const safeColor = color || theme.palette.primary.main;
+    const thisTheme = useTheme();
+    const safeColor = color || thisTheme.palette.primary.main;
     return (
         <Grid container>
             <Grid size={12} display="flex" justifyContent="-moz-initial">

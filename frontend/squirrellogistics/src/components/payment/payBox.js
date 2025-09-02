@@ -1,10 +1,13 @@
-import { Grid, Typography } from "@mui/material";
+import { Box, Divider, Grid, Typography } from "@mui/material";
 import { paymentFormat, SubTitle } from "../common/CommonForCompany";
+import CommonList from "../common/CommonList";
+import { CommonSmallerTitle, CommonSubTitle } from "../common/CommonText";
+import { theme } from "../common/CommonTheme";
 
 //PayBox=({총금액 파라미터})로 Payment.js에 전달
-const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, caution, mountainous, isAll, 
-    additionalRate
- }) => {
+const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, caution, mountainous, isAll,
+    additionalRate, atPayment
+}) => {
 
     const ContentBox = ({ children, subTitle }) => {
         return (
@@ -29,7 +32,6 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
                 <Typography
                     variant="body1"
                     component={"p"}
-                    color="#2A2A2A"
                     margin={"2%"}
                 >
                     {children}
@@ -40,46 +42,51 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
         return (
             <>
                 <PforCharge>{dataKey}</PforCharge>
-                <PforCharge>{value}{locale?"원":""}</PforCharge>
-                <Grid size={12} borderBottom={"2px solid #909095"} />
+                <PforCharge>{value}{locale ? "원" : ""}</PforCharge>
+                <Divider color={theme.palette.text.secondary} />
             </>
         )
     }
 
     function HowMuch({ children, fontSize }) {
         return (
-            <Grid size={12} display={"flex"} justifyContent={"end"} margin={"2%"}>
+            <Box display={"flex"} justifyContent={"end"} marginTop={"4%"}>
                 <Typography
                     sx={{
-                        color: "#2A2A2A",
                         fontWeight: "bold",
                         fontSize: `${fontSize}px`,
                     }}
                 >
                     {children}
                 </Typography>
-            </Grid>
+            </Box>
         )
     }
 
     return (
         <>
-            <ContentBox subTitle={"기본요금"}>
+            <CommonList padding={2}>
+                <CommonSmallerTitle>기본요금</CommonSmallerTitle>
                 <Content dataKey={"주행거리"} value={`${paymentFormat(mileage)}km`} />
                 <Content dataKey={"무게"} value={`${paymentFormat(weight)}kg`} />
                 <HowMuch fontSize={20} inBox={true}>{paymentFormat(baseRate)}원</HowMuch>
-            </ContentBox>
+            </CommonList>
 
-            <ContentBox subTitle={"추가요금"}>
-                {stopOver1 ? <Content dataKey={"경유지1"} value={paymentFormat(50000)} locale={true}/> : <></>}
-                {stopOver2 ? <Content dataKey={"경유지2"} value={paymentFormat(50000)} locale={true}/> : <></>}
-                {stopOver3 ? <Content dataKey={"경유지3"} value={paymentFormat(50000)} locale={true}/> : <></>}
-                {caution ? <Content dataKey={"산간지역"} value={paymentFormat(50000)} locale={true}/> : <></>}
+            <CommonList padding={2}>
+                <CommonSmallerTitle>추가요금</CommonSmallerTitle>
+                {stopOver1 ? <Content dataKey={"경유지1"} value={paymentFormat(50000)} locale={true} /> : <></>}
+                {stopOver2 ? <Content dataKey={"경유지2"} value={paymentFormat(50000)} locale={true} /> : <></>}
+                {stopOver3 ? <Content dataKey={"경유지3"} value={paymentFormat(50000)} locale={true} /> : <></>}
+                {caution ? <Content dataKey={"산간지역"} value={paymentFormat(50000)} locale={true} /> : <></>}
                 {mountainous ? <Content dataKey={"취급주의"} value={paymentFormat(50000)} locale={true} /> : <></>}
                 <HowMuch fontSize={20} inBox={true}>{paymentFormat(additionalRate)}원</HowMuch>
-            </ContentBox>
+            </CommonList>
 
-            <HowMuch fontSize={25} topLine={true}> {isAll ? '총' : ''}  {paymentFormat(baseRate+additionalRate)}원</HowMuch>
+            <Box>
+                <HowMuch fontSize={25}> {isAll ? '총' : ''}  {paymentFormat(baseRate + additionalRate)}원<span>&nbsp;</span>{atPayment && <span>&nbsp;</span>}</HowMuch>
+
+            </Box>
+
 
         </>
     )

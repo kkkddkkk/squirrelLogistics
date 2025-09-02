@@ -81,17 +81,17 @@
   font-size: 0.8rem;
   font-weight: 600;
   margin-top: 0.5rem;
-  background: #4CAF50;
+  background: var(--success-main);
   color: white;
 }
 
 .drivable-badge.unavailable {
-  background: #f44336;
+  background: var(--error-main);
 }
 
 .request-button {
   padding: 0.5rem 1rem;
-  background: #E8A93F;
+  background: var(--warning-main);
   border: none;
   border-radius: 6px;
   font-weight: bold;

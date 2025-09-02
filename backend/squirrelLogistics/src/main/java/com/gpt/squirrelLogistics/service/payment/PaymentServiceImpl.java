@@ -177,6 +177,8 @@ public class PaymentServiceImpl implements PaymentService {
 		payment.setPayStatus(PayStatusEnum.ALLCOMPLETED);
 		payment.setPaid(LocalDateTime.now());
 		payment.setImpUid(paymentSuccessDTO.getImpUid());
+		payment.setPayMethod(paymentSuccessDTO.getPayMethod());
+		payment.setPayAmount(paymentSuccessDTO.getPayAmount());
 		paymentRepository.save(payment);
 		paymentRepository.flush();
 

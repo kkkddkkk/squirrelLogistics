@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { theme } from "../common/CommonTheme";
 
 /**
  * props
@@ -122,7 +123,7 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
                                 <span>{t.termName}</span>
                                 <span
                                     style={{
-                                        color: t.required ? "#ff9800" : "#777",
+                                        color: t.required ? theme.palette.warning.main : theme.palette.text.secondary,
                                         fontWeight: t.required ? "bold" : "normal",
                                     }}
                                 >

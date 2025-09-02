@@ -8,6 +8,7 @@ import {
     Checkbox,
     FormControlLabel,
     FormHelperText,
+    useTheme,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/user/api";
@@ -15,6 +16,7 @@ import TermsConsent from "../../components/term/TermsConsent";
 import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
 import dayjs from "dayjs";
 import PreferredTimeBlock from "../../components/Time/PreferredTimeBlock";
+import { pink } from "@mui/material/colors";
 
 const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 const DEFAULT_VEHICLES = [
@@ -23,6 +25,7 @@ const DEFAULT_VEHICLES = [
 ];
 
 export default function DriverForm() {
+    const thisTheme = useTheme();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -302,6 +305,8 @@ export default function DriverForm() {
                             onClick={checkLoginId}
                             sx={{ minWidth: 110, whiteSpace: "nowrap", height: "56px" }}
                             disabled={!form.loginId || idStatus === "checking"}
+
+                            
                         >
                             {idStatus === "checking" ? "확인중..." : "중복 확인"}
                         </Button>
@@ -356,7 +361,7 @@ export default function DriverForm() {
                         fullWidth
                         value={form.birthday}
                         onChange={onChange("birthday")}
-                        InputLabelProps={{ shrink: true }}
+                        InputLabelProps={{ shrink: true}}
                         error={!!errors.birthday}
                         helperText={errors.birthday || " "}
                         FormHelperTextProps={helperProps}

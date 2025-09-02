@@ -4,6 +4,7 @@ import { Buttons } from "../../components/history/HistoryList";
 import { getTransactionStatement } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
 import { paymentFormat } from "../../components/common/CommonForCompany";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 const TransactionStatement = () => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -65,6 +66,7 @@ const TransactionStatement = () => {
 
     return (
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
+            <LoadingComponent open={!trans} text="거래명세표를 불러오는 중..."/>
             <FormControl>
                 <TableContainer sx={{ width: "100%", display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
                     <Table ref={tableRef} sx={{

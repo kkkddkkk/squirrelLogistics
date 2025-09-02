@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { ListBoxContainer, TwoBtns } from "../common/CommonForCompany";
-import { Box, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import StarRate from "./StarRate";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ReviewModal from "./ReviewModal";
+import { TwoButtonsAtRight } from "../common/CommonButton";
+import { theme } from "../common/CommonTheme";
 
 const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope, setScope, delReviewFunc, modiReviewFunc }) => {
     const [isExpand, setIsExpand] = useState(false);
@@ -16,10 +18,10 @@ const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope
 
     return (
         <ListBoxContainer header={header} isExpand={isExpand} setIsExpand={setIsExpand}>
-            {!isExpand ?<></>
+            {!isExpand ? <></>
                 : <>
-                <input type="hidden" value={reviewId}></input>
-                    <Box margin={"3%"} width={"100%"}>
+                    <input type="hidden" value={reviewId}></input>
+                    <Box margin={"3%"} width={"94%"}>
                         <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"} >
                             <Box width={"30%"} display={"flex"} alignItems={"center"} flexWrap={"wrap"} flexDirection={"column"}>
                                 <Box
@@ -41,13 +43,18 @@ const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope
                             </Box>
                         </Box>
 
-                        <Box width={"100%"} border={"1px solid #909095"} margin={"5% 0"} />
-                        <Typography textAlign={"justify"}>
+                        {/* <Box width={"100%"} border={"1px solid #909095"} margin={"5% 0"} /> */}
+                        <Divider color={theme.palette.text.secondary}></Divider>
+                        <Typography textAlign={"justify"} margin={"5% 0"}>
                             {content}
                         </Typography>
-                        <Box width={"100%"} display={"flex"} justifyContent={"end"} marginTop={"5%"}>
-                            <TwoBtns children1={"리뷰 삭제"} func1={delReviewFunc} children2={"리뷰 수정"} func2={modiReviewFunc}></TwoBtns>
-                        </Box>
+                        <TwoButtonsAtRight
+                            leftTitle={"리뷰 삭제"}
+                            leftClickEvent={delReviewFunc}
+                            rightTitle={"리뷰 수정"}
+                            rightClickEvent={modiReviewFunc}
+                            gap={2}
+                        />
                     </Box>
                 </>
             }

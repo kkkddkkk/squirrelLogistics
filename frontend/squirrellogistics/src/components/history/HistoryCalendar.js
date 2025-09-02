@@ -1,20 +1,35 @@
 import "react-datepicker/dist/react-datepicker.css"; // 필수, 이건 컴포넌트 구조를 위한 것
 import "./HistoryCalendar.css"
-import { Box, Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
-import { TwoBtns } from "../common/CommonForCompany";
-import axios from "axios";
 import { getHistoryDate } from "../../api/company/historyApi";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import CommonList from "../common/CommonList";
+import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 
 
 const HistoryCalendar = () => {
+    const thisTheme = useTheme();
+
+    useEffect(() => {
+        const root = document.documentElement;
+        
+        root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+        root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+        root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+        root.style.setProperty("--background-default", thisTheme.palette.background.default);
+        root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+        root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+        root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+    }, [thisTheme.palette.primary.main])
+
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [historyDate, setHistoryDate] = useState([]);
-    const { moveToAnotherDay, moveToReportList, moveToReviewList } = useHistoryMove();
+    const { moveToAnotherDay } = useHistoryMove();
     const [markedDates, setMarkedDates] = useState([]);
 
     useEffect(() => {
@@ -28,22 +43,9 @@ const HistoryCalendar = () => {
     }, []);
 
     useEffect(() => {
-        if(!historyDate) return;
+        if (!historyDate) return;
         setMarkedDates(historyDate.map(d => new Date(d)));
     }, [historyDate])
-
-    const PsButton = ({ children, func, disabled }) => {
-        return (
-            <Button
-                variant="contained"
-                sx={{ width: "40%", minWidth: "110px" }}
-                onClick={func}
-                disabled={disabled}
-            >
-                {children}
-            </Button>
-        );
-    }
 
     const CalendarButton = ({ onClickFunc, disabledFunc, left }) => {
         return (
@@ -58,16 +60,13 @@ const HistoryCalendar = () => {
                     display: "flex",          // 아이콘 정렬용
                     alignItems: "center",
                     justifyContent: "center",
+                    color: thisTheme.palette.text.primary
                 }}
             >
                 {left ? <KeyboardArrowLeftIcon /> : <KeyboardArrowRightIcon />}
 
             </button>
         )
-    }
-
-    const handleClickReportList = () => {
-        moveToReportList();
     }
 
     let clickedMonth;
@@ -94,88 +93,88 @@ const HistoryCalendar = () => {
 
     return (
         <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>
-            <DatePicker
-                selected={selectedDate}
-                onChange={handleChangeDate}
-                inline
-                highlightDates={[
-                    { "react-datepicker__day--highlighted-custom": markedDates }
-                ]}
-                renderCustomHeader={({
-                    date,
-                    changeYear,
-                    changeMonth,
-                    decreaseMonth,
-                    increaseMonth,
-                    prevMonthButtonDisabled,
-                    nextMonthButtonDisabled
-                }) => (
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <CommonList>
+                <DatePicker
+                    selected={selectedDate}
+                    onChange={handleChangeDate}
+                    inline
+                    highlightDates={[
+                        { "react-datepicker__day--highlighted-custom": markedDates }
+                    ]}
+                    renderCustomHeader={({
+                        date,
+                        changeYear,
+                        changeMonth,
+                        decreaseMonth,
+                        increaseMonth,
+                        prevMonthButtonDisabled,
+                        nextMonthButtonDisabled
+                    }) => (
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
 
-                        <CalendarButton onClickFunc={decreaseMonth} disabledFunc={prevMonthButtonDisabled}
-                            left={true} />
+                            <CalendarButton onClickFunc={decreaseMonth} disabledFunc={prevMonthButtonDisabled}
+                                left={true} />
 
-                        <Box display="flex" gap={2}>
-                            {/* 연도 선택 */}
-                            <select
-                                value={date.getFullYear()}
-                                onChange={({ target: { value } }) => changeYear(Number(value))}
-                                style={{
-                                    border: "none",          // 테두리 제거
-                                    background: "transparent",
-                                    padding: "0 0.5rem",
-                                    fontSize: "1.5rem",
-                                    cursor: "pointer",
-                                    outline: "none",         // 포커스 시 테두리 제거
-                                }}
-                            >
-                                {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map((y) => (
-                                    <option
-                                        key={y}
-                                        value={y}
-                                        style={{ fontSize: "1rem" }}   // 드롭다운 메뉴 폰트 작게
-                                    >
-                                        {y}년
-                                    </option>
-                                ))}
-                            </select>
+                            <Box display="flex" gap={2}>
+                                {/* 연도 선택 */}
+                                <select
+                                    value={date.getFullYear()}
+                                    onChange={({ target: { value } }) => changeYear(Number(value))}
+                                    style={{
+                                        border: "none",          // 테두리 제거
+                                        background: "transparent",
+                                        padding: "0 0.5rem",
+                                        fontSize: "1.5rem",
+                                        cursor: "pointer",
+                                        outline: "none",        // 포커스 시 테두리 제거
+                                        color: thisTheme.palette.text.primary 
+                                    }}
+                                >
+                                    {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map((y) => (
+                                        <option
+                                            key={y}
+                                            value={y}
+                                            style={{ fontSize: "1rem" }}   // 드롭다운 메뉴 폰트 작게
+                                        >
+                                            {y}년
+                                        </option>
+                                    ))}
+                                </select>
 
-                            {/* 월 선택 */}
-                            <select
-                                value={date.getMonth()}
-                                onChange={({ target: { value } }) => changeMonth(Number(value))}
-                                style={{
-                                    border: "none",          // 테두리 제거
-                                    background: "transparent",
-                                    padding: "0 0.5rem",
-                                    fontSize: "1.5rem",
-                                    cursor: "pointer",
-                                    outline: "none",         // 포커스 시 테두리 제거
-                                }}
-                            >
-                                {[
-                                    "1월", "2월", "3월", "4월", "5월", "6월",
-                                    "7월", "8월", "9월", "10월", "11월", "12월"
-                                ].map((m, i) => (
-                                    <option
-                                        key={i}
-                                        value={i}
-                                        style={{ fontSize: "1rem" }}
-                                    >
-                                        {m}
-                                    </option>
-                                ))}
-                            </select>
-                        </Box>
+                                {/* 월 선택 */}
+                                <select
+                                    value={date.getMonth()}
+                                    onChange={({ target: { value } }) => changeMonth(Number(value))}
+                                    style={{
+                                        border: "none",          // 테두리 제거
+                                        background: "transparent",
+                                        padding: "0 0.5rem",
+                                        fontSize: "1.5rem",
+                                        cursor: "pointer",
+                                        outline: "none",         // 포커스 시 테두리 제거
+                                        color: thisTheme.palette.text.primary 
+                                    }}
+                                >
+                                    {[
+                                        "1월", "2월", "3월", "4월", "5월", "6월",
+                                        "7월", "8월", "9월", "10월", "11월", "12월"
+                                    ].map((m, i) => (
+                                        <option
+                                            key={i}
+                                            value={i}
+                                            style={{ fontSize: "1rem" }}
+                                        >
+                                            {m}
+                                        </option>
+                                    ))}
+                                </select>
+                            </Box>
 
-                        <CalendarButton onClickFunc={increaseMonth} disabledFunc={nextMonthButtonDisabled} />
-                    </div>
-                )}
-            />
-            <Box sx={{ width: "100%", display: "flex", justifyContent: "space-around", marginTop: "5%" }} >
-                <PsButton func={handleClickReportList} disabled={true}>내 신고목록</PsButton>
-                <PsButton func={moveToReviewList}>내 리뷰목록</PsButton>
-            </Box>
+                            <CalendarButton onClickFunc={increaseMonth} disabledFunc={nextMonthButtonDisabled} />
+                        </div>
+                    )}
+                />
+            </CommonList>
         </div>
     );
 };

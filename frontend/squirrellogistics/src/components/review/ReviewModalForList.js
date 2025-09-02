@@ -97,8 +97,8 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                                 borderRadius: "100%",
                                 marginBottom: "5%"
                             }}
-                            alt="OtterImg"
-                            src="https://www.otterspecialistgroup.org/osg-newsite/wp-content/uploads/2017/04/ThinkstockPhotos-827261360-2000x1200.jpg"
+                            alt="profile"
+                            src={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
                         />
                         <Typography sx={{ marginBottom: "10%" }}>{review.driverName}</Typography>
                         <Box width={"100%"} display={"flex"} justifyContent={"center"}>

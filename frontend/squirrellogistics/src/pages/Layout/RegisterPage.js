@@ -1,21 +1,28 @@
-import { useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Button, Typography, useTheme } from "@mui/material";
 import DriverForm from "./DriverForm";
 import CompanyForm from "./CompanyForm";
 import styles from "../../css/RegistForm.module.css";
 import Header from "./Header";
 import Footer from "./Footer";
+import { theme, applyThemeToCssVars, darkTheme } from "../../components/common/CommonTheme";
+import { CommonTitle } from "../../components/common/CommonText";
+import { useDarkMode } from "../../DarkModeContext";
 
 export default function RegisterPage() {
     const [type, setType] = useState("driver");
+    const { darkMode } = useDarkMode();
+    useEffect(() => {
+        applyThemeToCssVars(darkMode ? darkTheme : theme);
+        console.log(darkMode, darkTheme, theme);
+    }, [darkMode]);
+
 
     return (
         <>
             <Header />
             <Box sx={{ maxWidth: 800, mx: "auto", p: 4 }}>
-                <Typography variant="h5" align="center" gutterBottom>
-                    회원가입
-                </Typography>
+                <CommonTitle>회원가입</CommonTitle>
 
                 {/* 탭 버튼 */}
                 <Box className={styles.tabContainer}>
@@ -38,7 +45,7 @@ export default function RegisterPage() {
                     {type === "driver" ? <DriverForm /> : <CompanyForm />}
                 </Box>
             </Box>
-            <Footer/>
+            <Footer />
         </>
     );
 }

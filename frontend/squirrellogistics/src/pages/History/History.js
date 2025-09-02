@@ -1,23 +1,30 @@
 import { Box, Grid } from "@mui/material";
 import HistoryCalendar from "../../components/history/HistoryCalendar";
 import HistoryList from "../../components/history/HistoryList";
-import { Layout, NoneOfList } from "../../components/common/CommonForCompany";
+import { Layout, NoneOfList, OneBtnAtRight } from "../../components/common/CommonForCompany";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getHistoryList } from "../../api/company/historyApi";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import { CommonTitle } from "../../components/common/CommonText";
+import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
+import LoadingComponent from "../../components/common/LoadingComponent";
+import { ButtonContainer, OneButtonAtRight, Two100Buttons } from "../../components/common/CommonButton";
 
 const History = () => {
     const [params] = useSearchParams();
     const date = params.get("date");
     const [todayList, setTodayList] = useState([]);
     const [assignStatus, setAssignStatus] = useState([]);
-    const { moveToMain } = useHistoryMove();
+    const { moveToMain } = usePaymentMove();
+    const { moveBack, moveToReportList, moveToReviewList } = useHistoryMove();
     const [dataLengths, setDataLengths] = useState(0);
+    const [loading, setLoading] = useState(false);
 
 
     useEffect(() => {
+        setLoading(true);
         if (!date) return;
         const accessToken = localStorage.getItem("accessToken");
         if (!accessToken) return moveToMain();
@@ -29,7 +36,7 @@ const History = () => {
             })
             .catch(err => {
                 console.error("데이터 가져오기 실패", err);
-            });
+            }).finally(setLoading(false));
 
     }, [date]);
 
@@ -47,36 +54,68 @@ const History = () => {
         setAssignStatus(statuses); // 이제 상태는 배열
     }, [todayList]);
 
+    function cutAddress(addr) {
+        const tokens = addr.split(" "); // 띄어쓰기 단위로 나누기
+        let result = [];
+
+        for (let t of tokens) {
+            result.push(t);
+            if (t.endsWith("구")) break; // 토큰이 "구"로 끝날 때만 멈춤
+        }
+
+        return result.join(" ");
+    }
+
 
 
     return (
-        <Layout title={"이용기록"}>
-            <Box width={"80%"}>
-                <Grid container spacing={3}>
-                    <Grid size={6}>
-                        <HistoryCalendar />
-                    </Grid>
-                    <Grid size={6} height={"65vh"} overflow={"auto"}>
-                        {dataLengths === 0 ?
-                            <NoneOfList logoSrc={Logo}>아직 이용기록이 없습니다.</NoneOfList> :
-                            (todayList?.map((today, idx) => (
-                                <HistoryList
-                                    key={today.assignedId}
-                                    assignedId={today.assignedId}
-                                    start={today.startAddress.toString().slice(0, 10) + "..."}
-                                    end={today.endAddress.toString().slice(0, 10) + "..."}
-                                    assignStatus={assignStatus[idx]}
-                                    paymentStatus={today.paymentStatus}
-                                />
-                            )))
-                        }
-
-                    </Grid>
+        <>
+            <CommonTitle>이용기록</CommonTitle>
+            <Grid container spacing={3} marginBottom={10}>
+                <LoadingComponent open={loading} text="이용기록을 불러오는 중..."></LoadingComponent>
+                <Grid size={2} />
+                <Grid size={3}>
+                    <HistoryCalendar />
                 </Grid>
-            </Box>
+                <Grid size={5} height={"50vh"} overflow={"auto"} display="flex" flexDirection="column">
+                    {dataLengths === 0 ?
+                        <NoneOfList logoSrc={Logo}>아직 이용기록이 없습니다.</NoneOfList> :
+                        (todayList?.map((today, idx) => (
+                            <HistoryList
+                                key={today.assignedId}
+                                assignedId={today.assignedId}
+                                start={today.startAddress}
+                                end={today.endAddress}
+                                assignStatus={assignStatus[idx]}
+                                paymentStatus={today.paymentStatus}
+                            />
+                        )))
+                    }
 
-        </Layout>
+                </Grid>
+                <Grid size={2} />
 
+                <Grid size={2} />
+                <Grid size={3}>
+                    <ButtonContainer>
+                        <Two100Buttons
+                            leftTitle={"내 신고목록"}
+                            leftClickEvent={()=>moveToReportList()}
+
+                            rightTitle={"내 리뷰목록"}
+                            rightClickEvent={()=>moveToReviewList()}
+
+                            gap={2}
+                        />
+                    </ButtonContainer>
+                </Grid>
+                <Grid size={5}>
+                    <ButtonContainer>
+                        <OneButtonAtRight clickEvent={()=>moveBack()}>뒤로가기</OneButtonAtRight>
+                    </ButtonContainer>
+                </Grid>
+            </Grid>
+        </>
     )
 }
 

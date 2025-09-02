@@ -13,6 +13,7 @@ import {
   ToggleButton,
   Divider,
   Alert,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble"; // 카카오 대체 아이콘
@@ -25,6 +26,8 @@ import { GoogleLogin } from "@react-oauth/google";
 
 export default function LoginModal({ open, onClose, onLoggedIn }) {
   const navigate = useNavigate();
+
+  const thisTheme = useTheme();
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -135,7 +138,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
           onClick={onClose}
           sx={{ position: "absolute", top: 8, right: 8 }}
         >
-          <CloseIcon />
+          <CloseIcon sx={{color: thisTheme.palette.text.primary}}/>
         </IconButton>
 
         {/* 로고/인사 */}
@@ -166,10 +169,27 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               setRoleError("");
             }}
             fullWidth
-            color="primary"
           >
-            <ToggleButton value="DRIVER">배송기사</ToggleButton>
-            <ToggleButton value="COMPANY">기업고객</ToggleButton>
+            <ToggleButton value="DRIVER" sx={{
+              color: thisTheme.palette.text.secondary,
+              "&.Mui-selected": {
+                backgroundColor: thisTheme.palette.primary.main,
+                color: thisTheme.palette.text.primary,
+                "&:hover": {
+                  backgroundColor: thisTheme.palette.primary.dark,
+                }
+              }
+            }}>배송기사</ToggleButton>
+            <ToggleButton value="COMPANY" sx={{
+              color: thisTheme.palette.text.secondary,
+              "&.Mui-selected": {
+                backgroundColor: thisTheme.palette.primary.main,
+                color: thisTheme.palette.text.primary,
+                "&:hover": {
+                  backgroundColor: thisTheme.palette.primary.dark,
+                }
+              }
+            }}>기업고객</ToggleButton>
           </ToggleButtonGroup>
           {roleError && (
             <Alert severity="warning" sx={{ mt: 1, py: 0.5 }}>
@@ -213,6 +233,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                   <IconButton
                     onClick={() => setShowPassword((v) => !v)}
                     tabIndex={-1}
+                    sx={{color: thisTheme.palette.text.primary}}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -236,7 +257,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
             fullWidth
             type="submit"
             variant="contained"
-            sx={{ backgroundColor: "#007aff", mt: 1.5 }}
+            sx={{ mt: 1.5 }}
             disabled={loading}
           >
             {loading ? "처리 중..." : "시작하기"}
@@ -330,6 +351,6 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
           </Button>
         </Box>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

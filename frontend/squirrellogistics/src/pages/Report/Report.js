@@ -6,6 +6,10 @@ import ReportImgList from "../../components/report/ReportImgList";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
+import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
+import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
+import CommonList from "../../components/common/CommonList";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 
 const Report = () => {
@@ -13,7 +17,7 @@ const Report = () => {
     const assignedId = params.get("id");
     const reportId = params.get("rId");
     const accesstoken = localStorage.getItem('accessToken');
-    const {moveToActualCalc} = usePaymentMove();
+    const { moveToActualCalc } = usePaymentMove();
 
     const [preview, setPreview] = useState([]);
     const [report, setReport] = useState({
@@ -34,8 +38,11 @@ const Report = () => {
         fileName: []
     })
 
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-        if (reportId !== "0" && reportId !== null ) {
+        if (reportId !== "0" && reportId !== null) {
+            setLoading(true);
             axios.get(`http://localhost:8080/api/report`, {
                 params: { reportId: reportId },
                 headers: {
@@ -45,8 +52,8 @@ const Report = () => {
                 setViewReport(res.data);
                 setPreview(res.data.fileName);
             }).catch(err => {
-                console.error("등록 실패", err);
-            })
+                console.error("불러오기 실패", err);
+            }).finally(()=>setLoading(false))
         }
     }, [])
 
@@ -65,6 +72,21 @@ const Report = () => {
         const formData = new FormData();
         const reportBlob = new Blob([JSON.stringify(report)], { type: "application/json" });
         formData.append("report", reportBlob);
+
+        if (report.rTitle.length === 0) {
+            alert("제목을 입력해주세요.")
+            return;
+        }
+
+        if (report.rContent.length < 5) {
+            alert("내용을 5자 이상 입력해주세요.")
+            return;
+        }
+
+        if (!report.rCate) {
+            alert("카테고리가 지정되지 않았습니다.")
+            return;
+        }
 
         preview.forEach(file => {
             if (file.size > 1 * 1024 * 1024) {
@@ -93,10 +115,10 @@ const Report = () => {
             },
         }).then(res => {
             console.log("등록 성공", res.data);
-            if(window.opener){
-            window.close();
-            }else{
-                moveToActualCalc({assignedId, reported: true});
+            if (window.opener) {
+                window.close();
+            } else {
+                moveToActualCalc({ assignedId, reported: true });
             }
 
 
@@ -115,34 +137,38 @@ const Report = () => {
     }
 
     return (
-        <Layout title={"1:1 문의사항"} >
-            <Grid container width={"80%"} maxWidth="1000px" margin="0 auto" display={"flex"} flexWrap={"wrap"} marginBottom={"5%"}>
+        <>
+            <LoadingComponent open={loading} text="신고내역을 불러오는 중..."/>
+            <CommonTitle>1:1 문의사항</CommonTitle>
+            <Grid container maxWidth="1000px" margin="0 auto" display={"flex"} flexWrap={"wrap"} marginBottom={"5%"}>
                 <Grid item size={3} />
                 <Grid item size={6} display={"flex"} flexWrap={"wrap"} flexDirection={"column"}>
                     {reportId === "0" || reportId === null ?
                         <form onSubmit={handleSubmit}>
                             <FormControl fullWidth >
-
-                                <SubTitle>제목</SubTitle>
+                                <CommonSubTitle>제목</CommonSubTitle>
                                 <TextField fullWidth sx={{ marginBottom: "5%" }} name="rTitle" onChange={writing}></TextField>
 
-                                <SubTitle>내용</SubTitle>
+                                <CommonSubTitle>내용</CommonSubTitle>
                                 <TextField fullWidth multiline rows={10} sx={{ marginBottom: "5%" }} name="rContent" onChange={writing}></TextField>
 
                                 <Box marginBottom={"5%"} width={"100%"}>
                                     <ReportRadio cateValue={report.rCate} setCateValue={(cate) => setReport(prev => ({ ...prev, rCate: cate }))} reporter={report.reporter}></ReportRadio>
                                 </Box>
 
-                                <SubTitle>사진({preview.length}/5)</SubTitle>
+                                <CommonSubTitle>사진({preview.length}/5)</CommonSubTitle>
                                 <ReportImgList preview={preview} setPreview={setPreview} />
 
-                                <OneBigBtn margin={"10%"}>신&nbsp;&nbsp;&nbsp;고</OneBigBtn>
+                                {/* <OneBigBtn margin={"10%"}>신&nbsp;&nbsp;&nbsp;고</OneBigBtn> */}
+                                <ButtonContainer marginBottom={5}>
+                                    <One100ButtonAtCenter>신&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;고</One100ButtonAtCenter>
+                                </ButtonContainer>
                             </FormControl>
                         </form> :
                         <>
-                            <SubTitle>{viewReport.regDate.toString().slice(0, 10)}</SubTitle>
-                            <Box margin={"3%"} width={"100%"}>
-                                <SubTitle>{viewReport.rtitle} </SubTitle>
+                            <SubTitle>{viewReport.regDate.toString().slice(0, 10)} 등록</SubTitle>
+                            <CommonList padding={5}>
+                                <CommonSmallerTitle>{viewReport.rtitle}</CommonSmallerTitle>
                                 <Typography textAlign={"justify"}>{viewReport.rcontent}</Typography>
                                 {preview.length > 0 ?
                                     <Box width={"100%"} height={"200px"} display={"flex"} overflow={"auto"} margin={"5% 0"}>                                {
@@ -160,16 +186,16 @@ const Report = () => {
                                 <Box width={"100%"} border={"1px solid #909095"} margin={"5% 0"} />
                                 <SubTitle>A. {viewReport.rtitle}의 답변</SubTitle>
                                 <Typography textAlign={"justify"}>
-                                    00
+                                    아직 답변이 등록되지 않았습니다.
                                 </Typography>
-                            </Box>
+                            </CommonList>
                         </>
                     }
 
                 </Grid>
                 <Grid item size={3} />
             </Grid>
-        </Layout>
+        </>
     )
 }
 export default Report;

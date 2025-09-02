@@ -2,12 +2,22 @@
 
 /* 전체 달력 컨테이너 */
 .react-datepicker {
+    background-color: var(--background-paper) !important;
+    color: var(--text-primary) !important;
     width: 100% !important;
     max-width: 400px;
     height: 400px;
     font-size: 16px;
     border: none;
     box-shadow: none;
+}
+
+.react-datepicker,
+.react-datepicker__day,
+.react-datepicker__day-name,
+.react-datepicker__current-month,
+.react-datepicker-time__header {
+  color: var(--text-primary) !important;
 }
 
 .react-datepicker__month-container{
@@ -61,11 +71,11 @@
     transform: translateX(-50%);
     width: 6px;
     height: 6px;
-    background-color: #A20025;
+    background-color: var(--error-main);
     border-radius: 50%;
 }
 
 .react-datepicker__day--highlighted-custom.react-datepicker__day--selected {
-    background-color: #216ba5 !important; 
+    background-color: var(--primary-main) !important; 
     color: white !important;
 }

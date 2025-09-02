@@ -1,4 +1,4 @@
-import { Box, Modal, Typography } from "@mui/material";
+import { Box, Grid, Modal, Typography } from "@mui/material";
 import ActualMap from "../../components/actualCalc/ActualMap";
 import PayBox from "../../components/payment/payBox";
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -10,6 +10,11 @@ import { Layout, paymentFormat, Title } from "../../components/common/CommonForC
 import { actualCalc, getActualCalc, getEstimateCalc, trySecondPayment } from "../../api/company/actualCalcApi";
 import { useSearchParams } from "react-router-dom";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
+import LoadingComponent from '../../components/common/LoadingComponent';
+import { CommonTitle } from "../../components/common/CommonText";
+import CommonList from "../../components/common/CommonList";
+import { theme } from "../../components/common/CommonTheme";
+import { ButtonContainer, Three100Buttons } from "../../components/common/CommonButton";
 
 const ActualCalc = () => {
     const { moveToSecondPayment } = usePaymentMove();
@@ -18,7 +23,7 @@ const ActualCalc = () => {
 
     const [params] = useSearchParams();
     const assignedId = params.get("assignedId");
-    const reported = params.get("reported")==="true";
+    const reported = params.get("reported") === "true";
 
     const [modal, setModal] = useState(false);
     const [actualCalc, setActualCalc] = useState(null);
@@ -29,6 +34,7 @@ const ActualCalc = () => {
     const [additionalRateEstimate, setAdditionalRateEstimate] = useState(null);
     const [requestId, setRequestId] = useState(null);
     const [paymentId, setPaymentId] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const showTransactionStatement = () => {
         window.open(`${window.location.origin}/company/transactionStatement?paymentId=${actualCalc.paymentId}&token=${localStorage.getItem("accessToken")}`, 'name', 'width=1000, height=600');
@@ -36,6 +42,7 @@ const ActualCalc = () => {
 
 
     useEffect(() => {
+        setLoading(true);
         if (assignedId != 0) {
             getActualCalc({ assignedId })
                 .then(data => {
@@ -44,7 +51,8 @@ const ActualCalc = () => {
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
-                });
+                })
+                .finally(setLoading(false));
         }
     }, []);
 
@@ -99,19 +107,19 @@ const ActualCalc = () => {
     }
 
     return (
-        <Layout title={"실 계산"}>
-            <Box
-                sx={{
-                    width: "70%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignContent: "center"
-                }}
-            >
-                <Box sx={{ width: "40%" }}>
-                    <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap>
-                </Box>
-                <Box sx={{ width: "45%", aspectRatio: "1/1", overflow: "auto" }}>
+        <>
+            <CommonTitle>실 계산</CommonTitle>
+            {loading && (
+                <LoadingComponent open={loading} text="운송 기록을 불러오는 중..." />
+            )}
+            <Grid container spacing={3} marginBottom={10}>
+                <Grid size={2} />
+                <Grid size={5} height={"65vh"}>
+                    <CommonList>
+                        <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap>
+                    </CommonList>
+                </Grid>
+                <Grid size={3} height={"65vh"} overflow={"auto"}>
                     <PayBox
                         mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
                         weight={actualCalc ? actualCalc.weight : 0}
@@ -131,13 +139,12 @@ const ActualCalc = () => {
                             alignItems: "center",
                             marginBottom: "5%",
                             paddingBottom: "5%",
-                            borderBottom: "2px solid #909095"
+                            borderBottom: `2px solid ${theme.palette.text.secondary}`
                         }}
                     >
                         <RemoveIcon />
                         <Typography
                             sx={{
-                                color: "#2A2A2A",
                                 fontWeight: "bold",
                                 fontSize: `25px`,
                                 marginRight: '2%',
@@ -145,35 +152,35 @@ const ActualCalc = () => {
                                 alignItems: "center"
                             }}
                         >
-                            <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} color="#909095" />&nbsp;
-                            <Modal open={modal} onClose={() => setModal(false)}
-                            >
-                                <Box sx={{
-                                    height: "100vh", width: "50%", position: "fixed", bgcolor: "background.paper",
-                                    display: "flex", justifyContent: "center", flexWrap: "wrap"
-                                    , maxWidth: "500px"
-                                }}>
-                                    <Title>예상금액</Title>
-                                    <Box sx={{ width: "90%" }}>
-                                        {estimateCalc && (
-                                            <PayBox
-                                                mileage={Math.ceil(estimateCalc.distance / 1000)}
-                                                weight={estimateCalc.weight}
-                                                baseRate={baseRateEstimate}
-                                                stopOver1={estimateCalc.dropOrderNum >= 1}
-                                                stopOver2={estimateCalc.dropOrderNum >= 2}
-                                                stopOver3={estimateCalc.dropOrderNum >= 3}
-                                                caution={estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3}
-                                                mountainous={estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3}
-                                                additionalRate={additionalRateEstimate}
-                                            />
-                                        )}
-                                    </Box>
-                                </Box>
-                            </Modal>
+                            <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} sx={{ color: theme.palette.text.secondary }} />&nbsp;
                             {paymentFormat(actualCalc?.estimateFee)}원
                         </Typography>
-
+                        <Modal open={modal} onClose={() => setModal(false)}>
+                            <Box sx={{
+                                height: "100vh", width: "50%", position: "fixed", bgcolor: "background.paper",
+                                display: "flex", justifyContent: "-moz-initial", alignItems: "center", flexDirection: "column", flexWrap: "wrap"
+                                , maxWidth: "500px"
+                            }}>
+                                <Box margin={"10% 0"}>
+                                    <CommonTitle>예상 금액</CommonTitle>
+                                </Box>
+                                <Box sx={{ width: "90%" }}>
+                                    {estimateCalc && (
+                                        <PayBox
+                                            mileage={Math.ceil(estimateCalc.distance / 1000)}
+                                            weight={estimateCalc.weight}
+                                            baseRate={baseRateEstimate}
+                                            stopOver1={estimateCalc.dropOrderNum >= 1}
+                                            stopOver2={estimateCalc.dropOrderNum >= 2}
+                                            stopOver3={estimateCalc.dropOrderNum >= 3}
+                                            caution={estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3}
+                                            mountainous={estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3}
+                                            additionalRate={additionalRateEstimate}
+                                        />
+                                    )}
+                                </Box>
+                            </Box>
+                        </Modal>
                     </Box>
                     <Box
                         sx={{
@@ -185,7 +192,6 @@ const ActualCalc = () => {
                     >
                         <Typography
                             sx={{
-                                color: "#2A2A2A",
                                 fontWeight: "bold",
                                 fontSize: `25px`,
                                 marginRight: '2%'
@@ -194,15 +200,26 @@ const ActualCalc = () => {
                             총 {paymentFormat(actualCalc ? baseRate + additionalRate - actualCalc.estimateFee : 0)}원
                         </Typography>
                     </Box>
-                    <Box sx={{ width: "100%", display: "flex", justifyContent: "end", margin: "5% 0" }}>
-                        <Buttons func={() => moveToReport(assignedId)} disabled={reported}>신고{reported?"완료":""}</Buttons>
-                        <Buttons func={showTransactionStatement}>명세서</Buttons>
-                        <Buttons func={handlePayment}>정 산</Buttons>
-                    </Box>
-                </Box>
+                    <ButtonContainer marginTop={2}>
+                        <Three100Buttons
+                            leftTitle={`신고${reported ? "완료" : ""}`}
+                            leftClickEvent={() => moveToReport(assignedId)}
+                            leftDisabled={reported}
+                            leftColor={theme.palette.error.main}
 
-            </Box >
-        </Layout>
+                            middleTitle={"명세서"}
+                            middleClickEvent={showTransactionStatement}
+
+                            rightTitle={"정산"}
+                            rightClickEvent={handlePayment}
+
+                            gap={2}
+                        />
+                    </ButtonContainer>
+                </Grid>
+                <Grid size={2} />
+            </Grid>
+        </>
     )
 }
 

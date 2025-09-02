@@ -5,10 +5,8 @@ import { useSearchParams } from "react-router-dom"
 import { Layout } from "../../components/common/CommonForCompany"
 import { failureSecondPayment, successSecondPayment } from "../../api/company/paymentApi"
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import { ButtonContainer, Three100Buttons, Two100Buttons } from "../../components/common/CommonButton"
 
-// export const showReciept = () => {
-//     window.open(`${window.location.origin}/company/reciept`, 'name', 'width=500, height=600');
-// }
 
 const PaymentSuccess = () => {
     const [params] = useSearchParams();
@@ -17,7 +15,7 @@ const PaymentSuccess = () => {
     const { moveToMain, moveToHistory, moveBack } = usePaymentMove();
 
     const showReciept = () => {
-        window.open(`${window.location.origin}/company/reciept?paymentId=${paymentId}`, 'name', 'width=500, height=600');
+        window.open(`${window.location.origin}/company/reciept?paymentId=${paymentId}&token=${localStorage.getItem("accessToken")}`, 'name', 'width=500, height=600');
     }
 
     const PsButton = ({ children, func }) => {
@@ -83,25 +81,29 @@ const PaymentSuccess = () => {
                         sx={{
                             fontSize: "20px",
                             marginTop: "5%"
-                        }}                    
-                    >{success==="true"?"결제가 완료되었습니다.":"결제에 실패하였습니다."}</Typography>
-
-                    <Box
-                        sx={{
-                            width: success === "true" ? "90%" : "60%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            margin: "10% 0"
                         }}
-                    >
-                        <PsButton func={() => moveToMain()}>메인화면</PsButton>
-                        {success === "true" ? <PsButton func={() => moveToHistory()}>내 이용기록</PsButton>
-                            : <></>}
-                        {success === "true" ? <PsButton func={showReciept}>영 수 증 </PsButton>
-                            : <PsButton func={() => moveBack()}>다시 결제 </PsButton>}
-                    </Box>
+                    >{success === "true" ? "결제가 완료되었습니다." : "결제에 실패하였습니다."}</Typography>
 
+                    <ButtonContainer width={"100%"} marginTop={"5%"} marginBottom={"5%"}>
+                        {success === "true" ?
+                            <Three100Buttons
+                                leftTitle={"메인화면"}
+                                leftClickEvent={() => moveToMain()}
+                                middleTitle={"내 이용기록"}
+                                middleClickEvent={() => moveToHistory()}
+                                rightTitle={"영 수 증"}
+                                rightClickEvent={showReciept}
+                                gap={2}
+                            /> :
+                            <Two100Buttons
+                                leftTitle={"메인화면"}
+                                leftClickEvent={() => moveToMain()}
+                                rightTitle={"다시 결제"}
+                                rightClickEvent={() => moveBack()}
+                                gap={2}
+                            />
+                        }
+                    </ButtonContainer>
                 </Grid>
                 {/* <Grid size={3}/> */}
             </Grid>

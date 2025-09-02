@@ -5,6 +5,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import { theme } from "./CommonTheme";
+import CommonList from "./CommonList";
 
 
 
@@ -64,7 +65,7 @@ export const Layout = ({ title, children }) => {
     )
 }
 
-export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton }) => {
+export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton, loading }) => {
 
     const handleExpand = () => {
         if (!isExpand) setIsExpand(true);
@@ -82,71 +83,74 @@ export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand,
 
 
     return (
-        <Box
-            sx={{
-                width: "90%",
-                border: "1px solid #2A2A2A",
-                borderRadius: "5px",
-                padding: "7px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "2%",
-                flexWrap: "wrap"
+        // <Box
+        //     sx={{
+        //         width: "90%",
+        //         border: "1px solid #2A2A2A",
+        //         borderRadius: "5px",
+        //         padding: "7px",
+        //         display: "flex",
+        //         justifyContent: "space-between",
+        //         alignItems: "center",
+        //         marginBottom: "2%",
+        //         flexWrap: "wrap"
 
-            }}
-            className="listBoxContainer"
-        >
+        //     }}
+        //     className="listBoxContainer"
+        // >
+        <CommonList padding={2}>
             {/* 숨겨진 ID */}
             <input type="hidden" value={id} />
+            <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"}>
+                {/* 왼쪽: 주소 */}
+                <Typography
+                    sx={{
+                        flex: 1,
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                        margin: "2% 0",
+                        display: "inline-block"
+                    }}
+                >
+                    {header}
+                </Typography>
 
-            {/* 왼쪽: 주소 */}
-            <Typography
-                sx={{
-                    flex: 1,
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                    margin: "2% 0",
-                    display: "inline-block"
-                }}
-            >
-                {header}
-            </Typography>
+                {/* 오른쪽: 배송완료 + children */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: "6px"
+                    }}
+                >
+                    <Box sx={{ display: "flex", marginRight: "5%" }}>
+                        {useButton ?
+                            <Box
+                                sx={{
+                                    borderRadius: "5px",
+                                    border: `1px solid ${color}`,
+                                    padding: "2px 6px",
+                                    whiteSpace: "nowrap",
+                                    marginRight: "5%",
+                                    color: color
+                                }}
+                            >
+                                {assignStatus}
+                            </Box> : <></>
+                        }
 
-            {/* 오른쪽: 배송완료 + children */}
-            <Box
-                sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: "6px"
-                }}
-            >
-                <Box sx={{ display: "flex", marginRight: "5%" }}>
-                    {useButton ?
-                        <Box
-                            sx={{
-                                borderRadius: "5px",
-                                border: `1px solid ${color}`,
-                                padding: "2px 6px",
-                                whiteSpace: "nowrap",
-                                marginRight: "5%",
-                                color: color
-                            }}
-                        >
-                            {assignStatus}
-                        </Box> : <></>
-                    }
-
-                    {isExpand ?
-                        <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} /> :
-                        <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
-                    }
+                        {isExpand && !loading ?
+                            <ExpandLessIcon cursor={"pointer"} onClick={handleExpand} /> :
+                            <ExpandMoreIcon cursor={"pointer"} onClick={handleExpand} />
+                        }
+                    </Box>
                 </Box>
             </Box>
-
             {children}
-        </Box>
+        </CommonList>
+
+        // </Box>
 
     )
 }
@@ -182,12 +186,12 @@ export const AddImgInput = ({ fileRef, funcAdd, funcChange, preview }) => {//사
                 onChange={funcChange}
             />
             <ImgBox func={funcAdd} preview={preview} sx={{
-                backgroundColor: "#113F67",
+                backgroundColor: theme.palette.primary.main,
                 justifyContent: "center",
                 alignItems: "center",
             }}>
                 <AddIcon sx={{
-                    color: "#F5F7FA",
+                    color: theme.palette.background.default,
                     fontSize: 45
                 }} />
             </ImgBox>
@@ -205,8 +209,8 @@ export const AddedImg = ({ preview, idx, func }) => {//추가된 사진
             justifyContent: "end",
             alignItems: "baseline",
         }}>
-            <Box sx={{ backgroundColor: "#F5F7FA", opacity: "0.5" }}>
-                <CloseIcon onClick={(e) => func(e, idx)} sx={{ color: "#2A2A2A" }} />
+            <Box sx={{ backgroundColor: theme.palette.background.default, opacity: "0.5", aspectRatio: 1/1}}>
+                <CloseIcon onClick={(e) => func(e, idx)} sx={{ color: theme.palette.text.primary }} />
             </Box>
         </ImgBox >
     )
@@ -236,9 +240,8 @@ export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없
                 />
                 <Typography width={"100%"} textAlign={"center"}
                     fontSize={"25px"} fontWeight={"bold"}
-                    marginBottom={"10%"}
+                    marginBottom={"10%"} color={theme.palette.primary.main}
                 >{children}</Typography>
-                <OneBigBtn func={() => moveBack()}>뒤로가기</OneBigBtn>
 
             </Box>
 

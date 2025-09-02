@@ -1,4 +1,4 @@
-import { Box, Button, Checkbox, Grid, Modal, Typography } from "@mui/material";
+import { Box, Button, Checkbox, Grid, Modal, Typography, useTheme } from "@mui/material";
 import PayBox from "../../components/payment/payBox";
 import { RefundDate } from "../../components/payment/RefundDate";
 import { PayMethod } from "../../components/payment/PayMethod";
@@ -14,6 +14,10 @@ import { getEstimateCalc } from "../../api/company/actualCalcApi";
 import axios from "axios";
 import useCompanyMove from "../../hook/company/useCompanyMove";
 import { PaymentClient } from "@portone/server-sdk";
+import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
+import { theme } from "../../components/common/CommonTheme";
+import LoadingComponent from "../../components/common/LoadingComponent";
+import { ButtonContainer, One100ButtonAtCenter, OneButtonAtLeft, OneButtonAtRight, Two100Buttons } from "../../components/common/CommonButton";
 
 
 
@@ -89,11 +93,13 @@ export const Payment = () => {
 
     const { moveToSuccess, moveToHistory } = usePaymentMove();
     const { moveBack } = useCompanyMove();
+    const thisTheme = useTheme();
 
     //데이터 생성용 useState
     const [refundDate, setRefundDate] = useState('3');
     const [paymentMethod, setPaymentMethod] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     //페이지 랜더링용 useState
     const [actualCalc, setActualCalc] = useState([]);
@@ -114,6 +120,7 @@ export const Payment = () => {
 
     //랜더링용 useEffect
     useEffect(() => {
+        setLoading(true);
         if (prepaidId != 0 && prepaidId != null) {
             getSecondPayBox({ prepaidId })
                 .then(data => {
@@ -122,7 +129,7 @@ export const Payment = () => {
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
-                });
+                }).finally(() => setLoading(false));
         } else if (paymentId != 0 && paymentId != null) {
             getFirstPayBox({ paymentId })
                 .then(data => {
@@ -131,7 +138,7 @@ export const Payment = () => {
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
-                });
+                }).finally(() => setLoading(false));
         }
     }, []);
 
@@ -160,12 +167,14 @@ export const Payment = () => {
 
         if (baseRate == null || additionalRate == null) return;
         setTotalRate(baseRate + additionalRate);
+        console.log(totalRate - actualCalc.estimateFee)
     }, [baseRate, additionalRate])
 
 
     useEffect(() => {
         if (prepaidId != null || paymentIdState != null) {
             if (!modal) return;
+            setLoading(true);
             getEstimateCalc({ requestId })
                 .then(data => {
                     setEstimateCalc(data);
@@ -173,7 +182,7 @@ export const Payment = () => {
                 })
                 .catch(err => {
                     console.error("데이터 가져오기 실패", err);
-                });
+                }).finally(() => setLoading(false));
         }
     }, [modal])
 
@@ -191,26 +200,26 @@ export const Payment = () => {
             + Math.ceil(estimateCalc.weight / 1000) * 30000
         );
 
+
     }, [estimateCalc]);
 
     function handleClickPayment() {
         if (isProcessing) return;
         setIsProcessing(true);
+        setLoading(true);
         const isSecondPayment = prepaidId !== null && prepaidId !== undefined && prepaidId !== "0";
+        const paymentAmount = isSecondPayment? totalRate - actualCalc.estimateFee: actualCalc.estimateFee;
         const merchant_uid = isSecondPayment ? actualCalc.paymentId : paymentId;
 
         const { IMP } = window;
         IMP.init("imp78074867");
-
-        console.log(paymentId);
-        console.log(prepaidId);
 
         IMP.request_pay(
             {
                 pg: paymentMethod,
                 pay_method: paymentMethod,
                 merchant_uid: merchant_uid,
-                amount: totalRate || 0,
+                amount: paymentAmount,
                 name: '(주)다람쥑스프레스',
                 buyer_name: localStorage.getItem("userName"),
                 buyer_tel: '01012341234'
@@ -242,7 +251,7 @@ export const Payment = () => {
                         await successSecondPayment({
                             paymentId: actualCalc.paymentId,
                             successSecondPayment: secondPaymentBody
-                        });
+                        }).finally(() => setLoading(false));
                         moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
                         setIsProcessing(false);
                     } else { // 1차 결제
@@ -258,7 +267,7 @@ export const Payment = () => {
                         await successFirstPayment({
                             paymentId,
                             successFirstPayment: firstPaymentBody
-                        });
+                        }).finally(() => setLoading(false));
                         moveToSuccess({ state: true, paymentId: paymentId });
                         setIsProcessing(false);
                     }
@@ -277,10 +286,11 @@ export const Payment = () => {
             paymentId: actualCalc.paymentId,
             amount: actualCalc?.estimateFee ? totalRate - actualCalc.estimateFee : totalRate
         };
+        setLoading(true);
         await successRefundPayment({
             paymentId: actualCalc.paymentId,
             refundPayment: refundPaymentBody
-        });
+        }).finally(() => setLoading(false));
         console.log("환불 완료");
         moveToSuccess({ state: true, paymentId: paymentId });
     };
@@ -292,11 +302,12 @@ export const Payment = () => {
 
 
     return (
-        <Layout title={"결제"}>
-            <Grid size={12} display={"flex"} justifyContent={"center"}>
-                <Box width={"90%"} minWidth={"600px"}>
-
-                    <SubTitle>결제금액</SubTitle>
+        <>
+            <CommonTitle>결제</CommonTitle>
+            <LoadingComponent open={loading} text="결제 정보를 불러오는 중..." />
+            <Grid container>
+                <Grid size={3} />
+                <Grid size={6}>
                     {actualCalc &&
                         <PayBox
                             mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
@@ -308,6 +319,8 @@ export const Payment = () => {
                             caution={actualCalc ? actualCalc.caution : false}
                             mountainous={actualCalc ? actualCalc.mountainous : false}
                             additionalRate={actualCalc ? additionalRate : 0}
+
+                            atPayment={true}
                         />
                     }
                     {prepaidId ? <>
@@ -326,7 +339,7 @@ export const Payment = () => {
 
                             <Typography
                                 sx={{
-                                    color: "#2A2A2A",
+                                    color: thisTheme.palette.text.primary,
                                     fontWeight: "bold",
                                     fontSize: `25px`,
                                     marginRight: '2%',
@@ -334,15 +347,16 @@ export const Payment = () => {
                                     alignItems: "center"
                                 }}
                             >
-                                <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} color="#909095" />&nbsp;
-                                <Modal open={modal} onClose={() => setModal(false)}
-                                >
+                                <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} sx={{ color: theme.palette.text.secondary }} />&nbsp;
+                                <Modal open={modal} onClose={() => setModal(false)}>
                                     <Box sx={{
                                         height: "100vh", width: "50%", position: "fixed", bgcolor: "background.paper",
-                                        display: "flex", justifyContent: "center", flexWrap: "wrap"
+                                        display: "flex", justifyContent: "-moz-initial", alignItems: "center", flexDirection: "column", flexWrap: "wrap"
                                         , maxWidth: "500px"
                                     }}>
-                                        <Title>예상금액</Title>
+                                        <Box margin={"10% 0"}>
+                                            <CommonTitle>예상 금액</CommonTitle>
+                                        </Box>
                                         <Box sx={{ width: "90%" }}>
                                             {estimateCalc && (
                                                 <PayBox
@@ -373,7 +387,7 @@ export const Payment = () => {
                         >
                             <Typography
                                 sx={{
-                                    color: "#2A2A2A",
+                                    color: thisTheme.palette.text.primary,
                                     fontWeight: "bold",
                                     fontSize: `25px`,
                                     marginRight: '2%'
@@ -397,49 +411,43 @@ export const Payment = () => {
                         </> : <></>}
 
                     <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                        <Button
-                            variant="contained"
-                            sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
-                            onClick={() => moveBack()}
-                        >
-                            뒤로가기
-                        </Button>
-                        {(paymentId != 0 && paymentId != null) || ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) > 0) ?
-                            <Button
-                                variant="contained"
-                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
-                                onClick={handleClickPayment}
-                                disabled={!(checkedAll && (paymentMethod !== '')) || isProcessing === true}
-                            >
-                                결&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;제
-                            </Button> : <></>
-                        }
-                        {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) < 0) ?
-                            <Button
-                                variant="contained"
-                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
-                                onClick={handleClickRefund}
-                            >
-                                환불신청
-                            </Button> : <></>
-                        }
-                        {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) === 0) ?
-                            <Button
-                                variant="contained"
-                                sx={{ width: "40%", height: "50px", margin: "5%", fontSize: "25px" }}
-                                onClick={handleClickComplete}
-                            >
-                                정산완료
-                            </Button> : <></>
-                        }
+                        <ButtonContainer width={"80%"} marginTop={"5%"} marginBottom={"5%"}>
+                            {(paymentId != 0 && paymentId != null) || ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) > 0) ?
+                                <Two100Buttons
+                                    leftTitle={"뒤로가기"}
+                                    leftClickEvent={() => moveBack()}
+                                    leftColor={theme.palette.text.secondary}
+
+                                    rightTitle={"결제"}
+                                    rightClickEvent={handleClickPayment}
+                                    rightDisabled={!(checkedAll && (paymentMethod !== '')) || isProcessing === true}
+
+                                    gap={2}
+                                /> : <></>
+                            }
+                            {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) < 0) ?
+                                <Two100Buttons
+                                    leftTitle={"뒤로가기"}
+                                    leftClickEvent={() => moveBack()}
+                                    leftColor={theme.palette.text.secondary}
+
+                                    rightTitle={"환불신청"}
+                                    rightClickEvent={handleClickRefund}
+
+                                    gap={2}
+                                /> : <></>
+                            }
+                            {(prepaidId != 0 && prepaidId != null) && ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) === 0) ?
+                                <One100ButtonAtCenter clickEvent={handleClickComplete}>정산완료</One100ButtonAtCenter>
+                                : <></>
+                            }
+                        </ButtonContainer>
                     </Box>
 
-                </Box>
+                </Grid>
+                <Grid size={3} />
             </Grid>
-        </Layout>
-
-
-
+        </>
     );
 
 }

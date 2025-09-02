@@ -278,9 +278,9 @@
 }
 
 .delivery-table th {
-  background-color: #f8f9fa;
+  /* background-color: #f8f9fa; */
   font-weight: bold;
-  color: #495057;
+  /* color: #495057; */
 }
 
 .delivery-table td {
