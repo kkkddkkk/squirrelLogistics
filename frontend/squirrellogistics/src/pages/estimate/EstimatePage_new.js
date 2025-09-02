@@ -1,10 +1,16 @@
 import EstimateForm_new from "../../components/estimate/EstimateForm_new";
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 
 const EstimatePage_new = () => {
   return (
-    <div className="page-wrap">
-      <EstimateForm_new />
-    </div>
+    <>
+      <Header />
+      <div className="page-wrap">
+        <EstimateForm_new />
+      </div>
+      <Footer />
+    </>
   );
 };
 

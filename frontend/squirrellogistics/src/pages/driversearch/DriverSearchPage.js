@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DriverSearchForm from "../../components/driversearch/DriverSearchForm";
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 
 const DriverSearchPage = () => {
   const navigate = useNavigate();
@@ -26,9 +28,13 @@ const DriverSearchPage = () => {
   }, [navigate]);
 
   return (
-    <div className="driversearch-page">
-      <DriverSearchForm />
-    </div>
+    <>
+      <Header />
+      <div className="driversearch-page">
+        <DriverSearchForm />
+      </div>
+      <Footer />
+    </>
   );
 };
 
