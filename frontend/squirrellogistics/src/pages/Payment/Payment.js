@@ -283,7 +283,7 @@ export const Payment = () => {
             setTimeout(async () => {
 
                 // 가상의 imp_uid 생성 (실제로는 토스페이에서 받아야 함)
-
+                const virtualImpUid = `imp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 await handleTossPaySuccess(virtualImpUid);
             }, 3000);
         }

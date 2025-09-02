@@ -432,6 +432,33 @@ const EstimateForm_new = () => {
 
   // 기사님 검색
   const goDriverSearch = () => {
+
+    // 1. 거리 및 금액 계산 확인
+    if (!hasCalculated || price <= 0) {
+      alert("먼저 집하지/목적지를 입력하고 거리 및 금액 계산을 해주세요.");
+      return;
+    }
+
+    // 2. 차량종류 선택 확인
+    if (!vehicleTypeId) {
+      alert("차량종류를 선택해주세요.");
+      return;
+    }
+
+    // 3. 화물 정보 확인 (최소 하나의 화물은 필요)
+    const hasAnyCargo = waypoints.some(w => w.cargo) || finalCargo;
+    if (!hasAnyCargo) {
+      alert("최소 하나의 화물 정보를 입력해주세요.");
+      return;
+    }
+
+    // 4. 배송 희망 날짜 확인
+    if (!startDate || !endDate) {
+      alert("배송 희망 날짜를 입력해주세요.");
+      return;
+    }
+
+
     const payload = buildPayload(null); // { request, payment }
 
     //세션스토리지에 저장
@@ -445,8 +472,28 @@ const EstimateForm_new = () => {
 
   // 요청 확정 후 결제 페이지 이동
   const handleConfirmPayment = async () => {
+    // 1. 거리 및 금액 계산 확인
     if (!hasCalculated || price <= 0) {
       alert("먼저 집하지/목적지를 입력하고 거리 및 금액 계산을 해주세요.");
+      return;
+    }
+
+    // 2. 차량종류 선택 확인
+    if (!vehicleTypeId) {
+      alert("차량종류를 선택해주세요.");
+      return;
+    }
+
+    // 3. 화물 정보 확인 (최소 하나의 화물은 필요)
+    const hasAnyCargo = waypoints.some(w => w.cargo) || finalCargo;
+    if (!hasAnyCargo) {
+      alert("최소 하나의 화물 정보를 입력해주세요.");
+      return;
+    }
+
+    // 4. 배송 희망 날짜 확인
+    if (!startDate || !endDate) {
+      alert("배송 희망 날짜를 입력해주세요.");
       return;
     }
 
