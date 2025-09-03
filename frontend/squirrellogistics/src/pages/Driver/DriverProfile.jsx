@@ -245,9 +245,7 @@ const DriverProfile = () => {
   const handleEmergencyReport = (reportData) => {
     console.log("긴급 신고 데이터:", reportData);
     // TODO: 실제 신고 API 호출
-    alert(
-      `긴급 신고가 접수되었습니다.\n카테고리: ${reportData.category}\n내용: ${reportData.description}`
-    );
+    alert("긴급 신고가 접수되었습니다.");
 
     // 신고 리스트 페이지로 이동
     const driverId = localStorage.getItem("userId") || "1";
