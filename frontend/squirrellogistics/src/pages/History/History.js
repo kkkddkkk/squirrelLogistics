@@ -39,7 +39,7 @@ const History = () => {
             })
             .catch(err => {
                 console.error("데이터 가져오기 실패", err);
-            }).finally(()=>setLoading(false));
+            }).finally(() => setLoading(false));
 
     }, [date]);
 
@@ -51,7 +51,7 @@ const History = () => {
             if (today.assignmentStatus === "COMPLETED" && today.paymentStatus === "ALLCOMPLETED") return "배송완료";
             if (today.assignmentStatus === "COMPLETED" && today.paymentStatus !== "ALLCOMPLETED") return "미정산";
             if (today.assignmentStatus === "CANCELED" || today.assignmentStatus === "FAILED") return "취소";
-            if (today.assignmentStatus === "UNKNOWN") return "";
+            if (today.assignmentStatus === "UNKNOWN") return "요청됨";
             return "";
         });
         setAssignStatus(statuses); // 이제 상태는 배열
@@ -82,7 +82,7 @@ const History = () => {
                 </Grid>
                 <Grid size={5} height={"50vh"} overflow={"auto"} display="flex" flexDirection="column">
                     {dataLengths === 0 ?
-                        <NoneOfList logoSrc={thisTheme.palette.mode==="light"?Logo:darkLogo}>아직 이용기록이 없습니다.</NoneOfList> :
+                        <NoneOfList logoSrc={thisTheme.palette.mode === "light" ? Logo : darkLogo}>아직 이용기록이 없습니다.</NoneOfList> :
                         (todayList?.map((today, idx) => (
                             <HistoryList
                                 key={today.assignedId}
@@ -103,10 +103,10 @@ const History = () => {
                     <ButtonContainer>
                         <Two100Buttons
                             leftTitle={"내 신고목록"}
-                            leftClickEvent={()=>moveToReportList()}
+                            leftClickEvent={() => moveToReportList()}
 
                             rightTitle={"내 리뷰목록"}
-                            rightClickEvent={()=>moveToReviewList()}
+                            rightClickEvent={() => moveToReviewList()}
 
                             gap={2}
                         />
@@ -114,7 +114,7 @@ const History = () => {
                 </Grid>
                 <Grid size={5}>
                     <ButtonContainer>
-                        <OneButtonAtRight clickEvent={()=>moveBack()}>뒤로가기</OneButtonAtRight>
+                        <OneButtonAtRight clickEvent={() => moveBack()}>뒤로가기</OneButtonAtRight>
                     </ButtonContainer>
                 </Grid>
             </Grid>

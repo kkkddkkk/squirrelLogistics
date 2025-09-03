@@ -138,3 +138,24 @@ export const getTransactionStatement = async ({ paymentId, options = {} }) => {
   }
 };
 
+
+//작성자: 고은설
+//기능: 추가 결제금 없는 건에 대하여 단순 2차 결제 완료 처리.
+export const fetchCompleteWithoutPayment = async ({ paymentId, options = {} }) => {
+  try {
+    const res = await axios.put(
+      `${API_SERVER_HOST}/second/${paymentId}/complete-without-payment`,
+      null,
+      {
+        params: { ...options },
+        headers: {
+          Authorization: `Bearer ${accesstoken}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (err) {
+    console.error("[WARN!]: ", err);
+    //throw err; <-- 필요시 프론트에서 throw할 수 있습니다!
+  }
+};

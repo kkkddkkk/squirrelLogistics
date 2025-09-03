@@ -272,7 +272,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
                 })
               }
             >
-              다음 하차지 건너뛰기
+              하차지 건너뛰기
             </Button>
             <Button
               variant={thisTheme.palette.mode==="light"?"outlined":"contained"}

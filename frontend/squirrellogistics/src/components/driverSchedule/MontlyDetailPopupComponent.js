@@ -60,7 +60,7 @@ export default function MontlyDetailPopupComponent(
     }
     // 미완료/예약: 요청 상세(변경/수락/취소 등) 페이지로
     navigate(`/driver/detail/${requestId}`,
-        { state: { ...data, isSchedule: true } });
+      { state: { ...data, isSchedule: true } });
   };
 
 
@@ -78,12 +78,12 @@ export default function MontlyDetailPopupComponent(
               color: thisTheme.palette.text.primary,
             }}
           >
-            운송 예약 정보
+            {completed ? "운송 완료 정보" : "운송 예약 정보"}
           </Typography>
           <IconButton
             aria-label="close"
             onClick={onClose}
-            sx={{ position: "absolute", right: 8, top: 8, color: thisTheme.palette.text.secondary}}
+            sx={{ position: "absolute", right: 8, top: 8, color: thisTheme.palette.text.secondary }}
           >
             <CloseIcon />
           </IconButton>
@@ -181,10 +181,10 @@ export default function MontlyDetailPopupComponent(
                     variant="contained"
                     size="large"
                     onClick={goDetailPage}
-                    disabled={loading || !requestId} // 로딩 중/필수키 없음 → 비활성화
-                    sx={{ borderRadius: 2, width: "100%"}}
+                    disabled={loading || !requestId} 
+                    sx={{ borderRadius: 2, width: "100%" }}
                   >
-                    예약된 운송 정보 자세히 보기
+                    {completed ? "완료된 운송 정보 자세히 보기" : "예약된 운송 정보 자세히 보기"}
                   </Button>
                 </DialogActions>
               </Grid>

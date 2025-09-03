@@ -31,3 +31,9 @@ export const getReportView = async ({ reportId, options = {} }) => {
     console.error(err); // res.data.err → err 자체에 에러 정보 있음
   }
 };
+
+//작성자: 고은설.
+//기능: 긴급 신고 등 운전자단 신고 삽입 요청.
+export const registerReport = async ({ }) => {
+
+};

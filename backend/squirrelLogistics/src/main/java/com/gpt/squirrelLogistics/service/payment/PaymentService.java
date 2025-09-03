@@ -1,6 +1,5 @@
 package com.gpt.squirrelLogistics.service.payment;
 
-
 import org.springframework.stereotype.Service;
 
 import com.gpt.squirrelLogistics.config.PaymentConfig;
@@ -15,47 +14,52 @@ import com.gpt.squirrelLogistics.dto.payment.RefundDTO;
 import com.gpt.squirrelLogistics.dto.payment.TransactionStatementDTO;
 import com.gpt.squirrelLogistics.dto.payment.TryPaymentDTO;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public interface PaymentService {
 	Long registerPayment(PaymentDTO paymentDTO);
-	
+
 	PaymentDTO getPayment(Long paymentId);
-	
-	//1차결제 시도
+
+	// 1차결제 시도
 	Long tryFirstPayment(PaymentDTO paymentDTO);
-	
-	//1차 결제 페이지 랜더링
+
+	// 1차 결제 페이지 랜더링
 	PayBoxDTO getFirstPayBox(Long paymentId);
-	
-	//2차결제 시도
+
+	// 2차결제 시도
 	Long trySecondPayment(PaymentDTO paymentDTO);
-	
-	//2차 결제 페이지 랜더링
+
+	// 2차 결제 페이지 랜더링
 	PayBoxDTO getSecondPayBox(Long prepaid);
-	
-	//1차 결제 성공 시
+
+	// 1차 결제 성공 시
 	void successFirstPayment(PaymentSuccessDTO paymentSuccessDTO);
-	
-	//2차 결제 생공 시
+
+	// 2차 결제 생공 시
 	void successSecondPayment(PaymentSuccessDTO paymentSuccessDTO);
-	
-	//2차 결제 환불 시
+
+	// 2차 결제 환불 시
 	void successRefundPayment(RefundDTO refundDTO);
-	
-	//2차 결제 실패 시
+
+	// 2차 결제 실패 시
 	void failureSecondPayment(PaymentFailureDTO paymentFailureDTO);
-	
-	//결제 방법에 따른 계정 정보 검증
+
+	// 결제 방법에 따른 계정 정보 검증
 	PaymentConfig.PaymentAccountInfo getPaymentAccountInfo(String payMethod);
-	
-	//결제 검증을 위한 로깅 및 계정 정보 확인
+
+	// 결제 검증을 위한 로깅 및 계정 정보 확인
 	void logPaymentAccountInfo(String payMethod, String impUid);
-	
-	
-	//영수증 랜더링
+
+	// 영수증 랜더링
 	RecieptDTO getReciept(Long paymentId);
-	
-	//거래명세서 랜더링
+
+	// 거래명세서 랜더링
 	TransactionStatementDTO getTransaction(Long paymentId);
+
+	// 작성자: 고은설.
+	// 기능: 추가 결제금이 0원인 건에 한하여 결제 방법 확인 없이 ALLCOMPLETED 상태로 즉시 바끔.
+	public Long completeWithoutPayment(Long paymentId);
 
 }

@@ -21,75 +21,30 @@ import LoadingComponent from "../common/LoadingComponent";
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
 
-const makeFallbackPage = (driverId, size) => {
-  const content = [
-    {
-      reviewId: 101,
-      rating: 4,
-      reason:
-        "유리 화병 80개 모두 손상 없이 배송 완료 확인했습니다. 사전에 전화로 주의사항 확인해주셔서 좋았어요. 감사합니다!",
-      regDate: "2025-08-01 10:12:00",
-      modiDate: null,
-      stateEnum: "SUBMITTED",
-      assignedId: 9001,
-      driverId: Number(driverId) || 1,
-      driverName: "샘플 기사",
-      companyId: 1,
-    },
-    {
-      reviewId: 102,
-      rating: 5,
-      reason: "정확하고 친절한 응대 감사합니다. 다음에도 부탁드릴게요.",
-      regDate: "2025-07-28 09:00:00",
-      modiDate: null,
-      stateEnum: "SUBMITTED",
-      assignedId: 9002,
-      driverId: Number(driverId) || 1,
-      driverName: "샘플 기사",
-      companyId: 2,
-    },
-  ];
-
-  return {
-    content,
-    number: 0, // 현재 페이지(0-based)
-    size, // 페이지 크기
-    totalElements: content.length,
-    totalPages: 1,
-    first: true,
-    last: true,
-    empty: content.length === 0,
-  };
-};
 
 export default function ReviewListComponent() {
-  const { driverId } = useParams();
   const [sort, setSort] = useState("latest");
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(5);
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [expanded, setExpanded] = useState(() => new Set());
 
   //DB데이터 연동.
   useEffect(() => {
-    if (!driverId) return;
     const ctrl = new AbortController();
     (async () => {
       try {
         setLoading(true);
         setErr("");
         let res = await fetchDriverReviews(
-          driverId,
           { page: page - 1, size },
           { signal: ctrl.signal }
         );
 
-        // content가 비었으면 더미 페이지 세팅
-        if (!res || !Array.isArray(res.content) || res.content.length === 0) {
-          res = makeFallbackPage(driverId, size);
-        }
+        console.log("review: " + res);
+    
         setData(res);
         setExpanded(new Set());
       } catch (e) {
@@ -99,7 +54,7 @@ export default function ReviewListComponent() {
       }
     })();
     return () => ctrl.abort();
-  }, [driverId, page, size]);
+  }, [page, size]);
 
   const content = useMemo(() => {
     const arr = data?.content ?? [];
@@ -134,6 +89,7 @@ export default function ReviewListComponent() {
     });
   };
 
+  console.log("loading: " + loading);
   return (
     <Box
       sx={{
@@ -325,7 +281,7 @@ export default function ReviewListComponent() {
       )}
 
       {/* 로딩 모달 */}
-      {loading && <LoadingComponent />}
+      {loading && <LoadingComponent open={loading} text="리뷰 목록을 불러오는 중..."/>}
     </Box>
   );
 }

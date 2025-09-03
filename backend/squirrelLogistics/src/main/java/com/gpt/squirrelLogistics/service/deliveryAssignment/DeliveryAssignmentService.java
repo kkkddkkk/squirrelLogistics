@@ -892,17 +892,25 @@ public class DeliveryAssignmentService {
 	    }
 	    
 		// 배정 삭제
-		deliveryAssignmentRepository.delete(assignment);
+		//deliveryAssignmentRepository.delete(assignment);
+		
+	    //삭제 대신 상태 변경.
+		assignment.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.CANCELED);
+		assignment.setCancelledAt(LocalDateTime.now());
 
 		// 상태 전이: ASSIGNED -> REGISTERED
-		int updated = requestRepository.turnCanceledReservationIntoRegistered(request.getRequestId());
-
-		if (updated == 0) {
-			// 이미 다른 상태인 경우 등
+		// int updated = requestRepository.turnCanceledReservationIntoRegistered(request.getRequestId());
+		
+		
+		// 단순 상태 전이에서 조건 확인 후 요청 상태 되돌리기 (PROPOSED → REGISTERED).
+		if (request.getStatus() == com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.ASSIGNED) {
+			request.setStatus(com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED);
+		}
+		else {
 			return Map.of("FAILED", "INVALID_STATUS");
 		}
 
-		return Map.of("SUCCESS", updated);
+		return Map.of("SUCCESS", request.getRequestId());
 
 	}
 

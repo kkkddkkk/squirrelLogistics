@@ -201,7 +201,7 @@ const RequestDetailComponent = () => {
 
     await runWithLoading(async () => {
       const res = await cancelDeliveryReservation(requestId);
-      if (res?.SUCCESS || res === 1 || res === true) {
+      if (typeof res === 'number' && Number.isFinite(res) || res?.SUCCESS || res === 1 || res === true) {
         setProposed(false);
         setPopupTitle("예약 취소 완료");
         setPopupContent("예약된 기사님 운송 일정이 성공적으로 취소되었습니다.");

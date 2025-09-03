@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingDTO;
 import com.gpt.squirrelLogistics.dto.driverSchedule.DriverScheduleDTO;
 import com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum;
@@ -58,20 +57,18 @@ public class DeliveryAssignmentController {
 		}
 
 		Long driverId = ((AuthOutcome.Success) outcome).driverId();
-		log.info("driverId={}",driverId);
+		log.info("driverId={}", driverId);
 		DeliveryAssignmentTrackingDTO result = assignmentService.getTodayAssignments(driverId);
-		
-		
+
 		return ResponseEntity.ok(result);
 	}
 
 	// 현재 진행중 운송의 상태값 변경 요청.
 	@PostMapping("/{assignedId}/action")
 	public ResponseEntity<?> applyDriverAction(
-			@RequestHeader(value = "Authorization", required = false) String authHeader, 
-	        @PathVariable("assignedId") Long assignedId,   
-	        @RequestParam("action") DriverActionEnum action, 
-	        @RequestParam(name = "detour", defaultValue = "false") boolean detour, 
+			@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@PathVariable("assignedId") Long assignedId, @RequestParam("action") DriverActionEnum action,
+			@RequestParam(name = "detour", defaultValue = "false") boolean detour,
 
 			@RequestBody(required = false) Map<String, Object> extras) {
 
@@ -89,9 +86,8 @@ public class DeliveryAssignmentController {
 	// 년/월에 소속된 일정 정보 가져오기.
 	@GetMapping("/schedules")
 	public ResponseEntity<?> getMonthlyScheduleByToken(
-	        @RequestHeader(value = "Authorization", required = false) String authHeader,
-	        @RequestParam(name = "year") int year,
-	        @RequestParam(name = "month") int month) {
+			@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@RequestParam(name = "year") int year, @RequestParam(name = "month") int month) {
 
 		AuthOutcome outcome = tokenValidService.resolve(authHeader);
 		if (outcome instanceof AuthOutcome.Failure f)
@@ -105,15 +101,17 @@ public class DeliveryAssignmentController {
 	// 해당 기사의 예약된 운송 기록 정보 상세 조회.
 	@GetMapping("/reservations/{requestId}")
 	public ResponseEntity<?> readFullReserveByToken(
-	        @RequestHeader(value = "Authorization", required = false) String authHeader,
-	        @PathVariable("requestId") Long requestId) {
+			@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@PathVariable("requestId") Long requestId) {
 
-	    AuthOutcome outcome = tokenValidService.resolve(authHeader);
-	    if (outcome instanceof AuthOutcome.Failure f) return toError(f);
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
 
-	    // 필요하면 여기서 driverId와 예약 소유권 검증 추가
-	    return ResponseEntity.ok(requestService.readFull(requestId));
+		// 필요하면 여기서 driverId와 예약 소유권 검증 추가
+		return ResponseEntity.ok(requestService.readFull(requestId));
 	}
+
 	// 해당 기사의 완료한 운송 기록 정보 상세 조회.
 	@GetMapping("/history/{assignedId}")
 	public ResponseEntity<?> readFullHistory(
@@ -153,7 +151,7 @@ public class DeliveryAssignmentController {
 			return toError(f);
 
 		Long driverId = ((AuthOutcome.Success) outcome).driverId();
-		
+
 		Pageable pageable = PageRequest.of(page, size, Sort.by("regDate").descending());
 		return ResponseEntity.ok(reviewService.getSubmittedReviews(driverId, pageable));
 	}
@@ -162,39 +160,38 @@ public class DeliveryAssignmentController {
 	private ResponseEntity<ErrorResponse> toError(AuthOutcome.Failure f) {
 		return ResponseEntity.status(f.status()).body(ErrorResponse.of(f.code().name(), f.message()));
 	}
-	
-	
+
 	@PutMapping("/cancel/{requestId}")
 	public ResponseEntity<?> cancelReservation(
 			@RequestHeader(value = "Authorization", required = false) String authHeader,
-			@PathVariable("requestId") Long requestId){
-		
+			@PathVariable("requestId") Long requestId) {
+
 		AuthOutcome outcome = tokenValidService.resolve(authHeader);
-	    if (outcome instanceof AuthOutcome.Failure f) {
-	        return toError(f);
-	    }
+		if (outcome instanceof AuthOutcome.Failure f) {
+			return toError(f);
+		}
 
-	    // 토큰에서 driverId 꺼내기
-	    Long driverId = ((AuthOutcome.Success) outcome).driverId();
-	    
-	    Map<String, Object> result = assignmentService.cancelDeliveryReservation(requestId, driverId);
+		// 토큰에서 driverId 꺼내기
+		Long driverId = ((AuthOutcome.Success) outcome).driverId();
 
-	    if (result.containsKey("FAILED")) {
-	        String code = (String) result.get("FAILED");
-	        // 상황에 따라 status code 맵핑
-	        if ("FORBIDDEN".equals(code)) {
-	            return ResponseEntity.status(403).body(ErrorResponse.of(code, "본인 배정만 취소할 수 있습니다."));
-	        }
-	        if ("ASSIGNMENT_NOT_FOUND".equals(code) || "REQUEST_NOT_FOUND".equals(code)) {
-	            return ResponseEntity.status(404).body(ErrorResponse.of(code, "해당 리소스를 찾을 수 없습니다."));
-	        }
-	        if ("INVALID_STATUS".equals(code)) {
-	            return ResponseEntity.status(409).body(ErrorResponse.of(code, "요청 상태가 예약취소 가능 상태가 아닙니다."));
-	        }
-	        return ResponseEntity.badRequest().body(ErrorResponse.of(code, "처리할 수 없습니다."));
-	    }
+		Map<String, Object> result = assignmentService.cancelDeliveryReservation(requestId, driverId);
 
-	    return ResponseEntity.ok(result.get("SUCCESS"));
-		
+		if (result.containsKey("FAILED")) {
+			String code = (String) result.get("FAILED");
+			// 상황에 따라 status code 맵핑
+			if ("FORBIDDEN".equals(code)) {
+				return ResponseEntity.status(403).body(ErrorResponse.of(code, "본인 배정만 취소할 수 있습니다."));
+			}
+			if ("ASSIGNMENT_NOT_FOUND".equals(code) || "REQUEST_NOT_FOUND".equals(code)) {
+				return ResponseEntity.status(404).body(ErrorResponse.of(code, "해당 리소스를 찾을 수 없습니다."));
+			}
+			if ("INVALID_STATUS".equals(code)) {
+				return ResponseEntity.status(409).body(ErrorResponse.of(code, "요청 상태가 예약취소 가능 상태가 아닙니다."));
+			}
+			return ResponseEntity.badRequest().body(ErrorResponse.of(code, "처리할 수 없습니다."));
+		}
+
+		return ResponseEntity.ok(result.get("SUCCESS"));
+
 	}
 }

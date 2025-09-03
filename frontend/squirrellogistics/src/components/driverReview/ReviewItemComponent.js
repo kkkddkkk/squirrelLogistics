@@ -71,10 +71,6 @@ export default function ReviewItem({ review, expanded, onToggle }) {
                     <Typography sx={{ ...textSx, color: '#6b7785' }} mt={1}>
                         운송 기록 ID: {review.assignedId ?? '-'}
                     </Typography>
-                    <Typography sx={{ ...textSx, color: '#6b7785' }} mt={0.5}>
-                        회사 ID: {review.companyId ?? '-'}
-                    </Typography>
-                    {/* 필요 시 driverName 등 더 표시 */}
                 </Box>
             </Collapse>
         </Paper>

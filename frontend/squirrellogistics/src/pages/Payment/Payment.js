@@ -6,7 +6,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { Layout, paymentFormat, SubTitle, Title } from "../../components/common/CommonForCompany";
-import { cancelPayment, getFirstPayBox, getSecondPayBox, refund, requestRefund, successFirstPayment, successRefundPayment, successSecondPayment } from "../../api/company/paymentApi";
+import { cancelPayment, fetchCompleteWithoutPayment, getFirstPayBox, getSecondPayBox, refund, requestRefund, successFirstPayment, successRefundPayment, successSecondPayment } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
 import RemoveIcon from '@mui/icons-material/Remove';
 import HelpIcon from '@mui/icons-material/Help';
@@ -395,9 +395,21 @@ export const Payment = () => {
     };
 
     //정산금액 0원일 경우
-    const handleClickComplete = () => {
-        moveToHistory();
-    }
+    // 수정자: 고은설
+    // 기능: 정산금액 0원일 경우 => 백엔드 completeWithoutPayment호출, 그간 로딩 화면 출력.
+    const handleClickComplete = async () => {
+        try {
+            setLoading(true);
+            await fetchCompleteWithoutPayment({
+                paymentId: actualCalc.paymentId,
+            });
+            moveToHistory();
+        } catch (err) {
+            console.error("완료 실패:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     return (
@@ -495,7 +507,7 @@ export const Payment = () => {
                                 총 {paymentFormat(actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate)}원
                             </Typography>
                         </Box>
-                    </> : 
+                    </> :
                         <Box marginBottom={5}>
                             <CommonSubTitle>환불일자</CommonSubTitle>
                             <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />

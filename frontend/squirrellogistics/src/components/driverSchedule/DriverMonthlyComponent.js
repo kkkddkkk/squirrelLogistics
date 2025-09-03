@@ -337,7 +337,7 @@ export default function DriverMonthlyComponent() {
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <Box width={"100%"} justifyItems={"center"} sx={{ backgroundColor: thisTheme.palette.background.default , pb: 4,}}>
+    <Box width={"100%"} justifyItems={"center"} sx={{ backgroundColor: thisTheme.palette.background.default, pb: 4, }}>
       <GlobalStyles
         styles={{
           ".rbc-calendar": {
@@ -361,14 +361,15 @@ export default function DriverMonthlyComponent() {
             color: thisTheme.palette.text.primary,
           },
           ".rbc-date-cell": { padding: 8 },
-          ".rbc-off-range-bg": { 
-            background: thisTheme.palette.mode==="light"?
-            lighten(thisTheme.palette.text.secondary, 0.9)
-            :darken(thisTheme.palette.text.secondary, 0.5) 
+          ".rbc-off-range-bg": {
+            background: thisTheme.palette.mode === "light" ?
+              lighten(thisTheme.palette.text.secondary, 0.9)
+              : darken(thisTheme.palette.text.secondary, 0.5)
           },
           ".rbc-event, .rbc-event-allday": {
             boxShadow: "none",
             border: "none",
+            fontSize: '10px',
             borderRadius: 999,
             padding: 0,
             height: 24,
@@ -383,6 +384,42 @@ export default function DriverMonthlyComponent() {
           },
           ".rbc-month-view .rbc-header + .rbc-header": {
             borderLeft: `1px solid ${thisTheme.palette.text.secondary} !important`,
+          },
+          //+더보기 버튼 스타일 지정 영역.
+          ".rbc-show-more": {
+            margin: "4px 0px",
+            padding: "2px 8px",
+            borderRadius: 999,
+            fontWeight: 700,
+            fontSize: '10px',
+            lineHeight: 1.2,
+            background: thisTheme.palette.background.paper,
+            color: thisTheme.palette.primary.main,
+            border: `1px solid ${thisTheme.palette.primary.main}`,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+            cursor: "pointer",
+          },
+          ".rbc-overlay": {
+            background: thisTheme.palette.background.default,   
+            color: thisTheme.palette.text.primary,
+            border: `1px solid ${thisTheme.palette.divider}`,
+            borderRadius: 12,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
+            padding: 8,
+            zIndex: 2, 
+          },
+          ".rbc-overlay-header": {
+            fontWeight: 700,
+            padding: "6px 8px 8px",
+            borderBottom: `none`,
+            textAlign: 'center',
+            marginBottom: 6,
+          },
+          ".rbc-overlay .rbc-event": {
+            borderRadius: 8,
+            height: 28,
+            alignItems: "center",
+            justifyContent: "center",
           },
         }}
       />

@@ -350,29 +350,26 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	// 작성자: 고은설.
 	// 기능: 특정 기사에게 할당된 해당 연·월 운송 일정(하루 1건: assignedAt 최솟값만) 조회
 	@Query("""
-			select new com.gpt.squirrelLogistics.dto.driverSchedule.DriverScheduleDTO(
-			  a.assignedId,
-			  r.requestId,
-			  case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED then true else false end,
-			  case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.FAILED then true else false end,
-			  r.wantToStart,
-			  r.wantToEnd
-			)
-			from DeliveryAssignment a
-			join a.deliveryRequest r
-			where a.driver.driverId = :driverId
-			  and r.wantToStart >= :monthStart
-			  and r.wantToStart <  :monthEnd
-			  and a.assignedAt = (
-			    select min(a2.assignedAt)
-			    from DeliveryAssignment a2
-			    join a2.deliveryRequest r2
-			    where a2.driver.driverId = a.driver.driverId
-			      and r2.wantToStart >= :monthStart
-			      and r2.wantToStart <  :monthEnd
-			      and function('date', r2.wantToStart) = function('date', r.wantToStart)
+			  select new com.gpt.squirrelLogistics.dto.driverSchedule.DriverScheduleDTO(
+			    a.assignedId,
+			    r.requestId,
+			    case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED then true else false end,
+			    case when a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.FAILED    then true else false end,
+			    r.wantToStart,
+			    r.wantToEnd
 			  )
-			order by r.wantToStart asc
+			  from DeliveryAssignment a
+			  join a.deliveryRequest r
+			  where a.driver.driverId = :driverId
+			    and r.wantToStart >= :monthStart
+			    and r.wantToStart <  :monthEnd
+			    and a.status in (
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS,
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED,
+			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.FAILED
+			    )
+			  order by r.wantToStart asc, a.assignedAt asc
 			""")
 	List<DriverScheduleDTO> findMonthlyScheduleForDriver(@Param("driverId") Long driverId,
 			@Param("monthStart") LocalDateTime monthStart, @Param("monthEnd") LocalDateTime monthEnd);
@@ -511,13 +508,23 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			      com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
 			    )
 			    and da.assignedAt = (
-			      select max(da2.assignedAt)
-			      from DeliveryAssignment da2
-			      where da2.deliveryRequest.requestId = :requestId
-			        and da2.status in (
+			      select max(x.assignedAt)
+			      from DeliveryAssignment x
+			      where x.deliveryRequest.requestId = :requestId
+			        and x.status in (
 			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
 			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
 			        )
+			    )
+			    and da.assignedId = (
+			      select max(y.assignedId)
+			      from DeliveryAssignment y
+			      where y.deliveryRequest.requestId = :requestId
+			        and y.status in (
+			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
+			          com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			        )
+			        and y.assignedAt = da.assignedAt
 			    )
 			""")
 	Optional<DeliveryAssignment> findLatestActiveByRequestId(@Param("requestId") Long requestId);

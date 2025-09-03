@@ -32,6 +32,21 @@ export async function declineDeliveryProposal(requestId, options = {}) {
 }
 
 //내게 제안된 요청 수락.
+// export async function acceptDeliveryProposal(requestId, options = {}) {
+//   try {
+//     const res = await axios.put(
+//       `${BASE}/${requestId}/accept`,
+//       null,
+//       buildConfig(options)
+//     );
+//     return res.data;
+//   } catch (e) {
+//     const status = e.response?.status;
+//     const code = e.response?.data?.FAILED || "UNKNOWN";
+//     throw Object.assign(new Error(code), { status, code });
+//   }
+// }
+
 export async function acceptDeliveryProposal(requestId, options = {}) {
   try {
     const res = await axios.put(
@@ -39,11 +54,18 @@ export async function acceptDeliveryProposal(requestId, options = {}) {
       null,
       buildConfig(options)
     );
-    return res.data;
+    return res.data; // 성공 시 그대로 리턴
   } catch (e) {
-    const status = e.response?.status;
-    const code = e.response?.data?.FAILED || "UNKNOWN";
-    throw Object.assign(new Error(code), { status, code });
+    const status = e.response?.status ?? 0;
+    const body = e.response?.data;
+    const code =
+      typeof body === 'string'
+        ? body                              // ← 문자열 본문
+        : body?.FAILED || body?.code || 'UNKNOWN'; // ← 객체 본문
+
+    const err = new Error(code);
+    err.status = status;
+    err.code = code;
+    throw err;
   }
 }
-
