@@ -5,14 +5,28 @@ import { updateCompanyProfile } from '../../api/company/companyApi';
 import { fetchCompanyMyPageInfo } from '../../slice/company/companySlice';
 import './CompanyEditPage.css';
 import { CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
-import { Grid } from '@mui/material';
+import { Grid, useTheme } from '@mui/material';
 import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
 import LockIcon from '@mui/icons-material/Lock';
 import CallIcon from '@mui/icons-material/Call';
 import { ButtonContainer, OneButtonAtRight, TwoButtonsAtRight } from '../../components/common/CommonButton';
 
 const CompanyEditPage = () => {
-  applyThemeToCssVars(theme);
+  const thisTheme = useTheme();
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+    root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+    root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+    root.style.setProperty("--background-default", thisTheme.palette.background.default);
+    root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+    root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+    root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+  }, [thisTheme.palette.primary.main])
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userInfo, myPageInfo, snsLogin } = useSelector((s) => s.company);
@@ -367,7 +381,7 @@ const CompanyEditPage = () => {
             {/* 소셜 사용자 비밀번호 수정 제한 안내 */}
             {isSocialUser && (
               <div className="social-notice">
-                <LockIcon />
+                <LockIcon sx={{color: thisTheme.palette.text.secondary}}/>
                 <p> 소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다.</p>
                 <p>비밀번호 변경이 필요한 경우 소셜 계정 설정에서 변경해주세요.</p>
               </div>

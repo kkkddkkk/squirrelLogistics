@@ -1,6 +1,7 @@
 import { Box, Button, Grid, Typography } from "@mui/material"
 import { theme } from "./CommonTheme";
 import { lighten, useTheme } from "@mui/material/styles";
+import { useState } from "react";
 
 
 export const ButtonContainer = ({ children, width, marginTop, marginBottom }) => {
@@ -340,6 +341,63 @@ export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightC
                 {rightTitle}
             </Button>
         </Box>
+    );
+}
+
+export const TwoToggleButton = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
+    leftDisabled, rightDisabled, leftColor, rightColor, height }) => {
+
+    const thisTheme = useTheme();
+
+    const safeLeftColor = leftColor || thisTheme.palette.primary.main;
+    const safeRightColor = rightColor || thisTheme.palette.primary.main;
+
+    const [activated, setActivated] = useState("left");
+
+    return (
+        <Grid container>
+            <Grid size={6}>
+                <Button
+                    fullWidth
+                    variant="contained"
+
+                    sx={{
+                        borderRadius: 0,
+                        backgroundColor: activated === "left" ? safeLeftColor : thisTheme.palette.background.default,
+                        color: activated === "left" ? thisTheme.palette.background.default : thisTheme.palette.text.primary,
+                        border: `1px solid ${thisTheme.palette.primary.main}`,
+                        height: height
+                    }}
+                    onClick={() => {
+                        setActivated("left");
+                        leftClickEvent();
+                    }}
+                    disabled={leftDisabled}
+                >
+                    {leftTitle}
+                </Button>
+            </Grid>
+            <Grid size={6}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                        borderRadius: 0,
+                        backgroundColor: activated === "right" ? safeRightColor : thisTheme.palette.background.default,
+                        color: activated === "right" ? thisTheme.palette.background.default : thisTheme.palette.text.primary,
+                        border: `1px solid ${thisTheme.palette.primary.main}`,
+                        height: height
+                    }}
+                    onClick={() => {
+                        setActivated("right");
+                        rightClickEvent();
+                    }}
+                    disabled={rightDisabled}
+                >
+                    {rightTitle}
+                </Button>
+            </Grid>
+        </Grid>
     );
 }
 //#endRegion

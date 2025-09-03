@@ -12,6 +12,8 @@ import {
   CircularProgress,
   Alert,
   Paper,
+  useTheme,
+  lighten,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -31,6 +33,7 @@ import {
 import LoadingComponent from "../../components/common/LoadingComponent";
 
 const DeliveredDetail = () => {
+  const thisTheme = useTheme();
   const navigate = useNavigate();
   const { assignedId } = useParams();
   const [deliveryData, setDeliveryData] = useState(null);
@@ -39,13 +42,13 @@ const DeliveredDetail = () => {
     weight: 0,
   });
   const [waypoints, setWaypoints] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    setLoading(true);
     const loadDeliveryDetail = async () => {
       try {
-        setLoading(true);
         console.log("API 호출 시작:", assignedId);
 
         // 운송 상세 정보 조회 (기존 DTO들을 조합한 Map 사용)
@@ -170,7 +173,7 @@ const DeliveredDetail = () => {
   if (loading) {
     return (
       <Box
-        sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
+        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
       >
         <Header />
         <LoadingComponent />
@@ -183,7 +186,7 @@ const DeliveredDetail = () => {
   if (error) {
     return (
       <Box
-        sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
+        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
       >
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -199,7 +202,7 @@ const DeliveredDetail = () => {
   if (!deliveryData) {
     return (
       <Box
-        sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}
+        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
       >
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -316,11 +319,11 @@ const DeliveredDetail = () => {
               borderRadius: "50%",
               ...(isCompleted
                 ? {
-                  bgcolor: "#4CAF50",
+                  bgcolor: thisTheme.palette.success.main,
                   color: "white",
                 }
                 : {
-                  bgcolor: "#757575",
+                  bgcolor: thisTheme.palette.text.secondary,
                   color: "white",
                 }),
               zIndex: 2,
@@ -349,7 +352,7 @@ const DeliveredDetail = () => {
               sx={{
                 width: 2,
                 height: 45,
-                bgcolor: "#D3D3D3",
+                bgcolor: thisTheme.palette.text.secondary,
                 position: "absolute",
                 top: 40,
                 left: "50%",
@@ -433,14 +436,15 @@ const DeliveredDetail = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
+      <LoadingComponent open={loading} text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`}/>
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
           <Box
             sx={{
-              borderBottom: `1px solid ${theme.palette.primary.main}`,
+              borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
               pb: 2,
               mb: 4,
             }}
@@ -448,7 +452,7 @@ const DeliveredDetail = () => {
             <Typography
               variant="h4"
               fontWeight="bold"
-              color={theme.palette.text.primary}
+              color={thisTheme.palette.text.primary}
             >
               운송 번호 # {assignedId}
             </Typography>
@@ -491,7 +495,7 @@ const DeliveredDetail = () => {
                           height: 40,
                           borderRadius: "50%",
                           bgcolor:
-                            item.status === "completed" ? "#4CAF50" : "#6B7280",
+                            item.status === "completed" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
                           color: "white",
                           zIndex: 2,
                           position: "relative",
@@ -519,7 +523,7 @@ const DeliveredDetail = () => {
                           sx={{
                             width: 3,
                             height: 80,
-                            bgcolor: "#E5E7EB",
+                            bgcolor: lighten(thisTheme.palette.text.secondary, 0.1),
                             position: "absolute",
                             top: 40,
                             left: "50%",
@@ -533,7 +537,7 @@ const DeliveredDetail = () => {
                           sx={{
                             width: 3,
                             height: 60,
-                            bgcolor: "#E5E7EB",
+                            bgcolor: lighten(thisTheme.palette.text.secondary, 0.1),
                             position: "absolute",
                             top: 40,
                             left: "50%",
@@ -568,7 +572,7 @@ const DeliveredDetail = () => {
                             variant="h6"
                             sx={{
                               fontWeight: "bold",
-                              color: "#2A2A2A",
+                              color: thisTheme.palette.text.primary,
                               fontSize: "1.1rem",
                             }}
                           >
@@ -584,8 +588,8 @@ const DeliveredDetail = () => {
                               fontWeight: "normal",
                               color:
                                 item.status === "completed"
-                                  ? "#4CAF50"
-                                  : "#6B7280",
+                                  ? thisTheme.palette.success.main
+                                  : thisTheme.palette.text.secondary,
                               fontSize: "0.9rem",
                             }}
                           >
@@ -596,12 +600,12 @@ const DeliveredDetail = () => {
                         {/* 하단: 주소 박스 */}
                         <Box
                           sx={{
-                            bgcolor: theme.palette.background.paper,
+                            bgcolor: thisTheme.palette.background.paper,
                             borderRadius: 1,
                             px: 2,
                             py: 1.5,
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: "1px solid #E8E8E8",
+                            border: `1px solid${thisTheme.palette.text.secondary}`,
                             width: "100%",
                             maxWidth: "420px",
                           }}
@@ -609,7 +613,7 @@ const DeliveredDetail = () => {
                           <Typography
                             variant="body1"
                             sx={{
-                              color: theme.palette.text.primary,
+                              color: thisTheme.palette.text.primary,
                               lineHeight: 1.4,
                               fontSize: "0.95rem",
                             }}
@@ -630,16 +634,16 @@ const DeliveredDetail = () => {
               <Box
                 sx={{
                   height: 500,
-                  border: `0.6px solid ${theme.palette.primary.main}`,
+                  border: `0.6px solid ${thisTheme.palette.primary.main}`,
                   borderRadius: 2,
                   overflow: "hidden",
-                  backgroundColor: theme.palette.background.paper,
+                  backgroundColor: thisTheme.palette.background.paper,
                   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   mb: 2,
                 }}
               >
                 {window.kakao && window.kakao.maps ? (
-                    <PolylineMapComponent
+                  <PolylineMapComponent
                     polyline={deliveryData.actualDelivery.actualPolyline}
                     waypoints={waypoints}
                   />
@@ -650,7 +654,7 @@ const DeliveredDetail = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       height: "100%",
-                      bgcolor: "#f5f5f5",
+                      bgcolor: thisTheme.palette.background.paper,
                     }}
                   >
                     <Typography>지도를 불러오는 중...</Typography>
@@ -662,7 +666,7 @@ const DeliveredDetail = () => {
               <Typography
                 variant="body2"
                 sx={{
-                  color: theme.palette.text.secondary,
+                  color: thisTheme.palette.text.secondary,
                   fontSize: "0.875rem",
                   textAlign: "center",
                   fontStyle: "italic",
@@ -679,9 +683,9 @@ const DeliveredDetail = () => {
             sx={{
               mt: 6,
               mb: 4,
-              border: `1px solid #E0E0E0`,
+              border: `1px solid ${thisTheme.palette.text.secondary}`,
               borderRadius: 2,
-              bgcolor: theme.palette.background.paper,
+              bgcolor: thisTheme.palette.background.paper,
             }}
           >
             <Box sx={{ p: 3 }}>
@@ -716,7 +720,7 @@ const DeliveredDetail = () => {
                       <Typography
                         variant="h5"
                         fontWeight="bold"
-                        color={theme.palette.text.primary}
+                        color={thisTheme.palette.text.primary}
                       >
                         정산 내역
                       </Typography>
@@ -725,7 +729,7 @@ const DeliveredDetail = () => {
                     {/* 구분선 */}
                     <Box
                       sx={{
-                        borderBottom: `1px solid ${theme.palette.primary.main}`,
+                        borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
                         mb: 3,
                       }}
                     />
@@ -741,13 +745,13 @@ const DeliveredDetail = () => {
                       >
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           ㄴ 기본 요금
                         </Typography>
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           {formatPrice(baseFee)}
                         </Typography>
@@ -763,13 +767,13 @@ const DeliveredDetail = () => {
                       >
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           ㄴ 거리별 요금
                         </Typography>
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           {formatPrice(distanceFee)}
                         </Typography>
@@ -785,13 +789,13 @@ const DeliveredDetail = () => {
                       >
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           ㄴ 무게별 요금
                         </Typography>
                         <Typography
                           variant="body1"
-                          color={theme.palette.text.primary}
+                          color={thisTheme.palette.text.primary}
                         >
                           {formatPrice(weightFee)}
                         </Typography>
@@ -808,13 +812,13 @@ const DeliveredDetail = () => {
                         >
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             ㄴ 경유지 요금
                           </Typography>
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             {formatPrice(waypointFee)}
                           </Typography>
@@ -832,13 +836,13 @@ const DeliveredDetail = () => {
                         >
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             ㄴ 산간지역 요금
                           </Typography>
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             {formatPrice(mountainousFee)}
                           </Typography>
@@ -856,13 +860,13 @@ const DeliveredDetail = () => {
                         >
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             ㄴ 취급주의 요금
                           </Typography>
                           <Typography
                             variant="body1"
-                            color={theme.palette.text.primary}
+                            color={thisTheme.palette.text.primary}
                           >
                             {formatPrice(cautionFee)}
                           </Typography>
@@ -887,14 +891,14 @@ const DeliveredDetail = () => {
                         <Typography
                           variant="h6"
                           fontWeight="bold"
-                          color={theme.palette.primary.main}
+                          color={thisTheme.palette.primary.main}
                         >
                           총 운송료
                         </Typography>
                         <Typography
                           variant="h6"
                           fontWeight="bold"
-                          color={theme.palette.primary.main}
+                          color={thisTheme.palette.primary.main}
                         >
                           {formatPrice(totalFee)}
                         </Typography>
@@ -911,13 +915,10 @@ const DeliveredDetail = () => {
             <Button
               variant="contained"
               sx={{
-                bgcolor: "#113F67",
-                color: "#fff",
                 fontWeight: "bold",
                 px: 4,
                 py: 1.5,
                 fontSize: "1rem",
-                "&:hover": { bgcolor: "#0d3050" },
               }}
               onClick={() => navigate("/driver/deliveredlist")}
             >

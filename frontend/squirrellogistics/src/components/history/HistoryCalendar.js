@@ -25,7 +25,7 @@ const HistoryCalendar = () => {
         root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
         root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
 
-    }, [thisTheme.palette.primary.main])
+    }, [thisTheme.palette.mode])
 
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [historyDate, setHistoryDate] = useState([]);
@@ -87,8 +87,6 @@ const HistoryCalendar = () => {
 
     useEffect(() => {//날짜 클릭 시 랜더링
         moveToAnotherDay(clickedFullDate);//path에 date 파라미터 추가
-
-
     }, [clickedFullDate]);
 
     return (

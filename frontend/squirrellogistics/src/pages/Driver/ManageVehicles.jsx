@@ -27,6 +27,7 @@ import {
   Snackbar,
   Container,
   Stack,
+  useTheme,
 } from "@mui/material";
 import {
   Edit,
@@ -41,18 +42,17 @@ import {
 import { carApi, vehicleTypeApi } from "../../api/cars";
 import PreferredTimeBlock from "../../components/Time/PreferredTimeBlock";
 import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
-import { CommonSubTitle } from "../../components/common/CommonText";
+import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import CommonList from "../../components/common/CommonList";
 import { theme } from "../../components/common/CommonTheme";
 import dayjs from "dayjs";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
 
-const C = { blue: "#113F67", gold: "#E8A93F" };
-
 const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 
 export default function ManageVehicles() {
+  const thisTheme = useTheme();
   const [cars, setCars] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,8 @@ export default function ManageVehicles() {
     message: "",
     severity: "success",
   });
+
+  const C = { blue: thisTheme.palette.primary.main, gold: thisTheme.palette.error.main };
 
   // Dialog 상태
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -349,15 +351,13 @@ export default function ManageVehicles() {
       <Header />
       <Box
         sx={{
-          bgcolor: theme.palette.background.default,
+          bgcolor: thisTheme.palette.background.default,
           minHeight: "100vh",
           py: 6,
         }}
       >
         <Container maxWidth="lg">
-          <CommonSubTitle sx={{ color: C.blue, mb: 4 }}>
-            내 차량 관리
-          </CommonSubTitle>
+          <CommonTitle>내 차량 관리</CommonTitle>
 
           {/* 추가 버튼 */}
           <Box
@@ -371,7 +371,6 @@ export default function ManageVehicles() {
                 bgcolor: C.blue,
                 minWidth: 140,
                 height: 50,
-                "&:hover": { bgcolor: "#0d2f4f" },
               }}
             >
               차량 추가
@@ -410,19 +409,19 @@ export default function ManageVehicles() {
                     p: 1.8,
                     mb: 3,
                     border: "0.8px solid",
-                    borderColor: theme.palette.primary.light,
+                    borderColor: thisTheme.palette.primary.light,
                     boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
                     borderRadius: 1.5,
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    bgcolor: theme.palette.background.paper,
+                    bgcolor: thisTheme.palette.background.paper,
                     mx: 3,
                     "&:hover": {
-                      bgcolor: theme.palette.background.default,
+                      bgcolor: thisTheme.palette.background.default,
                       transform: "translateY(-2px)",
                       boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
-                      borderColor: theme.palette.primary.main,
+                      borderColor: thisTheme.palette.primary.main,
                     },
                   }}
                 >
@@ -511,7 +510,7 @@ export default function ManageVehicles() {
 
                     {/* 화살표 아이콘 */}
                     <ChevronRight
-                      sx={{ color: theme.palette.text.secondary, fontSize: 24 }}
+                      sx={{ color: thisTheme.palette.text.secondary, fontSize: 24 }}
                     />
                   </Box>
                 </Paper>
@@ -567,8 +566,8 @@ export default function ManageVehicles() {
                   disabled
                   sx={{
                     "& .MuiInputBase-input.Mui-disabled": {
-                      color: "#000000",
-                      WebkitTextFillColor: "#000000",
+                      color: thisTheme.palette.text.primary,
+                      WebkitTextFillColor: thisTheme.palette.text.primary,
                     },
                   }}
                   helperText=" "
@@ -607,8 +606,8 @@ export default function ManageVehicles() {
                   disabled
                   sx={{
                     "& .MuiInputBase-input.Mui-disabled": {
-                      color: "#000000",
-                      WebkitTextFillColor: "#000000",
+                      color: thisTheme.palette.text.primary,
+                      WebkitTextFillColor: thisTheme.palette.text.primary,
                     },
                   }}
                 />

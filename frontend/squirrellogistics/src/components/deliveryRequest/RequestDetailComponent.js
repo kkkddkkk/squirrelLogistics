@@ -10,6 +10,8 @@ import {
   Divider,
   Alert,
   Snackbar,
+  useTheme,
+  lighten,
 } from "@mui/material";
 import RouteMapComponent from "../../components/deliveryMap/RouteMapComponent";
 import { useCallback, useEffect, useState } from "react";
@@ -38,6 +40,7 @@ import { cancelDeliveryReservation } from "../../api/deliveryRequest/deliveryAss
 const RequestDetailComponent = () => {
   const navigate = useNavigate();
   const { requestId, driverId } = useParams();
+  const thisTheme = useTheme();
 
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -163,7 +166,7 @@ const RequestDetailComponent = () => {
         setPathMoveOpen(true);
       } else {
         // 실패 케이스
-        setErr(msg(result.code));           
+        setErr(msg(result.code));
         setErrKind(result.httpStatus >= 500 ? "server" : "forbidden");
         setErrpopupOpen(true);
       }
@@ -223,7 +226,7 @@ const RequestDetailComponent = () => {
   };
   const textSx = {
     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-    color: "#2A2A2A",
+    color: thisTheme.palette.text.primary,
     fontSize: "clamp(12px, 1vw, 14px)",
   };
 
@@ -295,7 +298,7 @@ const RequestDetailComponent = () => {
       <Grid
         width={"100%"}
         sx={{
-          bgcolor: theme.palette.background.paper,
+          bgcolor: thisTheme.palette.background.default,
           minHeight: 190,
         }}
       >
@@ -312,9 +315,9 @@ const RequestDetailComponent = () => {
                 pr: 4,
                 pl: 4,
                 width: "100%",
-                bgcolor: "#113F67",
+                bgcolor: thisTheme.palette.primary.main,
                 mb: 1,
-                borderColor: "#bbc5d0",
+                borderColor: thisTheme.palette.text.secondary,
                 boxShadow: "0px 5px 5px rgba(0, 0, 0, 0.05)",
               }}
             >
@@ -336,7 +339,7 @@ const RequestDetailComponent = () => {
                   >
                     <Box
                       component="span"
-                      sx={{ color: "#ff2121ff", fontWeight: 700, mr: 1 }}
+                      sx={{ color: thisTheme.palette.error.main, fontWeight: 700, mr: 1 }}
                     >
                       [알림]
                     </Box>{" "}
@@ -366,7 +369,7 @@ const RequestDetailComponent = () => {
               pt: 2,
               pb: 2,
               width: "100%",
-              borderColor: "#bbc5d0",
+              borderColor: thisTheme.palette.text.secondary,
               boxShadow: "0px 5px 5px rgba(0, 0, 0, 0.05)",
             }}
           >
@@ -382,7 +385,7 @@ const RequestDetailComponent = () => {
                   variant="body2"
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: "#2A2A2A",
+                    color: thisTheme.palette.text.primary,
                     fontSize: "clamp(12px, 1.5vw, 18px)",
                   }}
                 >
@@ -397,7 +400,7 @@ const RequestDetailComponent = () => {
                   variant="body2"
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: "#2A2A2A",
+                    color: thisTheme.palette.text.primary,
                     fontSize: "clamp(12px, 1.5vw, 18px)",
                   }}
                 >
@@ -483,7 +486,7 @@ const RequestDetailComponent = () => {
                         padding: '2px 8px',
                         fontSize: '18px',
                         lineHeight: 1.2,
-                        bgcolor: '#113F67',
+                        bgcolor: thisTheme.palette.primary.main,
                         p: 6, pt: 0, pb: 0,
                       }}
                     >
@@ -506,7 +509,6 @@ const RequestDetailComponent = () => {
                           padding: '2px 8px',
                           fontSize: '18px',
                           lineHeight: 1.2,
-                          bgcolor: '#113F67',
                           p: 6, pt: 0, pb: 0,
                         }}
                       >
@@ -528,7 +530,10 @@ const RequestDetailComponent = () => {
                             padding: '2px 8px',
                             fontSize: '18px',
                             lineHeight: 1.2,
-                            bgcolor: '#671111ff',
+                            bgcolor: thisTheme.palette.error.main,
+                            "&:hover": {
+                              bgcolor: lighten(thisTheme.palette.error.main,0.1), // 호버 시 색상 변경
+                            },
                             p: 6, pt: 0, pb: 0,
                           }}
                         >
@@ -547,7 +552,7 @@ const RequestDetailComponent = () => {
             <Grid container spacing={2} direction="column">
               {/* 경로 정보 */}
               <Grid item>
-                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
+                <Paper variant="outlined" sx={{ p: 2, borderColor: thisTheme.palette.text.secondary }}>
                   <Typography fontWeight="bold" gutterBottom>
                     경로 정보
                   </Typography>
@@ -574,7 +579,7 @@ const RequestDetailComponent = () => {
                     {deliveryData.waypoints.length > 0 && (
                       <Grid>
                         <Button
-                          variant="outlined"
+                          variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
                           onClick={handleSelectWaypointEvent}
                           sx={{
                             minWidth: "auto",
@@ -582,9 +587,6 @@ const RequestDetailComponent = () => {
                             padding: "2px 8px",
                             fontSize: "11px",
                             lineHeight: 1.2,
-                            color: "#113F67",
-                            backgroundColor: "white",
-                            borderColor: "#113F67",
                           }}
                         >
                           <strong>하차지 정보</strong>

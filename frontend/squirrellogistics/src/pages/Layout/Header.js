@@ -24,7 +24,7 @@ import { useDarkMode } from "../../DarkModeContext";
 
 export default function Header() {
 
-  const { darkMode, setDarkMode } = useDarkMode();
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const navigate = useNavigate();
 
   const [loginOpen, setLoginOpen] = useState(false);
@@ -146,12 +146,12 @@ export default function Header() {
             {darkMode ? (
               <LightModeOutlinedIcon
                 sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
-                onClick={() => setDarkMode(prev => !prev)}
+                onClick={() => toggleDarkMode(prev => !prev)}
               />
             ) : (
               <BedtimeOutlinedIcon
                 sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
-                onClick={() => setDarkMode(prev => !prev)}
+                onClick={() => toggleDarkMode(prev => !prev)}
               />
             )}
 

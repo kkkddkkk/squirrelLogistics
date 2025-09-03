@@ -1,14 +1,16 @@
-import { Box, Button, Grid, Typography, } from "@mui/material"
+import { Box, Button, Grid, Typography, useTheme, } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove"
 import { useSearchParams } from "react-router-dom"
 import { Layout } from "../../components/common/CommonForCompany"
 import { failureSecondPayment, successSecondPayment } from "../../api/company/paymentApi"
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import darkLogo from '../../components/common/squirrelLogisticsLogo_dark.png';
 import { ButtonContainer, Three100Buttons, Two100Buttons } from "../../components/common/CommonButton"
 
 
 const PaymentSuccess = () => {
+    const thisTheme = useTheme();
     const [params] = useSearchParams();
     const success = params.get("success");
     const paymentId = params.get("paymentId");
@@ -63,51 +65,53 @@ const PaymentSuccess = () => {
     }, [])
 
     return (
-        <Layout>
-            <Grid container display={"flex"} justifyContent={"center"} flexWrap={"wrap"} marginTop={"10%"}>
-                {/* <Grid size={3}/> */}
-                <Grid size={12} display={"flex"} justifyContent={"center"} flexWrap={"wrap"}>
-                    <Box
-                        component="img"
-                        sx={{
-                            width: "80%",
-                            // margin: "15% 0"
-                        }}
-                        alt="LOGO"
-                        src={Logo}
-                    >
-                    </Box>
-                    <Typography
-                        sx={{
-                            fontSize: "20px",
-                            marginTop: "5%"
-                        }}
-                    >{success === "true" ? "결제가 완료되었습니다." : "결제에 실패하였습니다."}</Typography>
 
-                    <ButtonContainer width={"100%"} marginTop={"5%"} marginBottom={"5%"}>
-                        {success === "true" ?
-                            <Three100Buttons
-                                leftTitle={"메인화면"}
-                                leftClickEvent={() => moveToMain()}
-                                middleTitle={"내 이용기록"}
-                                middleClickEvent={() => moveToHistory()}
-                                rightTitle={"영 수 증"}
-                                rightClickEvent={showReciept}
-                                gap={2}
-                            /> :
-                            <Two100Buttons
-                                leftTitle={"메인화면"}
-                                leftClickEvent={() => moveToMain()}
-                                rightTitle={"다시 결제"}
-                                rightClickEvent={() => moveBack()}
-                                gap={2}
-                            />
-                        }
-                    </ButtonContainer>
-                </Grid>
-                {/* <Grid size={3}/> */}
+        <Grid container display={"flex"} justifyContent={"center"} flexWrap={"wrap"} marginTop={"10%"}>
+            <Grid size={3}/>
+            <Grid size={6} display={"flex"} justifyContent={"center"} flexWrap={"wrap"}>
+                <Box
+                    component="img"
+                    sx={{
+                        width: "40%",
+                        // margin: "15% 0"
+                    }}
+                    alt="LOGO"
+                    src={thisTheme.palette.mode==="light"?Logo:darkLogo}
+                >
+                </Box>
+                <Typography
+                    sx={{
+                        width: "100%",
+                        textAlign: "center",
+                        fontSize: "20px",
+                        marginTop: "5%"
+                    }}
+                >{success === "true" ? "결제가 완료되었습니다." : "결제에 실패하였습니다."}</Typography>
+
+                <ButtonContainer width={"100%"} marginTop={"5%"} marginBottom={"10%"}>
+                    {success === "true" ?
+                        <Three100Buttons
+                            leftTitle={"메인화면"}
+                            leftClickEvent={() => moveToMain()}
+                            middleTitle={"내 이용기록"}
+                            middleClickEvent={() => moveToHistory()}
+                            rightTitle={"영 수 증"}
+                            rightClickEvent={showReciept}
+                            gap={2}
+                        /> :
+                        <Two100Buttons
+                            leftTitle={"메인화면"}
+                            leftClickEvent={() => moveToMain()}
+                            rightTitle={"다시 결제"}
+                            rightClickEvent={() => moveBack()}
+                            gap={2}
+                        />
+                    }
+                </ButtonContainer>
             </Grid>
-        </Layout >
+            <Grid size={3}/>
+        </Grid>
+
     );
 
 }

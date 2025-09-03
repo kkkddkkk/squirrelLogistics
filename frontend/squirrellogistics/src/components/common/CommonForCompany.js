@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material"
+import { Box, Button, Typography, useTheme } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -176,6 +176,7 @@ export const ImgBox = ({ func, children, sx }) => {//기본 ImgBox
 }
 
 export const AddImgInput = ({ fileRef, funcAdd, funcChange, preview }) => {//사진추가 인풋
+    const thisTheme = useTheme();
     return (
         <Box>
             <input
@@ -186,12 +187,12 @@ export const AddImgInput = ({ fileRef, funcAdd, funcChange, preview }) => {//사
                 onChange={funcChange}
             />
             <ImgBox func={funcAdd} preview={preview} sx={{
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: thisTheme.palette.primary.main,
                 justifyContent: "center",
                 alignItems: "center",
             }}>
                 <AddIcon sx={{
-                    color: theme.palette.background.default,
+                    color: thisTheme.palette.background.default,
                     fontSize: 45
                 }} />
             </ImgBox>
@@ -222,7 +223,7 @@ export const paymentFormat = ((payment) => {//숫자 형식
 });
 
 export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없을 때 표시화면
-
+    const thisTheme = useTheme();
     const { moveBack } = useHistoryMove();
 
     return (
@@ -240,7 +241,7 @@ export const NoneOfList = ({ logoSrc, children }) => {//list에 아무것도 없
                 />
                 <Typography width={"100%"} textAlign={"center"}
                     fontSize={"25px"} fontWeight={"bold"}
-                    marginBottom={"10%"} color={theme.palette.primary.main}
+                    marginBottom={"10%"} color={thisTheme.palette.primary.main}
                 >{children}</Typography>
 
             </Box>

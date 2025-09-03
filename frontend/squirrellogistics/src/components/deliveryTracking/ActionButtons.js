@@ -1,4 +1,4 @@
-import { Button, Grid, Stack } from '@mui/material';
+import { Button, Grid, Stack, useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { postDriverAction } from '../../api/deliveryRequest/deliveryAssignmentAPI';
 import TwoButtonPopupComponent from '../deliveryRequest/TwoButtonPopupComponent'; // 경로는 프로젝트 구조에 맞춰 조정
@@ -31,6 +31,8 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
   const lastActionRef = useRef(null);
   const lastSentAtRef = useRef(0);
   const MIN_INTERVAL_MS = 800;
+
+  const thisTheme = useTheme();
 
   useEffect(() => {
     if (prevSignatureRef.current !== signature) {
@@ -166,7 +168,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
             disabled={disabledAll || !rules.startToPickup}
             onClick={() => doAction('START_TO_PICKUP')}
           >
@@ -176,7 +178,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
             disabled={disabledAll || !rules.pickupCompleted}
             // onClick={() => doAction('PICKUP_COMPLETED')}
             onClick={() =>
@@ -194,7 +196,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
             disabled={disabledAll || !rules.arrived}
             onClick={() =>
               showConfirm('ARRIVED_AT_WAYPOINT', {
@@ -213,7 +215,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
             disabled={disabledAll || !rules.dropped}
             onClick={() =>
               showConfirm('DROPPED_AT_WAYPOINT', {
@@ -230,7 +232,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
             disabled={disabledAll || !rules.complete}
             onClick={() =>
               showConfirm('COMPLETE', {
@@ -251,7 +253,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Stack direction="row" spacing={1}>
             <Button
-              variant="outlined"
+              variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
               color="error"
               sx={{ flex: 1 }}
               disabled={disabledAll || !rules.skip}
@@ -273,7 +275,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
               다음 하차지 건너뛰기
             </Button>
             <Button
-              variant="outlined"
+              variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
               color="error"
               sx={{ flex: 1 }}
               disabled={disabledAll}

@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
 import HistoryCalendar from "../../components/history/HistoryCalendar";
 import HistoryList from "../../components/history/HistoryList";
 import { Layout, NoneOfList, OneBtnAtRight } from "../../components/common/CommonForCompany";
@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import { getHistoryList } from "../../api/company/historyApi";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import darkLogo from '../../components/common/squirrelLogisticsLogo_dark.png';
 import { CommonTitle } from "../../components/common/CommonText";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import LoadingComponent from "../../components/common/LoadingComponent";
@@ -22,6 +23,8 @@ const History = () => {
     const [dataLengths, setDataLengths] = useState(0);
     const [loading, setLoading] = useState(false);
 
+    const thisTheme = useTheme();
+
 
     useEffect(() => {
         setLoading(true);
@@ -36,7 +39,7 @@ const History = () => {
             })
             .catch(err => {
                 console.error("데이터 가져오기 실패", err);
-            }).finally(setLoading(false));
+            }).finally(()=>setLoading(false));
 
     }, [date]);
 
@@ -72,14 +75,14 @@ const History = () => {
         <>
             <CommonTitle>이용기록</CommonTitle>
             <Grid container spacing={3} marginBottom={10}>
-                <LoadingComponent open={loading} text="이용기록을 불러오는 중..."></LoadingComponent>
+                <LoadingComponent open={loading} text={`${date}의 이용기록을 불러오는 중...`}></LoadingComponent>
                 <Grid size={2} />
                 <Grid size={3}>
                     <HistoryCalendar />
                 </Grid>
                 <Grid size={5} height={"50vh"} overflow={"auto"} display="flex" flexDirection="column">
                     {dataLengths === 0 ?
-                        <NoneOfList logoSrc={Logo}>아직 이용기록이 없습니다.</NoneOfList> :
+                        <NoneOfList logoSrc={thisTheme.palette.mode==="light"?Logo:darkLogo}>아직 이용기록이 없습니다.</NoneOfList> :
                         (todayList?.map((today, idx) => (
                             <HistoryList
                                 key={today.assignedId}

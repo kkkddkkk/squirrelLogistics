@@ -17,6 +17,9 @@ import {
   GlobalStyles,
   Stack,
   Grid,
+  useTheme,
+  darken,
+  lighten,
 } from "@mui/material";
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
@@ -150,6 +153,7 @@ function MonthEvent({ event }) {
 
 //DriverMonthlyComponent: 컴포넌트 메인부 시작.
 export default function DriverMonthlyComponent() {
+  const thisTheme = useTheme();
   useAttachRbcOverrides();
   const navigate = useNavigate();
 
@@ -250,14 +254,11 @@ export default function DriverMonthlyComponent() {
 
     let backgroundColor, borderColor;
     if (isCompleted) {
-      backgroundColor = "#606060"; // 회색 (완료)
-      borderColor = "#525252";
+      backgroundColor = thisTheme.palette.success.main;
     } else if (isFailed) {
-      backgroundColor = "#7F0000"; // 빨강 (실패)
-      borderColor = "#600000ff";
+      backgroundColor = thisTheme.palette.error.main;
     } else {
-      backgroundColor = "#113F67"; // 파랑 (예약/진행중)
-      borderColor = "#051829";
+      backgroundColor = thisTheme.palette.primary.main;
     }
 
     return {
@@ -279,7 +280,7 @@ export default function DriverMonthlyComponent() {
       return {
         className: "rbc-today-custom",
         style: {
-          outline: "2px solid #113F67",
+          outline: "2px solid " + thisTheme.palette.primary.main,
           outlineOffset: "-2px",
           background: "rgba(25, 118, 210, 0.06)",
         },
@@ -336,31 +337,35 @@ export default function DriverMonthlyComponent() {
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <Box width={"100%"} justifyItems={"center"} mb={4}>
+    <Box width={"100%"} justifyItems={"center"} sx={{ backgroundColor: thisTheme.palette.background.default , pb: 4,}}>
       <GlobalStyles
         styles={{
           ".rbc-calendar": {
-            background: "white",
+            background: thisTheme.palette.background.default,
             borderRadius: 16,
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             width: "90%",
           },
           ".rbc-toolbar": { display: "none !important" },
           ".rbc-month-view": {
-            border: "1px solid #bbc5d0",
+            border: "1px solid " + thisTheme.palette.text.secondary,
             borderRadius: 12,
             overflow: "hidden",
           },
-          ".rbc-month-row + .rbc-month-row": { borderTop: "1px solid #bbc5d0" },
-          ".rbc-header": {
-            borderBottom: "1px solid #bbc5d0",
+          ".rbc-month-row + .rbc-month-row": { borderTop: "1px solid " + thisTheme.palette.text.secondary },
+          ".rbc-calendar .rbc-header": {
+            borderBottom: `1px solid ${thisTheme.palette.text.secondary}`,
             padding: 8,
             fontWeight: 600,
-            background: "#e2e5e7",
-            color: "#2A2A2A",
+            background: thisTheme.palette.background.paper,
+            color: thisTheme.palette.text.primary,
           },
           ".rbc-date-cell": { padding: 8 },
-          ".rbc-off-range-bg": { background: "#fafafa" },
+          ".rbc-off-range-bg": { 
+            background: thisTheme.palette.mode==="light"?
+            lighten(thisTheme.palette.text.secondary, 0.9)
+            :darken(thisTheme.palette.text.secondary, 0.5) 
+          },
           ".rbc-event, .rbc-event-allday": {
             boxShadow: "none",
             border: "none",
@@ -374,10 +379,10 @@ export default function DriverMonthlyComponent() {
           ".rbc-today": { background: "transparent" },
           ".rbc-row-segment": { display: "flex", alignItems: "flex-end" },
           ".rbc-month-view .rbc-row-bg .rbc-day-bg + .rbc-day-bg": {
-            borderLeft: "1px solid #bbc5d0 !important",
+            borderLeft: `1px solid ${thisTheme.palette.text.secondary} !important`,
           },
           ".rbc-month-view .rbc-header + .rbc-header": {
-            borderLeft: "1px solid #bbc5d0 !important",
+            borderLeft: `1px solid ${thisTheme.palette.text.secondary} !important`,
           },
         }}
       />
@@ -385,7 +390,7 @@ export default function DriverMonthlyComponent() {
       <Grid
         width={"100%"}
         justifyItems={"center"}
-        sx={{ bgcolor: theme.palette.background.paper, minHeight: 160 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: 160 }}
       >
         <Box pt={4}>
           <CommonTitle>월별 일정표</CommonTitle>
@@ -403,9 +408,9 @@ export default function DriverMonthlyComponent() {
               variant="outlined"
               startIcon={<ChevronLeftIcon />}
               sx={{
-                color: theme.palette.primary.main,
-                backgroundColor: theme.palette.background.paper,
-                borderColor: theme.palette.primary.main,
+                color: thisTheme.palette.primary.main,
+                backgroundColor: thisTheme.palette.background.paper,
+                borderColor: thisTheme.palette.primary.main,
               }}
               onClick={goPrev}
             >
@@ -415,9 +420,9 @@ export default function DriverMonthlyComponent() {
               variant="outlined"
               endIcon={<ChevronRightIcon />}
               sx={{
-                color: theme.palette.primary.main,
-                backgroundColor: theme.palette.background.paper,
-                borderColor: theme.palette.primary.main,
+                color: thisTheme.palette.primary.main,
+                backgroundColor: thisTheme.palette.background.paper,
+                borderColor: thisTheme.palette.primary.main,
               }}
               onClick={goNext}
             >
@@ -432,7 +437,7 @@ export default function DriverMonthlyComponent() {
                 fontFamily: "inherit",
                 fontSize: "1.2rem",
                 fontWeight: "bold",
-                color: "#113F67",
+                color: thisTheme.palette.primary.main,
                 m: 0,
               }}
             >
@@ -505,8 +510,10 @@ export default function DriverMonthlyComponent() {
         style={{
           height: "calc(100vh - 240px)",
           width: "90%",
-          margin: "0 auto",
+          // margin: "0 auto",
+          backgroundColor: thisTheme.palette.background.default
         }}
+
         messages={{
           next: "다음",
           previous: "이전",
@@ -549,7 +556,7 @@ export default function DriverMonthlyComponent() {
               <FormControl fullWidth>
                 <InputLabel
                   id="year-label"
-                  sx={{ backgroundColor: theme.palette.background.paper }}
+                  sx={{ backgroundColor: thisTheme.palette.background.default }}
                 >
                   연도
                 </InputLabel>
@@ -570,7 +577,7 @@ export default function DriverMonthlyComponent() {
               <FormControl fullWidth>
                 <InputLabel
                   id="month-label"
-                  sx={{ backgroundColor: theme.palette.background.paper }}
+                  sx={{ backgroundColor: thisTheme.palette.background.paper }}
                 >
                   월
                 </InputLabel>

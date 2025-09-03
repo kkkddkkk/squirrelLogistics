@@ -1,5 +1,5 @@
-import { Box, FormControl, Grid, TextField, Typography } from "@mui/material";
-import { Layout, OneBigBtn, SubTitle } from "../../components/common/CommonForCompany";
+import { Box, FormControl, Grid, TextField, Typography, useTheme } from "@mui/material";
+import { SubTitle } from "../../components/common/CommonForCompany";
 import { useEffect, useState } from "react";
 import ReportRadio from "../../components/report/ReportRadio";
 import ReportImgList from "../../components/report/ReportImgList";
@@ -53,7 +53,7 @@ const Report = () => {
                 setPreview(res.data.fileName);
             }).catch(err => {
                 console.error("불러오기 실패", err);
-            }).finally(()=>setLoading(false))
+            }).finally(() => setLoading(false))
         }
     }, [])
 
@@ -138,7 +138,7 @@ const Report = () => {
 
     return (
         <>
-            <LoadingComponent open={loading} text="신고내역을 불러오는 중..."/>
+            <LoadingComponent open={loading} text="신고내역을 불러오는 중..." />
             <CommonTitle>1:1 문의사항</CommonTitle>
             <Grid container maxWidth="1000px" margin="0 auto" display={"flex"} flexWrap={"wrap"} marginBottom={"5%"}>
                 <Grid item size={3} />

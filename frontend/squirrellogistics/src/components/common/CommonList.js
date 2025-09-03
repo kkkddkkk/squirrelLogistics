@@ -1,7 +1,7 @@
-import { Paper } from "@mui/material";
-import { theme } from "./CommonTheme";
+import { Paper, useTheme } from "@mui/material";
 
-const CommonList = ({ clickEvent, children, padding, margin, sx = {} }) => {
+const CommonList = ({ clickEvent, children, padding, margin, sx }) => {
+  const thisTheme = useTheme();
   return (
     <Paper
       onClick={clickEvent}
@@ -10,7 +10,7 @@ const CommonList = ({ clickEvent, children, padding, margin, sx = {} }) => {
         p: padding,
         mb: 2,
         border: "1px solid",
-        borderColor: "rgba(0, 0, 0, 0.12)",
+        borderColor: thisTheme.palette.text.secondary,
         boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
         borderRadius: 1.5,
         fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
@@ -21,8 +21,11 @@ const CommonList = ({ clickEvent, children, padding, margin, sx = {} }) => {
           boxShadow: clickEvent
             ? "0px 8px 16px rgba(0, 0, 0, 0.15)"
             : "0px 5px 8px rgba(0, 0, 0, 0.1)",
+          borderColor: clickEvent
+            ? thisTheme.palette.primary.main
+            : thisTheme.palette.text.primary,
         },
-        ...sx,
+         ...sx,
       }}
     >
       {children}

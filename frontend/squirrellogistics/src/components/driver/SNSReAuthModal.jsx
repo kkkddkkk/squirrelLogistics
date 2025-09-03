@@ -9,6 +9,7 @@ import {
   Box,
   Alert,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import { GoogleLogin } from "@react-oauth/google";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
@@ -17,6 +18,7 @@ import CloseIcon from "@mui/icons-material/Close";
 const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const thisTheme = useTheme();
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
@@ -104,7 +106,7 @@ const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
       <DialogTitle
         sx={{
           textAlign: "center",
-          color: "#113F67",
+          color: thisTheme.palette.primary.main,
           fontWeight: "bold",
           position: "relative",
         }}
@@ -116,7 +118,7 @@ const SNSReAuthModal = ({ open, onClose, loginType, onSuccess }) => {
             position: "absolute",
             right: 8,
             top: 8,
-            color: "#113F67",
+            color: thisTheme.palette.primary.main,
             "&:hover": {
               bgcolor: "rgba(17, 63, 103, 0.1)",
             },

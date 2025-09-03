@@ -10,6 +10,7 @@ import {
   InputLabel,
   FormControl,
   Pagination,
+  useTheme,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,6 +22,7 @@ import DriverProposalComponent from "./DriverProposalComponent";
 import DatePicker from "react-datepicker";
 import TwoButtonPopupComponent from './TwoButtonPopupComponent';
 import OneButtonPopupComponent from './OneButtonPopupComponent';
+import { CommonTitle } from "../common/CommonText";
 
 const SORT_MAP = {
   recent: "RECENT",
@@ -33,6 +35,8 @@ const SORT_MAP = {
 
 const ListComponent = () => {
   const { driverId } = useParams();
+
+  const thisTheme = useTheme();
 
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -167,14 +171,12 @@ const ListComponent = () => {
       <Box width={"100%"}>
         <Grid
           sx={{
-            bgcolor: "white",
+            bgcolor: thisTheme.palette.background.default,
             minHeight: 190,
           }}
         >
           <Box pt={4}>
-            <Typography variant="h4" align="center" fontWeight="bold">
-              배송 요청
-            </Typography>
+            <CommonTitle>배송 요청</CommonTitle>
           </Box>
 
           <Grid
@@ -292,26 +294,26 @@ const ListComponent = () => {
                   boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
                   borderRadius: 1.5,
                   fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                  bgcolor: "#113F67",
+                  bgcolor: thisTheme.palette.primary.main,
                 }}
               >
                 <Typography
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: "#e3effcff",
+                    color: thisTheme.palette.text.primary,
                     fontSize: "clamp(12px, 1.5vw, 14px)",
                   }}
                 >
                   <Box
                     component="span"
-                    sx={{ color: "#ff2121ff", fontWeight: 700, mr: 1 }}
+                    sx={{ color: thisTheme.palette.error.main, fontWeight: 700, mr: 1 }}
                   >
                     [알림]
                   </Box>{" "}
                   기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!
                   <Box
                     component="span"
-                    sx={{ ml: 1, color: "#e3effcff", fontWeight: 700 }}
+                    sx={{ ml: 1, color: thisTheme.palette.text.primary, fontWeight: 700 }}
                   >
                     (클릭하여 확인하기)
                   </Box>{" "}

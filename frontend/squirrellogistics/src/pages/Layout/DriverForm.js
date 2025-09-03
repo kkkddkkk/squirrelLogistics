@@ -26,6 +26,20 @@ const DEFAULT_VEHICLES = [
 
 export default function DriverForm() {
     const thisTheme = useTheme();
+
+    useEffect(() => {
+        const root = document.documentElement;
+
+        root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+        root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+        root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+        root.style.setProperty("--background-default", thisTheme.palette.background.default);
+        root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+        root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+        root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+    }, [thisTheme.palette.primary.main])
+
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -301,12 +315,12 @@ export default function DriverForm() {
                         />
                         <Button
                             type="button"
-                            variant="outlined"
+                            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                             onClick={checkLoginId}
                             sx={{ minWidth: 110, whiteSpace: "nowrap", height: "56px" }}
                             disabled={!form.loginId || idStatus === "checking"}
 
-                            
+
                         >
                             {idStatus === "checking" ? "확인중..." : "중복 확인"}
                         </Button>
@@ -331,7 +345,7 @@ export default function DriverForm() {
                         />
                         <Button
                             type="button"
-                            variant="outlined"
+                             variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                             onClick={checkEmail}
                             sx={{ minWidth: 110, whiteSpace: "nowrap", height: "56px" }}
                             disabled={!form.email || emailStatus === "checking"}
@@ -361,7 +375,7 @@ export default function DriverForm() {
                         fullWidth
                         value={form.birthday}
                         onChange={onChange("birthday")}
-                        InputLabelProps={{ shrink: true}}
+                        InputLabelProps={{ shrink: true }}
                         error={!!errors.birthday}
                         helperText={errors.birthday || " "}
                         FormHelperTextProps={helperProps}
@@ -476,7 +490,7 @@ export default function DriverForm() {
                     />
                 </div>
 
-                <Button variant="outlined" type="button" onClick={() => alert("진위확인 연동 예정")} sx={{ height: 56 }}>
+                <Button  variant={thisTheme.palette.mode==="light"?"outlined":"contained"} type="button" onClick={() => alert("진위확인 연동 예정")} sx={{ height: 56 }}>
                     운전면허 진위확인
                 </Button>
 
@@ -527,7 +541,7 @@ export default function DriverForm() {
 
             <Box sx={{ display: "flex", gap: 2 }}>
                 <Button
-                    variant="contained"
+                     variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                     type="submit"
                     disabled={
                         loading ||
@@ -540,7 +554,7 @@ export default function DriverForm() {
                 >
                     {loading ? "처리 중..." : "회원가입"}
                 </Button>
-                <Button variant="outlined" type="button" onClick={() => navigate(-1)}>
+                <Button  variant={thisTheme.palette.mode==="light"?"outlined":"contained"} type="button" onClick={() => navigate(-1)}>
                     취소
                 </Button>
             </Box>

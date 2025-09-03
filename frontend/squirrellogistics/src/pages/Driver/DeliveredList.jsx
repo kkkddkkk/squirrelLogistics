@@ -10,6 +10,7 @@ import {
   Pagination,
   CircularProgress,
   Alert,
+  useTheme,
 } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +31,7 @@ const DeliveredList = () => {
   const [deliveredData, setDeliveredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const thisTheme = useTheme();
 
   useEffect(() => {
     const loadCompletedDeliveries = async () => {
@@ -85,7 +87,7 @@ const DeliveredList = () => {
     return (
       <Box
         sx={{
-          bgcolor: "#F5F7FA",
+          bgcolor: thisTheme.palette.background.default,
           minHeight: "100vh",
           py: 6,
           display: "flex",
@@ -100,7 +102,7 @@ const DeliveredList = () => {
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: "#F5F7FA", minHeight: "100vh", py: 6 }}>
+      <Box sx={{ bgcolor: thisTheme.palette.background.paper, minHeight: "100vh", py: 6 }}>
         <Container maxWidth="lg">
           <Alert severity="error" sx={{ mb: 4 }}>
             {error}
@@ -115,7 +117,7 @@ const DeliveredList = () => {
       <Header />
       <Box
         sx={{
-          bgcolor: theme.palette.background.default,
+          bgcolor: thisTheme.palette.background.default,
           minHeight: "100vh",
           py: 6,
         }}
@@ -171,18 +173,18 @@ const DeliveredList = () => {
                     p: 3,
                     mb: 2,
                     border: "0.8px solid",
-                    borderColor: theme.palette.primary.light,
+                    borderColor: thisTheme.palette.text.secondary,
                     boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
                     borderRadius: 1.5,
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    bgcolor: theme.palette.background.paper,
+                    bgcolor: thisTheme.palette.background.paper,
                     "&:hover": {
-                      bgcolor: theme.palette.background.default,
+                      bgcolor: thisTheme.palette.background.default,
                       transform: "translateY(-2px)",
                       boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
-                      borderColor: theme.palette.primary.main,
+                      borderColor: thisTheme.palette.primary.main,
                     },
                   }}
                 >
@@ -212,7 +214,7 @@ const DeliveredList = () => {
                         <Typography
                           variant="h6"
                           fontWeight="bold"
-                          color={theme.palette.primary.main}
+                          color={thisTheme.palette.primary.main}
                         >
                           운송번호 #{assignedId}
                         </Typography>
@@ -231,10 +233,11 @@ const DeliveredList = () => {
                               px: 2,
                               py: 0.5,
                               borderRadius: 1,
-                              bgcolor:
-                                status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
+                              border: `1px solid ${status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary}`,
+                              // bgcolor: 
+                              //   status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
                               color:
-                                status === "COMPLETED" ? "#2e7d32" : "#666",
+                                status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
                             }}
                           >
                             {status === "COMPLETED" ? "배송완료" : status}
