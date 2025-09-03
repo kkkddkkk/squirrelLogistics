@@ -304,7 +304,7 @@ export const TwoButtonsAtRight = ({ leftTitle, rightTitle, leftClickEvent, right
 }
 
 export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightClickEvent,
-    leftDisabled, rightDisabled, leftColor, rightColor, gap }) => {
+    leftDisabled, rightDisabled, leftColor, rightColor, gap, sx }) => {
 
     const thisTheme = useTheme();
 
@@ -320,7 +320,7 @@ export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightC
                     "&:hover": {
                         backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
                     },
-
+                    ...sx
                 }}
                 onClick={leftClickEvent}
                 disabled={leftDisabled}
@@ -334,6 +334,7 @@ export const TwoButtonsAtLeft = ({ leftTitle, rightTitle, leftClickEvent, rightC
                     "&:hover": {
                         backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
                     },
+                    ...sx
                 }}
                 onClick={rightClickEvent}
                 disabled={rightDisabled}

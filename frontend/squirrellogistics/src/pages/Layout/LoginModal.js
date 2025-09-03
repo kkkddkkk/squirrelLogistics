@@ -176,9 +176,9 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               color: thisTheme.palette.text.secondary,
               "&.Mui-selected": {
                 backgroundColor: thisTheme.palette.primary.main,
-                color: thisTheme.palette.text.primary,
+                color: thisTheme.palette.background.default,
                 "&:hover": {
-                  backgroundColor: thisTheme.palette.primary.dark,
+                  backgroundColor: thisTheme.palette.primary.main,
                 }
               }
             }}>배송기사</ToggleButton>
@@ -186,9 +186,9 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               color: thisTheme.palette.text.secondary,
               "&.Mui-selected": {
                 backgroundColor: thisTheme.palette.primary.main,
-                color: thisTheme.palette.text.primary,
+                color: thisTheme.palette.background.default,
                 "&:hover": {
-                  backgroundColor: thisTheme.palette.primary.dark,
+                  backgroundColor: thisTheme.palette.primary.main,
                 }
               }
             }}>기업고객</ToggleButton>

@@ -1,5 +1,7 @@
 .customInput{
-
+  background-color: var(--background-paper);
+  border: 1px solid var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .customInput:focus {
@@ -11,6 +13,8 @@
   width: 100%;
   resize: vertical;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--text-secondary);
+  background-color: var(--background-paper);
+  color: var(--text-primary);
   border-radius: 6px;
 }

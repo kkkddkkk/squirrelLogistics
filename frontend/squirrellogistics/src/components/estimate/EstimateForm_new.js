@@ -16,17 +16,29 @@ import "./EstimateForm.css";
 import { Box, Grid, useTheme } from "@mui/material";
 import { CommonSmallerTitle, CommonTitle } from "../common/CommonText";
 import CommonList from "../common/CommonList";
-import { ButtonContainer, OneButtonAtRight, Three100Buttons, ThreeButtons, Two100Buttons, TwoButtonsAtEnd } from "../common/CommonButton";
+import { ButtonContainer, OneButtonAtRight, Three100Buttons, ThreeButtons, Two100Buttons, TwoButtonsAtEnd, TwoButtonsAtLeft } from "../common/CommonButton";
 import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import "./EstimateForm_new.css";
+import DesignServicesIcon from '@mui/icons-material/DesignServices';
 
 const STORAGE_KEY = "deliveryFlow";
 const WAYPOINT_FEE_PER_ITEM = 50000;
 
 const EstimateForm_new = () => {
   const thisTheme = useTheme();
-  applyThemeToCssVars(thisTheme);
+  useEffect(() => {
+    const root = document.documentElement;
+
+    root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+    root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+    root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+    root.style.setProperty("--background-default", thisTheme.palette.background.default);
+    root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+    root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+    root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+  }, [thisTheme.palette.mode])
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -547,12 +559,12 @@ const EstimateForm_new = () => {
   const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
-    <Grid container sx={{ bgcolor: theme.palette.background.default }}>
+    <Grid container sx={{ bgcolor: thisTheme.palette.background.default }}>
       <Grid size={3} />
       <Grid size={6} marginBottom={"5%"}>
         <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
           <CommonTitle>예상 금액 계산 &nbsp;</CommonTitle>
-          <LocalShippingOutlinedIcon sx={{ fontSize: "40px", color: theme.palette.primary.main }} />
+          <LocalShippingOutlinedIcon sx={{ fontSize: "40px", color: thisTheme.palette.primary.main }} />
         </Box>
 
 
@@ -586,7 +598,7 @@ const EstimateForm_new = () => {
 
                 rightTitle={"경유지 삭제"}
                 rightClickEvent={() => handleRemoveWaypoint(i)}
-                rightColor={theme.palette.error.main}
+                rightColor={thisTheme.palette.error.main}
 
                 gap={1}
               />
@@ -614,24 +626,36 @@ const EstimateForm_new = () => {
 
 
           {savedAddresses.length > 0 && (
-            <div className="info-section">
-              <p>📌 저장된 기본 주소</p>
+            <CommonList padding={3}>
+              <Box display={"flex"} alignItems={"center"} color={thisTheme.palette.primary.main}
+                marginBottom={2}
+              >
+                <DesignServicesIcon fontSize="small" />
+                <p style={{margin: 0}}> &nbsp;저장된 기본 출발 주소</p>
+              </Box>
               {savedAddresses.map((addr) => (
-                <div key={addr.id}>
+                <div key={addr.id} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}>
                   {addr.type}: {addr.value}
-                  <button onClick={() => applySavedAddress(addr.value)} style={{ marginLeft: 8 }}>
-                    적용
-                  </button>
-                  <button onClick={removeDefaultAddress} style={{ marginLeft: 8 }}>
-                    삭제
-                  </button>
+                  <TwoButtonsAtLeft
+                    leftTitle={"적용"}
+                    leftClickEvent={() => applySavedAddress(addr.value)}
+                    rightTitle={"삭제"}
+                    rightClickEvent={removeDefaultAddress}
+                    rightColor={thisTheme.palette.error.main}
+                    gap={1}
+                    sx={{ height: "25px" }}
+                  />
                 </div>
               ))}
-            </div>
+            </CommonList>
           )}
 
           {hasCalculated ? (
-            <div className="info-section">
+            <CommonList padding={3}>
               <CommonSmallerTitle>상세 운송 내역</CommonSmallerTitle>
               <ul style={{ marginTop: 6, lineHeight: 1.6 }}>
                 <li>예상 거리: {Number(Math.floor(distance) || 0)} km</li>
@@ -657,11 +681,15 @@ const EstimateForm_new = () => {
               <CommonSmallerTitle>
                 총 예상 금액: {Number(price || 0).toLocaleString()}원
               </CommonSmallerTitle>
-            </div>
+            </CommonList>
+
           ) : (
-            <div className="info-section">
+            <div className="info-section" style={{
+              color: thisTheme.palette.text.secondary,
+              backgroundColor: thisTheme.palette.background.paper
+            }}>
               <p>상세 운송/요금 내역</p>
-              <p style={{ color: "#666" }}>
+              <p>
                 집하지/최종 목적지를 입력하고 &ldquo;거리 및 금액 계산&rdquo;을 눌러주세요.
               </p>
             </div>

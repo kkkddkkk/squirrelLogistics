@@ -401,7 +401,7 @@ export const Payment = () => {
 
 
     return (
-        <>
+        <Box bgcolor={thisTheme.palette.background.default}>
             <CommonTitle>결제</CommonTitle>
             <LoadingComponent open={loading} text="결제 정보를 불러오는 중..." />
             <Grid container>
@@ -495,19 +495,21 @@ export const Payment = () => {
                                 총 {paymentFormat(actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate)}원
                             </Typography>
                         </Box>
-                    </> : <>
-                        <SubTitle>환불일자</SubTitle>
-                        <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} /></>
+                    </> : 
+                        <Box marginBottom={5}>
+                            <CommonSubTitle>환불일자</CommonSubTitle>
+                            <RefundDate refundDate={refundDate} setRefundDate={setRefundDate} />
+                        </Box>
                     }
                     {(paymentId != 0 && paymentId != null) || ((actualCalc?.estimateFee ? (totalRate - actualCalc.estimateFee) : totalRate) > 0) ?
-                        <>
-                            <SubTitle>결제수단</SubTitle>
+                        <Box marginBottom={5}>
+                            <CommonSubTitle>결제수단</CommonSubTitle>
                             <PayMethod paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
 
-                            <SubTitle><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</SubTitle>
+                            <CommonSubTitle><PolicyCheckbox onClick={handleClickAllPolicy} checked={checkedAll} />모든 약관 동의</CommonSubTitle>
                             <Policies onClick={handleClickPolicy1} checked={checked1} path={'/policy1'}> 이용약관 동의</Policies>
                             <Policies onClick={handleClickPolicy2} checked={checked2} path={'/policy2'}> 개인정보 수집 및 이용 동의</Policies>
-                        </> : <></>}
+                        </Box> : <></>}
 
                     <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
                         <ButtonContainer width={"80%"} marginTop={"5%"} marginBottom={"5%"}>
@@ -546,7 +548,7 @@ export const Payment = () => {
                 </Grid>
                 <Grid size={3} />
             </Grid>
-        </>
+        </Box>
     );
 
 }

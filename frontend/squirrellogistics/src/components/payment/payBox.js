@@ -9,22 +9,6 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
     additionalRate, atPayment
 }) => {
 
-    const ContentBox = ({ children, subTitle }) => {
-        return (
-            <Grid container sx={{ border: "1px solid #2A2A2A", marginBottom: "5%" }}>
-                <Grid item size={12} margin={"4% 0 0 4%"} >
-                    <SubTitle>{subTitle}</SubTitle>
-                </Grid>
-                <Grid item size={12} margin={"0 4% 2% 4%"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}
-                >
-                    {children}
-                </Grid>
-
-            </Grid>
-        )
-
-    }
-
     const Content = ({ dataKey, value, locale }) => {
 
         function PforCharge({ children }) {
@@ -41,8 +25,10 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
 
         return (
             <>
+            <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"}>
                 <PforCharge>{dataKey}</PforCharge>
                 <PforCharge>{value}{locale ? "원" : ""}</PforCharge>
+            </Box>
                 <Divider color={theme.palette.text.secondary} />
             </>
         )

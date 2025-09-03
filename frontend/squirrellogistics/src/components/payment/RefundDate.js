@@ -1,11 +1,13 @@
-import { Box, Divider, FormControl, FormControlLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material"
+import { Box, Divider, FormControl, FormControlLabel, Grid, Radio, RadioGroup, Typography, useTheme } from "@mui/material"
 import { useState } from "react"
+import CommonList from "../common/CommonList";
 
 export const RefundDate = ({ refundDate, setRefundDate }) => {
+    const thisTheme = useTheme();
     function RefundCaution() {
         return (
             <Grid size={12} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"2%"}>
-                <Typography sx={{ color: "#A20025" }}>
+                <Typography sx={{ color: thisTheme.palette.error.main }}>
                     {refundDate}일 이내 매칭 실패 시 결제를 취소합니다.
                 </Typography>
             </Grid>
@@ -46,6 +48,7 @@ export const RefundDate = ({ refundDate, setRefundDate }) => {
                                 value={item.value}
                                 control={<Radio />}
                                 label={item.label}
+                                color={thisTheme.palette.text.primary}
                             />
                         ))}
                     </RadioGroup>
@@ -58,17 +61,15 @@ export const RefundDate = ({ refundDate, setRefundDate }) => {
 
     return (
 
-        <Grid container sx={{ border: "1px solid #2A2A2A", marginBottom: "5%" }}>
+        <CommonList>
             <RefundRadioForm></RefundRadioForm>
             <Divider
-                orientation="horizontal"
-                flexItem
                 sx={{
-                    backgroundColor: "#909095",
+                    backgroundColor: thisTheme.palette.text.secondary,
                     height: "0.5px"
                 }}
             />
             <RefundCaution />
-        </Grid>
+        </CommonList>
     );
 }
