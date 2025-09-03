@@ -4,7 +4,7 @@ import "./CompanyVerifyPage.css";
 import { verifyCredentials, requestPasswordReset } from "../../api/company/companyApi";
 import { useSelector } from "react-redux";
 import ReLoginModal from "../../components/company/ReLoginModal";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
 import CommonList from "../../components/common/CommonList";
 import LockIcon from '@mui/icons-material/Lock';
 import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
@@ -12,7 +12,21 @@ import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme'
 import { ButtonContainer, One100ButtonAtCenter, OneButtonAtRight, TwoButtonsAtCenter, TwoButtonsAtEnd, TwoButtonsAtRight } from "../../components/common/CommonButton";
 
 const CompanyVerifyPage = () => {
-  applyThemeToCssVars(theme);
+    const thisTheme = useTheme();
+
+    useEffect(() => {
+        const root = document.documentElement;
+        
+        root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+        root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+        root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+        root.style.setProperty("--background-default", thisTheme.palette.background.default);
+        root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+        root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+        root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+    }, [thisTheme.palette.mode])
+
   const navigate = useNavigate();
   const userInfo = useSelector((s) => s.company.userInfo);
 

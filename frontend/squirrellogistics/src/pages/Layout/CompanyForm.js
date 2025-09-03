@@ -7,6 +7,7 @@ import {
     Checkbox,
     FormControlLabel,
     FormHelperText,
+    useTheme,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/user/api";
@@ -15,6 +16,21 @@ import TermsConsent from "../../components/term/TermsConsent";
 const helperProps = { sx: { minHeight: "20px" } }; // 항상 동일한 높이 확보
 
 export default function CompanyForm() {
+    const thisTheme = useTheme();
+
+    useEffect(() => {
+        const root = document.documentElement;
+
+        root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+        root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+        root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+        root.style.setProperty("--background-default", thisTheme.palette.background.default);
+        root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+        root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+        root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+    }, [thisTheme.palette.primary.main])
+
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -267,7 +283,7 @@ export default function CompanyForm() {
                         />
                         <Button
                             type="button"
-                            variant="outlined"
+                            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                             onClick={checkLoginId}
                             sx={{ minWidth: 110, whiteSpace: "nowrap", height: "56px" }}
                             disabled={!form.loginId || idStatus === "checking"}
@@ -295,7 +311,7 @@ export default function CompanyForm() {
                         />
                         <Button
                             type="button"
-                            variant="outlined"
+                            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                             onClick={checkEmail}
                             sx={{ minWidth: 110, whiteSpace: "nowrap", height: "56px" }}
                             disabled={!form.email || emailStatus === "checking"}
@@ -356,7 +372,7 @@ export default function CompanyForm() {
                             FormHelperTextProps={helperProps}
                         />
                         <Button
-                            variant="outlined"
+                            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                             type="button"
                             onClick={openPostcode}
                             sx={{ minWidth: 100, whiteSpace: "nowrap", height: "56px" }}
@@ -417,7 +433,7 @@ export default function CompanyForm() {
 
             <Box sx={{ display: "flex", gap: 2 }}>
                 <Button
-                    variant="contained"
+                    variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
                     type="submit"
                     disabled={
                         loading ||
@@ -430,7 +446,7 @@ export default function CompanyForm() {
                 >
                     {loading ? "처리 중..." : "회원가입"}
                 </Button>
-                <Button variant="outlined" type="button" onClick={() => navigate(-1)}>
+                <Button variant={thisTheme.palette.mode==="light"?"outlined":"contained"} type="button" onClick={() => navigate(-1)}>
                     취소
                 </Button>
             </Box>

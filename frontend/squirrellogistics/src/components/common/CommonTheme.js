@@ -2,6 +2,7 @@ import { createTheme, lighten } from "@mui/material";
 
 export const theme = createTheme({
   palette: {
+     mode: "light",
     primary: {
       main: "#113F67",  // MAIN THEME
       dark: "rgba(255,255,255,.08)", //DARK THEME
@@ -48,6 +49,7 @@ export const theme = createTheme({
 
 export const darkTheme = createTheme({
   palette: {
+    mode: "dark",
     primary: {
       main: "#58A0C8",  // MAIN THEME
       dark: "rgba(255,255,255,.08)", //DARK THEME

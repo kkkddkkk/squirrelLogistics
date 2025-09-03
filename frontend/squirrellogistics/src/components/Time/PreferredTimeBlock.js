@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Divider } from "@mui/material";
+import { Box, Typography, Paper, Divider, useTheme } from "@mui/material";
 import dayjs from "dayjs";
 import { useState } from "react";
 import OperatingHoursPicker from "./OperatingHoursPicker";
@@ -6,9 +6,9 @@ import OperatingHoursPicker from "./OperatingHoursPicker";
 export default function PreferredTimeBlock() {
     const [startTime, setStartTime] = useState(dayjs().hour(7).minute(0));
     const [endTime, setEndTime] = useState(dayjs().hour(18).minute(0));
-
+    const thisTheme = useTheme();
     return (
-        <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
+        <Paper variant="outlined" sx={{ p: 2, mt: 2, backgroundColor: thisTheme.palette.background.default }}>
             {/* 타이틀 */}
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>

@@ -23,6 +23,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/user/api";
 import { GoogleLogin } from "@react-oauth/google";
+import logo from "../../components/common/squirrelLogisticsLogo.png"
+import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png"
 
 export default function LoginModal({ open, onClose, onLoggedIn }) {
   const navigate = useNavigate();
@@ -144,7 +146,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
         {/* 로고/인사 */}
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <img
-            src="/images/squirrelLogisticsLogo.png"
+            src={thisTheme.palette.mode==="light"?logo:darkLogo}
             alt="logo"
             style={{ width: 80, marginBottom: 8 }}
           />

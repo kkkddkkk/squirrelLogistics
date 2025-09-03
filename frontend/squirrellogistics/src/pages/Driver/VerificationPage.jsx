@@ -8,12 +8,14 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  useTheme,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import LockIcon from "@mui/icons-material/Lock";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { CommonTitle } from "../../components/common/CommonText";
 import { verifyPassword } from "../../api/driver/driverApi";
+import { Two100Buttons } from "../../components/common/CommonButton";
 
 const VerificationPage = () => {
   const navigate = useNavigate();
@@ -21,6 +23,8 @@ const VerificationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const thisTheme = useTheme();
 
   // 비밀번호 확인
   const handlePasswordConfirm = async () => {
@@ -71,7 +75,7 @@ const VerificationPage = () => {
           sx={{
             p: 4,
             borderRadius: 2,
-            bgcolor: "white",
+            bgcolor: thisTheme.palette.background.paper,
           }}
         >
           {/* 헤더 */}
@@ -79,7 +83,8 @@ const VerificationPage = () => {
             <Button
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate("/driver/profile")}
-              sx={{ position: "absolute", left: 16, top: 16 }}
+              sx={{ position: "absolute", left: 16, top: 16 
+              }}
             >
               뒤로가기
             </Button>
@@ -92,8 +97,8 @@ const VerificationPage = () => {
                 mb: 2,
               }}
             >
-              <LockIcon sx={{ fontSize: 40, color: "#113F67", mr: 2 }} />
-              <CommonTitle sx={{ color: "#113F67" }}>비밀번호 확인</CommonTitle>
+              <LockIcon sx={{ fontSize: 40, color: thisTheme.palette.primary.main, mr: 2 }} />
+              <CommonTitle>비밀번호 확인</CommonTitle>
             </Box>
 
             <Typography variant="body1" color="text.secondary">
@@ -136,12 +141,8 @@ const VerificationPage = () => {
               onClick={() => navigate("/driver/profile")}
               disabled={isLoading}
               sx={{
-                borderColor: "#113F67",
-                color: "#113F67",
-                "&:hover": {
-                  borderColor: "#34699A",
-                  bgcolor: "#f5f5f5",
-                },
+                borderColor: thisTheme.palette.primary.main,
+                color: thisTheme.palette.primary.main,
               }}
             >
               취소
@@ -153,10 +154,7 @@ const VerificationPage = () => {
               onClick={handlePasswordConfirm}
               disabled={isLoading}
               sx={{
-                bgcolor: "#113F67",
-                "&:hover": {
-                  bgcolor: "#34699A",
-                },
+                bgcolor: thisTheme.palette.primary.main,
               }}
             >
               {isLoading ? (

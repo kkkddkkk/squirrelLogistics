@@ -5,6 +5,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { createUser, fetchUserById, updateUser } from "../../../../api/users";
+import { CommonTitle } from "../../../../components/common/CommonText";
 
 const C = { blue: "#113F67", gold: "#E8A93F" };
 
@@ -256,7 +257,7 @@ export default function UserForm() {
         {form.userType === "DRIVER" ? (
           <>
             <Divider sx={{ my: 3 }} />
-            <SectionTitle>운전자 개인 정보</SectionTitle>
+            <CommonTitle>운전자 개인 정보</CommonTitle>
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <TextField label="생년월일" name="birth" type="date" InputLabelProps={{ shrink: true }}

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { ListBoxContainer, OneBigBtn, OneBtnAtRight, paymentFormat, TwoBtns } from "../common/CommonForCompany";
 import StarRate from "../review/StarRate";
@@ -44,6 +44,8 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
         state: 'PENDING'
     });
 
+    const thisTheme = useTheme();
+
     useEffect(() => {
         if (!isExpand) return;
         setLoading(true);
@@ -71,8 +73,9 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const showReport = () => {
+        const mode = thisTheme.palette.mode
         window.open(
-            `${window.location.origin}/company/report?id=${assignedId}&rId=${todayContent?.reportId}&token=${accesstoken}`,
+            `${window.location.origin}/company/report?id=${assignedId}&rId=${todayContent?.reportId}&token=${accesstoken}?mode=${mode}`,
             'reportWindow',
             'width=1000,height=600'
         );
@@ -143,7 +146,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                         alt="Img"
                                         src={`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
                                     />
-                                    <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}<br/>({todayContent.carName})</Typography>
+                                    <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}<br />({todayContent.carName})</Typography>
                                 </Box>
                                 {assignStatus === "배송완료" && todayContent.rating != 0 ? <StarRate scope={scope} setScope={setScope} /> : <></>}
 
@@ -158,7 +161,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                         rightClickEvent={openModal}
                                         gap={1}
                                     />
-                                    
+
                                     : (assignStatus === "배송중" || assignStatus === "예약" ?
                                         <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
                                             세부내역 확인

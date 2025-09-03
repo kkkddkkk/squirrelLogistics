@@ -3,7 +3,8 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Box, Typography, Divider, Grid,
   Paper,
-  IconButton
+  IconButton,
+  useTheme
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close"
@@ -23,6 +24,7 @@ export default function MontlyDetailPopupComponent(
   const [err, setErr] = useState("");
   const [data, setData] = useState(null);
   const navigate = useNavigate();
+  const thisTheme = useTheme();
 
   const handlingTagString = renderWarningTags(data?.waypoints);
 
@@ -73,7 +75,7 @@ export default function MontlyDetailPopupComponent(
               fontFamily: "inherit",
               fontSize: "1.5rem",
               fontWeight: "bold",
-              color: "#2A2A2A",
+              color: thisTheme.palette.text.primary,
             }}
           >
             운송 예약 정보
@@ -81,7 +83,7 @@ export default function MontlyDetailPopupComponent(
           <IconButton
             aria-label="close"
             onClick={onClose}
-            sx={{ position: "absolute", right: 8, top: 8, color: "#888" }}
+            sx={{ position: "absolute", right: 8, top: 8, color: thisTheme.palette.text.secondary}}
           >
             <CloseIcon />
           </IconButton>
@@ -123,6 +125,7 @@ export default function MontlyDetailPopupComponent(
                     border: "1px solid #2a2a2a5d",
                     boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
                     borderRadius: 1.2,
+                    backgroundColor: thisTheme.palette.background.default
                   }}
                 >
                   <RouteMapComponent
@@ -179,7 +182,7 @@ export default function MontlyDetailPopupComponent(
                     size="large"
                     onClick={goDetailPage}
                     disabled={loading || !requestId} // 로딩 중/필수키 없음 → 비활성화
-                    sx={{ borderRadius: 2, width: "100%", backgroundColor: "#113F67" }}
+                    sx={{ borderRadius: 2, width: "100%"}}
                   >
                     예약된 운송 정보 자세히 보기
                   </Button>

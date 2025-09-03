@@ -1,10 +1,12 @@
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Grid } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { useRef } from 'react';
 
 
 const ReportImg = ({ func, addPic, preview, setPreview }) => {
+
+    const thisTheme = useTheme();
     const fileRef = useRef(null);
 
     const handleClickAddImg = () => {
@@ -45,7 +47,7 @@ const ReportImg = ({ func, addPic, preview, setPreview }) => {
                 width: "18%",
                 aspectRatio: "1/1",
                 marginLeft: "2%",
-                backgroundColor: "#113F67",
+                backgroundColor: thisTheme.palette.primary.main,
                 backgroundImage: preview ? `url(${preview})` : "none",
                 backgroundSize: "cover",
                 backgroundPosition: "center",

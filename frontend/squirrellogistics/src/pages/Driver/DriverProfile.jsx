@@ -18,6 +18,8 @@ import {
   DialogActions,
   TextField,
   Alert,
+  useTheme,
+  lighten,
 } from "@mui/material";
 import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -40,6 +42,7 @@ import {
 } from "../../api/driver/driverApi";
 
 const DriverProfile = () => {
+  const thisTheme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [driver, setDriver] = useState({
@@ -157,21 +160,29 @@ const DriverProfile = () => {
         // 프로필 이미지 설정
         if (driverData.profileImageUrl) {
           console.log(
-            "백엔드에서 받은 프로필 이미지 파일명:",
+            "백엔드에서 받은 프로필 이미지 URL:",
             driverData.profileImageUrl
           );
-
-          // localStorage에서 data URL 우선 확인
-          const savedDataUrl = localStorage.getItem("profileImageUrl");
-          if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
-            console.log(
-              "localStorage에서 data URL 사용:",
-              savedDataUrl.substring(0, 50) + "..."
-            );
-            setProfileImageUrl(savedDataUrl);
-          } else {
-            // 백엔드에서 받은 파일명 사용 (ProfileImage 컴포넌트에서 전체 URL 구성)
+          // 백엔드 URL이 data URL인 경우에만 사용
+          if (driverData.profileImageUrl.startsWith("data:image")) {
             setProfileImageUrl(driverData.profileImageUrl);
+            localStorage.setItem("profileImageUrl", driverData.profileImageUrl);
+          } else {
+            // 백엔드 URL이 data URL이 아닌 경우 localStorage에서 data URL 확인
+            const savedDataUrl = localStorage.getItem("profileImageUrl");
+            if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
+              console.log(
+                "localStorage에서 data URL 사용:",
+                savedDataUrl.substring(0, 50) + "..."
+              );
+              setProfileImageUrl(savedDataUrl);
+            } else {
+              setProfileImageUrl(driverData.profileImageUrl);
+              localStorage.setItem(
+                "profileImageUrl",
+                driverData.profileImageUrl
+              );
+            }
           }
         } else {
           // 저장된 프로필 이미지 로드
@@ -356,7 +367,7 @@ const DriverProfile = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
       <Container sx={{ maxWidth: "1000px", py: 6 }}>
         <Typography
@@ -387,8 +398,8 @@ const DriverProfile = () => {
               position: "absolute",
               right: 26,
               top: 15,
-              color: "#113F67",
-              "&:hover": { color: "#34699A" },
+              color: thisTheme.palette.primary.main,
+              // "&:hover": { color: "#34699A" },
               fontSize: "1rem",
               fontWeight: "bold",
               zIndex: 10,
@@ -407,7 +418,7 @@ const DriverProfile = () => {
             <Box
               sx={{
                 width: "35%",
-                bgcolor: "#113F67",
+                bgcolor: thisTheme.palette.primary.main,
                 color: "white",
                 p: 5,
                 display: "flex",
@@ -551,12 +562,12 @@ const DriverProfile = () => {
                     fullWidth
                     size="large"
                     sx={{
-                      bgcolor: "white",
-                      color: "#113F67",
+                      bgcolor: thisTheme.palette.background.default,
+                      color: thisTheme.palette.primary.main,
                       py: 2,
-                      "&:hover": {
-                        bgcolor: "rgba(255,255,255,0.9)",
-                      },
+                      // "&:hover": {
+                      //   bgcolor: "rgba(255,255,255,0.9)",
+                      // },
                       textTransform: "none",
                       fontWeight: "600",
                       fontSize: "1.1rem",
@@ -583,9 +594,9 @@ const DriverProfile = () => {
                       borderWidth: 1,
                       py: 2,
                       "&:hover": {
-                        backgroundColor: "white",
-                        color: "#113F67",
-                        borderColor: "white",
+                        // backgroundColor: "white",
+                        // color: "#113F67",
+                        // borderColor: "white",
                         borderWidth: 2,
                       },
                       textTransform: "none",
@@ -601,11 +612,11 @@ const DriverProfile = () => {
                     fullWidth
                     size="large"
                     sx={{
-                      bgcolor: "#A20025",
-                      color: "white",
+                      bgcolor: thisTheme.palette.error.main,
+                      color: thisTheme.palette.text.primary,
                       py: 2,
                       "&:hover": {
-                        bgcolor: "#8B001F",
+                        bgcolor: lighten(thisTheme.palette.error.main, 0.1),
                       },
                       textTransform: "none",
                       fontWeight: "600",
@@ -623,9 +634,9 @@ const DriverProfile = () => {
             <Box
               sx={{
                 width: "65%",
-                bgcolor: "white",
+                bgcolor: thisTheme.palette.background.paper,
                 p: 5,
-                border: "1px solid #E0E6ED",
+                // border: `1px solid ${thisTheme.palette.text.secondary}`,
               }}
             >
               {/* 차량 정보 */}
@@ -638,13 +649,13 @@ const DriverProfile = () => {
                 <Box
                   sx={{
                     p: 10,
-                    bgcolor: "#F5F7FA",
+                    bgcolor: thisTheme.palette.background.default,
                     borderRadius: 3,
                     textAlign: "center",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
                     "&:hover": {
-                      bgcolor: "#E8E8E8",
+                      bgcolor: thisTheme.palette.background.paper,
                       transform: "translateY(-2px)",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     },
@@ -659,17 +670,17 @@ const DriverProfile = () => {
                     sx={{
                       fontSize: 100,
                       mb: 3,
-                      color: "#113F67",
+                      color: thisTheme.palette.primary.main,
                     }}
                   />
                   <Typography
                     variant="h4"
-                    color="text.secondary"
+                    color={thisTheme.palette.text.secondary}
                     sx={{ mb: 3, fontWeight: "bold" }}
                   >
                     차량 조회하기
                   </Typography>
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant="h6" color={thisTheme.palette.text.secondary}>
                     차량 정보를 조회하고 관리할 수 있습니다
                   </Typography>
                 </Box>
@@ -683,13 +694,13 @@ const DriverProfile = () => {
                 <Box
                   sx={{
                     p: 10,
-                    bgcolor: "#F5F7FA",
+                    bgcolor: thisTheme.palette.background.default,
                     borderRadius: 3,
                     textAlign: "center",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
                     "&:hover": {
-                      bgcolor: "#E8E8E8",
+                      bgcolor: thisTheme.palette.background.paper,
                       transform: "translateY(-2px)",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     },
@@ -708,17 +719,17 @@ const DriverProfile = () => {
                     sx={{
                       fontSize: 100,
                       mb: 3,
-                      color: "#113F67",
+                      color: thisTheme.palette.primary.main,
                     }}
                   />
                   <Typography
                     variant="h4"
-                    color="text.secondary"
+                    color={thisTheme.palette.text.secondary}
                     sx={{ mb: 3, fontWeight: "bold" }}
                   >
                     일정 관리하기
                   </Typography>
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant="h6" color={thisTheme.palette.text.secondary}>
                     달력에서 일정을 확인하고 관리할 수 있습니다
                   </Typography>
                 </Box>
@@ -730,7 +741,8 @@ const DriverProfile = () => {
         {/* 탈퇴 버튼 */}
         <Box display="flex" justifyContent="center">
           <Button
-            variant="outlined"
+            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            color="error"
             onClick={handleWithdraw}
             sx={{
               mt: 3,
@@ -738,13 +750,9 @@ const DriverProfile = () => {
               py: 2,
               fontSize: "1.1rem",
               fontWeight: "bold",
-              borderWidth: 1,
-              borderColor: "#A20025",
-              color: "#A20025",
+              borderWidth: 2,
               "&:hover": {
-                borderColor: "#8B001F",
-                color: "#8B001F",
-                bgcolor: "rgba(162, 0, 37, 0.04)",
+                bgcolor: lighten(thisTheme.palette.error.main, 0.1),
               },
             }}
           >
@@ -766,16 +774,16 @@ const DriverProfile = () => {
           {loginType === 0
             ? "비밀번호 확인"
             : hasSetPassword
-            ? "비밀번호 확인"
-            : "비밀번호 설정"}
+              ? "비밀번호 확인"
+              : "비밀번호 설정"}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2, textAlign: "center" }}>
             {loginType === 0
               ? "회원정보 수정을 위해 비밀번호를 입력해주세요."
               : hasSetPassword
-              ? "회원정보 수정을 위해 비밀번호를 입력해주세요."
-              : "회원정보 수정을 위해 비밀번호를 설정해주세요. (4자 이상)"}
+                ? "회원정보 수정을 위해 비밀번호를 입력해주세요."
+                : "회원정보 수정을 위해 비밀번호를 설정해주세요. (4자 이상)"}
           </Typography>
           <TextField
             fullWidth

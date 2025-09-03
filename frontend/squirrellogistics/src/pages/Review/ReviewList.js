@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Layout, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
 import ReviewContent from "../../components/review/ReviewContent";
 import axios from "axios";
 import ReviewModalForList from "../../components/review/ReviewModalForList";
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
+import darkLogo from '../../components/common/squirrelLogisticsLogo_dark.png';
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
 import LoadingComponent from "../../components/common/LoadingComponent";
-import { CommonTitle } from "../../components/common/CommonText";
+import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 
 const ReviewList = () => {
     const accesstoken = localStorage.getItem('accessToken');
@@ -22,6 +23,8 @@ const ReviewList = () => {
     const [dates, setDates] = useState([]);
     const [changed, setChanged] = useState(false);
     const [dataLengths, setDataLengths] = useState(0);
+
+    const thisTheme = useTheme();
 
     useEffect(() => {
         setLoading(true);
@@ -67,10 +70,10 @@ const ReviewList = () => {
                 <Grid size={3} />
                 <Grid size={6}>
                     {dataLengths == 0 ?
-                        <NoneOfList logoSrc={Logo}>아직 작성한 리뷰가 없습니다.</NoneOfList> :
+                        <NoneOfList logoSrc={thisTheme.palette.mode==="light"?Logo:darkLogo}>아직 작성한 리뷰가 없습니다.</NoneOfList> :
                         (dates.map((date) => (
                             <Box marginBottom={"5%"}>
-                                <SubTitle>{date}</SubTitle>
+                                <CommonSubTitle>{date}</CommonSubTitle>
                                 {reviewList.map((review, idx) => (
                                     review.regDate.toString().slice(0, 10) == date ?
                                         <ReviewContent

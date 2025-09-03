@@ -2,7 +2,8 @@ import React from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Typography, Button,
-    Grid
+    Grid,
+    useTheme
 } from '@mui/material';
 
 function TwoButtonPopupComponent({
@@ -15,6 +16,9 @@ function TwoButtonPopupComponent({
     onRightClick = () => { },
     maxWidth = 'xs',
 }) {
+
+    const thisTheme = useTheme();
+
     const handleGuardedClose = (event, reason) => {
         if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
     };
@@ -38,7 +42,7 @@ function TwoButtonPopupComponent({
                                 fontFamily: 'inherit',
                                 fontSize: '1.2rem',
                                 fontWeight: 'bold',
-                                color: '#2A2A2A',
+                                color: thisTheme.palette.text.primary,
                             }}
                         >
                             {title}
@@ -56,7 +60,7 @@ function TwoButtonPopupComponent({
                                 textAlign: 'center',
                                 fontFamily: 'inherit',
                                 fontSize: '1.0rem',
-                                color: '#2A2A2A',
+                                color: thisTheme.palette.text.primary,
                             }}
                         >
                             {content}
@@ -71,7 +75,7 @@ function TwoButtonPopupComponent({
                     variant="outlined"
                     size='large'
                     onClick={onLeftClick}
-                    sx={{ minWidth: 120, borderColor: '#113F67', color: '#113F67' }}
+                    sx={{ minWidth: 120 }}
                 >
                     {leftTxt}
                 </Button>
@@ -79,7 +83,7 @@ function TwoButtonPopupComponent({
                 <Button
                     variant="contained"
                     onClick={onRightClick}
-                    sx={{ minWidth: 120, bgcolor: '#113F67' }}
+                    sx={{ minWidth: 120 }}
                 >
                     {rightTxt}
                 </Button>

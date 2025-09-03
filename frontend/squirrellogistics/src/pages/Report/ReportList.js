@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Layout, ListBoxContainer, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, useTheme } from "@mui/material";
 import ReportContent from "../../components/report/ReportContent";
 import axios from "axios";
 import { getReportList } from "../../api/company/reportApi";
 import Logo from '../../components/common/squirrelLogisticsLogo.png';
-import { CommonTitle } from "../../components/common/CommonText";
+import darkLogo from '../../components/common/squirrelLogisticsLogo_dark.png';
+import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
@@ -17,6 +18,8 @@ const ReportList = () => {
     const [dataLengths, setDataLengths] = useState(0);
     const [loading, setLoading] = useState(false);
     const { moveBack } = useHistoryMove();
+
+    const thisTheme = useTheme();
 
     useEffect(() => {
         setLoading(true);
@@ -42,10 +45,10 @@ const ReportList = () => {
                 <Grid size={3} />
                 <Grid size={6}>
                     {dataLengths == 0 ?
-                        <NoneOfList logoSrc={Logo}>아직 작성한 신고가 없습니다.</NoneOfList> :
+                        <NoneOfList logoSrc={thisTheme.palette.mode==="light"?Logo:darkLogo}>아직 작성한 신고가 없습니다.</NoneOfList> :
                         (dates.map((date) => (
                             <Box marginBottom={"5%"}>
-                                <SubTitle>{date}</SubTitle>
+                                <CommonSubTitle>{date}</CommonSubTitle>
                                 {reportList.map((report) => (
                                     report.regDate.toString().slice(0, 10) === date ?
                                         <ReportContent

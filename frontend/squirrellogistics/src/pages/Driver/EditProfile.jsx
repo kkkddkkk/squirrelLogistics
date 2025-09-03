@@ -28,14 +28,17 @@ import {
   IconButton,
   Stack,
   Switch,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Header from "../Layout/Header";
+import { CommonTitle } from "../../components/common/CommonText";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const thisTheme = useTheme();
 
   // 인증 상태 확인 (비밀번호 확인으로 대체)
   const [verificationStatus, setVerificationStatus] = useState(
@@ -599,19 +602,12 @@ const EditProfile = () => {
         // 백엔드 API 호출은 별도로 처리 (성공/실패와 관계없이 미리보기는 유지)
         try {
           console.log("API 호출 시작...");
-          const uploadedFileName = await uploadProfileImage(file);
-          console.log("API 응답 (파일명):", uploadedFileName);
+          const uploadedImageUrl = await uploadProfileImage(file);
+          console.log("API 응답:", uploadedImageUrl);
 
-          // API 성공 시 파일명 저장
-          if (uploadedFileName) {
-            const userId =
-              localStorage.getItem("userId") ||
-              localStorage.getItem("userLoginId") ||
-              "default";
-            localStorage.setItem(
-              `backendProfileImageFileName_${userId}`,
-              uploadedFileName
-            );
+          // API 성공 시 백엔드 URL도 저장 (선택사항)
+          if (uploadedImageUrl) {
+            localStorage.setItem("backendProfileImageUrl", uploadedImageUrl);
           }
         } catch (apiError) {
           console.error("백엔드 업로드 실패 (미리보기는 유지):", apiError);
@@ -788,7 +784,7 @@ const EditProfile = () => {
           console.error("비밀번호 수정 실패:", passwordError);
           alert(
             "비밀번호 수정에 실패했습니다: " +
-              (passwordError.response?.data || passwordError.message)
+            (passwordError.response?.data || passwordError.message)
           );
           return;
         }
@@ -838,15 +834,9 @@ const EditProfile = () => {
     return (
       <Box>
         <Header />
+        <CommonTitle>회원 정보 수정</CommonTitle>
         <Container maxWidth="sm" sx={{ py: 4 }}>
-          <Typography
-            variant="h4"
-            align="center"
-            fontWeight="bold"
-            gutterBottom
-          >
-            회원 정보 수정
-          </Typography>
+
           <Box
             display="flex"
             justifyContent="center"
@@ -865,14 +855,7 @@ const EditProfile = () => {
       <Box>
         <Header />
         <Container maxWidth="sm" sx={{ py: 4 }}>
-          <Typography
-            variant="h4"
-            align="center"
-            fontWeight="bold"
-            gutterBottom
-          >
-            회원 정보 수정
-          </Typography>
+          <CommonTitle>회원 정보 수정</CommonTitle>
           <Box
             display="flex"
             justifyContent="center"
@@ -892,9 +875,7 @@ const EditProfile = () => {
     <Box>
       <Header />
       <Container maxWidth="sm" sx={{ py: 4 }}>
-        <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
-          회원 정보 수정
-        </Typography>
+        <CommonTitle>회원 정보 수정</CommonTitle>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
           <Stack spacing={2}>
             {/* 프로필 사진 업로드 */}
@@ -907,7 +888,7 @@ const EditProfile = () => {
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                sx={{ mb: 2, color: "#113F67" }}
+                sx={{ mb: 2, color: thisTheme.palette.primary.main }}
               >
                 프로필 사진
               </Typography>
@@ -922,7 +903,7 @@ const EditProfile = () => {
               <Box display="flex" gap={2} sx={{ mt: 2 }}>
                 <Button
                   variant="outlined"
-                  color="primary"
+                  color={thisTheme.palette.primary.main}
                   onClick={() => {
                     // 가장 간단하고 확실한 방법
                     const input = document.createElement("input");
@@ -944,11 +925,11 @@ const EditProfile = () => {
                     input.click();
                   }}
                   sx={{
-                    borderColor: "#113F67",
-                    color: "#113F67",
+                    borderColor: thisTheme.palette.primary.main,
+                    color: thisTheme.palette.primary.main,
                     "&:hover": {
-                      borderColor: "#0d2d4a",
-                      bgcolor: "#113F67",
+                      borderColor: thisTheme.palette.primary.main,
+                      bgcolor: thisTheme.palette.primary.main,
                       color: "white",
                     },
                   }}
@@ -961,11 +942,11 @@ const EditProfile = () => {
                     color="error"
                     onClick={handleImageDelete}
                     sx={{
-                      borderColor: "#A20025",
-                      color: "#A20025",
+                      borderColor: thisTheme.palette.error.main,
+                      color: thisTheme.palette.error.main,
                       "&:hover": {
-                        borderColor: "#8B001F",
-                        bgcolor: "#A20025",
+                        borderColor: thisTheme.palette.error.main,
+                        bgcolor: thisTheme.palette.error.main,
                         color: "white",
                       },
                     }}
@@ -980,20 +961,20 @@ const EditProfile = () => {
             {(loginType === "EMAIL" ||
               ((loginType === "GOOGLE" || loginType === "KAKAO") &&
                 hasSetPassword)) && (
-              <TextField
-                label="아이디"
-                name="id"
-                value={form.id}
-                disabled
-                fullWidth
-                sx={{
-                  "& .MuiInputBase-input.Mui-disabled": {
-                    color: "#000000",
-                    WebkitTextFillColor: "#000000",
-                  },
-                }}
-              />
-            )}
+                <TextField
+                  label="아이디"
+                  name="id"
+                  value={form.id}
+                  disabled
+                  fullWidth
+                  sx={{
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      color: thisTheme.palette.text.primary,
+                      WebkitTextFillColor: thisTheme.palette.text.primary,
+                    },
+                  }}
+                />
+              )}
             {/* SNS 로그인 사용자는 비밀번호 필드 숨김 */}
             {loginType === "EMAIL" && (
               <Box display="flex" gap={2}>

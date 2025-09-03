@@ -7,12 +7,14 @@ import {
     IconButton,
     Paper,
     Typography,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function DeliveryWaypointPopupComponent({ waypoints = [], open, onClose }) {
     // 0번(상차지) 제외한 하차지들만 사용
     const drops = waypoints.slice(1); // [1..N]
+    const thisTheme = useTheme();
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 1.5, pt: 2 } }}>
@@ -25,7 +27,7 @@ export default function DeliveryWaypointPopupComponent({ waypoints = [], open, o
                             fontFamily: "inherit",
                             fontSize: "1.5rem",
                             fontWeight: "bold",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                         }}
                     >
                         하차지 정보
@@ -33,7 +35,7 @@ export default function DeliveryWaypointPopupComponent({ waypoints = [], open, o
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
-                        sx={{ position: "absolute", right: 20, top: 28, color: "#888" }}
+                        sx={{ position: "absolute", right: 20, top: 28, color: thisTheme.palette.text.secondary }}
                     >
                         <CloseIcon />
                     </IconButton>
@@ -59,7 +61,8 @@ export default function DeliveryWaypointPopupComponent({ waypoints = [], open, o
                                             border: '1px solid #2a2a2a5d',
                                             boxShadow: '0px 5px 8px rgba(0, 0, 0, 0.1)',
                                             borderRadius: 1.5,
-                                            fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif'
+                                            fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
+                                            backgroundColor: thisTheme.palette.background.default
                                         }}>
                                         <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                                             <Box
@@ -69,15 +72,15 @@ export default function DeliveryWaypointPopupComponent({ waypoints = [], open, o
                                                     fontWeight: 700,
                                                     ml: 1,
                                                     mr: 1.2,
-                                                    color: "#2A2A2A"
+                                                    color: thisTheme.palette.text.primary
                                                 }}
                                             >
                                                 {number}
                                             </Box>
-                                            <Typography variant="body2" sx={{ color: "#2A2A2A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            <Typography variant="body2" sx={{ color: thisTheme.palette.text.primary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                                 {item.address}{" "}
                                                 {isFinal && (
-                                                    <Box component="span" sx={{ color: "#2A2A2A", fontWeight: "bold" }}>
+                                                    <Box component="span" sx={{ color: thisTheme.palette.text.primary, fontWeight: "bold" }}>
                                                         · 최종
                                                     </Box>
                                                 )}

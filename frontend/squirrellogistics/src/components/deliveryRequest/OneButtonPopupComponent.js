@@ -2,7 +2,8 @@ import React from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Typography, Button,
-    Grid
+    Grid,
+    useTheme
 } from '@mui/material';
 
 function OneButtonPopupComponent({
@@ -13,6 +14,8 @@ function OneButtonPopupComponent({
     onClick = () => { },
     maxWidth = 'xs',
 }) {
+
+    const thisTheme= useTheme();
     const handleGuardedClose = (event, reason) => {
         if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
     };
@@ -24,7 +27,7 @@ function OneButtonPopupComponent({
             disableEscapeKeyDown
             maxWidth={maxWidth}
             fullWidth
-            PaperProps={{ sx: { borderRadius: 3, border: '1px solid #5e5e5eff'} }}
+            PaperProps={{ sx: { borderRadius: 3} }}
         >
             {title && (
                 <DialogTitle sx={{ pt: 2, pb: 4 }}>
@@ -36,7 +39,7 @@ function OneButtonPopupComponent({
                                 fontFamily: 'inherit',
                                 fontSize: '1.2rem',
                                 fontWeight: 'bold',
-                                color: '#2A2A2A',
+                                color: thisTheme.palette.text.primary,
                             }}
                         >
                             {title}
@@ -54,7 +57,7 @@ function OneButtonPopupComponent({
                                 textAlign: 'center',
                                 fontFamily: 'inherit',
                                 fontSize: '1.0rem',
-                                color: '#2A2A2A',
+                                color: thisTheme.palette.text.primary,
                             }}
                         >
                             {content}
@@ -68,7 +71,7 @@ function OneButtonPopupComponent({
                 <Button
                     variant="contained"
                     onClick={onClick}
-                    sx={{ minWidth: 120, bgcolor: '#113F67' }}
+                    sx={{ minWidth: 120}}
                 >
                     {btnTxt}
                 </Button>

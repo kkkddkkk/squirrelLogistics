@@ -1,10 +1,13 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
-import logo from "../../pages/Driver/images/logo.jpg";
+import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import logo from "../../components/common/squirrelLogisticsLogo.png";
+import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
 
+
 const EmptyDeliveryTrackingComponent = () => {
+  const thisTheme = useTheme();
   const { driverId } = useParams();
   const navigate = useNavigate();
 
@@ -13,10 +16,10 @@ const EmptyDeliveryTrackingComponent = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       {/* 제목 영역 */}
       <Box
-        sx={{ bgcolor: theme.palette.background.paper, py: 4, minHeight: 190 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, py: 4, minHeight: 190 }}
       >
         <CommonTitle>현재 운송 정보</CommonTitle>
       </Box>
@@ -30,14 +33,14 @@ const EmptyDeliveryTrackingComponent = () => {
         sx={{ py: 8, px: 4 }}
       >
         <img
-          src={logo}
+          src={thisTheme.palette.mode==="light"?logo:darkLogo}
           alt="logo"
           style={{ maxWidth: "240px", marginBottom: "20px" }}
         />
         <Typography
           variant="h6"
           sx={{
-            color: theme.palette.text.primary,
+            color: thisTheme.palette.text.primary,
             fontSize: "clamp(14px, 1.5vw, 16px)",
             textAlign: "center",
             fontWeight: "bold",
@@ -54,10 +57,6 @@ const EmptyDeliveryTrackingComponent = () => {
           onClick={onClickMove}
           sx={{
             fontSize: "clamp(14px, 1.5vw, 16px)",
-            bgcolor: theme.palette.primary.main,
-            "&:hover": {
-              bgcolor: theme.palette.primary.dark,
-            },
           }}
         >
           운송 목록으로 가기

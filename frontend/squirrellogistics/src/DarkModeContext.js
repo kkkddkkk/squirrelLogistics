@@ -6,11 +6,20 @@ import { CssBaseline, GlobalStyles } from "@mui/material";
 const DarkModeContext = createContext();
 
 export const DarkModeProvider = ({ children }) => {
-    const [darkMode, setDarkMode] = useState(false);
-    console.log('DarkModeProvider 렌더링, darkMode:', darkMode);
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem("darkMode");
+        return saved ? JSON.parse(saved) : false;
+    });
+
+    const toggleDarkMode  = () => {
+        setDarkMode(prev => {
+            localStorage.setItem("darkMode", JSON.stringify(!prev));
+            return !prev;
+        });
+    }; 
 
     return (
-        <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
+        <DarkModeContext.Provider value={{ darkMode, toggleDarkMode  }}>
             <ThemeProvider theme={darkMode ? darkTheme : theme}>
                 <CssBaseline />
                 {children}

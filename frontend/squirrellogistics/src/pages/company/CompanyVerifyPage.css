@@ -41,7 +41,8 @@
 
 .field input {
   height: 44px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-primary);
   border-radius: 8px;
   padding: 0 .8rem;
   background: var(--background-default);
@@ -119,7 +120,7 @@
 /* 기존 스타일 유지하면서 새로운 스타일 추가 */
 
 .verify-description {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   line-height: 1.5;
@@ -199,7 +200,7 @@
 .reset-form {
   margin-top: 20px;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--background-paper);
   border-radius: 8px;
   border: 1px solid #e9ecef;
   animation: slideDown 0.3s ease;
@@ -213,7 +214,7 @@
 .reset-form .field span {
   display: block;
   margin-bottom: 8px;
-  color: #333;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 14px;
 }
@@ -221,7 +222,7 @@
 .reset-form .field input {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid #e1e5e9;
+  color: var(--text-primary);
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.3s ease;

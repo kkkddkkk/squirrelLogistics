@@ -322,7 +322,7 @@ const MyPage = () => {
                     style={{
                       width: "300px",
                       backgroundColor: thisTheme.palette.background.paper,
-                      color: thisTheme.palette.text.secondary
+                      color: thisTheme.palette.text.primary
                     }}
                   />
                 </div>
@@ -335,7 +335,7 @@ const MyPage = () => {
                     className='searchInput'
                     style={{
                       backgroundColor: thisTheme.palette.background.paper,
-                      color: thisTheme.palette.text.secondary
+                      color: thisTheme.palette.text.primary
                     }}
                   >
                     <option value="">전체</option>

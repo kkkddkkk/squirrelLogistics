@@ -149,23 +149,29 @@ export default function TermsConsent({ terms = [], agreed = new Set(), onChange 
                     {active && (
                         agreedSet.has(active.termId) ? (
                             <>
-                                <Button onClick={unagreeFromModal} variant="outlined" color="warning">
+                                <Button onClick={unagreeFromModal} variant="outlined" color="warning" sx={{
+                                    "&:hover": {
+                                        backgroundColor: theme.palette.warning.main, // 호버 시 배경색
+                                        borderColor: theme.palette.warning.main,     // 호버 시 테두리 색
+                                        color: "black",           // 호버 시 글자색
+                                    },
+                                }}>
                                     동의 해제
                                 </Button>
-                                <Button onClick={closeModal}>닫기</Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button onClick={agreeFromModal} variant="contained">
-                                    동의하고 닫기
-                                </Button>
-                                <Button onClick={closeModal}>닫기</Button>
-                            </>
-                        )
+                    <Button onClick={closeModal}>닫기</Button>
+                </>
+                ) : (
+                <>
+                    <Button onClick={agreeFromModal} variant="contained">
+                        동의하고 닫기
+                    </Button>
+                    <Button onClick={closeModal}>닫기</Button>
+                </>
+                )
                     )}
-                    {!active && <Button onClick={closeModal}>닫기</Button>}
-                </DialogActions>
-            </Dialog>
+                {!active && <Button onClick={closeModal}>닫기</Button>}
+            </DialogActions>
+        </Dialog >
         </>
     );
 }

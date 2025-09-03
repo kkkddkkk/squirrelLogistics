@@ -8,6 +8,7 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  useTheme,
 } from "@mui/material";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
 import { useStartDummyRoute } from "../../hook/DeliveryMap/useKakaoRouteMap";
@@ -27,6 +28,7 @@ import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
 
 const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
+  const thisTheme = useTheme();
   const { driverId } = useParams();
   const {
     leg: activeLeg,
@@ -44,10 +46,10 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
 
   const items = computeWaypointStatuses(data);
   return (
-    <Box width={"100%"} sx={{ bgcolor: theme.palette.background.default }}>
+    <Box width={"100%"} sx={{ bgcolor: thisTheme.palette.background.default }}>
       {/* 페이지 최상단 제목 */}
       <Box
-        sx={{ bgcolor: theme.palette.background.paper, py: 4, minHeight: 190 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, py: 4, minHeight: 190 }}
       >
         <CommonTitle>현재 운송 정보</CommonTitle>
 
@@ -59,8 +61,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
               pt: 2,
               pb: 1,
               width: "100%",
-              bgcolor: theme.palette.background.paper,
-              borderColor: theme.palette.primary.main,
+              borderColor: thisTheme.palette.text.secondary,
             }}
           >
             <Grid
@@ -74,7 +75,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                   variant="body2"
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: theme.palette.text.primary,
+                    color: thisTheme.palette.text.primary,
                     fontSize: "clamp(12px, 1.5vw, 18px)",
                   }}
                 >
@@ -87,7 +88,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                   variant="body2"
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: theme.palette.text.primary,
+                    color: thisTheme.palette.text.primary,
                     fontSize: "clamp(12px, 1.5vw, 18px)",
                   }}
                 >
@@ -99,7 +100,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
               </Grid>
 
               <Divider
-                sx={{ mt: 2, mb: 1, borderColor: theme.palette.divider }}
+                sx={{ mt: 2, mb: 1, borderColor: thisTheme.palette.text.secondary }}
               />
 
               <Grid
@@ -132,7 +133,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                       variant="body2"
                       sx={{
                         fontSize: "clamp(10px, 1.5vw, 14px)",
-                        color: theme.palette.text.secondary,
+                        color: thisTheme.palette.text.secondary,
                       }}
                     >
                       <Box component="span" fontWeight="bold">
@@ -151,7 +152,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         variant="body2"
                         sx={{
                           fontSize: "clamp(10px, 1.5vw, 14px)",
-                          color: theme.palette.text.secondary,
+                          color: thisTheme.palette.text.secondary,
                         }}
                       >
                         <Box component="span" fontWeight="bold">
@@ -165,7 +166,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         variant="body2"
                         sx={{
                           fontSize: "clamp(10px, 1.5vw, 14px)",
-                          color: theme.palette.text.secondary,
+                          color: thisTheme.palette.text.secondary,
                         }}
                       >
                         <Box component="span" fontWeight="bold">
@@ -179,7 +180,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         variant="body2"
                         sx={{
                           fontSize: "clamp(10px, 1.5vw, 14px)",
-                          color: theme.palette.text.secondary,
+                          color: thisTheme.palette.text.secondary,
                         }}
                       >
                         <Box component="span" fontWeight="bold">
@@ -199,7 +200,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
       </Box>
 
       {/* 중앙 지도 + 운송 정보 영역*/}
-      <Box sx={{ px: 4, py: 3, bgcolor: theme.palette.background.default }}>
+      <Box sx={{ px: 4, py: 3, bgcolor: thisTheme.palette.background.default }}>
         <Grid
           container
           sx={{
@@ -226,8 +227,8 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                     width: "100%",
                     height: 500,
                     p: 1,
-                    borderColor: theme.palette.primary.main,
-                    bgcolor: theme.palette.background.paper,
+                    borderColor: thisTheme.palette.text.secondary,
+                    bgcolor: thisTheme.palette.background.paper,
                     boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
                     borderRadius: 1.2,
                   }}
@@ -255,7 +256,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                           gutterBottom
                           sx={{
                             fontSize: "clamp(12px, 1.5vw, 16px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           전체 운송 완료
@@ -263,7 +264,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           모든 운송이 완료되었습니다!
@@ -271,7 +272,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           안전한 종료를 위해 반드시 하단
@@ -287,7 +288,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                           gutterBottom
                           sx={{
                             fontSize: "clamp(12px, 1.5vw, 16px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           화물 정보
@@ -295,7 +296,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           아직 화물 집하가 완료되지 않았습니다!
@@ -303,7 +304,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           집하지에서 화물을 픽업한 후<br />
@@ -318,7 +319,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                           gutterBottom
                           sx={{
                             fontSize: "clamp(12px, 1.5vw, 16px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           하차 화물 정보
@@ -327,14 +328,14 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           하차지 번호:{" "}
                           <Box
                             component="span"
                             fontFamily="monospace"
-                            color="primary.main"
+                            color={thisTheme.palette.primary.main}
                           >
                             #WP-{activeLeg?.cargos?.waypointId ?? "—"}
                           </Box>
@@ -342,14 +343,14 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           하차 화물 번호:{" "}
                           <Box
                             component="span"
                             fontFamily="monospace"
-                            color="primary.main"
+                            color={thisTheme.palette.primary.main}
                           >
                             #CG-{activeLeg?.cargos?.cargoId ?? "—"}
                           </Box>
@@ -357,7 +358,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           품목: {activeLeg?.cargos?.description ?? "—"}
@@ -366,14 +367,14 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color: "#2A2A2A",
+                            color:  thisTheme.palette.text.primary,
                           }}
                         >
                           특수 태그:{" "}
                           <Box
                             component="span"
                             fontWeight="bold"
-                            color="primary.main"
+                            color={thisTheme.palette.primary.main}
                           >
                             {renderSingleTag(
                               activeLeg?.cargos?.handlingId,
@@ -398,7 +399,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                           fontWeight="bold"
                           sx={{
                             fontSize: "clamp(12px, 1.5vw, 16px)",
-                            color: "#2A2A2A",
+                            color: thisTheme.palette.text.primary,
                             mb: 2,
                           }}
                         >
@@ -415,15 +416,15 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                               <div key={it.waypointId ?? idx}>
                                 <ListItem
                                   sx={{
-                                    backgroundColor: "#F5F7FA",
+                                    backgroundColor: thisTheme.palette.background.paper,
                                     borderRadius: 1,
-                                    border: "solid 1px #D1D9E6",
+                                    border: `solid 1px ${thisTheme.palette.text.secondary}`,
                                   }}
                                 >
                                   <ListItemText
                                     primary={
                                       <Typography
-                                        color="#2A2A2A"
+                                        color={thisTheme.palette.text.primary}
                                         fontSize="clamp(10px, 1.5vw, 14px)"
                                       >
                                         {it.no}. {wpLabel} ({it.address})

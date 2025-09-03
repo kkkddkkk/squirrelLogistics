@@ -221,7 +221,7 @@
 .filter-item input,
 .filter-item select {
   padding: 0.5rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--text-secondary);
   border-radius: 4px;
   font-size: 0.9rem;
   min-width: 150px;
@@ -274,7 +274,7 @@
 .delivery-table td {
   padding: 0.8rem;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--text-secondary);
 }
 
 .delivery-table th {
@@ -363,7 +363,7 @@
 
 /* 소셜 사용자 안내 메시지 */
 .social-notice {
-  background: #f8f9fa;
+  background: var(--background-paper);
   color: #495057;
   padding: 1rem 1.5rem;
   border-radius: 8px;
@@ -371,17 +371,17 @@
   text-align: center;
   font-size: 0.95rem;
   line-height: 1.4;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--primary-main);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .social-notice p {
   margin: 0.5rem 0;
-  color: #6c757d;
+  color: var(--primary-main);
 }
 
 .social-notice p:first-child {
-  color: #495057;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 

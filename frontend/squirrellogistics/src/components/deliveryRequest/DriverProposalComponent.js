@@ -1,4 +1,4 @@
-import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, Paper, Typography } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, Paper, Typography, useTheme } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"
 import { formatAddress, formatDistanceKm } from "./deliveryFormatUtil";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,6 +28,7 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
 
     const { driverId } = useParams();
     const navigate = useNavigate();
+    const thisTheme = useTheme();
 
     const handleClick = (requestId, refundDate) => {
         navigate(`/driver/detail/${requestId}`, {
@@ -53,7 +54,7 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
                             fontFamily: 'inherit',
                             fontSize: '1.5rem',
                             fontWeight: 'bold',
-                            color: '#2A2A2A',
+                            color: thisTheme.palette.text.primary,
                         }}
                     >
                         지명 운송 요청
