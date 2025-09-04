@@ -34,6 +34,46 @@ export const getReportView = async ({ reportId, options = {} }) => {
 
 //작성자: 고은설.
 //기능: 긴급 신고 등 운전자단 신고 삽입 요청.
-export const registerReport = async ({ }) => {
+export const fetchRegisterReport = async ({ reportData}) => {
+  console.log("fetchRegisterReport");
 
+  try {
+    const res = await axios.post(
+      "http://localhost:8080/api/driver-report/regist",
+      reportData,
+      {
+        headers: {
+          Authorization: `Bearer ${accesstoken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(res.data);
+    return res.data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const fetchDriverReportList = async () => {
+  console.log("fetchDriverReportList");
+
+  try {
+    const res = await axios.get(
+      "http://localhost:8080/api/driver-report/list",
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${accesstoken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(res.data);
+    return res.data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };

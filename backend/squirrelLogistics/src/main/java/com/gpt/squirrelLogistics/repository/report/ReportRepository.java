@@ -32,5 +32,12 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 			"AND r.reporter = 'COMPANY'")
 	List<Report> findByCompanyId(@Param("companyId") Long companyId);
 	
+	@Query("SELECT r FROM Report r "+
+			"JOIN r.deliveryAssignment da "+
+			"JOIN da.driver d "+
+			"WHERE d.driverId = :driverId "+
+			"AND r.reporter = 'DRIVER'")
+	List<Report> findByDriverId(@Param("driverId") Long driverId);
+	
 
 }

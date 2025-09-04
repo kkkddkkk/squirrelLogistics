@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
@@ -315,6 +317,25 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 
 	// 작성자: 고은설.
 	// 기능: 운전자 현 배송 상태 화면 제작에 필요한 부분만 발췌.
+//	@Query("""
+//			  select new com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingHeaderDTO(
+//			    da.assignedId,
+//			    dr.requestId,
+//			    dr.startAddress,
+//			    dr.memoToDriver,
+//			    dr.wantToStart,
+//			    dr.wantToEnd
+//			  )
+//			  from DeliveryAssignment da
+//			  join da.deliveryRequest dr
+//			  where da.driver.driverId = :driverId
+//			    and da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+//			  order by dr.wantToStart asc
+//			""")
+//	List<DeliveryAssignmentTrackingHeaderDTO> findCurrentTrackingHead(@Param("driverId") Long driverId,
+//			@Param("now") java.time.LocalDateTime now, // 사용 안 해도 시그니처 유지 가능
+//			org.springframework.data.domain.Pageable pageable);
+
 	@Query("""
 			  select new com.gpt.squirrelLogistics.dto.deliveryTracking.DeliveryAssignmentTrackingHeaderDTO(
 			    da.assignedId,
@@ -327,12 +348,18 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			  from DeliveryAssignment da
 			  join da.deliveryRequest dr
 			  where da.driver.driverId = :driverId
-			    and da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
-			  order by dr.wantToStart asc
+			    and (
+			         da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			         or (da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED
+			             and dr.wantToStart <= :now)
+			        )
+			  order by
+			    case when da.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS then 0 else 1 end,
+			    dr.wantToStart asc,
+			    da.assignedAt desc
 			""")
-	List<DeliveryAssignmentTrackingHeaderDTO> findCurrentTrackingHead(@Param("driverId") Long driverId,
-			@Param("now") java.time.LocalDateTime now, // 사용 안 해도 시그니처 유지 가능
-			org.springframework.data.domain.Pageable pageable);
+	List<DeliveryAssignmentTrackingHeaderDTO> findCurrentOrDueHead(@Param("driverId") Long driverId,
+			@Param("now") LocalDateTime now, org.springframework.data.domain.Pageable pageable);
 
 	// 작성자: 고은설.
 	// 기능: IN_PROGRESS 상태로 전환까지 된 assign데이터 중 종료 일이 지나도록 완료처리 안된 미완수건 검수.
@@ -528,5 +555,9 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			    )
 			""")
 	Optional<DeliveryAssignment> findLatestActiveByRequestId(@Param("requestId") Long requestId);
+
+	// 작성자: 고은설.
+	// 기능: 긴급신고용 더미 assignid가져오기.
+	Optional<DeliveryAssignment> findTopByDriver_DriverIdOrderByAssignedAtDescAssignedIdDesc(Long driverId);
 
 }

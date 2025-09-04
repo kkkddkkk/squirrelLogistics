@@ -30,7 +30,11 @@ public interface DeliveryStatusLogRepository extends JpaRepository<DeliveryStatu
 	List<DeliveryStatusLogSlimResponseDTO> findStatusRowsByRequestId(@Param("requestId") Long requestId);
 
 	// 최신 1건 (Pageable로 1건만 가져오기)
-	List<DeliveryStatusLog> findByDeliveryAssignment_DeliveryRequest_RequestIdOrderByCreatedAtDescStatusIdDesc(
+//	List<DeliveryStatusLog> findByDeliveryAssignment_DeliveryRequest_RequestIdOrderByCreatedAtDescStatusIdDesc(
+//			Long requestId, org.springframework.data.domain.Pageable pageable);
+	
+	// 최신 1건 (Pageable로 1건만 가져오기)
+	List<DeliveryStatusLog> findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(
 			Long requestId, org.springframework.data.domain.Pageable pageable);
 
 	Optional<DeliveryStatusLog> findFirstByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(

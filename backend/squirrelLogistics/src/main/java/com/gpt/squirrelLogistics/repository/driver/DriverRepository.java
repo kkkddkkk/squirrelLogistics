@@ -22,26 +22,29 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 	@Query("SELECT COUNT(d) FROM Driver d WHERE d.drivable = true")
 	long countByDrivableTrue();
 
+	@Query("SELECT d.driverId FROM Driver d " + "JOIN d.user u WHERE u.userId =:userId")
+	Long findDriverIdByUserId(@Param("userId") Long userId);
+
 	/**
-     * 기사 리스트 조회 (프로필/차량/보험 포함)
-     * - Driver → Car(ON) → VehicleType
-     * 반환 배열: [0: driverId, 1: driverName, 2: profileImageUrl, 3: vehicleTypeName, 4: maxWeight, 5: mainLoca, 6: drivable, 7: insurance]
-     */
-    @Query("""
-        SELECT
-            d.driverId,
-            u.name,
-            COALESCE(d.profileImageUrl, ''),
-            v.name,
-            v.maxWeight,
-            d.mainLoca,
-            d.drivable,
-            c.insurance
-        FROM Driver d
-        JOIN d.user u
-        JOIN Car c ON c.driver = d
-        JOIN c.vehicleType v
-        WHERE u.role != 'ETC'
-        """)
-    List<Object[]> findDriverList();
+	 * 기사 리스트 조회 (프로필/차량/보험 포함) - Driver → Car(ON) → VehicleType 반환 배열: [0:
+	 * driverId, 1: driverName, 2: profileImageUrl, 3: vehicleTypeName, 4:
+	 * maxWeight, 5: mainLoca, 6: drivable, 7: insurance]
+	 */
+	@Query("""
+			SELECT
+			    d.driverId,
+			    u.name,
+			    COALESCE(d.profileImageUrl, ''),
+			    v.name,
+			    v.maxWeight,
+			    d.mainLoca,
+			    d.drivable,
+			    c.insurance
+			FROM Driver d
+			JOIN d.user u
+			JOIN Car c ON c.driver = d
+			JOIN c.vehicleType v
+			WHERE u.role != 'ETC'
+			""")
+	List<Object[]> findDriverList();
 }

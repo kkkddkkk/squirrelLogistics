@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gpt.squirrelLogistics.dto.report.DriverReportRequestDTO;
 import com.gpt.squirrelLogistics.dto.report.ReportRequestDTO;
 import com.gpt.squirrelLogistics.dto.report.ReportResponseDTO;
 import com.gpt.squirrelLogistics.dto.report.ReportSlimResponseDTO;
@@ -21,6 +22,7 @@ import com.gpt.squirrelLogistics.entity.admin.AdminUser;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
 import com.gpt.squirrelLogistics.repository.report.ReportRepository;
 import com.gpt.squirrelLogistics.repository.reportImage.ReportImageRepository;
+import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.repository.answer.AnswerRepository;
 import com.gpt.squirrelLogistics.enums.report.ReportStatusEnum;
 import com.gpt.squirrelLogistics.enums.report.ReportCategoryEnum;
@@ -288,6 +290,27 @@ public class ReportService {
 	// 신고리스트
 	public List<Map<String, Object>> reportList(Long companyId) {
 		List<Report> reports = reportRepository.findByCompanyId(companyId);
+		
+		List<Map<String, Object>> result = reports.stream().map(report -> {
+			Map<String, Object> map = new HashMap<>();
+			List <Object[]> addressList = deliveryAssignmentRepository.findStartEndAddressById(report.getDeliveryAssignment().getAssignedId());
+			
+			map.put("reportId", report.getReportId());
+			map.put("rTitle", report.getRTitle());
+			map.put("rContent", report.getRContent());
+			map.put("regDate", report.getRegDate());
+			map.put("startAddress", addressList.get(0)[0]);
+			map.put("endAddress", addressList.get(0)[1]);
+			map.put("fileNames", reportImageRepository.findImgsByReportId(report.getReportId()));
+			
+			return map;
+		}).toList();
+		
+		return result;
+	}
+
+	public List<Map<String, Object>> driverReportList(Long driverId) {
+		List<Report> reports = reportRepository.findByDriverId(driverId);
 		
 		List<Map<String, Object>> result = reports.stream().map(report -> {
 			Map<String, Object> map = new HashMap<>();
@@ -624,4 +647,38 @@ public class ReportService {
 			throw new RuntimeException("답변 삭제 중 오류가 발생했습니다: " + e.getMessage());
 		}
 	}
+	
+	public ReportResponseDTO registerDriverReport(DriverReportRequestDTO reportRequestDTO) {
+
+		DeliveryAssignment assignRef = deliveryAssignmentRepository.getReferenceById(reportRequestDTO.getAssignedId());
+		
+		Report report = Report.builder()
+			.deliveryAssignment(assignRef)
+			.reporter(reportRequestDTO.getReporter())
+			.rTitle(reportRequestDTO.getRTitle())
+			.rContent(reportRequestDTO.getRContent())
+			.rStatus(reportRequestDTO.getRStatus())
+			.rCate(reportRequestDTO.getRCate())
+			.place(reportRequestDTO.getPlace())
+			.regDate(LocalDateTime.now())
+			.build();
+
+		Report savedReport = reportRepository.save(report);
+
+		ReportResponseDTO reportResponseDTO = ReportResponseDTO.builder()
+			.reportId(savedReport.getReportId())
+			.deliveryAssignment(null) // DTO 타입 문제로 null 설정
+			.reporter(savedReport.getReporter())
+			.rTitle(savedReport.getRTitle())
+			.rContent(savedReport.getRContent())
+			.rStatus(savedReport.getRStatus())
+			.rCate(savedReport.getRCate())
+			.place(savedReport.getPlace())
+			.regDate(savedReport.getRegDate())
+			.modiDate(savedReport.getModiDate())
+			.build();
+
+		return reportResponseDTO;
+	}
+
 }

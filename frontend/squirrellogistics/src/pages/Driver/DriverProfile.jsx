@@ -40,6 +40,7 @@ import {
   deleteAccount,
   verifyPassword,
 } from "../../api/driver/driverApi";
+import { fetchRegisterReport } from "../../api/company/reportApi";
 
 const DriverProfile = () => {
   const thisTheme = useTheme();
@@ -256,14 +257,17 @@ const DriverProfile = () => {
   const handleEmergencyReport = (reportData) => {
     console.log("긴급 신고 데이터:", reportData);
 
-
-    // TODO: 실제 신고 API 호출
-    
-    alert("긴급 신고가 접수되었습니다.");
-
-    // 신고 리스트 페이지로 이동
-    const driverId = localStorage.getItem("userId") || "1";
-    navigate(`/driver/${driverId}/reportlist`);
+    setLoading(true);
+    fetchRegisterReport({ reportData })
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((e) => {
+        const errBody = e.response?.data;
+        setError(errBody?.message ?? e.message);
+      })
+      .finally(() => setLoading(false));
+    navigate(`/driver/reportlist`);
   };
 
   if (loading) {
@@ -598,7 +602,7 @@ const DriverProfile = () => {
                         // backgroundColor: "white",
                         // color: "#113F67",
                         // borderColor: "white",
-                        borderWidth: 2,
+                        outline: 2,
                       },
                       textTransform: "none",
                       fontWeight: "600",
@@ -606,6 +610,26 @@ const DriverProfile = () => {
                     }}
                   >
                     나의 리뷰 보기
+                  </Button>
+                  <Button
+                    onClick={() => navigate(`/driver/reportlist`)}
+                    variant="outlined"
+                    fullWidth
+                    size="large"
+                    sx={{
+                      color: "white",
+                      borderColor: "white",
+                      borderWidth: 1,
+                      py: 2,
+                      "&:hover": {
+                        outline: 2,
+                      },
+                      textTransform: "none",
+                      fontWeight: "600",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    신고 목록 보기
                   </Button>
                   <Button
                     onClick={handleHeaderEmergencyReport}
@@ -627,6 +651,7 @@ const DriverProfile = () => {
                   >
                     긴급 신고
                   </Button>
+
                 </Stack>
               </Box>
             </Box>
@@ -742,7 +767,7 @@ const DriverProfile = () => {
         {/* 탈퇴 버튼 */}
         <Box display="flex" justifyContent="center">
           <Button
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             color="error"
             onClick={handleWithdraw}
             sx={{

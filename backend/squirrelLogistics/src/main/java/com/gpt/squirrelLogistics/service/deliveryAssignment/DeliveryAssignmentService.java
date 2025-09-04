@@ -531,12 +531,13 @@ public class DeliveryAssignmentService {
 	@Transactional(readOnly = true)
 	public DeliveryAssignmentTrackingDTO getTodayAssignments(Long driverId) {
 		var now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
-		var heads = deliveryAssignmentRepository.findCurrentTrackingHead(driverId, now, PageRequest.of(0, 1));
+		var heads = deliveryAssignmentRepository.findCurrentOrDueHead(driverId, now, PageRequest.of(0, 1));
 		if (heads.isEmpty())
 			return null;
 
 		var h = heads.get(0);
 		Long requestId = h.getRequestId();
+		Long assignId = h.getAssignedId();
 
 		// 1) 웨이포인트 전체(START~DEST)
 		var points = deliveryWaypointRepository.findAllByRequestIdOrderByDrop(requestId);
@@ -547,8 +548,12 @@ public class DeliveryAssignmentService {
 				.collect(Collectors.toMap(DeliveryCargoSlimResponseDTO::getWaypointId, Function.identity()));
 
 		// 3) 최신 상태
+//		var last = deliveryStatusLogRepository
+//				.findByDeliveryAssignment_DeliveryRequest_RequestIdOrderByCreatedAtDescStatusIdDesc(requestId,
+//						PageRequest.of(0, 1));
+		
 		var last = deliveryStatusLogRepository
-				.findByDeliveryAssignment_DeliveryRequest_RequestIdOrderByCreatedAtDescStatusIdDesc(requestId,
+				.findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(requestId,
 						PageRequest.of(0, 1));
 		DeliveryStatusLogSlimResponseDTO lastDto = null;
 		Integer lastVisited = null;
@@ -936,6 +941,17 @@ public class DeliveryAssignmentService {
 
 		return Map.of("SUCCESS", request.getRequestId());
 
+	}
+	
+	public Long getLatestAssignmentIdByDriverId(Long driverId) {
+		Optional<DeliveryAssignment> latestAssignId = deliveryAssignmentRepository.findTopByDriver_DriverIdOrderByAssignedAtDescAssignedIdDesc(driverId);
+		
+		if(latestAssignId.isEmpty())
+		{
+			return null;
+		}
+		
+		return latestAssignId.get().getAssignedId();
 	}
 
 }

@@ -154,7 +154,7 @@ const driverRouter = () => {
       ),
     },
     {
-      path: ":driverId/reportlist",
+      path: "reportlist",
       element: (
         <Suspense fallback={Loading}>
           <ReportList />

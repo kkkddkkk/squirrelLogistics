@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -20,11 +20,26 @@ import {
   ReportProblemOutlined as ReportProblemOutlinedIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
+const CATEGORY_OPTIONS = ["ETC", "INAPPROPRIATE", "REVIEW", "EMERGENCY"];
 
-const EmergencyReportModal = ({ open, onClose, onReport }) => {
+const EmergencyReportModal = ({
+  open,
+  assignId = null,
+  onClose,
+  presetCategory = 'ETC',
+  lockCategory = true,
+  onReport }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      const safe = CATEGORY_OPTIONS.includes(presetCategory) ? presetCategory : "ETC";
+      setSelectedCategory(safe);
+      setError("");
+    }
+  }, [open, presetCategory]);
 
   const handleSubmit = () => {
     if (!selectedCategory) {
@@ -38,8 +53,9 @@ const EmergencyReportModal = ({ open, onClose, onReport }) => {
 
     // 신고 데이터 구성
     const reportData = {
-      category: selectedCategory,
-      description: description.trim(),
+      assignedId: assignId,
+      rCate: selectedCategory,
+      rContent: description.trim(),
       reporter: "DRIVER", // 운전자 신고
       rStatus: "PENDING", // 대기 상태
     };
