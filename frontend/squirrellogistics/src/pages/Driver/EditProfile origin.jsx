@@ -8,7 +8,6 @@ import {
   uploadProfileImage,
   deleteProfileImage,
   changePassword,
-  uploadProfile,
 } from "../../api/driver/driverApi";
 import {
   Box,
@@ -191,15 +190,12 @@ const EditProfile = () => {
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
 
-  const [preview, setPreview] = useState("");
-  const [formData, setFormData] = useState("");
   useEffect(() => {
     if (form.id === "") return setProfileImageUrl("default_profile.png");
     setProfileImageUrl(form.profileImageUrl);
-    setPreview(`http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`)
-  }, [form])
+  }, [profileImageUrl])
 
-  //#region 도시별 구/군 데이터
+  // 도시별 구/군 데이터
   const cityDistricts = {
     서울: [
       "서울 전체",
@@ -453,7 +449,6 @@ const EditProfile = () => {
       "합천군",
     ],
   };
-  //#endregion
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -583,23 +578,61 @@ const EditProfile = () => {
   const handleImageUpload = async (file) => {
     console.log("handleImageUpload 호출됨:", file);
 
-    if (!file) return;
-    // 파일 크기 검증 (5MB 이하)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("파일 크기는 5MB 이하여야 합니다.");
-      return;
-    }
-    // 파일 타입 검증 (이미지 파일만)
-    if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드 가능합니다.");
-      return;
-    }
+    if (file) {
+      // 파일 크기 검증 (5MB 이하)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("파일 크기는 5MB 이하여야 합니다.");
+        return;
+      }
 
-    setPreview(URL.createObjectURL(file));
-    const newFormData = new FormData();
+      // 파일 타입 검증 (이미지 파일만)
+      if (!file.type.startsWith("image/")) {
+        alert("이미지 파일만 업로드 가능합니다.");
+        return;
+      }
 
-    newFormData.append("image", file);
-    setFormData(newFormData);
+      try {
+        console.log("이미지 업로드 시작:", file.name);
+
+        // 먼저 로컬 미리보기 설정 (data URL 사용)
+        setProfileImage(file);
+
+        // FileReader를 사용하여 data URL 생성
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          console.log("생성된 data URL:", dataUrl.substring(0, 50) + "...");
+          setProfileImageUrl(dataUrl);
+          // localStorage.setItem("profileImageUrl", dataUrl);
+        };
+        reader.readAsDataURL(file);
+
+        // 백엔드 API 호출은 별도로 처리 (성공/실패와 관계없이 미리보기는 유지)
+        try {
+          console.log("API 호출 시작...");
+          const uploadedImageUrl = await uploadProfileImage(file);
+          console.log("API 응답:", uploadedImageUrl);
+
+          // API 성공 시 백엔드 URL도 저장 (선택사항)
+          if (uploadedImageUrl) {
+            // localStorage.setItem("backendProfileImageUrl", uploadedImageUrl);
+          }
+        } catch (apiError) {
+          console.error("백엔드 업로드 실패 (미리보기는 유지):", apiError);
+          // 백엔드 업로드 실패해도 미리보기는 유지
+        }
+
+        console.log("이미지 업로드 완료");
+      } catch (error) {
+        console.error("이미지 업로드 실패:", error);
+        alert("이미지 업로드에 실패했습니다: " + error.message);
+
+        // 업로드 실패 시 로컬 미리보기도 제거
+        setProfileImage(null);
+        setProfileImageUrl("");
+        // localStorage.removeItem("profileImageUrl");
+      }
+    }
   };
 
   // 프로필 사진 삭제
@@ -608,10 +641,13 @@ const EditProfile = () => {
       // 로컬 상태 초기화
       setProfileImage(null);
       setProfileImageUrl("");
-      setPreview(`http://localhost:8080/api/public/driverImage/default_profile.png`)
+      localStorage.removeItem("profileImageUrl");
 
-      // // 백엔드에 빈 이미지 URL로 업데이트 요청
-      // await deleteProfileImage(); // 새로 추가된 API 호출
+      // 백엔드에 빈 이미지 URL로 업데이트 요청
+      const emptyImageFile = new File([""], "empty.jpg", {
+        type: "image/jpeg",
+      });
+      await deleteProfileImage(); // 새로 추가된 API 호출
 
       console.log("프로필 이미지 삭제 완료");
     } catch (error) {
@@ -620,7 +656,6 @@ const EditProfile = () => {
     }
   };
 
-  //#region[임시]
   // 컴포넌트 마운트 시 저장된 프로필 이미지 로드 및 사용자 정보 로드
   React.useEffect(() => {
     const savedImageUrl = localStorage.getItem("profileImageUrl");
@@ -702,6 +737,17 @@ const EditProfile = () => {
         account: form.bankAccount || "",
         businessN: form.businessId,
         mainLoca: form.deliveryArea,
+        // 보험 관련 필드는 백엔드에 아직 구현되지 않음
+        // insurance: form.insurance,
+        // insuranceRenewalDate:
+        //   form.insuranceRenewalDate && form.insuranceRenewalDate.trim() !== ""
+        //     ? dayjs(form.insuranceRenewalDate).toDate()
+        //     : null,
+        // insuranceExpiryDate:
+        //   form.insuranceExpiryDate && form.insuranceExpiryDate.trim() !== ""
+        //     ? dayjs(form.insuranceExpiryDate).toDate()
+        //     : null,
+        // 기존 데이터 유지를 위한 필드들 (null로 설정하여 기존 값 유지)
         loginId: null, // 기존 값 유지
         password: null, // 기존 값 유지 (별도 API로 처리)
         birthday: form.birth ? dayjs(form.birth).toDate() : null, // 생년월일 업데이트
@@ -719,8 +765,7 @@ const EditProfile = () => {
 
       // 프로필 정보 업데이트
       await updateDriverProfile(profileData);
-      if (preview === `http://localhost:8080/api/public/driverImage/default_profile.png`) await deleteProfileImage();
-      else await uploadProfileImage(formData);
+
       // 일반 로그인 사용자의 경우 비밀번호 수정 처리 (실제로 변경된 경우에만)
       if (
         loginType === "EMAIL" &&
@@ -834,7 +879,6 @@ const EditProfile = () => {
     );
   }
 
-  //#endregion
   return (
     <Box>
       <Header />
@@ -856,9 +900,8 @@ const EditProfile = () => {
               >
                 프로필 사진
               </Typography>
-
               <ProfileImage
-                imageUrl={preview}
+                imageUrl={`http://localhost:8080/api/public/driverImage/${profileImageUrl}`}
                 alt="프로필 편집"
                 size={120}
                 editable={true}
@@ -1060,6 +1103,61 @@ const EditProfile = () => {
                 />
               </div>
             </Box>
+
+            {/* 보험 관련 섹션 - 백엔드에 아직 구현되지 않음 */}
+            {/* <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={form.insurance}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          insurance: e.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label="보험 가입"
+                />
+              </div>
+            </Box>
+
+            {form.insurance && (
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="보험 갱신일"
+                    type="date"
+                    fullWidth
+                    value={form.insuranceRenewalDate || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        insuranceRenewalDate: e.target.value,
+                      }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+                <div style={{ flex: "1 1 48%" }}>
+                  <TextField
+                    label="보험 만료일"
+                    type="date"
+                    fullWidth
+                    value={form.insuranceExpiryDate || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        insuranceExpiryDate: e.target.value,
+                      }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+              </Box>
+            )} */}
 
             <Box display="flex" justifyContent="space-between" pt={3}>
               <Button

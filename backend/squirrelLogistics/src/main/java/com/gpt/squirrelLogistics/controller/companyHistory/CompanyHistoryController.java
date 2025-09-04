@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -79,7 +80,12 @@ public class CompanyHistoryController {
 	public DetailHistoryDTO getDetailHistory(@RequestParam("assignedId") Long assignedId) {
 		return service.getDetailHistory(assignedId);
 	}
-
+	
+	@PutMapping("/cancel")
+	@TimedEndpoint("cancel")
+	public void cancel(@RequestParam("assignedId") Long assignedId) {
+		service.cancel(assignedId);
+	}
 	
 	
 }

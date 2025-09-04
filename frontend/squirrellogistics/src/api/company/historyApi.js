@@ -70,4 +70,19 @@ export const getDetailHistory = async ({ assignedId, options = {} }) => {//Histo
   }
 };
 
+export const cancel = async ({ assignedId, options = {} }) => {//HistoryList
+  try {
+    const res = await axios.put(`${API_SERVER_HOST}/cancel`, null,{
+      params: { assignedId, ...options }, // GET 쿼리 파라미터로 전달
+      headers: {
+        Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가
+      },
+    });
+    console.log(res.data);
+    return res.data; // 필요하면 반환
+  } catch (err) {
+    console.error(err); // res.data.err → err 자체에 에러 정보 있음
+  }
+};
+
 

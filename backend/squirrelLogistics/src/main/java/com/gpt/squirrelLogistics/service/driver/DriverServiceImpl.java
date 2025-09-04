@@ -72,8 +72,8 @@ public class DriverServiceImpl implements DriverService {
 //            }
 //        }
         String profileImageFileName = null;
-        if(driver.getProfileImageName() != null && !driver.getProfileImageName().isEmpty()) {
-        	profileImageFileName = driver.getProfileImageName();
+        if(driver.getProfileImageUrl() != null && !driver.getProfileImageUrl().isEmpty()) {
+        	profileImageFileName = driver.getProfileImageUrl();
         }else {
         	profileImageFileName = "default_profile.png";
         }
@@ -84,11 +84,12 @@ public class DriverServiceImpl implements DriverService {
                 .licenseNum(driver.getLicenseNum())
                 .drivable(driver.isDrivable())
                 .LicenseDT(driver.getLicenseDT() != null ? driver.getLicenseDT().atStartOfDay() : null)
-                .profileImageName(profileImageFileName)
+                .profileImageUrl(profileImageFileName)
                 .userDTO(userDTO)
                 .build();
     }
 
+    //2025-09-04 김도경 수정
     @Override
     @Transactional
     public DriverResponseDTO updateDriverProfile(Long userId, RegisterDriverRequest request) {
@@ -137,6 +138,10 @@ public class DriverServiceImpl implements DriverService {
             driver.setPreferred_end_time(request.getPreferred_end_time());
         }
         
+        if(request.getProfileImageUrl()!=null) {
+        	driver.setProfileImageUrl(request.getProfileImageUrl());
+        }
+        
         userRepository.save(user);
         driverRepository.save(driver);
         
@@ -176,7 +181,7 @@ public class DriverServiceImpl implements DriverService {
         user.setName("탈퇴한사용자");  // 이름 마스킹
         user.setEmail("deleted_" + userId + "@deleted.com");  // 이메일 마스킹
         user.setPnumber("***-****-****");  // 전화번호 마스킹
-        //user.setLoginId("deleted_" + userId + "_" + System.currentTimeMillis());  // 로그인 차단
+        // user.setLoginId("deleted_" + userId + "_" + System.currentTimeMillis());  // 로그인 차단
         user.setPassword("{deleted}");  // 로그인 차단
         user.setAccount(null);  // 계좌정보 삭제
         user.setBusinessN(null);  // 사업자번호 삭제

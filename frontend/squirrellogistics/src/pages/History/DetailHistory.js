@@ -1,19 +1,16 @@
-import { Box, Grid, Modal, Typography, useTheme } from "@mui/material";
-import ActualMap from "../../components/actualCalc/ActualMap";
+import { Box, Grid, Typography, useTheme } from "@mui/material";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { useEffect, useMemo, useState } from "react";
-import { Layout, paymentFormat, SubTitle, Title, TwoBtns } from "../../components/common/CommonForCompany";
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import PlaceIcon from "@mui/icons-material/Place";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import { useSearchParams } from "react-router-dom";
-import { getDetailHistory } from "../../api/company/historyApi";
+import { cancel, getDetailHistory } from "../../api/company/historyApi";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
-import { useCompanyStream, useDriverStream } from "../../api/deliveryRequest/driverStreamAPI";
+import { useCompanyStream } from "../../api/deliveryRequest/driverStreamAPI";
 import { buildWaypointViews, buildMainStatus } from "./trackingUtil";
-import CommonList from "../../components/common/CommonList";
 import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import { OneButtonAtLeft, TwoButtonsAtRight } from "../../components/common/CommonButton";
 
@@ -114,10 +111,18 @@ const DetailHistory = () => {
     //고은설: 경유지 운송 상태값 가공.
     const views = buildWaypointViews(detailContent?.waypoints, detailContent?.statuses);
 
+    //예약 취소
     const handleCancel = () => {
+        if (!assignedId) return;
         /* eslint-disable no-restricted-globals */
         if (confirm("정말 예약을 취소하시겠습니까?")) {
-            console.log("예약취소")
+            cancel({ assignedId })
+                .then((data) => {
+                    moveToActualCalc({assignedId, reported: false});
+                })
+                .catch((err) => {
+                    console.error("데이터 가져오기 실패", err);
+                });
         }
     }
 
@@ -158,12 +163,12 @@ const DetailHistory = () => {
                             <CommonSmallerTitle>{v.role}: {v.address}</CommonSmallerTitle>
                             <Box display="flex" alignItems="center" gap="8px">
                                 {iconOf(v.state)}
-                                <Typography sx={{ 
-                                    fontSize: "0.85rem", 
-                                    fontWeight: "bold", 
+                                <Typography sx={{
+                                    fontSize: "0.85rem",
+                                    fontWeight: "bold",
                                     color: colorOf(v.state),
                                     whiteSpace: "nowrap"
-                                    }}>
+                                }}>
                                     {v.state}
                                 </Typography>
                             </Box>
@@ -174,7 +179,7 @@ const DetailHistory = () => {
                         <OneButtonAtLeft clickEvent={fetchDetail}>새로고침({cooldown}s)</OneButtonAtLeft>
                         <TwoButtonsAtRight
                             leftTitle={"예약 취소"}
-                            leftClickEvent={() => alert("예약취소")}
+                            leftClickEvent={handleCancel}
                             leftColor={thisTheme.palette.error.main}
                             rightTitle={"뒤로가기"}
                             rightClickEvent={() => moveBack()}

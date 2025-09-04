@@ -24,6 +24,10 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
 	@Query("SELECT d.driverId FROM Driver d " + "JOIN d.user u WHERE u.userId =:userId")
 	Long findDriverIdByUserId(@Param("userId") Long userId);
+	
+	//작성자: 김도경
+	@Query("SELECT d.profileImageUrl FROM Driver d WHERE d.driverId =:driverId")
+	String findProfileById(@Param("driverId") Long driverId);
 
 	/**
 	 * 기사 리스트 조회 (프로필/차량/보험 포함) - Driver → Car(ON) → VehicleType 반환 배열: [0:

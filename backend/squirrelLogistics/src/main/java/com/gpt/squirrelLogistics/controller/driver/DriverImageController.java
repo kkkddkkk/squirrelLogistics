@@ -54,6 +54,16 @@ public class DriverImageController {
                 .body(resource);
     }
     
+    //파일명 가져오기
+    @GetMapping("/getName/{fileName}")
+    public String getFileName(@RequestHeader("Authorization")String token) {
+
+		Long userId = findUserByTokenService.getUserIdByToken(token);
+        Long driverId = driverRepository.findDriverIdByUserId(userId);
+        
+        return driverRepository.findProfileById(driverId);
+    }
+    
     
     @PutMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader("Authorization")String token) {

@@ -27,6 +27,7 @@ public class RegisterDriverRequest {
   private Boolean drivable;
   private LocalTime preferred_start_time;
   private LocalTime preferred_end_time;
+  private String profileImageUrl;
 
   // car (optional on register)
   private Long vehicleTypeId;

@@ -59,6 +59,7 @@ const DriverProfile = () => {
     rating: 0,
     insurance: false,
     insuranceRenewalDate: "",
+    driverImageUrl: ""
   });
 
   const [profileImageUrl, setProfileImageUrl] = useState("");
@@ -74,28 +75,31 @@ const DriverProfile = () => {
   const [error, setError] = useState(null);
 
   // EditProfile에서 전달받은 state 처리
-  useEffect(() => {
-    if (
-      location.state?.fromEditProfile &&
-      location.state?.updatedProfileImage
-    ) {
-      console.log(
-        "EditProfile에서 전달받은 프로필 이미지:",
-        location.state.updatedProfileImage.substring(0, 50) + "..."
-      );
-      console.log("타임스탬프:", location.state.timestamp);
+  // useEffect(() => {
+  //   if (
+  //     location.state?.fromEditProfile &&
+  //     location.state?.updatedProfileImage
+  //   ) {
+  //     console.log(
+  //       "EditProfile에서 전달받은 프로필 이미지:",
+  //       location.state.updatedProfileImage.substring(0, 50) + "..."
+  //     );
+  //     console.log("타임스탬프:", location.state.timestamp);
 
-      // 즉시 이미지 URL 설정
-      setProfileImageUrl(location.state.updatedProfileImage);
-      localStorage.setItem(
-        "profileImageUrl",
-        location.state.updatedProfileImage
-      );
+  //     // 즉시 이미지 URL 설정
+  //     setProfileImageUrl(location.state.updatedProfileImage);
+  //     localStorage.setItem(
+  //       "profileImageUrl",
+  //       location.state.updatedProfileImage
+  //     );
 
-      // state 초기화 (중복 처리 방지)
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
+  //     // state 초기화 (중복 처리 방지)
+  //     window.history.replaceState({}, document.title);
+  //   }
+  // }, [location.state]);
+
+  //수정: 김도경
+  //페이지 로드 시 데이터 가져오기
 
   // 페이지 로드 시 데이터 가져오기
   useEffect(() => {
@@ -135,6 +139,7 @@ const DriverProfile = () => {
 
         // accessToken을 사용해서 기사 프로필 조회 (백엔드에서 JWT 토큰에서 userId 추출)
         const driverData = await getDriverProfile();
+
         const driverId = driverData.driverId;
         // console.log("가져온 기사 프로필 데이터:", driverData);
         // console.log("userDTO 데이터:", driverData.userDTO);
@@ -151,6 +156,7 @@ const DriverProfile = () => {
           unavailableStart: "", // API에 없는 필드
           unavailableEnd: "", // API에 없는 필드
           deliveryArea: driverData.mainLoca || "",
+          profileImageUrl: driverData.profileImageUrl
         });
 
         // console.log("설정된 driver 상태:", {
@@ -168,7 +174,7 @@ const DriverProfile = () => {
           // 백엔드 URL이 data URL인 경우에만 사용
           if (driverData.profileImageUrl.startsWith("data:image")) {
             setProfileImageUrl(driverData.profileImageUrl);
-            localStorage.setItem("profileImageUrl", driverData.profileImageUrl);
+            // localStorage.setItem("profileImageUrl", driverData.profileImageUrl);
           } else {
             // 백엔드 URL이 data URL이 아닌 경우 localStorage에서 data URL 확인
             const savedDataUrl = localStorage.getItem("profileImageUrl");
@@ -180,10 +186,10 @@ const DriverProfile = () => {
               setProfileImageUrl(savedDataUrl);
             } else {
               setProfileImageUrl(driverData.profileImageUrl);
-              localStorage.setItem(
-                "profileImageUrl",
-                driverData.profileImageUrl
-              );
+              // localStorage.setItem(
+              //   "profileImageUrl",
+              //   driverData.profileImageUrl
+              // );
             }
           }
         } else {
@@ -250,6 +256,12 @@ const DriverProfile = () => {
 
     fetchDriverProfile();
   }, []);
+
+  useEffect(() => {
+    if (driver.name === "") return;
+    setProfileImageUrl(driver.profileImageUrl);
+    console.log("profileImageUrl: " + profileImageUrl);
+  }, [driver])
 
   const handleHeaderEmergencyReport = () => {
     setShowEmergencyReportModal(true);
@@ -374,7 +386,6 @@ const DriverProfile = () => {
     }
   };
 
-  console.log("driver: " + driver);
   return (
     <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
@@ -437,7 +448,7 @@ const DriverProfile = () => {
               {/* 프로필 사진 */}
               <Box display="flex" justifyContent="center" mb={4}>
                 <ProfileImage
-                  imageUrl={profileImageUrl}
+                  imageUrl={`http://localhost:8080/api/public/driverImage/${profileImageUrl}`}
                   alt="프로필 이미지"
                   size={150}
                   editable={false}
