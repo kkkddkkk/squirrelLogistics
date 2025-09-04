@@ -14,6 +14,7 @@ import com.gpt.squirrelLogistics.entity.company.Company;
 import com.gpt.squirrelLogistics.entity.driver.Driver;
 import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.entity.vehicleType.VehicleType;
+import com.gpt.squirrelLogistics.enums.car.CarStatusEnum;
 import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
 import com.gpt.squirrelLogistics.repository.car.CarRepository;
 import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
@@ -69,6 +70,7 @@ public class AuthService {
       Car car = new Car();
       car.setVehicleType(vt);
       car.setDriver(d);
+      car.setCarStatus(CarStatusEnum.OPERATIONAL);
       car.setCarNum(req.getCarNum());
       car.setRegDate(LocalDateTime.now());
       carRepo.save(car);

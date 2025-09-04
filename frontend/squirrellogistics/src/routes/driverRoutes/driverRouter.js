@@ -1,7 +1,8 @@
 import { lazy, Suspense } from "react";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 const driverRouter = () => {
-  const Loading = "<div>로딩중</div>";
+  const LoadingFallback = <LoadingComponent open text="로딩중..." />;
 
   //요청 목록 페이지.
   const RequestList = lazy(() =>
@@ -52,7 +53,7 @@ const driverRouter = () => {
     {
       path: "list",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <RequestList />
         </Suspense>
       ),
@@ -60,7 +61,7 @@ const driverRouter = () => {
     {
       path: "detail/:requestId",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <RequestDetail />
         </Suspense>
       ),
@@ -68,7 +69,7 @@ const driverRouter = () => {
     {
       path: "ongoing",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <OnGoing />
         </Suspense>
       ),
@@ -76,7 +77,7 @@ const driverRouter = () => {
     {
       path: "review",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <Review />
         </Suspense>
       ),
@@ -92,7 +93,7 @@ const driverRouter = () => {
     {
       path: "calendar/:year/:month",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <Calender />
         </Suspense>
       ),
@@ -100,7 +101,7 @@ const driverRouter = () => {
     {
       path: "schedule/:scheduleId",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <Schedule />
         </Suspense>
       ),
@@ -108,7 +109,7 @@ const driverRouter = () => {
     {
       path: "profile",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <Profile />
         </Suspense>
       ),
@@ -116,7 +117,7 @@ const driverRouter = () => {
     {
       path: "editprofile",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <EditProfile />
         </Suspense>
       ),
@@ -124,7 +125,7 @@ const driverRouter = () => {
     {
       path: "verification",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <VerificationPage />
         </Suspense>
       ),
@@ -132,7 +133,7 @@ const driverRouter = () => {
     {
       path: "managevehicles",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <ManageVehicles />
         </Suspense>
       ),
@@ -140,7 +141,7 @@ const driverRouter = () => {
     {
       path: "deliveredlist",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <DeliveredList />
         </Suspense>
       ),
@@ -148,7 +149,7 @@ const driverRouter = () => {
     {
       path: "deliveredetail/:assignedId",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <DeliveredDetail />
         </Suspense>
       ),
@@ -156,7 +157,7 @@ const driverRouter = () => {
     {
       path: "reportlist",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <ReportList />
         </Suspense>
       ),
@@ -164,7 +165,7 @@ const driverRouter = () => {
     {
       path: "reports/:userId",
       element: (
-        <Suspense fallback={Loading}>
+        <Suspense fallback={LoadingFallback}>
           <DriverReportList />
         </Suspense>
       ),

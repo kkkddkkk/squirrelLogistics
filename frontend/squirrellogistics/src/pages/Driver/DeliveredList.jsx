@@ -20,6 +20,7 @@ import { theme } from "../../components/common/CommonTheme";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
 import dayjs from "dayjs";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -83,22 +84,22 @@ const DeliveredList = () => {
     page * ITEMS_PER_PAGE
   );
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          bgcolor: thisTheme.palette.background.default,
-          minHeight: "100vh",
-          py: 6,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <CircularProgress size={60} />
-      </Box>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         bgcolor: thisTheme.palette.background.default,
+  //         minHeight: "100vh",
+  //         py: 6,
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //       }}
+  //     >
+  //       <CircularProgress size={60} />
+  //     </Box>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -115,6 +116,9 @@ const DeliveredList = () => {
   return (
     <>
       <Header />
+      {loading && (
+        <LoadingComponent open={loading} text="운송 내역을 불러오는 중..." />
+      )}
       <Box
         sx={{
           bgcolor: thisTheme.palette.background.default,

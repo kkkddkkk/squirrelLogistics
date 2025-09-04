@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,16 +15,21 @@ import {
   Typography,
   Alert,
   IconButton,
+  Chip,
 } from "@mui/material";
 import {
   ReportProblemOutlined as ReportProblemOutlinedIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
+
 const CATEGORY_OPTIONS = ["ETC", "INAPPROPRIATE", "REVIEW", "EMERGENCY"];
+
+
 
 const EmergencyReportModal = ({
   open,
   assignId = null,
+  driverId = null,
   onClose,
   presetCategory = 'ETC',
   lockCategory = true,
@@ -33,6 +38,29 @@ const EmergencyReportModal = ({
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
+  //카테고리 enum과 유저 출력용 스트링 매핑.
+  const labelOf = useCallback((category) => {
+    switch (category) {
+      case "REVIEW": return "부적절한 리뷰";
+      case "INAPPROPRIATE": return "부적절한 운송요청";
+      case "EMERGENCY": return "긴급신고";
+      case "ETC": default: return "차량 사고";
+    }
+  }, []);
+
+  const buildTitle = useCallback((driverIdArg, category) => {
+    return `[${labelOf(category)}] 유저 아이디: ${driverIdArg ?? '미확인'}번`;
+  }, [labelOf]);
+
+  const buildAutoContent = useCallback((driverIdArg, category) => {
+    if (category === "EMERGENCY") {
+      return `${driverIdArg ?? '미확인'}번 아이디 유저에 의한 긴급 신고 접수, 빠른 확인을 요망합니다.`;
+    }
+    return "";
+  }, []);
+
+
+  //위에서 지정한 카테고리로 강제 세팅.
   useEffect(() => {
     if (open) {
       const safe = CATEGORY_OPTIONS.includes(presetCategory) ? presetCategory : "ETC";
@@ -41,26 +69,49 @@ const EmergencyReportModal = ({
     }
   }, [open, presetCategory]);
 
+  useEffect(() => {
+    if (!open) return;
+    const effectiveCat = lockCategory ? (CATEGORY_OPTIONS.includes(presetCategory) ? presetCategory : "ETC")
+      : selectedCategory;
+
+    if (effectiveCat === "EMERGENCY" && !description.trim()) {
+      setDescription(buildAutoContent(driverId, "EMERGENCY"));
+    }
+  }, [open, lockCategory, presetCategory, selectedCategory, description, driverId, buildAutoContent]);
+
+  //고정 모드면 fixed, 아니면 선택 가능하게 풀기.
+  const visibleOptions = useMemo(() => {
+    if (!lockCategory) return CATEGORY_OPTIONS;
+    return [selectedCategory || presetCategory];
+  }, [lockCategory, selectedCategory, presetCategory]);
+
   const handleSubmit = () => {
     if (!selectedCategory) {
       setError("신고 카테고리를 선택해주세요.");
       return;
     }
-    if (!description.trim()) {
+
+    //EMERGENCY=>  내용 자동 생성
+    let finalContent = description.trim();
+    if (lockCategory && selectedCategory === "EMERGENCY" && !finalContent) {
+      finalContent = buildAutoContent(driverId, selectedCategory);
+    }
+
+    //다른 카테고리는 내용 필수
+    if (!finalContent && selectedCategory !== "EMERGENCY") {
       setError("신고 내용을 입력해주세요.");
       return;
     }
-
-    // 신고 데이터 구성
     const reportData = {
       assignedId: assignId,
       rCate: selectedCategory,
-      rContent: description.trim(),
-      reporter: "DRIVER", // 운전자 신고
-      rStatus: "PENDING", // 대기 상태
+      rTitle: buildTitle(driverId, selectedCategory),
+      rContent: finalContent,
+      reporter: "DRIVER",
+      rStatus: "PENDING",
     };
 
-    onReport(reportData);
+    onReport?.(reportData);
     handleClose();
   };
 
@@ -69,21 +120,6 @@ const EmergencyReportModal = ({
     setDescription("");
     setError("");
     onClose();
-  };
-
-  const getCategoryLabel = (category) => {
-    switch (category) {
-      case "REVIEW":
-        return "부적절한 리뷰";
-      case "INAPPROPRIATE":
-        return "부적절한 운송요청";
-      case "EMERGENCY":
-        return "긴급신고";
-      case "ETC":
-        return "차량 사고";
-      default:
-        return category;
-    }
   };
 
   return (
@@ -99,7 +135,7 @@ const EmergencyReportModal = ({
       >
         <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
           <ReportProblemOutlinedIcon sx={{ color: "#A20025" }} />
-          <Typography variant="h6">긴급 신고</Typography>
+          <Typography variant="h6">신고</Typography>
         </Box>
 
         {/* 우측 상단 X 버튼 */}
@@ -120,13 +156,18 @@ const EmergencyReportModal = ({
       </DialogTitle>
 
       <DialogContent>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mb: 3, textAlign: "center" }}
-        >
-          신고 카테고리를 선택하고 상세 내용을 입력해주세요.
-        </Typography>
+
+
+        {!lockCategory ? (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 3, textAlign: "center" }}
+          >
+            신고 카테고리를 선택하고 상세 내용을 입력해주세요.
+          </Typography>
+        ) : (null)}
+
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -135,34 +176,30 @@ const EmergencyReportModal = ({
         )}
 
         <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-          <FormLabel component="legend" sx={{ mb: 2, fontWeight: "bold" }}>
-            신고 카테고리
-          </FormLabel>
-          <RadioGroup
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            <FormControlLabel
-              value="ETC"
-              control={<Radio />}
-              label="차량 사고"
-            />
-            <FormControlLabel
-              value="INAPPROPRIATE"
-              control={<Radio />}
-              label="부적절한 운송요청"
-            />
-            <FormControlLabel
-              value="REVIEW"
-              control={<Radio />}
-              label="부적절한 리뷰"
-            />
-            <FormControlLabel
-              value="EMERGENCY"
-              control={<Radio />}
-              label="긴급신고"
-            />
-          </RadioGroup>
+          {lockCategory ? (
+            <Box sx={{ mb: 3 }}>
+              <FormLabel component="legend" sx={{ mb: 1, fontWeight: "bold" }}>신고 카테고리</FormLabel>
+              <Chip label={labelOf(selectedCategory)} color="error" variant="outlined" />
+            </Box>
+          ) : (
+            <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
+              <FormLabel component="legend" sx={{ mb: 2, fontWeight: "bold" }}>신고 카테고리</FormLabel>
+              <RadioGroup
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                {CATEGORY_OPTIONS.map((opt) => (
+                  <FormControlLabel
+                    key={opt}
+                    value={opt}
+                    control={<Radio />}
+                    label={labelOf(opt)}
+                    disabled={lockCategory && opt !== selectedCategory}
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
+          )}
         </FormControl>
 
         <TextField

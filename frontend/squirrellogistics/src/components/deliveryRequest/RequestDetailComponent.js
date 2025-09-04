@@ -36,6 +36,8 @@ import LoadingComponent from "../common/LoadingComponent";
 import { theme } from "../common/CommonTheme";
 import { CommonTitle } from "../common/CommonText";
 import { cancelDeliveryReservation } from "../../api/deliveryRequest/deliveryAssignmentAPI";
+import { fetchRegisterReport } from "../../api/company/reportApi";
+import EmergencyReportModal from "../driver/EmergencyReportModal";
 
 const RequestDetailComponent = () => {
   const navigate = useNavigate();
@@ -58,6 +60,8 @@ const RequestDetailComponent = () => {
   const [popupTitle, setPopupTitle] = useState("");
   const [popupContent, setPopupContent] = useState("");
   const [errpopupOpen, setErrpopupOpen] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
   const unautorized = false;
 
   const [deliveryData, setDeliveryData] = useState({
@@ -216,6 +220,28 @@ const RequestDetailComponent = () => {
       }
     });
   }
+
+  const handleReport = () => {
+    setShowReport(true);
+  };
+
+  const onReport = (reportData) => {
+
+    setLoading(true);
+    fetchRegisterReport({ reportData })
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((e) => {
+        const errBody = e.response?.data;
+        //setError(errBody?.message ?? e.message);
+      })
+      .finally(() => {
+        setLoading(false);
+        navigate(`/driver/reportlist`);
+
+      });
+  };
 
   const isWithin3Days = () => {
     const start = deliveryData?.estimated_start_at;
@@ -532,7 +558,7 @@ const RequestDetailComponent = () => {
                             lineHeight: 1.2,
                             bgcolor: thisTheme.palette.error.main,
                             "&:hover": {
-                              bgcolor: lighten(thisTheme.palette.error.main,0.1), // 호버 시 색상 변경
+                              bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
                             },
                             p: 6, pt: 0, pb: 0,
                           }}
@@ -543,6 +569,30 @@ const RequestDetailComponent = () => {
                     )}
                   </>
                 )}
+
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={handleReport}
+                    disabled={loading}
+                    sx={{
+                      minWidth: 'auto',
+                      height: '48px',
+                      padding: '2px 4px',
+                      fontSize: '18px',
+                      lineHeight: 1.2,
+                      bgcolor: thisTheme.palette.error.main,
+                      "&:hover": {
+                        bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+                      },
+                      p: 6, pt: 0, pb: 0,
+                    }}
+                  >
+                    신고
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
@@ -710,6 +760,13 @@ const RequestDetailComponent = () => {
         />
       )}
       <LoadingComponent open={loading} text="상세 정보를 불러오는 중..." />
+      <EmergencyReportModal
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        presetCategory="INAPPROPRIATE"
+        lockCategory={true}
+        onReport={onReport}
+      />
     </Box>
   );
 };

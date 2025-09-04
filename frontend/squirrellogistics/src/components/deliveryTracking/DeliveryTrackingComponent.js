@@ -29,7 +29,6 @@ import { theme } from "../common/CommonTheme";
 
 const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
   const thisTheme = useTheme();
-  const { driverId } = useParams();
   const {
     leg: activeLeg,
     index: activeIndex,
@@ -39,12 +38,14 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
   } = pickActiveLeg(data);
   const hasNextLeg = activeLeg != null; // 다음으로 달릴 구간이 있나
 
+
   // 웹소켓으로 들어오는 실시간 경로
-  const live = useDriverStream(() => localStorage.getItem('token') || localStorage.getItem('accessToken'));
+  const live = useDriverStream(() => localStorage.getItem('accessToken'));
   const distanceKm = live?.distance != null ? (live.distance / 1000).toFixed(1) : null;
   const durationMin = live?.duration != null ? Math.round(live.duration / 60) : null;
 
   const items = computeWaypointStatuses(data);
+  console.log(data);
   return (
     <Box width={"100%"} sx={{ bgcolor: thisTheme.palette.background.default }}>
       {/* 페이지 최상단 제목 */}

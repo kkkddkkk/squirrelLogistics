@@ -129,6 +129,8 @@ export default function ReviewItem({ review, expanded, onToggle }) {
             <EmergencyReportModal
                 open={showReport}
                 assignId={review.assignedId}
+                presetCategory="REVIEW"
+                lockCategory={true}
                 onClose={() => setShowReport(false)}
                 onReport={handleEmergencyReport}
             />

@@ -131,9 +131,9 @@ const ListComponent = () => {
     return () => ctrl.abort();
   }, [driverId]);
 
-  if (loading && !pageData) {
-    return <LoadingComponent open text="요청 목록을 불러오는 중..." />;
-  }
+  // if (loading && !pageData) {
+  //   return <LoadingComponent open text="요청 목록을 불러오는 중..." />;
+  // }
   if (err) {
     const mess = (
       <>
@@ -154,9 +154,14 @@ const ListComponent = () => {
       />
     );
   }
-  if (!pageData) return null;
+  //if (!pageData) return null;
 
-  const { dtoList, totalPage, current } = pageData;
+  const dtoList = pageData?.dtoList ?? [];
+  const totalPage = Math.max(pageData?.totalPage ?? 1, 1);
+  const current = Math.max(pageData?.current ?? 1, 1);
+  const firstLoad = !pageData; // 최초 로딩 여부
+
+  //const { dtoList, totalPage, current } = pageData;
 
   const openProposalDialog = () => {
     setDialogOpen(true);

@@ -536,7 +536,7 @@ public class DeliveryAssignmentService {
 //						PageRequest.of(0, 1));
 		
 		var last = deliveryStatusLogRepository
-				.findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(requestId,
+				.findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(assignId,
 						PageRequest.of(0, 1));
 		DeliveryStatusLogSlimResponseDTO lastDto = null;
 		Integer lastVisited = null;
