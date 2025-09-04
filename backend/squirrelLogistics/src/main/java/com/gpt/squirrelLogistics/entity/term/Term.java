@@ -36,6 +36,7 @@ public class Term {//약관동의
 	private Long termId;//약관 ID
 	
 	private String termName;//약관
+	@Column(name = "term_content", columnDefinition = "MEDIUMTEXT")
 	private String termContent;//약관내용
 	private boolean isRequired;//약관 필수 여부
 	
