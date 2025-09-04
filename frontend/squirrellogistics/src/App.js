@@ -3,14 +3,12 @@ import { RouterProvider } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import root from "./routes/root";
 import useAuthSession from "./api/user/useAuthSession";
-import { ThemeProvider } from "@mui/material";
-import { darkTheme, theme } from "./components/common/CommonTheme";
-import { createContext, useState } from "react";
 import { DarkModeProvider } from "./DarkModeContext";
+import { Box, useTheme } from "@mui/material";
 
 //const CLIENT_ID = "86450001711-...apps.googleusercontent.com";
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-function App() {
+function AppLayout() {
   useAuthSession({
     idleMinutes: 15, // 무활동 15분
     onLogout: (msg) => {
@@ -22,11 +20,25 @@ function App() {
     },
   });
 
+  const thisTheme = useTheme();
+
   return (
-    <DarkModeProvider >
+    <Box sx={{
+      backgroundColor: thisTheme.palette.background.default
+    }}>
       <GoogleOAuthProvider clientId={clientId}>
         <RouterProvider router={root} />
       </GoogleOAuthProvider>
+    </Box>
+
+  );
+}
+
+function App() {
+
+  return (
+    <DarkModeProvider >
+      <AppLayout/>
     </DarkModeProvider>
 
   );

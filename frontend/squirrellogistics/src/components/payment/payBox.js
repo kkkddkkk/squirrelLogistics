@@ -1,4 +1,4 @@
-import { Box, Divider, Grid, Typography } from "@mui/material";
+import { Box, Divider, Grid, Typography, useTheme } from "@mui/material";
 import { paymentFormat, SubTitle } from "../common/CommonForCompany";
 import CommonList from "../common/CommonList";
 import { CommonSmallerTitle, CommonSubTitle } from "../common/CommonText";
@@ -9,6 +9,7 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
     additionalRate, atPayment
 }) => {
 
+    const thisTheme = useTheme();
     const Content = ({ dataKey, value, locale }) => {
 
         function PforCharge({ children }) {
@@ -17,6 +18,9 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
                     variant="body1"
                     component={"p"}
                     margin={"2%"}
+                    sx={{
+                        color: thisTheme.palette.text.primary
+                    }}
                 >
                     {children}
                 </Typography>
@@ -41,6 +45,7 @@ const PayBox = ({ mileage, weight, baseRate, stopOver1, stopOver2, stopOver3, ca
                     sx={{
                         fontWeight: "bold",
                         fontSize: `${fontSize}px`,
+                        color: thisTheme.palette.text.primary
                     }}
                 >
                     {children}

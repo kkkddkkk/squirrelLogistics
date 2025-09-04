@@ -1,11 +1,11 @@
-import { Box, Grid, Modal, Typography } from "@mui/material";
+import { Box, Grid, Modal, Typography, useTheme } from "@mui/material";
 import ActualMap from "../../components/actualCalc/ActualMap";
 import PayBox from "../../components/payment/payBox";
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Buttons } from "../../components/history/HistoryList";
 import HelpIcon from '@mui/icons-material/Help';
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { useEffect, useState } from "react";
+import { act, useEffect, useState } from "react";
 import { Layout, paymentFormat, Title } from "../../components/common/CommonForCompany";
 import { actualCalc, getActualCalc, getEstimateCalc, trySecondPayment } from "../../api/company/actualCalcApi";
 import { useSearchParams } from "react-router-dom";
@@ -19,7 +19,7 @@ import { ButtonContainer, Three100Buttons } from "../../components/common/Common
 const ActualCalc = () => {
     const { moveToSecondPayment } = usePaymentMove();
     const { moveToReport } = useHistoryMove();
-
+    const thisTheme = useTheme();
 
     const [params] = useSearchParams();
     const assignedId = params.get("assignedId");
@@ -65,9 +65,13 @@ const ActualCalc = () => {
         if (actualCalc.caution) addThisRate += 50000;
         if (actualCalc.mountainous) addThisRate += 50000;
         setAdditionalRate(addThisRate)
-        setBaseRate(100000
-            + (3000 * Math.ceil((actualCalc.distance) / 1000))
-            + (Math.ceil((actualCalc.weight) / 1000) * 30000));
+        if (actualCalc.distance === 0) {
+            setBaseRate(0);
+        } else {
+            setBaseRate(100000
+                + (3000 * Math.ceil((actualCalc.distance) / 1000))
+                + (Math.ceil((actualCalc.weight) / 1000) * 30000));
+        }
         setRequestId(actualCalc.requestId);
         setPaymentId(actualCalc.paymentId);
     }, [actualCalc])
@@ -139,7 +143,8 @@ const ActualCalc = () => {
                             alignItems: "center",
                             marginBottom: "5%",
                             paddingBottom: "5%",
-                            borderBottom: `2px solid ${theme.palette.text.secondary}`
+                            borderBottom: `2px solid ${theme.palette.text.secondary}`,
+                            color: thisTheme.palette.text.primary
                         }}
                     >
                         <RemoveIcon />
@@ -149,7 +154,8 @@ const ActualCalc = () => {
                                 fontSize: `25px`,
                                 marginRight: '2%',
                                 display: "flex",
-                                alignItems: "center"
+                                alignItems: "center",
+                                color: thisTheme.palette.text.primary
                             }}
                         >
                             <HelpIcon cursor={"pointer"} onClick={() => setModal(true)} sx={{ color: theme.palette.text.secondary }} />&nbsp;
@@ -194,7 +200,8 @@ const ActualCalc = () => {
                             sx={{
                                 fontWeight: "bold",
                                 fontSize: `25px`,
-                                marginRight: '2%'
+                                marginRight: '2%',
+                                color: thisTheme.palette.text.primary
                             }}
                         >
                             총 {paymentFormat(actualCalc ? baseRate + additionalRate - actualCalc.estimateFee : 0)}원

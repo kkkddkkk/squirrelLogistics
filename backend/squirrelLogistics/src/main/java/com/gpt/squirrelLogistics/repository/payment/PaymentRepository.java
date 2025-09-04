@@ -62,4 +62,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT p.impUid FROM Payment p WHERE p.paymentId = :paymentId")
     String findimpUidPaymentId(@Param("paymentId") Long paymentId);
     
+    //prepaidId로 payment 찾기
+    @Query("SELECT p FROM Payment p WHERE p.prepaidId = :prepaidId")
+    Optional<Payment> findByPrepaidId(@Param("prepaidId") Long prepaidId);
+    
 }

@@ -77,7 +77,8 @@ export const Payment = () => {
                     width: "100%",
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    color: thisTheme.palette.text.primary
                 }}
             >
                 <Box>
@@ -154,11 +155,14 @@ export const Payment = () => {
         if (actualCalc.caution) addThisRate += 50000;
         if (actualCalc.mountainous) addThisRate += 50000;
         setAdditionalRate(addThisRate)
-        setBaseRate(
-            100000
-            + (3000 * Math.ceil((actualCalc.distance) / 1000))
-            + Math.ceil(actualCalc.weight / 1000) * 30000);
-
+        if (actualCalc.distance === 0) {
+            setBaseRate(0);
+        } else {
+            setBaseRate(
+                100000
+                + (3000 * Math.ceil((actualCalc.distance) / 1000))
+                + Math.ceil(actualCalc.weight / 1000) * 30000);
+        }
         setRequestId(actualCalc.requestId);
 
     }, [actualCalc])

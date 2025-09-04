@@ -1,10 +1,11 @@
-import { Box, Button, FormControl, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material"
+import { Box, Button, FormControl, lighten, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material"
 import { useEffect, useRef, useState } from "react";
 import { Buttons } from "../../components/history/HistoryList";
 import { getTransactionStatement } from "../../api/company/paymentApi";
 import { useSearchParams } from "react-router-dom";
 import { paymentFormat } from "../../components/common/CommonForCompany";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import { theme } from "../../components/common/CommonTheme";
 
 const TransactionStatement = () => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -28,7 +29,28 @@ const TransactionStatement = () => {
         return (
             <TextField
                 sx={{
-                    "& fieldset": { border: "none" }
+                    "& input": {
+                        color: theme.palette.text.primary, // 입력 글자 색
+                        "&:-webkit-autofill": {
+                            WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.default} inset !important`,
+                            WebkitTextFillColor: theme.palette.text.primary,
+                        },
+                    },
+                    "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                            borderColor: "transparent", // 테두리 없애기
+                        },
+                        "&:hover fieldset": {
+                            borderColor: "transparent", // 호버 시 테두리
+                        },
+                        "&.Mui-focused fieldset": {
+                            borderColor: "transparent", // 포커스 시 테두리
+                        },
+                    },
+                    "& input::placeholder": {
+                        color: lighten(theme.palette.text.primary, 0.5), // 플레이스홀더 색
+                    },
+
                 }}
                 placeholder="입력가능"
                 name={name}
@@ -65,12 +87,20 @@ const TransactionStatement = () => {
     const tableRef = useRef(null);
 
     return (
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
-            <LoadingComponent open={!trans} text="거래명세표를 불러오는 중..."/>
+        <Box sx={{
+            width: "100%", display: "flex", justifyContent: "center",
+            flexWrap: "wrap", backgroundColor: theme.palette.background.default,
+            color: theme.palette.text.primary
+        }}>
+            <LoadingComponent open={!trans} text="거래명세표를 불러오는 중..." />
             <FormControl>
                 <TableContainer sx={{ width: "100%", display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
                     <Table ref={tableRef} sx={{
-                        width: "90%", padding: 0, "& .MuiTableCell-root": { padding: "5px" },
+                        width: "90%", padding: 0, "& .MuiTableCell-root": {
+                            padding: "5px",
+                            backgroundColor: theme.palette.background.default,
+                            color: theme.palette.text.primary
+                        },
                         margin: "25px"
                     }} >
                         <TableHead>

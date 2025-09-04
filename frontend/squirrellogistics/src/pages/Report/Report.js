@@ -184,7 +184,7 @@ const Report = () => {
                                 }
 
                                 <Box width={"100%"} border={"1px solid #909095"} margin={"5% 0"} />
-                                <SubTitle>A. {viewReport.rtitle}의 답변</SubTitle>
+                                <CommonSubTitle>A. {viewReport.rtitle}의 답변</CommonSubTitle>
                                 <Typography textAlign={"justify"}>
                                     아직 답변이 등록되지 않았습니다.
                                 </Typography>

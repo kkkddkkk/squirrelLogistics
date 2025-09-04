@@ -109,12 +109,46 @@ public class DeliveryAssignmentService {
 
 	// 작성자: 김도경
 	// 기능: 실계산 페이지 랜더링
+	@Transactional
 	public ActualCalcDTO getActualCalc(Long assignedId) {
 		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
 		ActualDelivery actualDelivery = deliveryAssignmentRepository.findAllActualDeliveyById(assignedId.toString());
 		Long estimatedFee = requestRepository
 				.findEstimatedFeeById(deliveryAssignmentRepository.findRequestIdById(assignedId));
+		String estimatedPolyline = requestRepository.findExpectedRealPolylineByAssignedId(assignedId).get();
 		Long paymentId = deliveryAssignmentRepository.findFirstPaymentIdById(assignedId);
+		
+		DeliveryAssignment deliveryAssignment = deliveryAssignmentRepository.findById(assignedId)
+				.orElseThrow(() -> new RuntimeException("assignment not found!"));
+		
+		if (actualDelivery == null) {
+			
+			Payment payment = paymentRepository.findByPrepaidId(paymentId)
+			        .orElseGet(() -> {
+			            Payment newPayment = Payment.builder()
+			                    .prepaidId(paymentId)
+			                    .settlement(false)
+			                    .payStatus(PayStatusEnum.PENDING)
+			                    .build();
+			            return paymentRepository.save(newPayment); // DB에 먼저 저장
+			        });
+
+			// 이후에 assignment와 연결
+			deliveryAssignment.setPayment(payment);
+			deliveryAssignmentRepository.save(deliveryAssignment);
+
+			
+			ActualCalcDTO actualCalcDTO = ActualCalcDTO.builder().paymentId(paymentId)
+					.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId)).assignedId(Long.valueOf(assignedId))
+					.dropOrder1(waypointList.size() >= 3).dropOrder2(waypointList.size() >= 4)
+					.dropOrder3(waypointList.size() >= 5).mountainous(false)
+					.caution(false).distance(0L)
+					.weight(0L)
+					.requestId(deliveryAssignmentRepository.findRequestIdById(assignedId)).estimateFee(estimatedFee)
+					.actualPolyline(estimatedPolyline).build();
+			
+			return actualCalcDTO;
+		}
 
 		ActualCalcDTO actualCalcDTO = ActualCalcDTO.builder().paymentId(paymentId)
 				.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId)).assignedId(Long.valueOf(assignedId))
@@ -140,6 +174,7 @@ public class DeliveryAssignmentService {
 
 		// 실운전(산간주의, 취급주의, 실제금액)
 		List<Object[]> actualDelivery = deliveryAssignmentRepository.findActualDeliveryById(assignedId);
+
 		Object[] actualDeliveryList = actualDelivery != null && !actualDelivery.isEmpty() ? actualDelivery.get(0)
 				: new Object[] { 0, 0, 0 };
 
@@ -212,13 +247,13 @@ public class DeliveryAssignmentService {
 	// 기능: detailHistory(예약, 운송중 세부내역 확인)
 	// 수정일: 2025.09.01 고은설 => 상태값 및 경유지 정보 가져오는 구조로 수정.
 	public DetailHistoryDTO getDetailHistory(Long assignedId) {
-		
+
 		DeliveryAssignment assignmentRef = deliveryAssignmentRepository.getReferenceById(assignedId);
 
-		if(assignmentRef == null) {
+		if (assignmentRef == null) {
 			return null;
 		}
-		
+
 		// Status
 		List<DeliveryWaypointSlimResponseDTO> wps = deliveryAssignmentRepository
 				.findWaypointsByRequest(assignmentRef.getDeliveryRequest());
@@ -226,16 +261,11 @@ public class DeliveryAssignmentService {
 		// Logs
 		List<DeliveryStatusLogSlimResponseDTO> logs = deliveryAssignmentRepository.findLogsByAssignId(assignedId);
 
-		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder()
-				.assignedId(assignedId)
-				.driverId(assignmentRef.getDriver().getDriverId())
-				.waypoints(wps)
-				.statuses(logs)
-				.build();
+		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
+				.driverId(assignmentRef.getDriver().getDriverId()).waypoints(wps).statuses(logs).build();
 
 		return detailHistoryDTO;
-		
-		
+
 //		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
 //		
 //		List<String> dropOrders = new ArrayList<>();
@@ -251,8 +281,7 @@ public class DeliveryAssignmentService {
 //				.dropOrder1(dropOrders.get(0)).dropOrder2(dropOrders.get(1)).dropOrder3(dropOrders.get(2))
 //				.startAddress(startEnd[0].toString()).endAddress(startEnd[1].toString()).wantToStart(startDate)
 //				.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0)).build();
-		
-		
+
 	}
 
 	// 작성자: 고은설.
@@ -332,11 +361,8 @@ public class DeliveryAssignmentService {
 
 		LocalDateTime start = req.getWantToStart();
 
-		boolean hasConflict = deliveryAssignmentRepository.existsOverlappingByRequestDay(
-			    driver.getDriverId(),
-			    start,
-			    blocking
-			);
+		boolean hasConflict = deliveryAssignmentRepository.existsOverlappingByRequestDay(driver.getDriverId(), start,
+				blocking);
 		if (hasConflict)
 			return "SCHEDULE_CONFLICT";
 
@@ -597,8 +623,7 @@ public class DeliveryAssignmentService {
 	}
 
 	@Transactional
-	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action, 
-			boolean detour) {
+	public DeliveryAssignmentTrackingDTO applyAction(Long assignedId, DriverActionEnum action, boolean detour) {
 		var assignment = deliveryAssignmentRepository.findById(assignedId)
 				.orElseThrow(() -> new IllegalArgumentException("배차 없음: " + assignedId));
 
@@ -689,7 +714,6 @@ public class DeliveryAssignmentService {
 		// 최신 상태 패킷 재조립.
 		return getTodayAssignments(assignment.getDriver().getDriverId());
 	}
-
 
 	private void insertLog(DeliveryAssignment assignment, DeliveryStatusEnum status, int lastVisited,
 			LocalDateTime at) {
@@ -869,44 +893,44 @@ public class DeliveryAssignmentService {
 
 		// 배정 엔티티 조회
 		Optional<DeliveryAssignment> optAssign = deliveryAssignmentRepository.findLatestActiveByRequestId(requestId);
-		
-		//DeliveryAssignment assignment = deliveryAssignmentRepository.findById(assignId).orElse(null);
+
+		// DeliveryAssignment assignment =
+		// deliveryAssignmentRepository.findById(assignId).orElse(null);
 		if (optAssign.isEmpty()) {
 			return Map.of("FAILED", "ASSIGNMENT_NOT_FOUND");
 		}
-		
+
 		DeliveryAssignment assignment = optAssign.get();
-		
+
 		// 요청 엔티티 확인
 		DeliveryRequest request = assignment.getDeliveryRequest();
 		if (request == null) {
 			return Map.of("FAILED", "REQUEST_NOT_FOUND");
 		}
-		
-		//본인 배차만 취소 가능
-	    if (requesterDriverId != null) {
-	        Long ownerDriverId = assignment.getDriver() != null ? assignment.getDriver().getDriverId() : null;
-	        if (!Objects.equals(ownerDriverId, requesterDriverId)) {
-	            return Map.of("FAILED", "FORBIDDEN"); // 본인 배정만 취소 가능
-	        }
-	    }
-	    
+
+		// 본인 배차만 취소 가능
+		if (requesterDriverId != null) {
+			Long ownerDriverId = assignment.getDriver() != null ? assignment.getDriver().getDriverId() : null;
+			if (!Objects.equals(ownerDriverId, requesterDriverId)) {
+				return Map.of("FAILED", "FORBIDDEN"); // 본인 배정만 취소 가능
+			}
+		}
+
 		// 배정 삭제
-		//deliveryAssignmentRepository.delete(assignment);
-		
-	    //삭제 대신 상태 변경.
+		// deliveryAssignmentRepository.delete(assignment);
+
+		// 삭제 대신 상태 변경.
 		assignment.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.CANCELED);
 		assignment.setCancelledAt(LocalDateTime.now());
 
 		// 상태 전이: ASSIGNED -> REGISTERED
-		// int updated = requestRepository.turnCanceledReservationIntoRegistered(request.getRequestId());
-		
-		
+		// int updated =
+		// requestRepository.turnCanceledReservationIntoRegistered(request.getRequestId());
+
 		// 단순 상태 전이에서 조건 확인 후 요청 상태 되돌리기 (PROPOSED → REGISTERED).
 		if (request.getStatus() == com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.ASSIGNED) {
 			request.setStatus(com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED);
-		}
-		else {
+		} else {
 			return Map.of("FAILED", "INVALID_STATUS");
 		}
 

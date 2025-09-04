@@ -31,6 +31,11 @@ const CompanyEditPage = () => {
   const dispatch = useDispatch();
   const { userInfo, myPageInfo, snsLogin } = useSelector((s) => s.company);
 
+  // ✅ 서버 데이터 불러오기
+  useEffect(() => {
+    dispatch(fetchCompanyMyPageInfo());
+  }, [dispatch]);
+
   // 소셜 사용자 여부 확인
   const isSocialUser = snsLogin;
 
@@ -200,7 +205,8 @@ const CompanyEditPage = () => {
   };
 
   // 주소 검색 핸들러
-  const handleAddressSearch = () => {
+  const handleAddressSearch = (e) => {
+    e.preventDefault();
     new window.daum.Postcode({
       oncomplete: function (data) {
         setFormData(prev => ({
@@ -381,7 +387,7 @@ const CompanyEditPage = () => {
             {/* 소셜 사용자 비밀번호 수정 제한 안내 */}
             {isSocialUser && (
               <div className="social-notice">
-                <LockIcon sx={{color: thisTheme.palette.text.secondary}}/>
+                <LockIcon sx={{ color: thisTheme.palette.text.secondary }} />
                 <p> 소셜 로그인 사용자는 비밀번호를 이 페이지에서 수정할 수 없습니다.</p>
                 <p>비밀번호 변경이 필요한 경우 소셜 계정 설정에서 변경해주세요.</p>
               </div>

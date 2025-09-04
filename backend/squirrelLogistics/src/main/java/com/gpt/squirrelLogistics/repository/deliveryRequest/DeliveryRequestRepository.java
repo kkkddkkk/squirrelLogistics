@@ -390,5 +390,15 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			    where a.assignedId = :assignedId
 			""")
 	Optional<String> findExpectedPolylineByAssignedId(@Param("assignedId") Long assignedId);
+	
+	// 작성자: 고은설
+	// 기능: 특정 ID의 운송 요청의 예상 경로 추출하기.
+	@Query("""
+			    select r.expectedPolyline
+			    from DeliveryAssignment a
+			    join a.deliveryRequest r
+			    where a.assignedId = :assignedId
+			""")
+	Optional<String> findExpectedRealPolylineByAssignedId(@Param("assignedId") Long assignedId);
 
 }

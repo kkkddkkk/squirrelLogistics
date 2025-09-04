@@ -300,7 +300,7 @@ const ListComponent = () => {
                 <Typography
                   sx={{
                     fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    color: thisTheme.palette.text.primary,
+                    color: thisTheme.palette.background.default,
                     fontSize: "clamp(12px, 1.5vw, 14px)",
                   }}
                 >
@@ -313,7 +313,7 @@ const ListComponent = () => {
                   기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!
                   <Box
                     component="span"
-                    sx={{ ml: 1, color: thisTheme.palette.text.primary, fontWeight: 700 }}
+                    sx={{ ml: 1, color: thisTheme.palette.background.default, fontWeight: 700 }}
                   >
                     (클릭하여 확인하기)
                   </Box>{" "}

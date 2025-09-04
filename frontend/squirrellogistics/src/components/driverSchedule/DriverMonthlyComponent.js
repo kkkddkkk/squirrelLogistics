@@ -363,8 +363,8 @@ export default function DriverMonthlyComponent() {
           ".rbc-date-cell": { padding: 8 },
           ".rbc-off-range-bg": {
             background: thisTheme.palette.mode === "light" ?
-              lighten(thisTheme.palette.text.secondary, 0.9)
-              : darken(thisTheme.palette.text.secondary, 0.5)
+              lighten(thisTheme.palette.text.secondary, 0.9)+" !important"
+              : thisTheme.palette.background.paper+" !important"
           },
           ".rbc-event, .rbc-event-allday": {
             boxShadow: "none",

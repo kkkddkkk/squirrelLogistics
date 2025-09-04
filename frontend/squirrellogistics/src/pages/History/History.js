@@ -11,7 +11,7 @@ import darkLogo from '../../components/common/squirrelLogisticsLogo_dark.png';
 import { CommonTitle } from "../../components/common/CommonText";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import LoadingComponent from "../../components/common/LoadingComponent";
-import { ButtonContainer, OneButtonAtRight, Two100Buttons } from "../../components/common/CommonButton";
+import { ButtonContainer, OneButtonAtRight, Two100Buttons, TwoButtonsAtRight } from "../../components/common/CommonButton";
 
 const History = () => {
     const [params] = useSearchParams();
@@ -19,7 +19,7 @@ const History = () => {
     const [todayList, setTodayList] = useState([]);
     const [assignStatus, setAssignStatus] = useState([]);
     const { moveToMain } = usePaymentMove();
-    const { moveBack, moveToReportList, moveToReviewList } = useHistoryMove();
+    const { moveBack, moveToReportList, moveToReviewList, moveToMyPage } = useHistoryMove();
     const [dataLengths, setDataLengths] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,8 @@ const History = () => {
             if (today.assignmentStatus === "IN_PROGRESS") return "배송중";
             if (today.assignmentStatus === "COMPLETED" && today.paymentStatus === "ALLCOMPLETED") return "배송완료";
             if (today.assignmentStatus === "COMPLETED" && today.paymentStatus !== "ALLCOMPLETED") return "미정산";
-            if (today.assignmentStatus === "CANCELED" || today.assignmentStatus === "FAILED") return "취소";
+            if ((today.assignmentStatus === "CANCELED" || today.assignmentStatus === "FAILED") && today.paymentStatus === "ALLCOMPLETED") return "환불완료";
+            else if(today.assignmentStatus === "CANCELED" || today.assignmentStatus === "FAILED")return "취소";
             if (today.assignmentStatus === "UNKNOWN") return "요청됨";
             return "";
         });
@@ -114,7 +115,13 @@ const History = () => {
                 </Grid>
                 <Grid size={5}>
                     <ButtonContainer>
-                        <OneButtonAtRight clickEvent={() => moveBack()}>뒤로가기</OneButtonAtRight>
+                        <TwoButtonsAtRight
+                            leftTitle={"메인화면"}
+                            leftClickEvent={() => moveToMain()}
+                            rightTitle={"마이페이지"}
+                            rightClickEvent={() => moveToMyPage()}
+                            gap={2}
+                        />
                     </ButtonContainer>
                 </Grid>
             </Grid>

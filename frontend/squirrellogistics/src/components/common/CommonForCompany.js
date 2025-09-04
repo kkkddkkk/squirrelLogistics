@@ -1,4 +1,4 @@
-import { Box, Button, Typography, useTheme } from "@mui/material"
+import { Box, Button, lighten, Typography, useTheme } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -67,37 +67,23 @@ export const Layout = ({ title, children }) => {
 
 export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton, loading }) => {
 
+    const thisTheme = useTheme();
     const handleExpand = () => {
         if (!isExpand) setIsExpand(true);
         else setIsExpand(false);
     }
 
     let color = '';
-    if (assignStatus === "예약") color = "#113F67";
-    if (assignStatus === "배송중") color = "#E8A93F";
-    if (assignStatus === "배송완료") color = "#31A04F";
-    if (assignStatus === "취소") color = "#A20025";
-    if (assignStatus === "미정산") color = "#A20025";
+    if (assignStatus === "예약") color = thisTheme.palette.primary.main;
+    if (assignStatus === "배송중") color = thisTheme.palette.warning.main;
+    if (assignStatus === "배송완료" || assignStatus === "환불완료") color = thisTheme.palette.success.main;
+    if (assignStatus === "취소" || assignStatus === "미정산") color = thisTheme.palette.error.main;
+    if (assignStatus === "요청됨") color =  lighten(thisTheme.palette.primary.main,0.5);
     if (assignStatus === "") color = 0;
 
 
 
     return (
-        // <Box
-        //     sx={{
-        //         width: "90%",
-        //         border: "1px solid #2A2A2A",
-        //         borderRadius: "5px",
-        //         padding: "7px",
-        //         display: "flex",
-        //         justifyContent: "space-between",
-        //         alignItems: "center",
-        //         marginBottom: "2%",
-        //         flexWrap: "wrap"
-
-        //     }}
-        //     className="listBoxContainer"
-        // >
         <CommonList padding={2}>
             {/* 숨겨진 ID */}
             <input type="hidden" value={id} />
@@ -107,6 +93,7 @@ export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand,
                     sx={{
                         flex: 1,
                         whiteSpace: "nowrap",
+                        whiteSpace: "pre-line",
                         textOverflow: "ellipsis",
                         margin: "2% 0",
                         display: "inline-block"

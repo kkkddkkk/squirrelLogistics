@@ -4,6 +4,7 @@ import { Layout, paymentFormat } from "../../components/common/CommonForCompany"
 import { useSearchParams } from "react-router-dom";
 import { getReciept } from "../../api/company/paymentApi";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import { theme } from "../../components/common/CommonTheme";
 
 export const Reciept = () => {
     const [params] = useSearchParams();
@@ -66,7 +67,9 @@ export const Reciept = () => {
                     width: "100%",
                     display: "flex",
                     justifyContent: "center",
-                    flexWrap: "wrap"
+                    flexWrap: "wrap",
+                    backgroundColor: theme.palette.background.default,
+                    color: theme.palette.text.primary
                 }}
             >
                 <Box

@@ -1,10 +1,11 @@
 
 import React, { useState } from "react";
-import { Container, Paper, Typography, TextField, Button, Box } from "@mui/material";
+import { Container, Paper, Typography, TextField, Button, Box, useTheme } from "@mui/material";
 
 export default function PasswordResetPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const thisTheme = useTheme();
 
   const handleReset = async () => {
     try {
@@ -31,17 +32,27 @@ export default function PasswordResetPage() {
           margin="normal"
           value={email}
           onChange={e => setEmail(e.target.value)}
-        />
-        <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={handleReset}>
-          재설정 메일 발송
-        </Button>
+          sx={{
+            background: thisTheme.palette.background.paper,
+            "& .MuiInputBase-input": {
+              color: thisTheme.palette.text.primary,
+              "&:-webkit-autofill": {
+                WebkitBoxShadow: `0 0 0 1000px ${thisTheme.palette.background.paper} inset !important`,
+                WebkitTextFillColor: thisTheme.palette.text.primary,
+              },
+            }
+          }}
+            />
+            <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={handleReset}>
+              재설정 메일 발송
+            </Button>
         {sent && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              이메일로 재설정 링크가 발송되었습니다.
-            </Typography>
-          </Box>
-        )}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                이메일로 재설정 링크가 발송되었습니다.
+              </Typography>
+            </Box>
+          )}
       </Paper>
     </Container>
   );

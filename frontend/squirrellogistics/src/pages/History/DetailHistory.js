@@ -1,4 +1,4 @@
-import { Box, Modal, Typography } from "@mui/material";
+import { Box, Grid, Modal, Typography, useTheme } from "@mui/material";
 import ActualMap from "../../components/actualCalc/ActualMap";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { useEffect, useMemo, useState } from "react";
@@ -13,6 +13,9 @@ import { getDetailHistory } from "../../api/company/historyApi";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
 import { useCompanyStream, useDriverStream } from "../../api/deliveryRequest/driverStreamAPI";
 import { buildWaypointViews, buildMainStatus } from "./trackingUtil";
+import CommonList from "../../components/common/CommonList";
+import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
+import { OneButtonAtLeft, TwoButtonsAtRight } from "../../components/common/CommonButton";
 
 //작성자: 고은설.
 //기능: 폴링 쿨타임 셋업용.
@@ -25,6 +28,7 @@ const DetailHistory = () => {
     const [params] = useSearchParams();
     const assignedId = params.get("assignId");
     const [detailContent, setDetailContent] = useState([]);
+    const thisTheme = useTheme();
 
     //고은설: 쿨타임 차감용.
     const [cooldown, setCooldown] = useState(POLL_INTERVAL);
@@ -131,35 +135,17 @@ const DetailHistory = () => {
         };
     }, [detailContent, live]);
     return (
-        <Layout title={"세부내역"}>
-            <Box
-                sx={{
-                    width: "70%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignContent: "center"
-                }}
-            >
-                <Box sx={{ width: "40%" }}>
-                    {/* <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap> */}
+        <>
+            <CommonTitle>세부내역</CommonTitle>
+            <Grid container spacing={3} marginBottom={10} alignItems="stretch">
+                <Grid size={2} />
+                <Grid size={4} sx={{ aspectRatio: 1 / 1 }}>
                     <LiveMapComponent route={mergedRoute} onRefresh />
-                </Box>
-                <Box sx={{ width: "50%", aspectRatio: "1/1", overflowY: "auto", overflowX: "hidden" }}>
-                    {/* <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        {detailContent?.status === "ASSIGNED" ?
-                            <Title> 출발 예정: {detailContent?.wantToStart}</Title> :
-                            <Title> 화물이 운송 중입니다.</Title>
-                        }
-                    </Box> */}
+                </Grid>
 
-                    <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <Title>{buildMainStatus(detailContent?.statuses, detailContent?.waypoints)}</Title>
-                    </Box>
-
-                    {/* <Box width={"100%"} display={"flex"} justifyContent={"space-between"} marginBottom={"5%"}>
-                        <SubTitle>출발지: {detailContent?.startAddress}</SubTitle>
-                        <CheckBoxIcon sx={{ color: "#31A04F" }}></CheckBoxIcon>
-                    </Box> */}
+                <Grid size={4} sx={{ display: "flex", flexDirection: "column" }}>
+                    <CommonSubTitle>{buildMainStatus(detailContent?.statuses, detailContent?.waypoints)}</CommonSubTitle>
+                    <Box marginTop={"5%"} />
                     {views.map((v) => (
                         <Box
                             key={v.index}
@@ -169,43 +155,36 @@ const DetailHistory = () => {
                             alignItems="center"
                             mb="5%"
                         >
-                            <SubTitle>
-                                {v.role}: {v.address}
-                            </SubTitle>
+                            <CommonSmallerTitle>{v.role}: {v.address}</CommonSmallerTitle>
                             <Box display="flex" alignItems="center" gap="8px">
                                 {iconOf(v.state)}
-                                <Typography sx={{ fontSize: "0.85rem", fontWeight: "bold", color: colorOf(v.state) }}>
+                                <Typography sx={{ 
+                                    fontSize: "0.85rem", 
+                                    fontWeight: "bold", 
+                                    color: colorOf(v.state),
+                                    whiteSpace: "nowrap"
+                                    }}>
                                     {v.state}
                                 </Typography>
                             </Box>
                         </Box>
                     ))}
+                    <Box sx={{ flexGrow: 1 }} />
                     <Box display="flex" justifyContent="space-between" mt="5%">
-                        <button
-                            onClick={fetchDetail}
-                            style={{
-                                padding: "8px 12px",
-                                background: "#34699A",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            새로고침 ({cooldown}s)
-                        </button>
-                        <TwoBtns
-                            children1={"예약 취소"}
-                            func1={() => alert("예약취소")}
-                            children2={"뒤로가기"}
-                            func2={() => moveBack()}
+                        <OneButtonAtLeft clickEvent={fetchDetail}>새로고침({cooldown}s)</OneButtonAtLeft>
+                        <TwoButtonsAtRight
+                            leftTitle={"예약 취소"}
+                            leftClickEvent={() => alert("예약취소")}
+                            leftColor={thisTheme.palette.error.main}
+                            rightTitle={"뒤로가기"}
+                            rightClickEvent={() => moveBack()}
+                            gap={2}
                         />
                     </Box>
-
-                </Box>
-
-            </Box >
-        </Layout>
+                </Grid>
+                <Grid size={2} />
+            </Grid>
+        </>
     )
 }
 

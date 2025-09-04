@@ -69,7 +69,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     const showReciept = () => {
-        window.open(`${window.location.origin}/company/reciept?paymentId=${todayContent?.paymentId}`, 'name', 'width=500, height=600');
+        window.open(`${window.location.origin}/company/reciept?paymentId=${todayContent?.paymentId}&token=${accesstoken}`, 'name', 'width=500, height=600');
     }
 
     const showReport = () => {
@@ -107,7 +107,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     return (
-        <ListBoxContainer id={assignedId} header={`${start} → ${end}`} useButton={true}
+        <ListBoxContainer id={assignedId} header={`출발지: ${start} →\n도착지: ${end}`} useButton={true}
             assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand} loading={loading}>
             <LoadingComponent open={loading} text="이용기록을 불러오는 중..." />
             {!isExpand ? <></> :
@@ -160,15 +160,24 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                         rightTitle={todayContent.reviewId != 0 ? "리뷰 수정" : "리뷰 작성"}
                                         rightClickEvent={openModal}
                                         gap={1}
-                                    />
+                                    /> : <></>
+                                }
+                                {assignStatus === "배송중" || assignStatus === "예약" ?
+                                    <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
+                                        세부내역 확인
+                                    </OneBtnAtRight> : <></>
+                                }
 
-                                    : (assignStatus === "배송중" || assignStatus === "예약" ?
-                                        <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
-                                            세부내역 확인
-                                        </OneBtnAtRight> : (assignStatus === "미정산" ?
-                                            <OneBtnAtRight func={handleSecondPayment}>
-                                                정&nbsp;&nbsp;&nbsp;산
-                                            </OneBtnAtRight> : <></>))
+                                {assignStatus === "미정산" ?
+                                    <OneBtnAtRight func={handleSecondPayment}>
+                                        정&nbsp;&nbsp;&nbsp;산
+                                    </OneBtnAtRight> : <></>
+                                }
+
+                                {assignStatus === "취소" ?
+                                    <OneBtnAtRight func={handleSecondPayment}>
+                                        환불신청
+                                    </OneBtnAtRight> : <></>
                                 }
                             </Grid>
                         </Grid> : <></>
