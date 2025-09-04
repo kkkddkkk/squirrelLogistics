@@ -27,7 +27,7 @@ const ProfileImage = ({
       }
       // 파일명만 있는 경우 전체 URL 구성
       else if (!imageUrl.includes("/")) {
-        const fullUrl = `http://localhost:8080/api/images/profile/${imageUrl}`;
+        const fullUrl = `http://localhost:8080/api/public/driverImage/${imageUrl}`;
         setPreviewUrl(fullUrl);
       }
       // 기타 경우

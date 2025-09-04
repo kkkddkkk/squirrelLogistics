@@ -265,23 +265,6 @@ public class DeliveryAssignmentService {
 				.driverId(assignmentRef.getDriver().getDriverId()).waypoints(wps).statuses(logs).build();
 
 		return detailHistoryDTO;
-
-//		List<String> waypointList = deliveryWaypointRepository.findWaypointsByAssignmentId(assignedId);
-//		
-//		List<String> dropOrders = new ArrayList<>();
-//		if (waypointList.size() > 2) { // 목적지가 하나 이상 있는 경우
-//			dropOrders = waypointList.subList(1, waypointList.size() - 1);
-//		}
-//		
-//		Object[] startEnd = deliveryAssignmentRepository.findStartEndAddressById(assignedId).get(0);
-//		
-//		LocalDateTime startDate = deliveryAssignmentRepository.findStartDateById(assignedId);
-
-//		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
-//				.dropOrder1(dropOrders.get(0)).dropOrder2(dropOrders.get(1)).dropOrder3(dropOrders.get(2))
-//				.startAddress(startEnd[0].toString()).endAddress(startEnd[1].toString()).wantToStart(startDate)
-//				.status(deliveryAssignmentRepository.findStatusById(assignedId).get(0)).build();
-
 	}
 
 	// 작성자: 고은설.
@@ -952,6 +935,15 @@ public class DeliveryAssignmentService {
 		}
 		
 		return latestAssignId.get().getAssignedId();
+	}
+	
+	//작성자: 김도경
+	//예약 취소
+	@Transactional
+	public void cancel(Long assignedId) {
+		DeliveryAssignment deliveryAssignment = deliveryAssignmentRepository.findById(assignedId).orElseThrow();
+		
+		deliveryAssignment.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.CANCELED);
 	}
 
 }

@@ -106,6 +106,7 @@ const EditProfile = () => {
         // API를 통해 사용자 프로필 정보 가져오기
         const profileData = await getDriverProfile();
 
+
         console.log("가져온 프로필 데이터:", profileData);
 
         // 폼 데이터 설정

@@ -61,15 +61,21 @@ public class DriverServiceImpl implements DriverService {
         log.info("UserDTO 생성 완료 - Pnumber: {}", userDTO.getPnumber());
         
         // 프로필 이미지: 파일명만 반환 (프론트에서 전체 URL 구성)
+//        String profileImageFileName = null;
+//        if (driver.getProfileImageUrl() != null && !driver.getProfileImageUrl().isEmpty()) {
+//            // 전체 URL이 저장되어 있다면 파일명만 추출
+//            if (driver.getProfileImageUrl().startsWith("/api/")) {
+//                profileImageFileName = driver.getProfileImageUrl().substring(driver.getProfileImageUrl().lastIndexOf("/") + 1);
+//            } else {
+//                // 이미 파일명만 저장되어 있는 경우
+//                profileImageFileName = driver.getProfileImageUrl();
+//            }
+//        }
         String profileImageFileName = null;
-        if (driver.getProfileImageUrl() != null && !driver.getProfileImageUrl().isEmpty()) {
-            // 전체 URL이 저장되어 있다면 파일명만 추출
-            if (driver.getProfileImageUrl().startsWith("/api/")) {
-                profileImageFileName = driver.getProfileImageUrl().substring(driver.getProfileImageUrl().lastIndexOf("/") + 1);
-            } else {
-                // 이미 파일명만 저장되어 있는 경우
-                profileImageFileName = driver.getProfileImageUrl();
-            }
+        if(driver.getProfileImageName() != null && !driver.getProfileImageName().isEmpty()) {
+        	profileImageFileName = driver.getProfileImageName();
+        }else {
+        	profileImageFileName = "default_profile.png";
         }
         
         return DriverResponseDTO.builder()
@@ -78,7 +84,7 @@ public class DriverServiceImpl implements DriverService {
                 .licenseNum(driver.getLicenseNum())
                 .drivable(driver.isDrivable())
                 .LicenseDT(driver.getLicenseDT() != null ? driver.getLicenseDT().atStartOfDay() : null)
-                .profileImageUrl(profileImageFileName)
+                .profileImageName(profileImageFileName)
                 .userDTO(userDTO)
                 .build();
     }

@@ -64,6 +64,23 @@ export const updateDriverProfile = async (profileData) => {
   }
 };
 
+//기사 프로필 생성 및 수정: 김도경 작성
+export const uploadProfile = async ({ options = {}, data }) => {//HistoryList
+  try {
+    const res = await axios.put(`localhost:8080/api/public/driverImage/upload`, data, {
+      params: { ...options }, // GET 쿼리 파라미터로 전달
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // JWT 토큰 추가
+      },
+    });
+    console.log(res.data);
+    return res.data; // 필요하면 반환
+  } catch (err) {
+    console.error(err); // res.data.err → err 자체에 에러 정보 있음
+  }
+};
+
 // 비밀번호 확인
 export const verifyPassword = async (password) => {
   try {
