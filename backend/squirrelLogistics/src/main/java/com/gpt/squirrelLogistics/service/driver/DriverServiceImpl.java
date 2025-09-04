@@ -176,7 +176,7 @@ public class DriverServiceImpl implements DriverService {
         user.setName("탈퇴한사용자");  // 이름 마스킹
         user.setEmail("deleted_" + userId + "@deleted.com");  // 이메일 마스킹
         user.setPnumber("***-****-****");  // 전화번호 마스킹
-        user.setLoginId("deleted_" + userId + "_" + System.currentTimeMillis());  // 로그인 차단
+        //user.setLoginId("deleted_" + userId + "_" + System.currentTimeMillis());  // 로그인 차단
         user.setPassword("{deleted}");  // 로그인 차단
         user.setAccount(null);  // 계좌정보 삭제
         user.setBusinessN(null);  // 사업자번호 삭제
