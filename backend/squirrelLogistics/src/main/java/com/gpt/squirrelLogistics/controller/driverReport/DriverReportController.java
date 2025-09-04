@@ -53,7 +53,7 @@ public class DriverReportController {
 
 		Long driverId = ((AuthOutcome.Success) outcome).driverId();
 		Long assignId = null;
-		if (dto.getRCate() == ReportCategoryEnum.EMERGENCY) {
+		if (dto.getRCate() != ReportCategoryEnum.REVIEW) {
 			assignId = assignmentService.getLatestAssignmentIdByDriverId(driverId);
 
 			if (assignId == null) {

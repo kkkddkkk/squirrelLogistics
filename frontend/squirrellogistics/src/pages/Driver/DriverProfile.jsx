@@ -135,12 +135,13 @@ const DriverProfile = () => {
 
         // accessToken을 사용해서 기사 프로필 조회 (백엔드에서 JWT 토큰에서 userId 추출)
         const driverData = await getDriverProfile();
-
-        console.log("가져온 기사 프로필 데이터:", driverData);
-        console.log("userDTO 데이터:", driverData.userDTO);
+        const driverId = driverData.driverId;
+        // console.log("가져온 기사 프로필 데이터:", driverData);
+        // console.log("userDTO 데이터:", driverData.userDTO);
 
         // API 응답 데이터를 컴포넌트 상태에 맞게 변환
         setDriver({
+          id: driverData.driverId || "",
           name: driverData.userDTO?.name || "",
           birth: driverData.userDTO?.birthday || "",
           phone: driverData.userDTO?.pnumber || "",
@@ -152,18 +153,18 @@ const DriverProfile = () => {
           deliveryArea: driverData.mainLoca || "",
         });
 
-        console.log("설정된 driver 상태:", {
-          name: driverData.userDTO?.name || "",
-          phone: driverData.userDTO?.pnumber || "",
-          email: driverData.userDTO?.email || "",
-        });
+        // console.log("설정된 driver 상태:", {
+        //   name: driverData.userDTO?.name || "",
+        //   phone: driverData.userDTO?.pnumber || "",
+        //   email: driverData.userDTO?.email || "",
+        // });
 
         // 프로필 이미지 설정
         if (driverData.profileImageUrl) {
-          console.log(
-            "백엔드에서 받은 프로필 이미지 URL:",
-            driverData.profileImageUrl
-          );
+          // console.log(
+          //   "백엔드에서 받은 프로필 이미지 URL:",
+          //   driverData.profileImageUrl
+          // );
           // 백엔드 URL이 data URL인 경우에만 사용
           if (driverData.profileImageUrl.startsWith("data:image")) {
             setProfileImageUrl(driverData.profileImageUrl);
@@ -255,7 +256,6 @@ const DriverProfile = () => {
   };
 
   const handleEmergencyReport = (reportData) => {
-    console.log("긴급 신고 데이터:", reportData);
 
     setLoading(true);
     fetchRegisterReport({ reportData })
@@ -266,8 +266,11 @@ const DriverProfile = () => {
         const errBody = e.response?.data;
         setError(errBody?.message ?? e.message);
       })
-      .finally(() => setLoading(false));
-    navigate(`/driver/reportlist`);
+      .finally(() => {
+        setLoading(false);
+        navigate(`/driver/reportlist`);
+
+      });
   };
 
   if (loading) {
@@ -371,6 +374,7 @@ const DriverProfile = () => {
     }
   };
 
+  console.log("driver: " + driver);
   return (
     <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
@@ -856,6 +860,9 @@ const DriverProfile = () => {
       <EmergencyReportModal
         open={showEmergencyReportModal}
         onClose={() => setShowEmergencyReportModal(false)}
+        presetCategory="EMERGENCY"
+        driverId={driver.id}
+        lockCategory={true}
         onReport={handleEmergencyReport}
       />
       <Footer />

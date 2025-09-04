@@ -28,6 +28,7 @@ import {
   Container,
   Stack,
   useTheme,
+  FormHelperText,
 } from "@mui/material";
 import {
   Edit,
@@ -48,6 +49,7 @@ import { theme } from "../../components/common/CommonTheme";
 import dayjs from "dayjs";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 
@@ -69,6 +71,11 @@ export default function ManageVehicles() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create");
   const [selectedCar, setSelectedCar] = useState(null);
+
+  //차량 상태값 제어.
+  const VALID_STATUSES = ["OPERATIONAL", "MAINTENANCE"];
+  //에러 송출용.
+  const [formErrors, setFormErrors] = useState({});
 
   // Form 상태
   const [form, setForm] = useState({
@@ -128,6 +135,17 @@ export default function ManageVehicles() {
     loadCars();
   }, []);
 
+  useEffect(() => {
+    if (!form?.inspection) {
+      setForm(prev => ({ ...prev, nextInspection: "" }));
+      return;
+    }
+    const next = dayjs(form.inspection).add(6, "month").format("YYYY-MM-DD");
+    if (form.nextInspection !== next) {
+      setForm(prev => ({ ...prev, nextInspection: next }));
+    }
+  }, [form?.inspection]);
+
   // Snackbar 표시
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
@@ -137,50 +155,87 @@ export default function ManageVehicles() {
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-
+  const todayStr = dayjs().format("YYYY-MM-DD");
   // Dialog 열기
   const handleOpenDialog = (mode, car = null) => {
     setDialogMode(mode);
     setSelectedCar(car);
 
     if (mode === "edit" && car) {
+      const inspectionStr = car.inspection ? dayjs(car.inspection).format("YYYY-MM-DD") : "";
+      const nextInspectionStr = inspectionStr ? dayjs(inspectionStr).add(6, "month").format("YYYY-MM-DD") : "";
+
       setForm({
+        // 수정 불가 영역
         carNum: car.carNum || "",
         vehicleTypeId: car.vehicleType?.vehicleTypeId || "",
+        regDate: car.regDate ? dayjs(car.regDate).format("YYYY-MM-DD") : todayStr,
+
+        // 일반 입력
         mileage: car.mileage?.toString() || "",
         etc: car.etc || "",
-        inspection: car.inspection
-          ? dayjs(car.inspection).format("YYYY-MM-DD")
-          : "",
+        inspection: inspectionStr,
+        nextInspection: nextInspectionStr, // 읽기전용 표시용(인풋 아님)
+
+        // 기본값
         carStatus: car.carStatus || "OPERATIONAL",
-        regDate: car.regDate ? dayjs(car.regDate).format("YYYY-MM-DD") : "",
-        nextInspection: car.nextInspection
-          ? dayjs(car.nextInspection).format("YYYY-MM-DD")
-          : "",
-        licenseNum: car.licenseNum || "",
-        preferredStartTime: car.preferredStartTime || "",
-        preferredEndTime: car.preferredEndTime || "",
-        timeWindow: car.timeWindow || "07:00AM ~ 18:00PM",
-        preferredAreas: car.preferredAreas || [],
-        mainLoca: car.mainLoca || "서울",
       });
     } else {
       setForm({
+        // 수정 불가 영역
         carNum: "",
         vehicleTypeId: "",
+        regDate: todayStr,
+
+        // 일반 입력
         mileage: "",
         etc: "",
         inspection: "",
+        nextInspection: "", // inspection 입력되면 자동 설정
+
+        // 기본값
         carStatus: "OPERATIONAL",
-        regDate: "",
-        nextInspection: "",
-        preferredStartTime: "",
-        preferredEndTime: "",
-        timeWindow: "07:00AM ~ 18:00PM",
-        preferredAreas: [],
-        mainLoca: "서울",
       });
     }
+
+    // if (mode === "edit" && car) {
+    //   setForm({
+    //     carNum: car.carNum || "",
+    //     vehicleTypeId: car.vehicleType?.vehicleTypeId || "",
+    //     mileage: car.mileage?.toString() || "",
+    //     etc: car.etc || "",
+    //     inspection: car.inspection
+    //       ? dayjs(car.inspection).format("YYYY-MM-DD")
+    //       : "",
+    //     carStatus: car.carStatus || "OPERATIONAL",
+    //     regDate: car.regDate ? dayjs(car.regDate).format("YYYY-MM-DD") : "",
+    //     nextInspection: car.nextInspection
+    //       ? dayjs(car.nextInspection).format("YYYY-MM-DD")
+    //       : "",
+    //     licenseNum: car.licenseNum || "",
+    //     preferredStartTime: car.preferredStartTime || "",
+    //     preferredEndTime: car.preferredEndTime || "",
+    //     timeWindow: car.timeWindow || "07:00AM ~ 18:00PM",
+    //     preferredAreas: car.preferredAreas || [],
+    //     mainLoca: car.mainLoca || "서울",
+    //   });
+    // } else {
+    //   setForm({
+    //     carNum: "",
+    //     vehicleTypeId: "",
+    //     mileage: "",
+    //     etc: "",
+    //     inspection: "",
+    //     carStatus: "OPERATIONAL",
+    //     regDate: "",
+    //     nextInspection: "",
+    //     preferredStartTime: "",
+    //     preferredEndTime: "",
+    //     timeWindow: "07:00AM ~ 18:00PM",
+    //     preferredAreas: [],
+    //     mainLoca: "서울",
+    //   });
+    // }
 
     setDialogOpen(true);
   };
@@ -203,45 +258,46 @@ export default function ManageVehicles() {
       setError("");
 
       // 필수 필드 검증
-      if (!form.vehicleTypeId) {
-        setError("차종을 선택해주세요.");
-        showSnackbar("차종을 선택해주세요.", "error");
-        return;
-      }
+      if (!validateForm()) return;
+      // if (!form.vehicleTypeId) {
+      //   setError("차종을 선택해주세요.");
+      //   showSnackbar("차종을 선택해주세요.", "error");
+      //   return;
+      // }
 
       const token = getToken();
-      console.log("저장할 차량 데이터:", form);
-      console.log(
-        "form.vehicleTypeId 타입:",
-        typeof form.vehicleTypeId,
-        "값:",
-        form.vehicleTypeId
-      );
-      console.log(
-        "form.mileage 타입:",
-        typeof form.mileage,
-        "값:",
-        form.mileage
-      );
-      console.log("form.etc 타입:", typeof form.etc, "값:", form.etc);
-      console.log(
-        "form.insurance 타입:",
-        typeof form.insurance,
-        "값:",
-        form.insurance
-      );
-      console.log(
-        "form.carStatus 타입:",
-        typeof form.carStatus,
-        "값:",
-        form.carStatus
-      );
-      console.log(
-        "form.inspection 타입:",
-        typeof form.inspection,
-        "값:",
-        form.inspection
-      );
+      // console.log("저장할 차량 데이터:", form);
+      // console.log(
+      //   "form.vehicleTypeId 타입:",
+      //   typeof form.vehicleTypeId,
+      //   "값:",
+      //   form.vehicleTypeId
+      // );
+      // console.log(
+      //   "form.mileage 타입:",
+      //   typeof form.mileage,
+      //   "값:",
+      //   form.mileage
+      // );
+      // console.log("form.etc 타입:", typeof form.etc, "값:", form.etc);
+      // console.log(
+      //   "form.insurance 타입:",
+      //   typeof form.insurance,
+      //   "값:",
+      //   form.insurance
+      // );
+      // console.log(
+      //   "form.carStatus 타입:",
+      //   typeof form.carStatus,
+      //   "값:",
+      //   form.carStatus
+      // );
+      // console.log(
+      //   "form.inspection 타입:",
+      //   typeof form.inspection,
+      //   "값:",
+      //   form.inspection
+      // );
 
       const carData = {
         vehicleTypeId: Number(form.vehicleTypeId),
@@ -258,9 +314,10 @@ export default function ManageVehicles() {
           : null,
       };
 
-      console.log("변환된 차량 데이터:", carData);
-      console.log("JSON.stringify(carData):", JSON.stringify(carData, null, 2));
+      // console.log("변환된 차량 데이터:", carData);
+      // console.log("JSON.stringify(carData):", JSON.stringify(carData, null, 2));
 
+      setLoading(true);
       if (dialogMode === "create") {
         console.log("차량 생성 모드");
         await carApi.createCar(carData, token);
@@ -270,6 +327,7 @@ export default function ManageVehicles() {
         await carApi.updateCar(selectedCar.carId, carData, token);
         showSnackbar("차량이 수정되었습니다.", "success");
       }
+      setLoading(false);
 
       handleCloseDialog();
       loadCars();
@@ -333,18 +391,67 @@ export default function ManageVehicles() {
     );
   };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!form.carNum?.trim()) {
+      errors.carNum = "차량번호를 입력해주세요.";
+    } else {
+      if (!carNumChk(form.carNum?.trim())) {
+        errors.carNum = "유효하지 않은 차량 번호입니다.";
+      }
+    }
+
+    if (!form.vehicleTypeId) {
+      errors.vehicleTypeId = "차종을 선택해주세요.";
+    }
+    if (!form.inspection) {
+      errors.inspection = "마지막 정비일을 입력해주세요.";
+    }
+    if (!VALID_STATUSES.includes(form.carStatus)) {
+      errors.carStatus = "차량 상태를 선택해주세요.";
+    }
+
+    const rawMileage = String(form.mileage ?? "").trim();
+    if (rawMileage === "") {
+      errors.mileage = "주행 거리를 입력해주세요.";
+    } else if (!/^\d+$/.test(rawMileage)) {
+      errors.mileage = "주행 거리는 0 이상의 정수만 가능합니다.";
+    }
+
+    setFormErrors(errors);
+    if (Object.keys(errors).length) {
+      showSnackbar("필수 항목을 확인해주세요.", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const carNumChk = (carNum) => {
+    const v = carNum.trim();
+
+    // 신형 => (예: 12가1234, 123나4567)
+    const patternNew = /^\d{2,3}[가-힣]\d{4}$/;
+
+    // 구형 => (예: 서울12가1234)
+    const patternOld = /^[가-힣]{2,3}\d{2}[가-힣]\d{4}$/;
+
+    return patternNew.test(v) || patternOld.test(v);
   }
+
+  // if (loading) {
+  //   return (
+  //     <Box
+  //       display="flex"
+  //       justifyContent="center"
+  //       alignItems="center"
+  //       minHeight="400px"
+  //     >
+  //       <CircularProgress />
+  //     </Box>
+  //   );
+  // }
 
   return (
     <>
@@ -356,6 +463,9 @@ export default function ManageVehicles() {
           py: 6,
         }}
       >
+        {loading && (
+          <LoadingComponent open={loading} text="차량 정보를 불러오는 중..." />
+        )}
         <Container maxWidth="lg">
           <CommonTitle>내 차량 관리</CommonTitle>
 
@@ -541,23 +651,27 @@ export default function ManageVehicles() {
             sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}
           >
             {/* 기본 정보 섹션 */}
-            <CommonSubTitle sx={{ color: C.blue }}>기본 정보</CommonSubTitle>
+            <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
+              기본 정보
+            </Typography>
 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 48%" }}>
                 <TextField
-                  label="차량번호"
+                  label="차량 번호"
                   fullWidth
                   value={form.carNum}
                   onChange={(e) => handleFormChange("carNum", e.target.value)}
                   disabled={dialogMode === "edit"}
-                  helperText=" "
+                  required
+                  error={!!formErrors.carNum}
+                  helperText={formErrors.carNum || " "}
                   FormHelperTextProps={helperProps}
                 />
               </div>
               <div style={{ flex: "1 1 48%" }}>
                 <TextField
-                  label="차량등록일"
+                  label="차량 등록일"
                   type="date"
                   fullWidth
                   value={form.regDate || ""}
@@ -565,10 +679,10 @@ export default function ManageVehicles() {
                   InputLabelProps={{ shrink: true }}
                   disabled
                   sx={{
-                    "& .MuiInputBase-input.Mui-disabled": {
-                      color: thisTheme.palette.text.primary,
-                      WebkitTextFillColor: thisTheme.palette.text.primary,
-                    },
+                    // "& .MuiInputBase-input.Mui-disabled": {
+                    //   color: thisTheme.palette.text.primary,
+                    //   WebkitTextFillColor: thisTheme.palette.text.primary,
+                    // },
                   }}
                   helperText=" "
                   FormHelperTextProps={helperProps}
@@ -579,13 +693,16 @@ export default function ManageVehicles() {
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 48%" }}>
                 <FormControl fullWidth required>
-                  <InputLabel>차종 *</InputLabel>
+                  <InputLabel>차종</InputLabel>
                   <Select
                     value={form.vehicleTypeId}
+                    disabled={dialogMode === "edit"}
                     onChange={(e) =>
                       handleFormChange("vehicleTypeId", e.target.value)
                     }
-                    label="차종 *"
+                    error={!!formErrors.vehicleTypeId}
+                    required
+                    label="차종"
                   >
                     {vehicleTypes.map((type) => (
                       <MenuItem
@@ -596,29 +713,31 @@ export default function ManageVehicles() {
                       </MenuItem>
                     ))}
                   </Select>
+                  <FormHelperText>{formErrors.vehicleTypeId || " "}</FormHelperText>
                 </FormControl>
               </div>
               <div style={{ flex: "1 1 48%" }}>
-                <TextField
-                  label="차량 상태"
-                  fullWidth
-                  value={form.carStatus}
-                  disabled
-                  sx={{
-                    "& .MuiInputBase-input.Mui-disabled": {
-                      color: thisTheme.palette.text.primary,
-                      WebkitTextFillColor: thisTheme.palette.text.primary,
-                    },
-                  }}
-                />
+                <FormControl fullWidth required error={!!formErrors.carStatus}>
+                  <InputLabel>차량 상태</InputLabel>
+                  <Select
+                    label="차량 상태"
+                    value={form.carStatus}
+                    onChange={(e) => handleFormChange("carStatus", e.target.value)}
+                  >
+                    <MenuItem value="OPERATIONAL">운행 가능</MenuItem>
+                    <MenuItem value="MAINTENANCE">정비중</MenuItem>
+                  </Select>
+                  <FormHelperText>{formErrors.carStatus || " "}</FormHelperText>
+                </FormControl>
               </div>
             </Box>
 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 48%" }}>
                 <TextField
-                  label="다음 정비 예정일"
+                  label="권장 다음 정비일"
                   type="date"
+                  disabled
                   fullWidth
                   value={form.nextInspection || ""}
                   onChange={(e) =>
@@ -638,32 +757,70 @@ export default function ManageVehicles() {
                   onChange={(e) =>
                     handleFormChange("inspection", e.target.value)
                   }
+                  required
+                  error={!!formErrors.inspection}
+                  helperText={formErrors.inspection || " "}
                   InputLabelProps={{ shrink: true }}
-                  helperText=" "
                   FormHelperTextProps={helperProps}
                 />
               </div>
             </Box>
 
-            <Divider />
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="주행 거리"
+                  fullWidth
+                  value={form.mileage}
+                  onChange={(e) => handleFormChange("mileage", e.target.value)}
+                  required
+                  error={!!formErrors.mileage}
+                  helperText={formErrors.mileage || " "}
+                  FormHelperTextProps={helperProps}
+                  type="number"
+                  inputProps={{ inputMode: "numeric", pattern: "[0-9]*", min: 0, step: 1 }}
+                  onKeyDown={(e) => {
+                    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                  }}
+                />
+              </div>
+              {/* <div style={{ flex: "1 1 48%" }}>
+                <TextField
+                  label="차량마지막점검일"
+                  type="date"
+                  fullWidth
+                  value={form.inspection}
+                  onChange={(e) =>
+                    handleFormChange("inspection", e.target.value)
+                  }
+                  required
+                  error={!!formErrors.inspection}
+                  helperText={formErrors.inspection || " "}
+                  InputLabelProps={{ shrink: true }}
+                  FormHelperTextProps={helperProps}
+                />
+              </div> */}
+            </Box>
 
-            {/* 선호시간대 섹션 */}
+            {/* <Divider />
+
+            선호시간대 섹션
             <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
               선호시간대
             </Typography>
             <PreferredTimeBlock />
 
-            <Divider />
+            <Divider /> */}
 
             {/* 운행선호지역 섹션 */}
-            <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
+            {/* <Typography variant="h6" sx={{ color: C.blue, fontWeight: 600 }}>
               운행선호지역
             </Typography>
             <PreferredAreasSelect
               value={form.preferredAreas}
               onChange={(areas) => handleFormChange("preferredAreas", areas)}
               label="운행선호지역"
-            />
+            /> */}
 
             <Divider />
 

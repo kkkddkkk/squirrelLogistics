@@ -34,6 +34,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
 
   const thisTheme = useTheme();
 
+  console.log("this Data: " + status);
   useEffect(() => {
     if (prevSignatureRef.current !== signature) {
       prevSignatureRef.current = signature;
