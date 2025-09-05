@@ -368,6 +368,11 @@ public class DriverSearchServiceImpl implements DriverSearchService {
         
         return results.stream()
             .filter(dto -> {
+                // 기사 이름으로 검색(김도경 추가)
+                if (dto.getDriverName() != null && dto.getDriverName().toLowerCase().contains(keyword)) {
+                    return true;
+                }
+                
                 // 차량 종류로 검색
                 if (dto.getVehicleTypeName() != null && dto.getVehicleTypeName().toLowerCase().contains(keyword)) {
                     return true;

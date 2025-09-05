@@ -487,8 +487,8 @@ const EstimateForm_new = () => {
         wantToEnd: formatLocalDateTime(endDate),
         companyId,
         vehicleTypeId: vehicleTypeId ? Number(vehicleTypeId) : null,
-        vehicleTypeName: selectedOption ? selectedOption.name : null,
-        vehicleMaxWeight: selectedOption ? selectedOption.maxWeight : null,
+        vehicleTypeName: selectedOption ? (selectedOption==="all"?"차량 선택 안함": selectedOption.name) : null,
+        vehicleMaxWeight: selectedOption ? (selectedOption==="all"?totalCargoWeight:selectedOption.maxWeight) : null,
         waypoints: wp
       },
     };
@@ -756,9 +756,14 @@ const EstimateForm_new = () => {
           <div className="form-row">
             <select className="customInput" value={vehicleTypeId} onChange={(e) => {
               setVehicleTypeId(e.target.value);
-              setSelectedOption(vehicleTypes.find(v => v.vehicleTypeId.toString() === e.target.value));
+              if (e.target.value === "all") {
+                setSelectedOption(e.target.value);
+              } else {
+                setSelectedOption(vehicleTypes.find(v => v.vehicleTypeId.toString() === e.target.value));
+              }
             }}>
               <option value="">차량 선택</option>
+              <option value="all">차량 선택 안함 (모든 차량 가능)</option>
               {vehicleTypes.map((v) => (
                 <option
                   key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}

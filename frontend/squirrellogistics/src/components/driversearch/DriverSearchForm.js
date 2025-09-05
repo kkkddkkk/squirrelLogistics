@@ -145,6 +145,11 @@ const DriverSearchForm = () => {
     setCargos(cargoContent.filter(Boolean).join(", "));
   }, [flow])
 
+  useEffect(() => {
+    handleSearch();
+    console.log("sortOption 작동됨")
+  }, [searchParams.sortOption]);
+
   // Redux 상태 동기화
   const reduxState = useSelector((state) => state.driverSearch);
 
@@ -169,11 +174,19 @@ const DriverSearchForm = () => {
 
 
       //김도경 수정: 요청 차량과 일치하는 기사만 출력
-      const newDrivers = result.drivers.filter((driver) => {
-        const storedData = JSON.parse(sessionStorage.getItem("deliveryFlow"));
-        const vehicleName = storedData.requestDto.vehicleTypeName;
-        return driver.combinedVehicleInfo.includes(vehicleName);
-      })
+      let newDrivers;
+      const storedData = JSON.parse(sessionStorage.getItem("deliveryFlow"));
+      const maxWeight = storedData.requestDto.vehicleMaxWeight
+      const vehicleName = storedData.requestDto.vehicleTypeName;
+      if (vehicleName === "차량 선택 안함") {
+        newDrivers = result.drivers.filter((driver) => {
+          return driver.maxWeight >= maxWeight;
+        })
+      } else {
+        newDrivers = result.drivers.filter((driver) => {
+          return driver.combinedVehicleInfo.includes(vehicleName);
+        })
+      }
       setSearchResult(result);
       setSearchResult({
         ...searchResult,
@@ -204,10 +217,6 @@ const DriverSearchForm = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    console.log("검색 결과:", searchResult);
-  }, [searchResult])
 
   // 필터 변경 시 파라미터만 업데이트 (자동 검색 비활성화)
   const handleFilterChange = (key, value) => {
@@ -393,19 +402,39 @@ const DriverSearchForm = () => {
             <input
               type="text"
               className="keyword-input"
-              placeholder="기사명으로 검색"
+              placeholder="기사명, 차량 종류로 검색"
               value={searchParams.keyword}
               onChange={(e) => setSearchParams(prev => ({ ...prev, keyword: e.target.value }))}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              // onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault(); // 엔터 입력 시 폼 submit 방지
+                  handleSearch();
+                }
+              }}
             />
-            {/* 검색 실행 버튼 */}
+                {/* 검색 실행 버튼 */ }
             <OneButtonAtRight clickEvent={() => handleSearch()}>검색</OneButtonAtRight>
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={searchParams.sortOption === "rating"}
+                onChange={() => {
+                  handleFilterChange(
+                    'sortOption',
+                    searchParams.sortOption === "rating" ? "" : "rating"
+                  )
+                }}
+              />
+              별점 높은 순
+            </label>
           </div>
 
           {/* 필터 옵션들 */}
-          <div className="filter-bar">
-            {/* 즉시 배차 */}
-            <label className="checkbox-label">
+          {/* <div className="filter-bar"> */}
+          {/* 즉시 배차 */}
+          {/* <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={searchParams.drivable}
@@ -413,9 +442,9 @@ const DriverSearchForm = () => {
 
               />
               즉시 배차 가능
-            </label>
-            {/* 별점 높은 순 */}
-            <label className="checkbox-label">
+            </label> */}
+          {/* 별점 높은 순 */}
+          {/* <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={searchParams.sortOption === "rating"}
@@ -425,10 +454,10 @@ const DriverSearchForm = () => {
                 )}
               />
               별점 높은 순
-            </label>
+            </label> */}
 
-            {/* 최대 적재량 */}
-            <CommonSelect
+          {/* 최대 적재량 */}
+          {/* <CommonSelect
               value={searchParams.maxWeight || ""}
               changeEvent={(e) => handleMaxWeightChange(e.target.value)}
             >
@@ -440,10 +469,10 @@ const DriverSearchForm = () => {
               <MenuItem value="10000">10톤 이상</MenuItem>
               <MenuItem value="15000">15톤 이상</MenuItem>
               <MenuItem value="25000">25톤 이상</MenuItem>
-            </CommonSelect>
+            </CommonSelect> */}
 
-            {/* 차량 종류 */}
-            <CommonSelect
+          {/* 차량 종류 */}
+          {/* <CommonSelect
               value={searchParams.vehicleTypeId || ""}
               changeEvent={(e) => handleVehicleTypeChange(e.target.value)}
             >
@@ -451,8 +480,8 @@ const DriverSearchForm = () => {
               {vehicleTypes.map(type => (
                 <MenuItem key={type.id} value={type.id}>{type.name}</MenuItem>
               ))}
-            </CommonSelect>
-          </div>
+            </CommonSelect> */}
+          {/* </div> */}
 
           {/* 검색 결과 */}
           <div className="driver-list">
@@ -462,7 +491,7 @@ const DriverSearchForm = () => {
             ) : (
               <>
                 <div className="search-info">
-                  총 {driverLength}명의 기사님
+                  총 {driverLength}명의 기사님이 대기 중입니다.
                 </div>
 
                 {/* 기사 목록 */}
