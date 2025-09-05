@@ -70,7 +70,7 @@ const DetailHistory = () => {
                 setCooldown(POLL_INTERVAL); // 성공 시 타이머 리셋
             })
             .catch((err) => {
-                console.error("데이터 가져오기 실패", err);
+                // console.error("데이터 가져오기 실패", err);
                 setCooldown(POLL_INTERVAL);
             });
     };
@@ -121,7 +121,7 @@ const DetailHistory = () => {
                     moveToActualCalc({assignedId, reported: false});
                 })
                 .catch((err) => {
-                    console.error("데이터 가져오기 실패", err);
+                    // console.error("데이터 가져오기 실패", err);
                 });
         }
     }

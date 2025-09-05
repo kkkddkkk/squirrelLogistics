@@ -49,14 +49,13 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     useEffect(() => {
         if (!isExpand) return;
         setLoading(true);
-        console.log("loading: " + loading);
         getTodayContent({ assignedId })
             .then(data => {
                 setTodayContent(data || {});
                 setScope((data && data.rating) || 0);
             })
             .catch(err => {
-                console.error("데이터 가져오기 실패", err);
+                // console.error("데이터 가져오기 실패", err);
             })
             .finally(() => setLoading(false));
     }, [isExpand, changed]);
@@ -107,7 +106,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
     }
 
     return (
-        <ListBoxContainer id={assignedId} header={`출발지: ${start} →\n도착지: ${end}`} useButton={true}
+        <ListBoxContainer id={assignedId} header={`출발지: ${start}\n도착지: ${end}`} useButton={true}
             assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand} loading={loading}>
             <LoadingComponent open={loading} text="이용기록을 불러오는 중..." />
             {!isExpand ? <></> :
@@ -164,7 +163,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                                 }
                                 {assignStatus === "배송중" || assignStatus === "예약" ?
                                     <OneBtnAtRight func={() => moveToDetailHistory(assignedId)}>
-                                        세부내역 확인
+                                        배송현황
                                     </OneBtnAtRight> : <></>
                                 }
 

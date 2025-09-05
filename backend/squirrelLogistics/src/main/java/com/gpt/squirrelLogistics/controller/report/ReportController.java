@@ -68,6 +68,7 @@ public class ReportController {
 		if (userType == UserRoleEnum.COMPANY) {
 			Long companyId = companyRepository.findCompanyIdByUserId(userId);
 			result = reportService.reportList(companyId);
+//			log.info("report", result.get(0));
 		} else if (userType == UserRoleEnum.DRIVER) {
 			Long driverId = driverRepository.findDriverIdByUserId(userId);
 			result = reportService.driverReportList(driverId);

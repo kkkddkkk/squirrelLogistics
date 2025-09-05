@@ -52,7 +52,7 @@ const Report = () => {
                 setViewReport(res.data);
                 setPreview(res.data.fileName);
             }).catch(err => {
-                console.error("불러오기 실패", err);
+                // console.error("불러오기 실패", err);
             }).finally(() => setLoading(false))
         }
     }, [])
@@ -99,12 +99,10 @@ const Report = () => {
         formData.forEach((value, key) => {
             if (key === "report") {
                 const reader = new FileReader();
-                reader.onload = () => {
-                    console.log("report JSON:", reader.result); // 여기서 실제 JSON 문자열 확인 가능
-                };
+                // reader.onload = () => {
+                //     console.log("report JSON:", reader.result); // 여기서 실제 JSON 문자열 확인 가능
+                // };
                 reader.readAsText(value);
-            } else {
-                console.log(key, value);
             }
         });
 
@@ -114,7 +112,7 @@ const Report = () => {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
         }).then(res => {
-            console.log("등록 성공", res.data);
+            // console.log("등록 성공", res.data);
             if (window.opener) {
                 window.close();
             } else {
@@ -128,10 +126,10 @@ const Report = () => {
                     Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
                 },
             }).then(res => {
-                console.log(res.data);
+                // console.log(res.data);
             })
         }).catch(err => {
-            console.error("등록 실패", err);
+            // console.error("등록 실패", err);
         })
 
     }

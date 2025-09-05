@@ -47,7 +47,7 @@ export const getCoordsFromAddress = async (address) => {
 
     const { documents } = res.data;
     if (!documents.length) {
-      console.warn("[주소 검색 실패]", address);
+      // console.warn("[주소 검색 실패]", address);
       return null;
     }
     return {
@@ -55,7 +55,7 @@ export const getCoordsFromAddress = async (address) => {
       lng: parseFloat(documents[0].x),
     };
   } catch (err) {
-    console.error("좌표 변환 실패:", err);
+    // console.error("좌표 변환 실패:", err);
     return null;
   }
 };
@@ -70,7 +70,7 @@ export const calculateDistance = async (addresses) => {
   const validCoords = coordsList.filter(Boolean);
 
   if (validCoords.length < 2) {
-    console.warn("[거리 계산 실패] 유효한 좌표가 2개 이상 필요");
+    // console.warn("[거리 계산 실패] 유효한 좌표가 2개 이상 필요");
     return null;
   }
 
@@ -80,7 +80,7 @@ export const calculateDistance = async (addresses) => {
   // km 변환 후 올림 처리
   const km = Math.ceil(meters / 1000);
 
-  console.log(`${km} km`);
+  // console.log(`${km} km`);
 
   return km; // 정수 km
 };
@@ -97,7 +97,7 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
     });
     return data?.price ?? 0;
   } catch (error) {
-    console.error("예상금액 계산 API 실패:", error);
+    // console.error("예상금액 계산 API 실패:", error);
     return 0;
   }
 };
@@ -114,16 +114,16 @@ export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) =>
 export const createDeliveryRequest = async (requestPayload, paymentPayload = null) => {
   try {
     const wrapped = { payment: paymentPayload, request: requestPayload };
-    console.log(wrapped);
+    // console.log(wrapped);
     const { data } = await http.post("/api/delivery/requests", wrapped);
 
     return data;
   } catch (error) {
-    if (error.response) {
-      console.error("[createDeliveryRequest 실패]", error.response.status, error.response.data);
-    } else {
-      console.error("[createDeliveryRequest 실패]", error.message);
-    }
+    // if (error.response) {
+    //   console.error("[createDeliveryRequest 실패]", error.response.status, error.response.data);
+    // } else {
+    //   console.error("[createDeliveryRequest 실패]", error.message);
+    // }
     throw error;
   }
 };
@@ -153,15 +153,15 @@ export const createDeliveryPropose = async (
 
     return data;
   } catch (error) {
-    if (error.response) {
-      console.error(
-        "[createDeliveryPropose 실패]",
-        error.response.status,
-        error.response.data
-      );
-    } else {
-      console.error("[createDeliveryPropose 실패]", error.message);
-    }
+    // if (error.response) {
+    //   console.error(
+    //     "[createDeliveryPropose 실패]",
+    //     error.response.status,
+    //     error.response.data
+    //   );
+    // } else {
+    //   console.error("[createDeliveryPropose 실패]", error.message);
+    // }
     throw error;
   }
 };

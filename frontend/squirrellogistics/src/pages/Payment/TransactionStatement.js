@@ -20,7 +20,7 @@ const TransactionStatement = () => {
                 setTrans(data);
             })
             .catch(err => {
-                console.error("데이터 가져오기 실패", err);
+                // console.error("데이터 가져오기 실패", err);
             });
 
     }, [paymentId]);

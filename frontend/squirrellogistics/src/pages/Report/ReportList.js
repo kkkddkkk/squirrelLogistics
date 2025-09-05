@@ -33,7 +33,7 @@ const ReportList = () => {
                 setDataLengths(data.length);
             })
             .catch(err => {
-                console.error("데이터 가져오기 실패", err);
+                // console.error("데이터 가져오기 실패", err);
             }).finally(() => setLoading(false));
     }, []);
 
@@ -54,7 +54,7 @@ const ReportList = () => {
                                     {reportList.map((report) => (
                                         report.regDate.toString().slice(0, 10) === date ?
                                             <ReportContent
-                                                header={`${report.startAddress.toString().slice(0, 15)}... > ${report.endAddress.toString().slice(0, 15)}...`}
+                                                header={`출발지: ${report.startAddress}\n도착지: ${report.endAddress}`}
                                                 title={report.rTitle}
                                                 content={report.rContent}
                                                 answer={"answer"}

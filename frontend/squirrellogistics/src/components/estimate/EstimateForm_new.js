@@ -74,10 +74,6 @@ const EstimateForm_new = () => {
   // number(경유지 인덱스) | "final"(최종 목적지) | null
   const [cargoDialogIdx, setCargoDialogIdx] = useState(null);
 
-  useEffect(() => {
-    console.log(cargoDialogIdx);
-  }, [cargoDialogIdx])
-
   // 저장된 기본 주소
   const [savedAddresses, setSavedAddresses] = useState([]);
 
@@ -185,7 +181,7 @@ const EstimateForm_new = () => {
       if (!flow) return;
       prefillFromFlow(flow);
     } catch (e) {
-      console.warn("[EstimateForm] session flow load failed:", e);
+      // console.warn("[EstimateForm] session flow load failed:", e);
     }
   }, []);
 
@@ -197,7 +193,7 @@ const EstimateForm_new = () => {
         try {
           await http.get(`/api/company/test`);
         } catch (e) {
-          console.warn("company/test 실패:", e);
+          // console.warn("company/test 실패:", e);
         }
 
         // 실제 회사 정보 가져오기
@@ -211,7 +207,7 @@ const EstimateForm_new = () => {
           localStorage.removeItem("companyId");
         }
       } catch (err) {
-        console.error("회사 정보 불러오기 실패:", err);
+        // console.error("회사 정보 불러오기 실패:", err);
         setCompanyId(null);
         localStorage.removeItem("companyId");
       }
@@ -221,11 +217,11 @@ const EstimateForm_new = () => {
   }, []);
 
   // 상태 변경 후 확인 로그
-  useEffect(() => {
-    if (companyId != null) {
-      console.log("토큰 기반 companyId 업데이트:", companyId);
-    }
-  }, [companyId]);
+  // useEffect(() => {
+  //   if (companyId != null) {
+  //     console.log("토큰 기반 companyId 업데이트:", companyId);
+  //   }
+  // }, [companyId]);
 
 
   useEffect(() => {
@@ -281,7 +277,7 @@ const EstimateForm_new = () => {
       .map((waypoint, idx) => ({ ...waypoint, idx: idx + 1 })) // idx+1 추가
       .filter(waypoint => !waypoint.address || !waypoint.cargo); // address나 cargo가 비어있으면
 
-    console.log(emptyWaypoints);
+    // console.log(emptyWaypoints);
     if (emptyWaypoints.length > 0) {
       const alertText = emptyWaypoints.map(ew => {
         let text = ew.idx + "번 경유지의 ";
@@ -334,7 +330,7 @@ const EstimateForm_new = () => {
       return;
     }
 
-    console.log(distance);
+    // console.log(distance);
     const kmUnits = Math.ceil((Number(distance) || 0));
 
     const distanceFee = kmUnits * 3000;
@@ -471,8 +467,6 @@ const EstimateForm_new = () => {
         : finalBase
     );
 
-    console.log("!!!!!!!!!!!!!!!!!!: " + vehicleTypeName);
-
     return {
       payment,
       request: {
@@ -598,7 +592,7 @@ const EstimateForm_new = () => {
         }
       );
     } catch (e) {
-      console.error("[createDeliveryRequest] error:", e?.response?.data || e);
+      // console.error("[createDeliveryRequest] error:", e?.response?.data || e);
       alert("저장 실패");
     }
   };

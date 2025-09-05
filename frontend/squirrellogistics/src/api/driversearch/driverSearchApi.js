@@ -23,16 +23,16 @@ const BASE_URL = `${API_SERVER_HOST}/api/search-drivers`;
 export const searchDrivers = async (searchParams) => {
   try {
     // 디버깅: 전송할 데이터 확인
-    console.log("API 호출 - searchParams:", searchParams);
+    // console.log("API 호출 - searchParams:", searchParams);
     
     // 순환 참조 방지를 위해 JSON 변환 테스트
     let cleanParams;
     try {
       JSON.stringify(searchParams);
       cleanParams = searchParams;
-      console.log("API 호출 - searchParams JSON:", JSON.stringify(searchParams));
+      // console.log("API 호출 - searchParams JSON:", JSON.stringify(searchParams));
     } catch (e) {
-      console.error("API 호출 - 순환 참조 발견, 기본값 사용:", e);
+      // console.error("API 호출 - 순환 참조 발견, 기본값 사용:", e);
       // 기본값으로 정리 (백엔드 DTO와 동일한 타입)
       cleanParams = {
         keyword: "",           // String
@@ -49,11 +49,11 @@ export const searchDrivers = async (searchParams) => {
     }
     
     const response = await axios.post(`${BASE_URL}/search`, cleanParams);
-    console.log("API 응답 성공:", response.data);
+    // console.log("API 응답 성공:", response.data);
     return response.data; // 페이징된 응답 객체 (DriverSearchPageResponseDTO)
   } catch (error) {
-    console.error("기사 검색 실패:", error);
-    console.error("에러 상세:", error.response?.data || error.message);
+    // console.error("기사 검색 실패:", error);
+    // console.error("에러 상세:", error.response?.data || error.message);
     
     // 에러 시 기본 응답 구조 반환 (백엔드 DTO와 동일한 구조)
     return {
@@ -102,7 +102,7 @@ export const sendDriverRequest = async (driverId) => {
     const response = await axios.post(`${API_SERVER_HOST}/api/company/drivers/${driverId}/request`);
     return response.data;
   } catch (error) {
-    console.error("기사 요청 실패:", error);
+    // console.error("기사 요청 실패:", error);
     return null;
   }
 };
@@ -117,7 +117,7 @@ export const testDriverSearchAPI = async () => {
     const response = await axios.get(`${BASE_URL}/test`);
     return response.data;
   } catch (error) {
-    console.error("API 테스트 실패:", error);
+    // console.error("API 테스트 실패:", error);
     return null;
   }
 };
@@ -132,7 +132,7 @@ export const getDriverStats = async () => {
     const response = await axios.get(`${BASE_URL}/stats`);
     return response.data;
   } catch (error) {
-    console.error("기사 통계 조회 실패:", error);
+    // console.error("기사 통계 조회 실패:", error);
     return null;
   }
 };
@@ -148,7 +148,7 @@ export const saveSearchHistory = async (searchParams) => {
     const response = await axios.post(`${BASE_URL}/history`, searchParams);
     return response.data;
   } catch (error) {
-    console.error("검색 히스토리 저장 실패:", error);
+    // console.error("검색 히스토리 저장 실패:", error);
     return null;
   }
 };
@@ -170,7 +170,7 @@ export const searchDriversByLocation = async (latitude, longitude, radius = 50) 
     });
     return response.data;
   } catch (error) {
-    console.error("위치 기반 기사 검색 실패:", error);
+    // console.error("위치 기반 기사 검색 실패:", error);
     return null;
   }
 };

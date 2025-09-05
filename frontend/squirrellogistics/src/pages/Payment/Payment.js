@@ -126,19 +126,15 @@ export const Payment = () => {
             getSecondPayBox({ prepaidId })
                 .then(data => {
                     setActualCalc(data);
-                    console.log("second");
                 })
                 .catch(err => {
-                    console.error("데이터 가져오기 실패", err);
                 }).finally(() => setLoading(false));
         } else if (paymentId != 0 && paymentId != null) {
             getFirstPayBox({ paymentId })
                 .then(data => {
                     setActualCalc(data);
-                    console.log("first");
                 })
                 .catch(err => {
-                    console.error("데이터 가져오기 실패", err);
                 }).finally(() => setLoading(false));
         }
     }, []);
@@ -147,7 +143,6 @@ export const Payment = () => {
     //기본요금 + 추가요금, 총 요금 계산
     useEffect(() => {
         if (!actualCalc) return;
-        console.log("getTotalRateStart");
         let addThisRate = 0;
         if (actualCalc.dropOrder1) addThisRate += 50000;
         if (actualCalc.dropOrder2) addThisRate += 50000;
@@ -171,7 +166,6 @@ export const Payment = () => {
 
         if (baseRate == null || additionalRate == null) return;
         setTotalRate(baseRate + additionalRate);
-        console.log(totalRate - actualCalc.estimateFee)
     }, [baseRate, additionalRate])
 
 
@@ -182,10 +176,8 @@ export const Payment = () => {
             getEstimateCalc({ requestId })
                 .then(data => {
                     setEstimateCalc(data);
-                    console.log(data);
                 })
                 .catch(err => {
-                    console.error("데이터 가져오기 실패", err);
                 }).finally(() => setLoading(false));
         }
     }, [modal])
@@ -305,21 +297,19 @@ export const Payment = () => {
             async function (response) {
 
                 if (!merchant_uid) {
-                    console.error("결제 ID가 없습니다.");
                     setIsProcessing(false);
                     return;
                 }
 
                 if (response.success) {
                     if (!response.imp_uid) {
-                        console.error("PortOne 결제 ID를 가져올 수 없습니다.");
                         setIsProcessing(false);
                         return;
                     }
 
                     // 🔥 토스페이 결제 완료 후 수동 처리 함수 호출
                     if (paymentMethod === 'tosspay') {
-                        console.log("토스페이 결제 완료 - 수동 처리 함수 호출");
+                        // console.log("토스페이 결제 완료 - 수동 처리 함수 호출");
                         await handleTossPaySuccess(response.imp_uid);
                     } else {
                         // 기존 결제 방법 처리
@@ -333,16 +323,12 @@ export const Payment = () => {
                                 impUid: response.imp_uid
                             };
 
-                            console.log("2차 결제 데이터:", secondPaymentBody);
-
                             try {
                                 const apiResponse = await successSecondPayment({
                                     paymentId: actualCalc.paymentId,
                                     successSecondPayment: secondPaymentBody
                                 });
-                                console.log("2차 결제 백엔드 API 호출 성공:", apiResponse);
                             } catch (error) {
-                                console.error("2차 결제 백엔드 API 호출 실패:", error);
                             }
 
                             moveToSuccess({ state: true, paymentId: actualCalc.paymentId });
@@ -357,16 +343,12 @@ export const Payment = () => {
                                 impUid: response.imp_uid
                             };
 
-                            console.log("1차 결제 데이터:", firstPaymentBody);
-
                             try {
                                 const apiResponse = await successFirstPayment({
                                     paymentId,
                                     successFirstPayment: firstPaymentBody
                                 });
-                                console.log("1차 결제 백엔드 API 호출 성공:", apiResponse);
                             } catch (error) {
-                                console.error("1차 결제 백엔드 API 호출 실패:", error);
                             }
 
                             moveToSuccess({ state: true, paymentId: paymentId });
@@ -375,7 +357,6 @@ export const Payment = () => {
                     }
 
                 } else {
-                    console.error("결제 실패 메시지:", response.error_msg);
                     moveToSuccess({ state: false, paymentId: actualCalc.paymentId });
                 }
             }
@@ -394,7 +375,6 @@ export const Payment = () => {
             paymentId: actualCalc.paymentId,
             refundPayment: refundPaymentBody
         }).finally(() => setLoading(false));
-        console.log("환불 완료");
         moveToSuccess({ state: true, paymentId: paymentId });
     };
 
@@ -409,7 +389,6 @@ export const Payment = () => {
             });
             moveToHistory();
         } catch (err) {
-            console.error("완료 실패:", err);
         } finally {
             setLoading(false);
         }

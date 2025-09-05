@@ -61,12 +61,12 @@ const CompanyVerifyPage = () => {
     setErr("");
     setSuccess("");
 
-    console.log("본인인증 시도:", {
-      loginId: `'${loginId}'`,
-      password: `'${password}'`,
-      loginIdLength: loginId?.length || 0,
-      passwordLength: password?.length || 0
-    });
+    // console.log("본인인증 시도:", {
+    //   loginId: `'${loginId}'`,
+    //   password: `'${password}'`,
+    //   loginIdLength: loginId?.length || 0,
+    //   passwordLength: password?.length || 0
+    // });
 
     if (!loginId || !password) {
       setErr("아이디와 비밀번호를 모두 입력해주세요.");
@@ -75,7 +75,7 @@ const CompanyVerifyPage = () => {
 
     try {
       const ok = await verifyCredentials({ loginId, password });
-      console.log("본인인증 결과:", ok);
+      // console.log("본인인증 결과:", ok);
 
       if (!ok) {
         setErr("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -91,7 +91,7 @@ const CompanyVerifyPage = () => {
       }, 1500);
 
     } catch (error) {
-      console.error("본인인증 에러:", error);
+      // console.error("본인인증 에러:", error);
       setErr("인증 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
@@ -112,11 +112,11 @@ const CompanyVerifyPage = () => {
     if (cooldown > 0) return;
 
     const targetEmail = email?.trim();
-    console.log("🔍 비밀번호 재설정 시도 - 원본 이메일:", email);
-    console.log("🔍 비밀번호 재설정 시도 - 정리된 이메일:", targetEmail);
+    // console.log("🔍 비밀번호 재설정 시도 - 원본 이메일:", email);
+    // console.log("🔍 비밀번호 재설정 시도 - 정리된 이메일:", targetEmail);
 
     const emailOk = /^\S+@\S+\.\S+$/.test(targetEmail || "");
-    console.log("🔍 이메일 유효성 검사 결과:", emailOk);
+    // console.log("🔍 이메일 유효성 검사 결과:", emailOk);
 
     if (!emailOk) {
       setErr("유효한 이메일 주소를 입력해 주세요.");
@@ -130,9 +130,9 @@ const CompanyVerifyPage = () => {
 
     try {
       setResetLoading(true);
-      console.log("🔍 requestPasswordReset 함수 호출 - 전달할 이메일:", email);
+      // console.log("🔍 requestPasswordReset 함수 호출 - 전달할 이메일:", email);
       const response = await requestPasswordReset(email);
-      console.log("🔍 requestPasswordReset 응답:", response);
+      // console.log("🔍 requestPasswordReset 응답:", response);
 
       if (response && response.ok) {
         setSuccess("비밀번호 재설정이 준비되었습니다. 팝업 창에서 새 비밀번호를 입력하세요.");
@@ -141,7 +141,7 @@ const CompanyVerifyPage = () => {
 
         // 팝업으로 비밀번호 재설정 페이지 열기
         const resetUrl = `${window.location.origin}${response.resetUrl}?token=${response.token}&email=${encodeURIComponent(response.email)}`;
-        console.log("🔍 비밀번호 재설정 팝업 URL:", resetUrl);
+        // console.log("🔍 비밀번호 재설정 팝업 URL:", resetUrl);
 
         const popup = window.open(
           resetUrl,
@@ -163,7 +163,7 @@ const CompanyVerifyPage = () => {
         setErr(response?.message || "비밀번호 재설정 요청에 실패했습니다.");
       }
     } catch (error) {
-      console.error("🔍 비밀번호 재설정 에러:", error);
+      // console.error("🔍 비밀번호 재설정 에러:", error);
       setErr("비밀번호 재설정 요청 중 오류가 발생했습니다.");
     } finally {
       setResetLoading(false);

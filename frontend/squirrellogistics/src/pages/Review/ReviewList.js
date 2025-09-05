@@ -34,7 +34,6 @@ const ReviewList = () => {
             },
         })
             .then(res => {
-                console.log(res.data);
                 setReviewList(res.data);
                 const dateSet = [...new Set(res.data.map(report => report.regDate.toString().slice(0, 10)))];
                 setDates(dateSet);
@@ -43,16 +42,14 @@ const ReviewList = () => {
     }, [changed])
 
     const handleDelReview = (review) => {
-        console.log(review.reviewId);
         axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
         })
             .then(res => {
-                console.log('삭제 성공', res.data)
                 setChanged(true);
-            }).catch(err => console.error('삭제 실패', err));
+            }).catch();
 
     }
 
@@ -78,7 +75,7 @@ const ReviewList = () => {
                                     review.regDate.toString().slice(0, 10) == date ?
                                         <ReviewContent
                                             key={idx}
-                                            header={`${review.startAddress} → ${review.endAddress}`}
+                                            header={`출발지: ${review.startAddress}\n도착지: ${review.endAddress}`}
                                             driverImg={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
                                             driverName={review.driverName}
                                             content={review.reason}

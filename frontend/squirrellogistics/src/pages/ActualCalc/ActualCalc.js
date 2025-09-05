@@ -47,10 +47,8 @@ const ActualCalc = () => {
             getActualCalc({ assignedId })
                 .then(data => {
                     setActualCalc(data);
-                    console.log(data);
                 })
                 .catch(err => {
-                    console.error("데이터 가져오기 실패", err);
                 })
                 .finally(setLoading(false));
         }
@@ -82,10 +80,8 @@ const ActualCalc = () => {
             getEstimateCalc({ requestId })
                 .then(data => {
                     setEstimateCalc(data);
-                    console.log(data);
                 })
                 .catch(err => {
-                    console.error("데이터 가져오기 실패", err);
                 });
         }
     }, [modal])
@@ -97,7 +93,6 @@ const ActualCalc = () => {
         if (estimateCalc.handlingId === 1 || estimateCalc.handlingId === 3) additionalFee += 50000;
         if (estimateCalc.handlingId === 2 || estimateCalc.handlingId === 3) additionalFee += 50000;
         setAdditionalRateEstimate(additionalFee);
-        console.log(additionalFee);
         setBaseRateEstimate(
             100000
             + (3000 * Math.ceil((estimateCalc.distance) / 1000))

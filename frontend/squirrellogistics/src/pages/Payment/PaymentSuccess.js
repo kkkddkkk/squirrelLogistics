@@ -48,18 +48,18 @@ const PaymentSuccess = () => {
         if (success === "true") {
             successSecondPayment({ paymentId, paymentSuccessDTO })
                 .then(data => {
-                    console.log("결제 성공 처리 성공");
+                    // console.log("결제 성공 처리 성공");
                 })
                 .catch(err => {
-                    console.error("수정 실패", err);
+                    // console.error("수정 실패", err);
                 });
         } else {
             failureSecondPayment({ paymentId, paymentFailureDTO })
                 .then(data => {
-                    console.log("결제 실패 처리 성공");
+                    // console.log("결제 실패 처리 성공");
                 })
                 .catch(err => {
-                    console.error("수정 실패", err);
+                    // console.error("수정 실패", err);
                 });
         }
     }, [])

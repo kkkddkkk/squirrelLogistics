@@ -21,6 +21,7 @@ import BedtimeOutlinedIcon from '@mui/icons-material/BedtimeOutlined';
 import { theme } from "../../components/common/CommonTheme";
 import { useOutletContext } from "react-router-dom";
 import { useDarkMode } from "../../DarkModeContext";
+import { format } from "date-fns";
 
 export default function Header() {
 
@@ -87,7 +88,7 @@ export default function Header() {
     COMPANY: [
       { label: "홈", path: "/" },
       { label: "배송신청", path: "/estimate" },
-      { label: "이용 기록", path: "/company/history" },
+      { label: "이용 기록", path: `/company/history?date=${format(new Date(), "yyyy-MM-dd")}` },
       { label: "마이페이지", path: "/company" },
     ],
     DRIVER: [

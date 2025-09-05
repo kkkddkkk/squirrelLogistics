@@ -688,7 +688,10 @@ const DriverProfile = () => {
                 width: "65%",
                 bgcolor: thisTheme.palette.background.paper,
                 p: 5,
-                // border: `1px solid ${thisTheme.palette.text.secondary}`,
+                border: `1px solid ${thisTheme.palette.mode === "light"
+                      ? thisTheme.palette.secondary.light
+                      : thisTheme.palette.background.default}`,
+                
               }}
             >
               {/* 차량 정보 */}
@@ -748,7 +751,9 @@ const DriverProfile = () => {
                 <Box
                   sx={{
                     p: 10,
-                    bgcolor: thisTheme.palette.background.default,
+                    bgcolor: thisTheme.palette.mode === "light"
+                      ? thisTheme.palette.secondary.light
+                      : thisTheme.palette.background.default,
                     borderRadius: 3,
                     textAlign: "center",
                     cursor: "pointer",

@@ -48,7 +48,6 @@ const DriverSearchForm = () => {
   useEffect(() => {
     const root = document.documentElement;
 
-    console.log(thisTheme.palette.mode);
     root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
     root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
     root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
@@ -121,7 +120,7 @@ const DriverSearchForm = () => {
   // Company 정보 조회 및 초기 검색
   useEffect(() => {
     // 페이지 로드 시 바로 검색 실행
-    console.log("페이지 로드 - 기본 검색 실행");
+    // console.log("페이지 로드 - 기본 검색 실행");
     handleSearch();
   }, []);
 
@@ -147,7 +146,6 @@ const DriverSearchForm = () => {
 
   useEffect(() => {
     handleSearch();
-    console.log("sortOption 작동됨")
   }, [searchParams.sortOption]);
 
   // Redux 상태 동기화
@@ -162,13 +160,13 @@ const DriverSearchForm = () => {
         page: page
       };
 
-      console.log("=== 검색 파라미터 상세 ===");
-      console.log("전체 파라미터:", params);
-      console.log("최대 적재량 (kg):", params.maxWeight);
-      console.log("차량 종류 ID:", params.vehicleTypeId);
-      console.log("즉시 배차:", params.drivable);
-      console.log("정렬 옵션:", params.sortOption);
-      console.log("========================");
+      // console.log("=== 검색 파라미터 상세 ===");
+      // console.log("전체 파라미터:", params);
+      // console.log("최대 적재량 (kg):", params.maxWeight);
+      // console.log("차량 종류 ID:", params.vehicleTypeId);
+      // console.log("즉시 배차:", params.drivable);
+      // console.log("정렬 옵션:", params.sortOption);
+      // console.log("========================");
 
       const result = await searchDrivers(params);
 
@@ -194,8 +192,6 @@ const DriverSearchForm = () => {
       })
       setDriverLength(newDrivers.length);
 
-      //#region [findHere]
-
       // Redux 상태 업데이트
       dispatch(setDrivers(result.drivers));
       dispatch(setKeyword(params.keyword));
@@ -210,8 +206,8 @@ const DriverSearchForm = () => {
       }
 
     } catch (error) {
-      console.error("기사 검색 실패:", error);
-      console.error("에러 상세:", error.response?.data || error.message);
+      // console.error("기사 검색 실패:", error);
+      // console.error("에러 상세:", error.response?.data || error.message);
       alert("기사 검색에 실패했습니다.");
     } finally {
       setIsLoading(false);
@@ -241,7 +237,7 @@ const DriverSearchForm = () => {
   // 최대 적재량 변경 (Integer 타입으로 변환, kg 단위)
   const handleMaxWeightChange = (weight) => {
     const weightValue = weight ? parseInt(weight) : null;
-    console.log("최대 적재량 필터 변경:", weightValue, "kg");
+    // console.log("최대 적재량 필터 변경:", weightValue, "kg");
     handleFilterChange('maxWeight', weightValue);
   };
 
@@ -308,12 +304,12 @@ const DriverSearchForm = () => {
         settlementFee: 0,
       };
 
-      console.log("전송 데이터:", {
-        payment: paymentDto,
-        request: flow.requestDto
-      });
+      // console.log("전송 데이터:", {
+      //   payment: paymentDto,
+      //   request: flow.requestDto
+      // });
 
-      console.log("driverId: " + driverId);
+      // console.log("driverId: " + driverId);
 
       const { requestId, paymentId } = await createDeliveryPropose(
         flow.requestDto,
@@ -341,7 +337,7 @@ const DriverSearchForm = () => {
       );
     } catch (e) {
       const data = e?.response?.data;
-      console.error("createDriverSpecificRequest error:", data || e);
+      // console.error("createDriverSpecificRequest error:", data || e);
       alert(`지명 요청에 실패했습니다.\n${data?.message || data?.error || ""}`);
     }
   };

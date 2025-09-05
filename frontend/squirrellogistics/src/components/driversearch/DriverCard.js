@@ -20,8 +20,6 @@ const DriverCard = ({ driver, onRequest }) => {
   
     useEffect(() => {
       const root = document.documentElement;
-  
-      console.log(thisTheme.palette.mode);
       root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
       root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
       root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
@@ -33,8 +31,7 @@ const DriverCard = ({ driver, onRequest }) => {
     })
 
   // 디버깅: 받은 데이터 확인
-  console.log("DriverCard received driver data:", driver);
-  applyThemeToCssVars(theme);
+  // console.log("DriverCard received driver data:", driver);
 
   const handleClick = () => {
     // 중복된 confirm 제거 - DriverSearchForm에서 처리
@@ -51,7 +48,7 @@ const DriverCard = ({ driver, onRequest }) => {
             alt="프로필"
             className="driver-profile-img"
             onError={(e) => {
-              console.log("이미지 로딩 실패:", driver.profileImageUrl);
+              // console.log("이미지 로딩 실패:", driver.profileImageUrl);
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'block';
             }}

@@ -71,26 +71,26 @@ const MyPage = () => {
         setDeliveryLoading(true);
         try {
           const deliveryData = await getDeliveryList();
-          console.log('배송 데이터 로드됨:', deliveryData);
+          // console.log('배송 데이터 로드됨:', deliveryData);
           if (deliveryData && Array.isArray(deliveryData)) {
             deliveryData.forEach((item, index) => {
-              console.log(`배송 ${index + 1} 상세:`, {
-                requestId: item.requestId,
-                name: item.name,          // ✅ driverName → name
-                status: item.status,      // ✅ deliveryStatus → status
-                payMethod: item.payMethod,
-                displayFee: item.displayFee,
-                payAmount: item.payAmount, // ✅ estimatedFee → payAmount
-                actualFee: item.actualFee,
-                cargoType: item.cargoType,
-                startAddress: item.startAddress,
-                endAddress: item.endAddress
-              });
+              // console.log(`배송 ${index + 1} 상세:`, {
+              //   requestId: item.requestId,
+              //   name: item.name,          // ✅ driverName → name
+              //   status: item.status,      // ✅ deliveryStatus → status
+              //   payMethod: item.payMethod,
+              //   displayFee: item.displayFee,
+              //   payAmount: item.payAmount, // ✅ estimatedFee → payAmount
+              //   actualFee: item.actualFee,
+              //   cargoType: item.cargoType,
+              //   startAddress: item.startAddress,
+              //   endAddress: item.endAddress
+              // });
             });
             setDeliveryList(deliveryData);
           }
         } catch (error) {
-          console.error('배송 데이터 로드 실패:', error);
+          // console.error('배송 데이터 로드 실패:', error);
         } finally {
           setDeliveryLoading(false);
         }
@@ -99,22 +99,22 @@ const MyPage = () => {
     loadDeliveryData();
   }, [myPageInfo?.companyId]);
 
-  useEffect(() => {
-    if (myPageInfo) {
-      console.log('마이페이지 정보 로드됨:', myPageInfo);
-      console.log('🔍 Redux 상태 확인:', {
-        snsLogin,
-        hasProfileInfo,
-        myPageInfo
-      });
-    }
-  }, [myPageInfo, snsLogin, hasProfileInfo]);
+  // useEffect(() => {
+  //   if (myPageInfo) {
+  //     console.log('마이페이지 정보 로드됨:', myPageInfo);
+  //     console.log('🔍 Redux 상태 확인:', {
+  //       snsLogin,
+  //       hasProfileInfo,
+  //       myPageInfo
+  //     });
+  //   }
+  // }, [myPageInfo, snsLogin, hasProfileInfo]);
 
-  useEffect(() => {
-    if (error) {
-      console.error('마이페이지 데이터 로딩 실패:', error);
-    }
-  }, [error]);
+  // useEffect(() => {
+  //   if (error) {
+  //     console.error('마이페이지 데이터 로딩 실패:', error);
+  //   }
+  // }, [error]);
 
   // 배송 리스트 필터링
   const filteredDeliveries = useMemo(() => {
@@ -150,34 +150,34 @@ const MyPage = () => {
   //프로필 수정(김도경, 2025-08-30)
   const handleEditProfile = () => {
     // 디버깅: 상태 값 확인
-    console.log('🔍 Edit 클릭 시 상태:', {
-      snsLogin,
-      hasProfileInfo,
-      myPageInfo: myPageInfo
-    });
+    // console.log('🔍 Edit 클릭 시 상태:', {
+    //   snsLogin,
+    //   hasProfileInfo,
+    //   myPageInfo: myPageInfo
+    // });
 
     // 회원정보 보유 여부 직접 계산
     const hasProfileInfoDirect = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
-    console.log('🔍 직접 계산한 hasProfileInfo:', hasProfileInfoDirect);
-    console.log('🔍 개별 필드 확인:', {
-      pnumber: myPageInfo?.pnumber,
-      account: myPageInfo?.account,
-      businessN: myPageInfo?.businessN,
-      address: myPageInfo?.address
-    });
+    // console.log('🔍 직접 계산한 hasProfileInfo:', hasProfileInfoDirect);
+    // console.log('🔍 개별 필드 확인:', {
+    //   pnumber: myPageInfo?.pnumber,
+    //   account: myPageInfo?.account,
+    //   businessN: myPageInfo?.businessN,
+    //   address: myPageInfo?.address
+    // });
     // 소셜 사용자는 회원정보 유무에 따라 다르게 처리
     if (snsLogin) {
       const hasProfileInfo = !!(myPageInfo?.pnumber || myPageInfo?.account || myPageInfo?.businessN || myPageInfo?.address);
 
       if (!hasProfileInfo) {
-        console.log('✅ 소셜 사용자 + 회원정보 없음 → edit 페이지로 이동');
+        // console.log('✅ 소셜 사용자 + 회원정보 없음 → edit 페이지로 이동');
         navigate('/company/edit');
       } else {
-        console.log('🔒 소셜 사용자 + 회원정보 있음 → verify 페이지로 이동 (소셜 재인증 필요)');
+        // console.log('🔒 소셜 사용자 + 회원정보 있음 → verify 페이지로 이동 (소셜 재인증 필요)');
         navigate('/company/verify');
       }
     } else {
-      console.log('🔒 로컬 사용자 → verify 페이지로 이동');
+      // console.log('🔒 로컬 사용자 → verify 페이지로 이동');
       // 로컬 사용자만 본인인증 페이지로 이동
       navigate('/company/verify');
     }
@@ -194,11 +194,11 @@ const MyPage = () => {
       try {
         // JWT 토큰 상태 확인
         const accessToken = localStorage.getItem('accessToken');
-        console.log('🔍 회원탈퇴 시도 - JWT 토큰 상태:', {
-          hasToken: !!accessToken,
-          tokenLength: accessToken ? accessToken.length : 0,
-          tokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : '없음'
-        });
+        // console.log('🔍 회원탈퇴 시도 - JWT 토큰 상태:', {
+        //   hasToken: !!accessToken,
+        //   tokenLength: accessToken ? accessToken.length : 0,
+        //   tokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : '없음'
+        // });
 
         if (!accessToken) {
           alert('로그인이 필요합니다. 다시 로그인해주세요.');
@@ -220,7 +220,7 @@ const MyPage = () => {
           alert(response.message || '회원탈퇴 처리 중 오류가 발생했습니다.');
         }
       } catch (error) {
-        console.error('회원탈퇴 실패:', error);
+        // console.error('회원탈퇴 실패:', error);
 
         // 401 에러인 경우 로그인 페이지로 이동
         if (error.response?.status === 401) {

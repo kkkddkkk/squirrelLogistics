@@ -33,12 +33,10 @@ const History = () => {
         if (!accessToken) return moveToMain();
         getHistoryList({ date, accessToken })
             .then(data => {
-                console.log(data);
                 setTodayList(data);
                 setDataLengths(data.length);
             })
             .catch(err => {
-                console.error("데이터 가져오기 실패", err);
             }).finally(() => setLoading(false));
 
     }, [date]);
