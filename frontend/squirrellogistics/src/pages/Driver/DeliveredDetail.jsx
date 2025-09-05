@@ -14,6 +14,7 @@ import {
   Paper,
   useTheme,
   lighten,
+  Grid,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -43,10 +44,15 @@ const DeliveredDetail = () => {
   });
   //const [waypoints, setWaypoints] = useState([]);
   const [mapAddresses, setMapAddresses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!assignedId) {
+      setError("유효하지 않은 운송 번호입니다.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const loadDeliveryDetail = async () => {
       try {
@@ -84,7 +90,6 @@ const DeliveredDetail = () => {
         );
         setMapAddresses(sortedWps.map(w => w?.waypoint?.address || ""));
 
-        console.log(data);
       } catch (err) {
         // console.error("운송 상세 정보 로드 실패:", err);
         // console.error("오류 상세:", err.response?.data || err.message);
@@ -124,9 +129,15 @@ const DeliveredDetail = () => {
     // 새로운 응답 구조에서 데이터 추출
     const actualDelivery = deliveryData.actualDelivery || {};
     const waypoints = deliveryData.waypoints || [];
+    const midStops = Math.max((waypoints?.length || 0) - 2, 0);
+
 
     const distance = actualDelivery.distance || 0;
+    const kmUnits = Math.ceil(distance / 1000);
+
     const weight = actualDelivery.weight || 0;
+    const tonUnits = Math.ceil(weight / 1000);
+
     const mountainous = actualDelivery.mountainous || false;
     const caution = actualDelivery.caution || false;
 
@@ -134,13 +145,13 @@ const DeliveredDetail = () => {
     const baseFee = 100000; // 기본요금 10만원
 
     // 거리별 요금 (1km당 3,000원)
-    const distanceFee = Math.floor(distance / 1000) * 3000;
+    const distanceFee = kmUnits * 3000;
 
     // 무게별 요금 (1kg당 30,000원)
-    const weightFee = Math.ceil(weight / 1000) * 30000;
+    const weightFee = tonUnits * 30000;
 
     // 경유지 요금 (경유지당 50,000원)
-    const waypointFee = waypoints.length * 50000;
+    const waypointFee = midStops * 50000;
 
     // 산간지역 요금
     const mountainousFee = mountainous ? 50000 : 0;
@@ -182,27 +193,20 @@ const DeliveredDetail = () => {
 
   if (loading) {
     return (
-      <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
-      >
+      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
         <Header />
-        <LoadingComponent />
+        <LoadingComponent open text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`} />
         <Footer />
-
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
-      >
+      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Alert severity="error" sx={{ mb: 4 }}>
-            {error}
-          </Alert>
+          <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>
         </Container>
         <Footer />
       </Box>
@@ -211,9 +215,7 @@ const DeliveredDetail = () => {
 
   if (!deliveryData) {
     return (
-      <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
-      >
+      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="warning">운송 데이터를 찾을 수 없습니다.</Alert>
@@ -294,7 +296,7 @@ const DeliveredDetail = () => {
       const isEnd = idx === wps.length - 1;
       const isMiddle = !isStart && !isEnd;
       const timeStr = w?.droppedAtFromLog
-        ? dayjs(w.droppedAtFromLog).format("HH:mm")
+        ? dayjs(w.droppedAtFromLog).format("YYYY/MM/DD HH:mm")
         : "-";
       return {
         label: isStart ? "상차 완료" : (isEnd ? "하차 완료" : `경유지 ${dropOrder}`),
@@ -311,6 +313,7 @@ const DeliveredDetail = () => {
   };
 
   const routeInfo = buildRouteInfo();
+  const fees = calculateFees(deliveryData);
 
   // 타임라인 아이템 렌더링 함수
   const renderTimelineItem = (item, index) => {
@@ -487,18 +490,18 @@ const DeliveredDetail = () => {
   return (
     <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
-      <LoadingComponent open={loading} text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`} />
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
-          <Box
+          <Grid container
+            direction={"row"}
+            justifyContent={"space-between"}
+            alignContent={"end"}
             sx={{
               borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
-              justifyContent:'space-between',
               pb: 2,
               mb: 4,
-            }}
-          >
+            }}>
             <Typography
               variant="h4"
               fontWeight="bold"
@@ -509,12 +512,13 @@ const DeliveredDetail = () => {
 
             <Typography
               variant="h6"
-              fontWeight="bold"
               color={thisTheme.palette.text.primary}
+              lineHeight={"2"}
             >
               요청자: {deliveryData.request.companyName}
             </Typography>
-          </Box>
+          </Grid>
+
 
           {/* 메인 콘텐츠 영역 */}
           <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
@@ -527,9 +531,9 @@ const DeliveredDetail = () => {
                     key={index}
                     sx={{
                       display: "flex",
-                      alignItems: "flex-start",
                       mb: 2.5,
                       position: "relative",
+                      alignItems: "stretch",
                     }}
                   >
                     {/* 왼쪽: 마커와 연결선 영역 */}
@@ -537,24 +541,26 @@ const DeliveredDetail = () => {
                       sx={{
                         display: "flex",
                         flexDirection: "column",
-                        alignItems: "stretch", 
+                        alignItems: "stretch",
                         mr: 2.5,
                         position: "relative",
                         width: 40,
-                        height: "100%",
-                        ...(item.isEnd ? {} : {
-                          "&::after": {
-                            content: '""',
-                            position: "absolute",
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            top: 40,               
-                            width: 3,
-                            height: `calc(100% - 40px + ${thisTheme.spacing(2.5)})`,
-                            backgroundColor: lighten(thisTheme.palette.text.secondary, 0.1),
-                            zIndex: 1,
-                          }
-                        })
+                        ...(index === routeInfo.length - 1
+                          ? {}
+                          : {
+                            "&::after": {
+                              content: '""',
+                              position: "absolute",
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              top: 40, // 마커 원 아래
+                              // 아이템 간 간격(mb: 2.5)만큼 더 내려서 다음 마커에 정확히 닿게
+                              bottom: `-${thisTheme.spacing(2.5)}`,
+                              width: 3,
+                              backgroundColor: lighten(thisTheme.palette.text.secondary, 0.1),
+                              zIndex: 1,
+                            },
+                          }),
                       }}
                     >
                       {/* 마커 */}
@@ -839,7 +845,7 @@ const DeliveredDetail = () => {
                           variant="body1"
                           color={thisTheme.palette.text.primary}
                         >
-                          {formatPrice(baseFee)}
+                          {formatPrice(fees.baseFee)}
                         </Typography>
                       </Box>
 
@@ -861,7 +867,7 @@ const DeliveredDetail = () => {
                           variant="body1"
                           color={thisTheme.palette.text.primary}
                         >
-                          {formatPrice(distanceFee)}
+                          {formatPrice(fees.distanceFee)}
                         </Typography>
                       </Box>
 
@@ -883,7 +889,7 @@ const DeliveredDetail = () => {
                           variant="body1"
                           color={thisTheme.palette.text.primary}
                         >
-                          {formatPrice(weightFee)}
+                          {formatPrice(fees.weightFee)}
                         </Typography>
                       </Box>
 
@@ -906,7 +912,7 @@ const DeliveredDetail = () => {
                             variant="body1"
                             color={thisTheme.palette.text.primary}
                           >
-                            {formatPrice(waypointFee)}
+                            {formatPrice(fees.waypointFee)}
                           </Typography>
                         </Box>
                       )}
@@ -930,7 +936,7 @@ const DeliveredDetail = () => {
                             variant="body1"
                             color={thisTheme.palette.text.primary}
                           >
-                            {formatPrice(mountainousFee)}
+                            {formatPrice(fees.mountainousFee)}
                           </Typography>
                         </Box>
                       )}
@@ -954,7 +960,7 @@ const DeliveredDetail = () => {
                             variant="body1"
                             color={thisTheme.palette.text.primary}
                           >
-                            {formatPrice(cautionFee)}
+                            {formatPrice(fees.cautionFee)}
                           </Typography>
                         </Box>
                       )}
@@ -986,7 +992,7 @@ const DeliveredDetail = () => {
                           fontWeight="bold"
                           color={thisTheme.palette.primary.main}
                         >
-                          {formatPrice(totalFee)}
+                          {formatPrice(fees.totalFee)}
                         </Typography>
                       </Box>
                     </Box>

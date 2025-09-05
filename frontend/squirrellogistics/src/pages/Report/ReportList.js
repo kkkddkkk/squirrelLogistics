@@ -10,8 +10,7 @@ import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText"
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
 import useHistoryMove from "../../hook/historyHook/useHistoryMove";
-import Header from "../Layout/Header";
-import Footer from "../Layout/Footer";
+
 
 const ReportList = () => {
 
@@ -41,7 +40,6 @@ const ReportList = () => {
 
     return (
         <>
-            <Header />
             <Box>
                 <CommonTitle>내 문의내역</CommonTitle>
                 <LoadingComponent open={loading} text="내 신고내역 불러오는 중..." />
@@ -75,7 +73,6 @@ const ReportList = () => {
                     <Grid size={3} />
                 </Grid>
             </Box>
-            <Footer />
         </>
 
 

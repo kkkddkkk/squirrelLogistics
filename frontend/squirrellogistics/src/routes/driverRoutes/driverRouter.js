@@ -44,7 +44,7 @@ const driverRouter = () => {
   const DeliveredDetail = lazy(() =>
     import("../../pages/Driver/DeliveredDetail")
   );
-  const ReportList = lazy(() => import("../../pages/Report/ReportList"));
+  const ReportList = lazy(() => import("../../pages/Driver/DriverReportPage"));
   const DriverReportList = lazy(() =>
     import("../../pages/Driver/DriverReportList")
   );

@@ -339,6 +339,7 @@ const DeliveredList = () => {
 
           {/* 리스트 */}
           <Box>
+            {/* {filteredData} */}
             {paginatedData.map((row, idx) => {
               // 새로운 응답 구조에서 additionalInfo를 통해 필요한 데이터에 접근
               const additionalInfo = row.additionalInfo || {};
