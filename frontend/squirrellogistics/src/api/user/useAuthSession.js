@@ -59,21 +59,21 @@ export default function useAuthSession({ onLogout, idleMinutes = 15 }) {
         armExpTimer();
 
         // 3) 서버가 401 주면 즉시 로그아웃 (axios 인터셉터)
-        const resInterceptor = api.interceptors.response.use(
-            (res) => res,
-            (err) => {
-                if (err?.response?.status === 401) {
-                    onLogout?.("비밀번호가 올바르지 않습니다.");
-                }
-                return Promise.reject(err);
-            }
-        );
+        // const resInterceptor = api.interceptors.response.use(
+        //     (res) => res,
+        //     (err) => {
+        //         if (err?.response?.status === 401) {
+        //             onLogout?.("비밀번호가 올바르지 않습니다.");
+        //         }
+        //         return Promise.reject(err);
+        //     }
+        // );
 
-        return () => {
-            clearTimers();
-            removeIdleListeners?.();
-            api.interceptors.response.eject(resInterceptor);
-        };
+        // return () => {
+        //     clearTimers();
+        //     removeIdleListeners?.();
+        //     api.interceptors.response.eject(resInterceptor);
+        // };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
