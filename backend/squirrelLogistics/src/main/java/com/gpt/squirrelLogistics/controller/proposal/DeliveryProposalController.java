@@ -117,6 +117,9 @@ public class DeliveryProposalController {
 
 			case "SCHEDULE_CONFLICT":
 				return ResponseEntity.status(HttpStatus.CONFLICT).body(AuthErrorCode.SCHEDULE_CONFLICT.toString());
+			
+			case "INVALID_STATE":
+				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(AuthErrorCode.INVALID_STATE.toString());
 
 			default:
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthErrorCode.UNKNOWN.toString());

@@ -53,6 +53,8 @@ public class DummyDriver {
 		synchronized (lock) {
 			var norm = kakaoClient.normalizeTrackPoints(polyline != null ? polyline : List.of());
 			this.expectedRoute = new ArrayList<>(norm);
+			this.outConsec = 0;
+			this.outOfWay = false;
 		}
 		broadcast();
 	}
@@ -90,11 +92,14 @@ public class DummyDriver {
 
 	/** 현재 레그를 교체하고 시작점으로 스냅 */
 	public void setRoute(List<LatLng> polyline) {
+
 		synchronized (lock) {
 			this.route = (polyline != null ? new ArrayList<>(polyline) : new ArrayList<>());
 			this.index = 0;
 			if (!this.route.isEmpty())
 				this.current = this.route.get(0);
+			this.outConsec = 0;
+			this.outOfWay = false;
 		}
 		notifyMoved();
 		broadcast();
@@ -147,6 +152,18 @@ public class DummyDriver {
 			this.route = new ArrayList<>();
 			this.index = 0;
 			this.current = (startPos != null ? startPos : this.current);
+			this.outConsec = 0;
+			this.outOfWay = false;
+		}
+		notifyMoved();
+		broadcast();
+	}
+
+	public void softResetRoutes() {
+		synchronized (lock) {
+			this.route = new ArrayList<>();
+			this.expectedRoute = List.of();
+			this.index = 0;
 			this.outConsec = 0;
 			this.outOfWay = false;
 		}
@@ -298,6 +315,32 @@ public class DummyDriver {
 
 		// P(0,0)와 투영점의 거리
 		return Math.hypot(projX, projY);
+	}
+
+	public void clearRoute() {
+		setRoute(List.of());
+	}
+
+	public void clearExpectedRoute() {
+		setExpectedRoute(List.of());
+	}
+
+	public void swapLeg(List<LatLng> expected, List<LatLng> driving, boolean snapToStart) {
+		synchronized (lock) {
+			var normExpected = kakaoClient.normalizeTrackPoints(expected != null ? expected : List.of());
+			this.expectedRoute = new ArrayList<>(normExpected);
+
+			this.route = (driving != null ? new ArrayList<>(driving) : new ArrayList<>());
+			this.index = 0;
+			if (snapToStart && !this.route.isEmpty()) {
+				this.current = this.route.get(0);
+			}
+			// 이탈 히스테리시스 초기화
+			this.outConsec = 0;
+			this.outOfWay = false;
+		}
+		notifyMoved();
+		broadcast();
 	}
 
 }

@@ -13,5 +13,6 @@ public enum AuthErrorCode {
     REQUEST_ALREADY_TAKEN,
     ALREADY_ACCEPTED,
     UNKNOWN,
+    INVALID_STATE,
     
 }

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getAuthHeaders, buildConfig } from "./apiUtil";
+import { extractCodeFromData } from "./deliveryRequestAPI";
 // 백엔드 서버 주소.
 export const API_SERVER_HOST = "http://localhost:8080";
 const BASE = `${API_SERVER_HOST}/api/delivery/proposals`;
@@ -54,18 +55,24 @@ export async function acceptDeliveryProposal(requestId, options = {}) {
       null,
       buildConfig(options)
     );
-    return res.data; // 성공 시 그대로 리턴
-  } catch (e) {
-    const status = e.response?.status ?? 0;
-    const body = e.response?.data;
-    const code =
-      typeof body === 'string'
-        ? body                              // ← 문자열 본문
-        : body?.FAILED || body?.code || 'UNKNOWN'; // ← 객체 본문
 
-    const err = new Error(code);
-    err.status = status;
-    err.code = code;
-    throw err;
+    if (res.status === 204) {
+      return { ok: true, code: "ALREADY_ACCEPTED", httpStatus: 204 };
+    }
+    if (res.status === 200) {
+      const data = res.data;
+      if (data?.SUCCESS) {
+        return { ok: true, code: data.SUCCESS, payload: data, httpStatus: 200 };
+      }
+      if (data?.FAILED) {
+        return { ok: false, code: data.FAILED, httpStatus: 200, raw: data };
+      }
+      return { ok: true, code: "SUCCESS", payload: data, httpStatus: 200 };
+    }
+    return { ok: true, code: "SUCCESS", payload: res.data, httpStatus: res.status };
+  } catch (err) {
+    const status = err.response?.status ?? 0;
+    const code = extractCodeFromData(err.response?.data);
+    return { ok: false, code, httpStatus: status, raw: err.response?.data };
   }
 }

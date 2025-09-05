@@ -80,6 +80,7 @@ const RequestDetailComponent = () => {
     waypoints: [],
   });
 
+  console.log(isProposed);
   useEffect(() => {
     if (!requestId) return;
 
@@ -171,7 +172,7 @@ const RequestDetailComponent = () => {
       } else {
         // 실패 케이스
         setErr(msg(result.code));
-        setErrKind(result.httpStatus >= 500 ? "server" : "forbidden");
+        setErrKind(result.httpStatus >= 406 ? "conflict" : "forbidden");
         setErrpopupOpen(true);
       }
     });
@@ -290,11 +291,23 @@ const RequestDetailComponent = () => {
             setErrKind(null);
           }}
           title={
-            errKind === "forbidden"
-              ? "올바르지 않은 접근"
-              : errKind === "decline"
-                ? "지명 요청 거절"
-                : "안내"
+           <>
+              {errKind === "forbidden" && (
+                <>
+                  잘못된 접근
+                </>
+              )}
+              {errKind === "decline" && (
+                <>
+                  요청 거절
+                </>
+              )}
+              {errKind === "conflict" && (
+                <>
+                  수락 불가
+                </>
+              )}
+            </>
           }
           content={
             <>

@@ -85,6 +85,7 @@ export async function acceptDeliveryRequest(id, driverId, options = {}) {
 
     return { ok: true, code: "SUCCESS", payload: res.data, httpStatus: res.status };
   } catch (err) {
+    console.log(err);
     const status = err.response?.status;
     const code = extractCodeFromData(err.response?.data);
     return { ok: false, code, httpStatus: status, raw: err.response?.data };
@@ -99,6 +100,10 @@ const ACCEPT_MESSAGES = {
   DRIVER_NOT_FOUND: "기사 정보를 찾을 수 없습니다.",
   VEHICLE_TYPE_MISMATCH: "차량 종류가 요청 조건과 일치하지 않습니다.",
   SCHEDULE_CONFLICT: "해당 일자에 겹치는 배차가 있습니다.",
+  INVALID_STATE: "해당 지명을 수락할 수 있는 상태가 아닙니다.",
+  PROPOSAL_NOT_FOUND: "해당 지명 요청을 찾을 수 없습니다.",
+  FORBIDDEN: "잘못된 접근입니다.",
+  ACCEPTED: "운송 요청이 성공적으로 수락되었습니다.",
   UNKNOWN: "알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
 };
 
@@ -106,7 +111,7 @@ export function msg(code) {
   return ACCEPT_MESSAGES[code] || ACCEPT_MESSAGES.UNKNOWN;
 }
 
-function extractCodeFromData(data) {
+export function extractCodeFromData(data) {
   if (typeof data === "string") return data;
   if (data && typeof data === "object") {
     return data.FAILED || data.code || data.error || "UNKNOWN";
