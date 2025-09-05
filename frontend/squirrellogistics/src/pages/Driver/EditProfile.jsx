@@ -30,12 +30,16 @@ import {
   Stack,
   Switch,
   useTheme,
+  Divider,
+  Paper,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Header from "../Layout/Header";
 import { CommonTitle } from "../../components/common/CommonText";
-
+import PreferredTimeLite from "../../components/Time/PreferredTimeLite";
+import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
+import LoadingComponent from "../../components/common/LoadingComponent";
 const EditProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -86,6 +90,22 @@ const EditProfile = () => {
   const [loginType, setLoginType] = useState("EMAIL");
   const [hasSetPassword, setHasSetPassword] = useState(false);
 
+  const [selectedAreas, setSelectedAreas] = useState(["상관없음"]);
+  const [startTime, setStartTime] = useState(dayjs().hour(7).minute(0).second(0));
+  const [endTime, setEndTime] = useState(dayjs().hour(18).minute(0).second(0));
+
+  // 프로필 사진 관련 state
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordConfirmError, setPasswordConfirmError] = useState("");
+  const [preview, setPreview] = useState("");
+
+  const [formData, setFormData] = useState(null);
+  const [imageChanged, setImageChanged] = useState(false);   //수정: 고은설, 기능: 이미지 변경 플래그.
+  const [imageDeleted, setImageDeleted] = useState(false);   //수정: 고은설, 기능: 이미지 삭제 플래그.
+
   // 페이지 로드 시 로그인한 사용자 정보 불러오기
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -121,8 +141,6 @@ const EditProfile = () => {
           confirmPassword: passwordPlaceholder, // 현재 비밀번호 마스킹 표시
           bankAccount: profileData.userDTO?.account || "",
           businessId: profileData.userDTO?.businessN || "",
-          unavailableStart: "",
-          unavailableEnd: "",
           deliveryArea: profileData.mainLoca || "",
           rating: 0,
           profileImageUrl: profileData.profileImageUrl
@@ -152,9 +170,26 @@ const EditProfile = () => {
         // }
 
         // 활동 지역 설정
-        if (profileData.mainLoca) {
-          setSelectedAreas([profileData.mainLoca]);
+        if (profileData.mainLoca && profileData.mainLoca.trim() !== "") {
+          const parsed = profileData.mainLoca
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean);
+          setSelectedAreas(parsed.length ? parsed : ["상관없음"]);
+        } else {
+          setSelectedAreas(["상관없음"]);
         }
+
+        // 선호 시간대(dayjs) 상태 세팅
+        const toDayjs = (hhmmss) => {
+          if (!hhmmss) return null;
+          const [h, m, s] = hhmmss.split(":").map(n => parseInt(n, 10));
+          return dayjs().hour(h || 0).minute(m || 0).second(s || 0);
+        };
+        const s = toDayjs(profileData.preferred_start_time) ?? dayjs().hour(7).minute(0).second(0);
+        const e = toDayjs(profileData.preferred_end_time) ?? dayjs().hour(18).minute(0).second(0);
+        setStartTime(s);
+        setEndTime(e);
 
         // 로그인 타입과 비밀번호 설정 여부 확인
         const savedLoginType = localStorage.getItem("loginType");
@@ -180,23 +215,24 @@ const EditProfile = () => {
   }, []);
 
 
-  // 프로필 사진 관련 state
-  const [profileImage, setProfileImage] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [passwordConfirmError, setPasswordConfirmError] = useState("");
 
-  const [selectedCity, setSelectedCity] = useState("서울");
-  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
-  const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
 
-  const [preview, setPreview] = useState("");
-  const [formData, setFormData] = useState("");
+  // const [selectedCity, setSelectedCity] = useState("서울");
+  // const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+  // const [selectedAreas, setSelectedAreas] = useState(["서울 전체"]);
+
   useEffect(() => {
     if (form.id === "") return setProfileImageUrl("default_profile.png");
     setProfileImageUrl(form.profileImageUrl);
-    setPreview(`http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`)
+    //setPreview(`http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`)
+    //작성자: 고은설, 기능: 폴백용 기본경로 추가.
+    setPreview(
+      form.profileImageUrl
+        ? `http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`
+        : `http://localhost:8080/api/public/driverImage/default_profile.png`
+    );
+    setImageChanged(false);
+    setImageDeleted(false);
   }, [form])
 
   //#region 도시별 구/군 데이터
@@ -550,34 +586,34 @@ const EditProfile = () => {
     }
   };
 
-  // 도시 선택 핸들러
-  const handleCityChange = (e) => {
-    const city = e.target.value;
-    setSelectedCity(city);
-  };
+  // // 도시 선택 핸들러
+  // const handleCityChange = (e) => {
+  //   const city = e.target.value;
+  //   setSelectedCity(city);
+  // };
 
-  // 구/군 선택 핸들러
-  const handleDistrictSelect = (district) => {
-    // 이미 선택된 지역인지 확인
-    if (!selectedAreas.includes(district)) {
-      setSelectedAreas((prev) => [...prev, district]);
-      setForm((prev) => ({
-        ...prev,
-        deliveryArea: [...selectedAreas, district].join(", "),
-      }));
-    }
-    setShowDistrictDropdown(false);
-  };
+  // // 구/군 선택 핸들러
+  // const handleDistrictSelect = (district) => {
+  //   // 이미 선택된 지역인지 확인
+  //   if (!selectedAreas.includes(district)) {
+  //     setSelectedAreas((prev) => [...prev, district]);
+  //     setForm((prev) => ({
+  //       ...prev,
+  //       deliveryArea: [...selectedAreas, district].join(", "),
+  //     }));
+  //   }
+  //   setShowDistrictDropdown(false);
+  // };
 
-  // 지역 삭제 핸들러
-  const removeArea = (areaToRemove) => {
-    const updatedAreas = selectedAreas.filter((area) => area !== areaToRemove);
-    setSelectedAreas(updatedAreas);
-    setForm((prev) => ({
-      ...prev,
-      deliveryArea: updatedAreas.join(", "),
-    }));
-  };
+  // // 지역 삭제 핸들러
+  // const removeArea = (areaToRemove) => {
+  //   const updatedAreas = selectedAreas.filter((area) => area !== areaToRemove);
+  //   setSelectedAreas(updatedAreas);
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     deliveryArea: updatedAreas.join(", "),
+  //   }));
+  // };
 
   // 프로필 사진 업로드 처리
   const handleImageUpload = async (file) => {
@@ -600,6 +636,10 @@ const EditProfile = () => {
 
     newFormData.append("image", file);
     setFormData(newFormData);
+
+    //멀티파트 바디 요구 여부 설정.
+    setImageChanged(true);
+    setImageDeleted(false);
   };
 
   // 프로필 사진 삭제
@@ -612,8 +652,11 @@ const EditProfile = () => {
 
       // // 백엔드에 빈 이미지 URL로 업데이트 요청
       // await deleteProfileImage(); // 새로 추가된 API 호출
+      //console.log("프로필 이미지 삭제 완료");
 
-      console.log("프로필 이미지 삭제 완료");
+      setFormData(null);
+      setImageChanged(true);
+      setImageDeleted(true);
     } catch (error) {
       console.error("프로필 이미지 삭제 실패:", error);
       alert("프로필 이미지 삭제에 실패했습니다.");
@@ -641,119 +684,79 @@ const EditProfile = () => {
     e.preventDefault();
     console.log("handleSubmit 호출됨 - timestamp:", Date.now());
 
-    // 운행불가 시작일/종료일과 선호시간대를 제외한 필수 필드 검증
     const requiredFields = {
-      name: "이름",
-      email: "이메일",
-      phone: "연락처",
-      bankAccount: "계좌번호",
-      businessId: "사업자등록번호",
-      deliveryArea: "운행선호지역",
+      name: "이름", email: "이메일", phone: "연락처", bankAccount: "계좌번호",
+      businessId: "사업자등록번호", deliveryArea: "운행선호지역"
     };
-
-    // 필수 필드 검증
     for (const [field, label] of Object.entries(requiredFields)) {
       if (!form[field] || form[field].trim() === "") {
         alert(`${label}을(를) 입력해주세요.`);
         return;
       }
     }
+    if (emailError) { alert("이메일 형식을 확인해주세요."); return; }
 
-    // 이메일 형식 검증
-    if (emailError) {
-      alert("이메일 형식을 확인해주세요.");
-      return;
-    }
-
-    // 일반 로그인 사용자의 경우 비밀번호 검증 (변경된 경우에만)
+    //비번 변경 검증
     if (loginType === "EMAIL" && isPasswordChanged) {
-      if (
-        !form.password ||
-        form.password.trim() === "" ||
-        form.password === passwordPlaceholder
-      ) {
+      if (!form.password || form.password.trim() === "" || form.password === passwordPlaceholder) {
         alert("새로운 비밀번호를 입력해주세요.");
         return;
       }
-      if (
-        !form.confirmPassword ||
-        form.confirmPassword.trim() === "" ||
-        form.confirmPassword === passwordPlaceholder
-      ) {
+      if (!form.confirmPassword || form.confirmPassword.trim() === "" || form.confirmPassword === passwordPlaceholder) {
         alert("비밀번호 확인을 입력해주세요.");
         return;
       }
-      if (passwordError) {
-        alert("비밀번호 형식을 확인해주세요.");
-        return;
-      }
-      if (passwordConfirmError) {
-        alert("비밀번호가 일치하지 않습니다.");
+      if (passwordError) { alert("비밀번호 형식을 확인해주세요."); return; }
+      if (passwordConfirmError) { alert("비밀번호가 일치하지 않습니다."); return; }
+      if (!currentPassword || currentPassword.trim() === "") {
+        alert("현재 비밀번호가 확인되지 않았습니다. 다시 비밀번호 확인을 진행해주세요.");
         return;
       }
     }
 
+    //여기서부터 로딩
+    setLoading(true);
     try {
-      // API 요청 데이터 구성
       const profileData = {
         name: form.name,
         email: form.email,
-        phone: form.phone, // 백엔드에서 Pnumber로 매핑됨
+        phone: form.phone,
         account: form.bankAccount || "",
         businessN: form.businessId,
-        mainLoca: form.deliveryArea,
-        loginId: null, // 기존 값 유지
-        password: null, // 기존 값 유지 (별도 API로 처리)
-        birthday: form.birth ? dayjs(form.birth).toDate() : null, // 생년월일 업데이트
-        licenseNum: null, // 기존 값 유지
-        licenseDT: null, // 기존 값 유지
-        drivable: null, // 기존 값 유지
-        preferred_start_time: null, // 기존 값 유지
-        preferred_end_time: null, // 기존 값 유지
-        vehicleTypeId: null, // 기존 값 유지
-        carNum: null, // 기존 값 유지
-        agreeTerms: null, // 기존 값 유지
+        mainLoca: selectedAreas.join(", "),
+        loginId: null,
+        password: null,
+        birthday: form.birth ? dayjs(form.birth).toDate() : null,
+        licenseNum: null,
+        licenseDT: null,
+        drivable: null,
+        preferred_start_time: startTime ? dayjs(startTime).format("HH:mm:ss") : null,
+        preferred_end_time: endTime ? dayjs(endTime).format("HH:mm:ss") : null,
+        vehicleTypeId: null,
+        carNum: null,
+        agreeTerms: null,
       };
 
       console.log("프로필 수정 요청 데이터:", profileData);
 
-      // 프로필 정보 업데이트
+      //프로필 본문 저장
       await updateDriverProfile(profileData);
-      if (preview === `http://localhost:8080/api/public/driverImage/default_profile.png`) await deleteProfileImage();
-      else await uploadProfileImage(formData);
-      // 일반 로그인 사용자의 경우 비밀번호 수정 처리 (실제로 변경된 경우에만)
-      if (
-        loginType === "EMAIL" &&
-        isPasswordChanged &&
-        form.password &&
-        form.password.trim() !== "" &&
-        form.password !== passwordPlaceholder
-      ) {
-        console.log("비밀번호 수정 시작");
-        console.log("currentPassword:", currentPassword);
-        console.log("newPassword:", form.password);
 
-        if (!currentPassword || currentPassword.trim() === "") {
-          alert(
-            "현재 비밀번호가 확인되지 않았습니다. 다시 비밀번호 확인을 진행해주세요."
-          );
-          return;
-        }
-
-        try {
-          await changePassword(currentPassword, form.password);
-          console.log("비밀번호 수정 성공");
-        } catch (passwordError) {
-          console.error("비밀번호 수정 실패:", passwordError);
-          alert(
-            "비밀번호 수정에 실패했습니다: " +
-            (passwordError.response?.data || passwordError.message)
-          );
-          return;
+      //이미지 변경 분기
+      if (imageChanged) {
+        if (imageDeleted) {
+          await deleteProfileImage();
+        } else if (formData instanceof FormData) {
+          await uploadProfileImage(formData);
         }
       }
 
-      console.log("수정 완료 알럿 표시 - timestamp:", Date.now());
+      //비밀번호 변경 분기
+      if (loginType === "EMAIL" && isPasswordChanged) {
+        await changePassword(currentPassword, form.password);
+        console.log("비밀번호 수정 성공");
+      }
+
       alert("수정이 완료되었습니다.");
 
       // 인증 상태 초기화
@@ -761,57 +764,50 @@ const EditProfile = () => {
       localStorage.removeItem("verifiedPhone");
       localStorage.removeItem("verificationMethod");
 
-      // Profile 페이지로 이동할 때 최신 프로필 이미지가 반영되도록 state 전달
-      console.log("Profile 페이지로 이동, 전달할 이미지 URL:", profileImageUrl);
+      // 이동
       navigate("/driver/profile", {
         state: {
           fromEditProfile: true,
           updatedProfileImage: profileImageUrl,
-          timestamp: Date.now(), // 강제 리렌더링을 위한 타임스탬프
+          timestamp: Date.now(),
         },
       });
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-
-      // 에러 메시지 추출
       let errorMessage = "알 수 없는 오류가 발생했습니다.";
-
       if (error.response?.data) {
-        if (typeof error.response.data === "string") {
-          errorMessage = error.response.data;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.error) {
-          errorMessage = error.response.data.error;
-        }
+        if (typeof error.response.data === "string") errorMessage = error.response.data;
+        else if (error.response.data.message) errorMessage = error.response.data.message;
+        else if (error.response.data.error) errorMessage = error.response.data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }
-
       alert("프로필 수정에 실패했습니다: " + errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   // 로딩 중이거나 에러가 있는 경우 처리
-  if (loading) {
-    return (
-      <Box>
-        <Header />
-        <CommonTitle>회원 정보 수정</CommonTitle>
-        <Container maxWidth="sm" sx={{ py: 4 }}>
+  // if (loading) {
+  //   return (
+  //     <Box>
+  //       <Header />
+  //       <CommonTitle>회원 정보 수정</CommonTitle>
+  //       <Container maxWidth="sm" sx={{ py: 4 }}>
 
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            sx={{ minHeight: "200px" }}
-          >
-            <Typography variant="h6">프로필 정보를 불러오는 중...</Typography>
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
+  //         <Box
+  //           display="flex"
+  //           justifyContent="center"
+  //           alignItems="center"
+  //           sx={{ minHeight: "200px" }}
+  //         >
+  //           <Typography variant="h6">프로필 정보를 불러오는 중...</Typography>
+  //         </Box>
+  //       </Container>
+  //     </Box>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -839,6 +835,9 @@ const EditProfile = () => {
     <Box>
       <Header />
       <Container maxWidth="sm" sx={{ py: 4 }}>
+        {loading && (
+          <LoadingComponent open={loading} text="내 정보를 불러오는 중..." />
+        )}
         <CommonTitle>회원 정보 수정</CommonTitle>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
           <Stack spacing={2}>
@@ -868,7 +867,6 @@ const EditProfile = () => {
               <Box display="flex" gap={2} sx={{ mt: 2 }}>
                 <Button
                   variant="outlined"
-                  color={thisTheme.palette.primary.main}
                   onClick={() => {
                     // 가장 간단하고 확실한 방법
                     const input = document.createElement("input");
@@ -921,7 +919,6 @@ const EditProfile = () => {
                 )}
               </Box>
             </Box>
-
             {/* SNS 로그인 사용자는 아이디 필드 숨김 */}
             {(loginType === "EMAIL" ||
               ((loginType === "GOOGLE" || loginType === "KAKAO") &&
@@ -940,6 +937,7 @@ const EditProfile = () => {
                   }}
                 />
               )}
+
             {/* SNS 로그인 사용자는 비밀번호 필드 숨김 */}
             {loginType === "EMAIL" && (
               <Box display="flex" gap={2}>
@@ -989,7 +987,6 @@ const EditProfile = () => {
                 </Box>
               </Box>
             )}
-
             <TextField
               label="이름"
               name="name"
@@ -1036,7 +1033,7 @@ const EditProfile = () => {
               onChange={handleChange}
               fullWidth
             />
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            {/* <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 48%" }}>
                 <TextField
                   label="운행 불가 시작일"
@@ -1059,7 +1056,37 @@ const EditProfile = () => {
                   InputLabelProps={{ shrink: true }}
                 />
               </div>
-            </Box>
+            </Box> */}
+
+            <PreferredTimeLite
+              start={startTime}
+              end={endTime}
+              minuteStep={15}
+              onChange={({ start, end /*, startStr, endStr*/ }) => {
+                setStartTime(start);
+                setEndTime(end);
+                // 필요하면 form에도 문자열 저장해두기:
+                // setForm(prev => ({
+                //   ...prev,
+                //   preferredStartTime: startStr,
+                //   preferredEndTime: endStr
+                // }));
+              }}
+            />
+            <Typography variant="subtitle1" sx={{ mt: 0, fontWeight: 600 }}>
+              운행 선호 지역
+            </Typography>
+            <PreferredAreasSelect
+              value={selectedAreas}
+              onChange={(areas) => {
+                let next = areas;
+                if (areas.includes("상관없음")) next = ["상관없음"];
+                else next = areas.filter(a => a !== "상관없음");
+                setSelectedAreas(next);
+                setForm(prev => ({ ...prev, deliveryArea: next.join(", ") }));
+              }}
+              label="운행 선호 지역"
+            />
 
             <Box display="flex" justifyContent="space-between" pt={3}>
               <Button

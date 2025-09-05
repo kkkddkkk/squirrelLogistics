@@ -113,11 +113,11 @@ const DriverProfile = () => {
         const userRole = localStorage.getItem("userRole");
         const userName = localStorage.getItem("userName");
 
-        console.log("디버깅 정보:", {
-          accessToken: accessToken ? "있음" : "없음",
-          userRole: userRole,
-          userName: userName,
-        });
+        // console.log("디버깅 정보:", {
+        //   accessToken: accessToken ? "있음" : "없음",
+        //   userRole: userRole,
+        //   userName: userName,
+        // });
 
         if (!accessToken) {
           setError("로그인이 필요합니다. 다시 로그인해주세요.");
@@ -179,10 +179,10 @@ const DriverProfile = () => {
             // 백엔드 URL이 data URL이 아닌 경우 localStorage에서 data URL 확인
             const savedDataUrl = localStorage.getItem("profileImageUrl");
             if (savedDataUrl && savedDataUrl.startsWith("data:image")) {
-              console.log(
-                "localStorage에서 data URL 사용:",
-                savedDataUrl.substring(0, 50) + "..."
-              );
+              // console.log(
+              //   "localStorage에서 data URL 사용:",
+              //   savedDataUrl.substring(0, 50) + "..."
+              // );
               setProfileImageUrl(savedDataUrl);
             } else {
               setProfileImageUrl(driverData.profileImageUrl);
@@ -196,14 +196,14 @@ const DriverProfile = () => {
           // 저장된 프로필 이미지 로드
           const savedImageUrl = localStorage.getItem("profileImageUrl");
           if (savedImageUrl) {
-            console.log(
-              "localStorage에서 로드한 프로필 이미지 URL:",
-              savedImageUrl.substring(0, 50) + "..."
-            );
+            // console.log(
+            //   "localStorage에서 로드한 프로필 이미지 URL:",
+            //   savedImageUrl.substring(0, 50) + "..."
+            // );
             setProfileImageUrl(savedImageUrl);
           } else {
             // 프로필 이미지가 없으면 빈 문자열로 설정 (기본 Person 아이콘 표시)
-            console.log("프로필 이미지 없음, 기본 아이콘 표시");
+            //console.log("프로필 이미지 없음, 기본 아이콘 표시");
             setProfileImageUrl("");
           }
         }
@@ -217,20 +217,20 @@ const DriverProfile = () => {
         if (isSnsLogin) {
           // 카카오와 구글 로그인 구분
           if (loginId.startsWith("kakao_")) {
-            console.log("카카오 로그인 사용자로 설정:", loginId);
+            //console.log("카카오 로그인 사용자로 설정:", loginId);
             setLoginType("KAKAO"); // 카카오 로그인 사용자
           } else if (loginId.startsWith("google_")) {
-            console.log("구글 로그인 사용자로 설정:", loginId);
+            //console.log("구글 로그인 사용자로 설정:", loginId);
             setLoginType("GOOGLE"); // 구글 로그인 사용자
           }
           setHasSetPassword(false); // SNS 로그인 사용자는 비밀번호 설정 여부 확인 필요
         } else {
-          console.log("일반 로그인 사용자로 설정:", loginId);
+          //console.log("일반 로그인 사용자로 설정:", loginId);
           setLoginType("EMAIL"); // 일반 로그인 사용자
           setHasSetPassword(true); // 일반 로그인 사용자는 비밀번호가 있음
         }
       } catch (error) {
-        console.error("기사 프로필 조회 실패:", error);
+        //console.error("기사 프로필 조회 실패:", error);
         setError("기사 정보를 불러오는데 실패했습니다.");
 
         // 에러 시 빈 데이터 설정
@@ -260,7 +260,7 @@ const DriverProfile = () => {
   useEffect(() => {
     if (driver.name === "") return;
     setProfileImageUrl(driver.profileImageUrl);
-    console.log("profileImageUrl: " + profileImageUrl);
+    //console.log("profileImageUrl: " + profileImageUrl);
   }, [driver])
 
   const handleHeaderEmergencyReport = () => {
@@ -272,7 +272,7 @@ const DriverProfile = () => {
     setLoading(true);
     fetchRegisterReport({ reportData })
       .then((data) => {
-        console.log(data);
+        //console.log(data);
       })
       .catch((e) => {
         const errBody = e.response?.data;
@@ -332,7 +332,7 @@ const DriverProfile = () => {
         alert("회원 정보가 삭제되었습니다.");
         navigate("/goodbye");
       } catch (error) {
-        console.error("회원 탈퇴 실패:", error);
+        //console.error("회원 탈퇴 실패:", error);
         alert("회원 탈퇴 중 오류가 발생했습니다.");
       }
     }
@@ -381,13 +381,16 @@ const DriverProfile = () => {
       setPasswordError("");
       navigate("/driver/editprofile");
     } catch (error) {
-      console.error("비밀번호 확인 실패:", error);
+      //console.error("비밀번호 확인 실패:", error);
       setPasswordError("비밀번호가 일치하지 않습니다. 다시 확인해 주세요.");
     }
   };
 
   return (
-    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+    <Box sx={{
+      bgcolor: thisTheme.palette.background.default,
+      minHeight: "100vh",
+    }}>
       <Header />
       <Container sx={{ maxWidth: "1000px", py: 6 }}>
         <Typography
@@ -410,6 +413,7 @@ const DriverProfile = () => {
             position: "relative",
             borderRadius: 0,
             bgcolor: "transparent",
+
           }}
         >
           <Button
@@ -433,7 +437,13 @@ const DriverProfile = () => {
           </Box>
 
           {/* 2단 레이아웃 */}
-          <Box display="flex" sx={{ minHeight: "800px" }}>
+          <Box display="flex" sx={{
+            minHeight: "800px",
+            border: "1px solid",
+            borderColor: thisTheme.palette.mode === "light"
+              ? thisTheme.palette.secondary.light
+              : thisTheme.palette.primary.dark,
+          }}>
             {/* 왼쪽 컬럼 - 어두운 배경 */}
             <Box
               sx={{
@@ -443,6 +453,7 @@ const DriverProfile = () => {
                 p: 5,
                 display: "flex",
                 flexDirection: "column",
+
               }}
             >
               {/* 프로필 사진 */}
@@ -690,7 +701,9 @@ const DriverProfile = () => {
                 <Box
                   sx={{
                     p: 10,
-                    bgcolor: thisTheme.palette.background.default,
+                    bgcolor: thisTheme.palette.mode === "light"
+                      ? thisTheme.palette.secondary.light
+                      : thisTheme.palette.background.default,
                     borderRadius: 3,
                     textAlign: "center",
                     cursor: "pointer",

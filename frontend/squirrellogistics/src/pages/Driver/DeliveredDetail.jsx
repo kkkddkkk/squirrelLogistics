@@ -41,7 +41,8 @@ const DeliveredDetail = () => {
     distance: 0,
     weight: 0,
   });
-  const [waypoints, setWaypoints] = useState([]);
+  //const [waypoints, setWaypoints] = useState([]);
+  const [mapAddresses, setMapAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -49,7 +50,7 @@ const DeliveredDetail = () => {
     setLoading(true);
     const loadDeliveryDetail = async () => {
       try {
-        console.log("API 호출 시작:", assignedId);
+        //console.log("API 호출 시작:", assignedId);
 
         // 운송 상세 정보 조회 (기존 DTO들을 조합한 Map 사용)
         const data = await fetchDeliveryDetail(assignedId);
@@ -61,7 +62,8 @@ const DeliveredDetail = () => {
         const additionalInfo = data?.additionalInfo || {};
         const request = data?.request || {};
         const actualDelivery = data?.actualDelivery || {};
-        const waypoints = data?.waypoints || [];
+        //const waypoints = data?.waypoints || [];
+        const rawWaypoints = data?.waypoints || [];
 
         // console.log("additionalInfo:", additionalInfo);
         // console.log("request:", request);
@@ -74,7 +76,15 @@ const DeliveredDetail = () => {
           distance: actualDelivery.distance || 0,
           weight: actualDelivery.weight || 0,
         });
-        setWaypoints(waypoints.map((wp) => wp.address || wp.waypointId));
+        //setWaypoints(waypoints.map((wp) => wp.address || wp.waypointId));
+
+        // 지도 표시용 주소 배열 (dropOrder 기준 정렬)
+        const sortedWps = [...rawWaypoints].sort(
+          (a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
+        );
+        setMapAddresses(sortedWps.map(w => w?.waypoint?.address || ""));
+
+        console.log(data);
       } catch (err) {
         // console.error("운송 상세 정보 로드 실패:", err);
         // console.error("오류 상세:", err.response?.data || err.message);
@@ -214,61 +224,90 @@ const DeliveredDetail = () => {
   }
 
   // ✅ 경로 정보 구성 - 올바른 데이터 구조 사용
+  // const buildRouteInfo = () => {
+  //   const info = [];
+
+  //   // 1. 상차지 (시작점)
+  //   const startAddress =
+  //     deliveryData.request?.startAddress ||
+  //     deliveryData.additionalInfo?.startAddress ||
+  //     "상차지 정보 없음";
+  //   const startTime = formatTime(
+  //     deliveryData.assignment?.assignedAt ||
+  //     deliveryData.additionalInfo?.assignedAt
+  //   );
+
+  //   info.push({
+  //     location: startAddress,
+  //     time: startTime,
+  //     status: "completed", // 상차 완료
+  //   });
+
+  //   // 2. 경유지들 (중간점들) - dropOrder 순서대로
+  //   if (waypoints && waypoints.length > 0) {
+  //     waypoints.forEach((waypoint, index) => {
+  //       info.push({
+  //         location: waypoint || `경유지 ${index + 1}`,
+  //         time: "시간 미정",
+  //         status: "waypoint", // 경유지
+  //         waypointNumber: index + 1,
+  //       });
+  //     });
+  //   }
+
+  //   // 3. 하차지 (도착점)
+  //   const endAddress =
+  //     deliveryData.request?.endAddress ||
+  //     deliveryData.additionalInfo?.endAddress ||
+  //     "하차지 정보 없음";
+  //   const endTime = formatTime(
+  //     deliveryData.assignment?.completedAt ||
+  //     deliveryData.additionalInfo?.completedAt
+  //   );
+
+  //   info.push({
+  //     location: endAddress,
+  //     time: endTime,
+  //     status: "completed", // 하차 완료
+  //   });
+
+  //   console.log("=== 구성된 routeInfo ===");
+  //   console.log("routeInfo:", info);
+  //   console.log(
+  //     "locations for map:",
+  //     info.map((r) => r.location)
+  //   );
+
+  //   return info;
+  // };
+
   const buildRouteInfo = () => {
-    const info = [];
+    const wps = (deliveryData?.waypoints || [])
+      .slice()
+      .sort((a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0));
 
-    // 1. 상차지 (시작점)
-    const startAddress =
-      deliveryData.request?.startAddress ||
-      deliveryData.additionalInfo?.startAddress ||
-      "상차지 정보 없음";
-    const startTime = formatTime(
-      deliveryData.assignment?.assignedAt ||
-      deliveryData.additionalInfo?.assignedAt
-    );
+    if (wps.length === 0) return [];
 
-    info.push({
-      location: startAddress,
-      time: startTime,
-      status: "completed", // 상차 완료
+    return wps.map((w, idx) => {
+      const dropOrder = w?.waypoint?.dropOrder ?? idx; // 0=상차지, 1..=경유/하차지
+      const isStart = idx === 0;
+      const isEnd = idx === wps.length - 1;
+      const isMiddle = !isStart && !isEnd;
+      const timeStr = w?.droppedAtFromLog
+        ? dayjs(w.droppedAtFromLog).format("HH:mm")
+        : "-";
+      return {
+        label: isStart ? "상차 완료" : (isEnd ? "하차 완료" : `경유지 ${dropOrder}`),
+        location: w?.waypoint?.address || "-",
+        time: timeStr,
+        isStart,
+        isEnd,
+        isMiddle,
+        markerNumber: isMiddle ? dropOrder : null,
+        dropOrder,
+        cargo: w?.cargo || null, // { description, handlingTags, ... } | null
+      };
     });
-
-    // 2. 경유지들 (중간점들) - dropOrder 순서대로
-    if (waypoints && waypoints.length > 0) {
-      waypoints.forEach((waypoint, index) => {
-        info.push({
-          location: waypoint || `경유지 ${index + 1}`,
-          time: "시간 미정",
-          status: "waypoint", // 경유지
-          waypointNumber: index + 1,
-        });
-      });
-    }
-
-    // 3. 하차지 (도착점)
-    const endAddress =
-      deliveryData.request?.endAddress ||
-      deliveryData.additionalInfo?.endAddress ||
-      "하차지 정보 없음";
-    const endTime = formatTime(
-      deliveryData.assignment?.completedAt ||
-      deliveryData.additionalInfo?.completedAt
-    );
-
-    info.push({
-      location: endAddress,
-      time: endTime,
-      status: "completed", // 하차 완료
-    });
-
-    console.log("=== 구성된 routeInfo ===");
-    console.log("routeInfo:", info);
-    console.log(
-      "locations for map:",
-      info.map((r) => r.location)
-    );
-
-    return info;
   };
 
   const routeInfo = buildRouteInfo();
@@ -428,6 +467,16 @@ const DeliveredDetail = () => {
               >
                 {item.location}
               </Typography>
+              {/* 화물 정보: 상차지(dropOrder 0)는 없음, 그 외에 cargo 있으면 표시 */}
+              {!item.isFirst && item.cargo && (
+                <Typography
+                  variant="body2"
+                  sx={{ color: thisTheme.palette.text.secondary, mt: 0.5 }}
+                >
+                  하차 화물: {item.cargo.description}
+                  {item.cargo.handlingTags ? ` · ${item.cargo.handlingTags}` : ""}
+                </Typography>
+              )}
             </Box>
           </Box>
         </Box>
@@ -438,13 +487,14 @@ const DeliveredDetail = () => {
   return (
     <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
       <Header />
-      <LoadingComponent open={loading} text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`}/>
+      <LoadingComponent open={loading} text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`} />
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
           <Box
             sx={{
               borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
+              justifyContent:'space-between',
               pb: 2,
               mb: 4,
             }}
@@ -455,6 +505,14 @@ const DeliveredDetail = () => {
               color={thisTheme.palette.text.primary}
             >
               운송 번호 # {assignedId}
+            </Typography>
+
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              color={thisTheme.palette.text.primary}
+            >
+              요청자: {deliveryData.request.companyName}
             </Typography>
           </Box>
 
@@ -479,10 +537,24 @@ const DeliveredDetail = () => {
                       sx={{
                         display: "flex",
                         flexDirection: "column",
-                        alignItems: "center",
+                        alignItems: "stretch", 
                         mr: 2.5,
                         position: "relative",
                         width: 40,
+                        height: "100%",
+                        ...(item.isEnd ? {} : {
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            top: 40,               
+                            width: 3,
+                            height: `calc(100% - 40px + ${thisTheme.spacing(2.5)})`,
+                            backgroundColor: lighten(thisTheme.palette.text.secondary, 0.1),
+                            zIndex: 1,
+                          }
+                        })
                       }}
                     >
                       {/* 마커 */}
@@ -494,14 +566,13 @@ const DeliveredDetail = () => {
                           width: 40,
                           height: 40,
                           borderRadius: "50%",
-                          bgcolor:
-                            item.status === "completed" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
+                          bgcolor: item.isMiddle ? thisTheme.palette.text.secondary : thisTheme.palette.success.main,
                           color: "white",
                           zIndex: 2,
                           position: "relative",
                         }}
                       >
-                        {item.status === "completed" ? (
+                        {/* {item.status === "completed" ? (
                           <CheckIcon sx={{ fontSize: 20, color: "white" }} />
                         ) : (
                           <Typography
@@ -514,7 +585,13 @@ const DeliveredDetail = () => {
                           >
                             {item.waypointNumber}
                           </Typography>
-                        )}
+                        )} */}
+                        {item.isMiddle
+                          ? <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem' }}>
+                            {item.markerNumber}
+                          </Typography>
+                          : <CheckIcon sx={{ fontSize: 20, color: "white" }} />
+                        }
                       </Box>
 
                       {/* 연결선 */}
@@ -568,7 +645,7 @@ const DeliveredDetail = () => {
                             mb: 1,
                           }}
                         >
-                          <Typography
+                          {/* <Typography
                             variant="h6"
                             sx={{
                               fontWeight: "bold",
@@ -581,6 +658,9 @@ const DeliveredDetail = () => {
                               : index === routeInfo.length - 1
                                 ? "하차 완료"
                                 : `경유지 ${item.waypointNumber}`}
+                          </Typography> */}
+                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: thisTheme.palette.text.primary, fontSize: '1.1rem' }}>
+                            {item.label}
                           </Typography>
                           <Typography
                             variant="body1"
@@ -605,7 +685,7 @@ const DeliveredDetail = () => {
                             px: 2,
                             py: 1.5,
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: `1px solid${thisTheme.palette.text.secondary}`,
+                            border: `1px solid ${thisTheme.palette.text.secondary}`,
                             width: "100%",
                             maxWidth: "420px",
                           }}
@@ -620,6 +700,12 @@ const DeliveredDetail = () => {
                           >
                             {item.location}
                           </Typography>
+                          {!item.isStart && item.cargo && (
+                            <Typography variant="body2" sx={{ color: thisTheme.palette.text.secondary, mt: 0.5 }}>
+                              하차 화물: {item.cargo.description}
+                              {item.cargo.handlingTags ? ` · ${item.cargo.handlingTags}` : ""}
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                     </Box>
@@ -645,7 +731,7 @@ const DeliveredDetail = () => {
                 {window.kakao && window.kakao.maps ? (
                   <PolylineMapComponent
                     polyline={deliveryData.actualDelivery.actualPolyline}
-                    waypoints={waypoints}
+                    waypoints={mapAddresses}
                   />
                 ) : (
                   <Box

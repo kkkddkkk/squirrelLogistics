@@ -1,5 +1,6 @@
 package com.gpt.squirrelLogistics.repository.deliveryCargo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,4 +47,9 @@ public interface DeliveryCargoRepository extends JpaRepository<DeliveryCargo, Lo
 			  )
 			""")
 	List<DeliveryCargoSlimResponseDTO> findCargoOnePerWaypoint(@Param("requestId") Long requestId);
+	
+	//작성자: 고은설.
+	//기능: 경유지 여러 개에 대한 하차 화물 일괄 조회.
+    List<DeliveryCargo> findByDeliveryWaypoint_WaypointIdIn(Collection<Long> waypointIds);
+
 }

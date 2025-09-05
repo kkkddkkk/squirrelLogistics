@@ -1,18 +1,14 @@
 import React, { useState } from "react";
 import {
     Paper, Grid, Box, Stack, Typography, Rating, Divider, Button, Collapse,
-    useTheme
+    useTheme, lighten
 } from "@mui/material";
 import EmergencyReportModal from "../driver/EmergencyReportModal";
 import LoadingComponent from "../common/LoadingComponent";
 import { useNavigate } from "react-router-dom";
 import { fetchRegisterReport } from "../../api/company/reportApi";
 
-const textSx = {
-    fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
-    color: '#2A2A2A',
-    fontSize: 'clamp(14px, 1vw, 16px)'
-};
+
 const fmtDate = (iso) =>
     iso ? new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
 const snippet = (s, n = 40) => (s?.length > n ? s.slice(0, n) + '…' : s ?? "");
@@ -27,7 +23,11 @@ export default function ReviewItem({ review, expanded, onToggle }) {
     const onReportClick = () => {
         setShowReport(true);
     }
-
+    const textSx = {
+        fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif',
+        color: thisTheme.palette.text.secondary,
+        fontSize: 'clamp(14px, 1vw, 16px)'
+    };
 
     const handleEmergencyReport = (reportData) => {
         console.log("긴급 신고 데이터:", reportData);
@@ -55,7 +55,9 @@ export default function ReviewItem({ review, expanded, onToggle }) {
                 borderRadius: 2,
                 borderColor: "#bbc5d0",
                 width: "100%",
-                boxShadow: '0px 5px 5px rgba(0, 0, 0, 0.05)'
+                boxShadow: '0px 5px 5px rgba(0, 0, 0, 0.05)',
+                backgroundColor: thisTheme.palette.background.default,
+                color: thisTheme.palette.text.secondary,
             }}
         >
             <LoadingComponent open={loading} text="신고 등록 중..." />
@@ -68,7 +70,7 @@ export default function ReviewItem({ review, expanded, onToggle }) {
                             precision={0.5}
                             size="medium"
                             sx={{
-                                '& .MuiRating-iconFilled': { color: '#113F67' },
+                                '& .MuiRating-iconFilled': { color: thisTheme.palette.warning.main },
                                 '& .MuiRating-iconEmpty': { color: '#bbc5d0' },
                             }}
                         />
@@ -93,7 +95,7 @@ export default function ReviewItem({ review, expanded, onToggle }) {
                             variant="outlined"
                             size="small"
                             onClick={onToggle}
-                            sx={{ minWidth: 0, p: '0px 4px', color: '#113F67', fontWeight: 600 }}
+                            sx={{ minWidth: 0, p: '0px 4px', color: thisTheme.palette.primary.main, fontWeight: 600 }}
                         >
                             {expanded ? '접기' : '펼치기'}
                         </Button>
@@ -117,7 +119,13 @@ export default function ReviewItem({ review, expanded, onToggle }) {
                             variant="contained"
                             size="small"
                             onClick={onReportClick}
-                            sx={{ minWidth: 0, p: '0px 4px', color: thisTheme.palette.text.primary, fontWeight: 600, bgcolor: thisTheme.palette.error.main }}
+                            sx={{
+                                minWidth: 0, p: '0px 4px', fontWeight: 600,
+                                bgcolor: thisTheme.palette.error.main ,
+                             "&:hover": {
+                                    bgcolor: lighten(thisTheme.palette.error.main, 0.1),
+                                },
+                            }}
                         >
                             신고하기
                         </Button>

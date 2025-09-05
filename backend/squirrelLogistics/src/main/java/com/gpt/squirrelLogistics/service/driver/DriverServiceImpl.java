@@ -83,6 +83,8 @@ public class DriverServiceImpl implements DriverService {
                 .mainLoca(driver.getMainLoca())
                 .licenseNum(driver.getLicenseNum())
                 .drivable(driver.isDrivable())
+                .preferred_start_time(driver.getPreferred_start_time())
+                .preferred_end_time(driver.getPreferred_end_time())
                 .LicenseDT(driver.getLicenseDT() != null ? driver.getLicenseDT().atStartOfDay() : null)
                 .profileImageUrl(profileImageFileName)
                 .userDTO(userDTO)

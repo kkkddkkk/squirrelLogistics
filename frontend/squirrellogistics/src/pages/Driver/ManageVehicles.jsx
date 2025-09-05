@@ -29,6 +29,7 @@ import {
   Stack,
   useTheme,
   FormHelperText,
+  lighten,
 } from "@mui/material";
 import {
   Edit,
@@ -71,7 +72,6 @@ export default function ManageVehicles() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create");
   const [selectedCar, setSelectedCar] = useState(null);
-
   //차량 상태값 제어.
   const VALID_STATUSES = ["OPERATIONAL", "MAINTENANCE"];
   //에러 송출용.
@@ -79,6 +79,7 @@ export default function ManageVehicles() {
 
   // Form 상태
   const [form, setForm] = useState({
+    carId: "",
     carNum: "",
     vehicleTypeId: "",
     mileage: "",
@@ -109,6 +110,22 @@ export default function ManageVehicles() {
       setLoading(true);
       const token = getToken();
       const carsData = await carApi.getMyCars(token);
+      setCars(carsData);
+    } catch (err) {
+      console.error("차량 목록 조회 실패:", err);
+      setError("차량 목록을 불러오는데 실패했습니다.");
+      showSnackbar("차량 목록 조회 실패", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //차량 삭제
+  const removeCars = async (id) => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      const carsData = await carApi.deleteCar(id, token);
       setCars(carsData);
     } catch (err) {
       console.error("차량 목록 조회 실패:", err);
@@ -167,6 +184,7 @@ export default function ManageVehicles() {
 
       setForm({
         // 수정 불가 영역
+        carId: car.carId || "",
         carNum: car.carNum || "",
         vehicleTypeId: car.vehicleType?.vehicleTypeId || "",
         regDate: car.regDate ? dayjs(car.regDate).format("YYYY-MM-DD") : todayStr,
@@ -252,6 +270,7 @@ export default function ManageVehicles() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+
   // 차량 저장 (생성/수정)
   const handleSaveCar = async () => {
     try {
@@ -319,11 +338,9 @@ export default function ManageVehicles() {
 
       setLoading(true);
       if (dialogMode === "create") {
-        console.log("차량 생성 모드");
         await carApi.createCar(carData, token);
         showSnackbar("차량이 등록되었습니다.", "success");
       } else {
-        console.log("차량 수정 모드, carId:", selectedCar.carId);
         await carApi.updateCar(selectedCar.carId, carData, token);
         showSnackbar("차량이 수정되었습니다.", "success");
       }
@@ -352,12 +369,18 @@ export default function ManageVehicles() {
       return;
     }
 
+    setLoading(true);
     try {
       const token = getToken();
       await carApi.deleteCar(carId, token);
+      setLoading(false);
+
       showSnackbar("차량이 삭제되었습니다.", "success");
+      handleCloseDialog();
       loadCars();
     } catch (err) {
+      setLoading(false);
+
       console.error("차량 삭제 실패:", err);
       showSnackbar("차량 삭제 실패", "error");
     }
@@ -840,17 +863,24 @@ export default function ManageVehicles() {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={handleCloseDialog} variant="outlined">
-            취소
+        <DialogActions sx={{ p: 3, pt: 1, justifyContent: 'space-between' }}>
+          <Button onClick={() => handleDeleteCar(form.carId)} variant="contained"
+            sx={{
+              bgcolor: thisTheme.palette.error.main,
+              "&:hover": {
+                bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+              },
+            }}>
+            삭제
           </Button>
-          <Button
-            onClick={handleSaveCar}
-            variant="contained"
-            sx={{ bgcolor: C.blue }}
-          >
-            {dialogMode === "create" ? "등록" : "저장"}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button onClick={handleCloseDialog} variant="outlined">
+              취소
+            </Button>
+            <Button onClick={handleSaveCar} variant="contained" sx={{ bgcolor: C.blue }}>
+              {dialogMode === 'create' ? '등록' : '저장'}
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
 

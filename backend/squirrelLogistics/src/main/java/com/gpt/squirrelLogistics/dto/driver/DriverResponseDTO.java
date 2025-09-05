@@ -1,6 +1,7 @@
 package com.gpt.squirrelLogistics.dto.driver;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
@@ -24,6 +25,8 @@ public class DriverResponseDTO {
 	private String profileImageName;
 	private String profileImagePath;
 	private String profileImageUrl;
+	private LocalTime preferred_start_time; // 선호 시작 시간
+	private LocalTime preferred_end_time; // 선호 마무리 시간
 	
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime LicenseDT;//면허 유효기간
