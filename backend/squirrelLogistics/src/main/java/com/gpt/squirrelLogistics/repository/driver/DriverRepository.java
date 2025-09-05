@@ -34,6 +34,7 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 	 * driverId, 1: driverName, 2: profileImageUrl, 3: vehicleTypeName, 4:
 	 * maxWeight, 5: mainLoca, 6: drivable, 7: insurance]
 	 */
+	//김도경 수정: 상태가 OPERATIONAL인 차량만 가져오도록 조건 추가, drivable한 운전자만 가져오도록 추가
 	@Query("""
 			SELECT
 			    d.driverId,
@@ -49,6 +50,8 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 			JOIN Car c ON c.driver = d
 			JOIN c.vehicleType v
 			WHERE u.role != 'ETC'
+			AND c.carStatus ='OPERATIONAL'
+			AND d.drivable = true
 			""")
 	List<Object[]> findDriverList();
 }

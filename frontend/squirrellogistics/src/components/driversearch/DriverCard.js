@@ -82,7 +82,7 @@ const DriverCard = ({ driver, onRequest }) => {
   // 최대 적재량 표시 (kg → 톤 변환, Integer 타입)
   const renderMaxWeight = () => {
     if (driver.maxWeight) {
-      const tons = Math.round(driver.maxWeight / 1000);
+      const tons = driver.maxWeight / 1000;
       return `${tons}톤`;
     }
     return "정보 없음";
@@ -107,7 +107,7 @@ const DriverCard = ({ driver, onRequest }) => {
           <span className="driver-rating">{renderRating()}</span>
         </div>
         <div className="driver-detail">
-          <strong>차량 종류:</strong> {driver.vehicleTypeName || "정보 없음"}
+          <strong>차량 종류:</strong> {driver.combinedVehicleInfo || "정보 없음"}
         </div>
         <div className="driver-detail">
           <strong>최대 적재량:</strong> {renderMaxWeight()}
@@ -118,7 +118,7 @@ const DriverCard = ({ driver, onRequest }) => {
         <div className="driver-detail">
           <strong>보험:</strong> {driver.insurance ? "가입" : "미가입"}
         </div>
-        {renderDrivableStatus()}
+        {/* {renderDrivableStatus()} */}
       </div>
       <OneButtonAtRight clickEvent={handleClick}>요청</OneButtonAtRight>
     </div>

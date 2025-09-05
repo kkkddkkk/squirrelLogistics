@@ -27,6 +27,7 @@ import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 import { ButtonContainer, OneButtonAtCenter, OneButtonAtLeft, OneButtonAtRight } from "../common/CommonButton";
 import LoadingComponent from '../common/LoadingComponent';
 import CommonSelect from "../common/CommonSelect";
+import { format } from "date-fns";
 
 const STORAGE_KEY = "deliveryFlow";
 
@@ -57,6 +58,9 @@ const DriverSearchForm = () => {
     root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
 
   })
+
+  const [cargos, setCargos] = useState();
+  const [driverLength, setDriverLength] = useState(0);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -132,6 +136,15 @@ const DriverSearchForm = () => {
     }
   });
 
+  //김도경 추가. sessionStorage에서 cargos 정보 가져오기
+  useEffect(() => {
+    if (!flow) return;
+    const cargoContent = flow.requestDto.waypoints.map((waypoint) => {
+      if (waypoint.cargo) return waypoint.cargo.description;
+    })
+    setCargos(cargoContent.filter(Boolean).join(", "));
+  }, [flow])
+
   // Redux 상태 동기화
   const reduxState = useSelector((state) => state.driverSearch);
 
@@ -153,8 +166,22 @@ const DriverSearchForm = () => {
       console.log("========================");
 
       const result = await searchDrivers(params);
-      console.log("검색 결과:", result);
+
+
+      //김도경 수정: 요청 차량과 일치하는 기사만 출력
+      const newDrivers = result.drivers.filter((driver) => {
+        const storedData = JSON.parse(sessionStorage.getItem("deliveryFlow"));
+        const vehicleName = storedData.requestDto.vehicleTypeName;
+        return driver.combinedVehicleInfo.includes(vehicleName);
+      })
       setSearchResult(result);
+      setSearchResult({
+        ...searchResult,
+        drivers: newDrivers,
+      })
+      setDriverLength(newDrivers.length);
+
+      //#region [findHere]
 
       // Redux 상태 업데이트
       dispatch(setDrivers(result.drivers));
@@ -177,6 +204,10 @@ const DriverSearchForm = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log("검색 결과:", searchResult);
+  }, [searchResult])
 
   // 필터 변경 시 파라미터만 업데이트 (자동 검색 비활성화)
   const handleFilterChange = (key, value) => {
@@ -329,22 +360,22 @@ const DriverSearchForm = () => {
                   <strong>도착지:</strong> {flow.requestDto?.endAddress || "미입력"}
                 </div>
                 <div className="data-item">
-                  <strong>경유지:</strong> {flow.requestDto?.waypoints?.length > 0 ? `${flow.requestDto.waypoints.length}개` : "없음"}
+                  <strong>경유지:</strong> {flow.requestDto?.waypoints?.length > 0 ? `${flow.requestDto.waypoints.length - 2}개` : "없음"}
                 </div>
                 <div className="data-item">
                   <strong>화물 무게:</strong> {flow.requestDto?.totalCargoWeight ? `${Math.round(flow.requestDto.totalCargoWeight / 1000)}톤` : "미입력"}
                 </div>
                 <div className="data-item">
-                  <strong>화물 종류:</strong> {flow.requestDto?.cargoTypes?.length > 0 ? flow.requestDto.cargoTypes.join(", ") : "미입력"}
+                  <strong>화물 종류:</strong> {flow.requestDto?.waypoints?.length > 0 ? cargos : "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>요청 차량:</strong> {flow.requestDto?.vehicleTypeName || "미입력"}
+                </div>
+                <div className="data-item">
+                  <strong>희망 출발일:</strong> {flow.requestDto?.wantToStart ? format(new Date(flow.requestDto.wantToStart), "yyyy-MM-dd hh:mm") : "미입력"}
                 </div>
                 <div className="data-item">
                   <strong>예상 금액:</strong> <span className="price-highlight">{flow.requestDto?.estimatedFee?.toLocaleString()}원</span>
-                </div>
-                <div className="data-item">
-                  <strong>희망 출발일:</strong> {flow.requestDto?.wantToStart ? new Date(flow.requestDto.wantToStart).toLocaleDateString() : "미입력"}
-                </div>
-                <div className="data-item">
-                  <strong>희망 도착일:</strong> {flow.requestDto?.wantToEnd ? new Date(flow.requestDto.wantToEnd).toLocaleDateString() : "미입력"}
                 </div>
               </div>
               {flow.requestDto?.memoToDriver && (
@@ -362,7 +393,7 @@ const DriverSearchForm = () => {
             <input
               type="text"
               className="keyword-input"
-              placeholder="기사명, 연락처 등으로 검색"
+              placeholder="기사명으로 검색"
               value={searchParams.keyword}
               onChange={(e) => setSearchParams(prev => ({ ...prev, keyword: e.target.value }))}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -388,7 +419,7 @@ const DriverSearchForm = () => {
               <input
                 type="checkbox"
                 checked={searchParams.sortOption === "rating"}
-                onChange={()=>handleFilterChange(
+                onChange={() => handleFilterChange(
                   'sortOption',
                   searchParams.sortOption === "rating" ? "" : "rating"
                 )}
@@ -431,11 +462,11 @@ const DriverSearchForm = () => {
             ) : (
               <>
                 <div className="search-info">
-                  총 {searchResult.totalElements}명의 기사님
+                  총 {driverLength}명의 기사님
                 </div>
 
                 {/* 기사 목록 */}
-                {searchResult.drivers.length > 0 ? (
+                {driverLength > 0 ? (
                   searchResult.drivers.map((driver) => (
                     <DriverCard
                       key={driver.driverId}

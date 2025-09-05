@@ -26,4 +26,9 @@ public class VehicleTypeResponseDTO {
 	public VehicleTypeResponseDTO(Long vehicleTypeId, String name) {
         this.vehicleTypeId = vehicleTypeId; this.name = name;
     }
+	
+	public VehicleTypeResponseDTO(Long vehicleTypeId, String name, int maxWeight) {
+        this.vehicleTypeId = vehicleTypeId; this.name = name;
+        this.maxWeight = maxWeight;
+    }
 }

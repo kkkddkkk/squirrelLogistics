@@ -9,6 +9,11 @@
   border: 2px solid var(--primary-main); /* 원하는 색 */
 }
 
+.customInput:disabled {
+  color: var(--text-secondary); /* 원하는 글자 색 */
+  cursor: not-allowed; /* 클릭 불가 느낌 */
+}
+
 .memo-input{
   width: 100%;
   resize: vertical;

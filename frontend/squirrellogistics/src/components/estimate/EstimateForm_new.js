@@ -13,7 +13,7 @@ import { setDistance } from "../../slice/estimate/estimateSlice";
 import CargoDialog from "./CargoDialog";
 import http from "../../api/user/api"; // 기본주소용 http 인스턴스
 import "./EstimateForm.css";
-import { Box, Grid, useTheme } from "@mui/material";
+import { Box, Grid, TextField, useTheme } from "@mui/material";
 import { CommonSmallerTitle, CommonTitle } from "../common/CommonText";
 import CommonList from "../common/CommonList";
 import { ButtonContainer, OneButtonAtRight, Three100Buttons, ThreeButtons, Two100Buttons, TwoButtonsAtEnd, TwoButtonsAtLeft } from "../common/CommonButton";
@@ -21,6 +21,7 @@ import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import "./EstimateForm_new.css";
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
+import { format } from "date-fns";
 
 const STORAGE_KEY = "deliveryFlow";
 const WAYPOINT_FEE_PER_ITEM = 50000;
@@ -54,11 +55,13 @@ const EstimateForm_new = () => {
   const [waypoints, setWaypoints] = useState([]);
   const [totalCargoCount, setTotalCargoCount] = useState(0);
   const [totalCargoWeight, setTotalCargoWeight] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
 
   // 회사/차량/가격
   const [companyId, setCompanyId] = useState(null);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [vehicleTypeId, setVehicleTypeId] = useState("");
+  const [vehicleTypeName, setVehicleTypeName] = useState("");
   const [price, setPrice] = useState(0);
   const [distanceOnlyPrice, setDistanceOnlyPrice] = useState(0);
   const [weight, setWeight] = useState(0);
@@ -70,6 +73,10 @@ const EstimateForm_new = () => {
   // 다이얼로그 상태
   // number(경유지 인덱스) | "final"(최종 목적지) | null
   const [cargoDialogIdx, setCargoDialogIdx] = useState(null);
+
+  useEffect(() => {
+    console.log(cargoDialogIdx);
+  }, [cargoDialogIdx])
 
   // 저장된 기본 주소
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -242,11 +249,15 @@ const EstimateForm_new = () => {
   useEffect(() => {
     (async () => {
       try {
-        const list = await fetchVehicleTypes();
-        setVehicleTypes(list || []);
+        //김도경 수정. maxWeight가 화물의 총무게 이상인 트럭만 vehicleTypes에 set
+        const lists = await fetchVehicleTypes();
+        const filtered = (lists || []).filter(
+          list => list.maxWeight >= totalCargoWeight
+        );
+        setVehicleTypes(filtered);
       } catch { }
     })();
-  }, []);
+  }, [totalCargoWeight]);
 
   // 취급유형(옵션) 로드
   useEffect(() => {
@@ -266,21 +277,53 @@ const EstimateForm_new = () => {
       alert("집하지와 최종 목적지를 입력해주세요.");
       return;
     }
+    const emptyWaypoints = waypoints
+      .map((waypoint, idx) => ({ ...waypoint, idx: idx + 1 })) // idx+1 추가
+      .filter(waypoint => !waypoint.address || !waypoint.cargo); // address나 cargo가 비어있으면
+
+    console.log(emptyWaypoints);
+    if (emptyWaypoints.length > 0) {
+      const alertText = emptyWaypoints.map(ew => {
+        let text = ew.idx + "번 경유지의 ";
+        const emptyFields = [];
+        if (!ew.address) emptyFields.push("주소");
+        if (!ew.cargo) emptyFields.push("화물");
+
+        if (emptyFields.length === 2) {
+          text += emptyFields.join(", ") + "이 공란입니다.";
+        } else if (emptyFields.length === 1 && emptyFields[0] === "주소") {
+          text += emptyFields + "가 공란입니다."
+        } else {
+          text += emptyFields + "이 공란입니다."
+        }
+        return text;
+      }).join("\n"); // 여러 개면 줄바꿈
+
+      alert(alertText);
+      return;
+    }
+
+    //#region [here]
     const addresses = [hubAddress, ...waypoints.map(w => w.address).filter(Boolean), finalAddress];
     const km = Number(await calculateDistance(addresses)) || 0;
 
     dispatch(setDistance(km));
-    setHasCalculated(true);
 
     // 화물 합계
     const waypointWeightSum = waypoints.reduce((s, w) => s + (w.cargo?.weightKg || 0), 0);
     const totalWeight = waypointWeightSum + (finalCargo?.weightKg || 0);
+    if (totalWeight > 25000) {
+      alert("총 화물 무게가 25톤 이상입니다.");
+      setHasCalculated(false);
+      return;
+    }
     setTotalCargoWeight(totalWeight);
     setTotalCargoCount(waypoints.filter(w => !!w.cargo).length + (finalCargo ? 1 : 0));
 
     // 톤 요금 산정용
     const priceWeightTon = Math.max(0, Math.ceil(totalWeight / 1000)); // ✅ 최소 0톤
     setWeight(priceWeightTon);
+    setHasCalculated(true);
   };
 
   // 총액 계산: 거리 + 무게 + 취급주의/산간(각 1회) + 경유지 수
@@ -313,16 +356,20 @@ const EstimateForm_new = () => {
       return;
     }
     setWaypoints((prev) => [...prev, { address: "", cargo: null }]);
+    setHasCalculated(false);
   };
 
-  const handleRemoveWaypoint = (index) =>
+  const handleRemoveWaypoint = (index) => {
     setWaypoints((prev) => prev.filter((_, i) => i !== index));
+    setHasCalculated(false);
+  }
 
   // 주소 검색(다음 우편번호)
   const openAddressPopup = (setter) => {
     new window.daum.Postcode({
       oncomplete: (data) => setter(data.address),
     }).open();
+    setHasCalculated(false);
   };
   const openWaypointAddress = (idx) => {
     new window.daum.Postcode({
@@ -334,6 +381,7 @@ const EstimateForm_new = () => {
         });
       },
     }).open();
+    setHasCalculated(false);
   };
 
   // 화물 저장 (경유지 / 최종 목적지)
@@ -423,6 +471,8 @@ const EstimateForm_new = () => {
         : finalBase
     );
 
+    console.log("!!!!!!!!!!!!!!!!!!: " + vehicleTypeName);
+
     return {
       payment,
       request: {
@@ -437,6 +487,8 @@ const EstimateForm_new = () => {
         wantToEnd: formatLocalDateTime(endDate),
         companyId,
         vehicleTypeId: vehicleTypeId ? Number(vehicleTypeId) : null,
+        vehicleTypeName: selectedOption ? selectedOption.name : null,
+        vehicleMaxWeight: selectedOption ? selectedOption.maxWeight : null,
         waypoints: wp
       },
     };
@@ -469,7 +521,6 @@ const EstimateForm_new = () => {
       alert("배송 희망 날짜를 입력해주세요.");
       return;
     }
-
 
     const payload = buildPayload(null); // { request, payment }
 
@@ -594,7 +645,10 @@ const EstimateForm_new = () => {
                 leftClickEvent={() => openWaypointAddress(i)}
 
                 middleTitle={"화물 입력"}
-                middleClickEvent={() => setCargoDialogIdx(i)}
+                middleClickEvent={() => {
+                  setCargoDialogIdx(i);
+                  setHasCalculated(false);
+                }}
 
                 rightTitle={"경유지 삭제"}
                 rightClickEvent={() => handleRemoveWaypoint(i)}
@@ -609,7 +663,10 @@ const EstimateForm_new = () => {
           <div className="form-row" style={{ display: "flex", justifyContent: "space-between" }}>
             최종 목적지: {finalAddress || "(미입력)"}{" "}
             {finalCargo ? `/ 화물: ${finalCargo.description}, ${finalCargo.weightKg}kg` : ""}
-            <OneButtonAtRight clickEvent={() => setCargoDialogIdx("final")}>
+            <OneButtonAtRight clickEvent={() => {
+              setCargoDialogIdx("final")
+              setHasCalculated(false);
+            }}>
               최종 목적지 화물 입력
             </OneButtonAtRight>
           </div>
@@ -631,7 +688,7 @@ const EstimateForm_new = () => {
                 marginBottom={2}
               >
                 <DesignServicesIcon fontSize="small" />
-                <p style={{margin: 0}}> &nbsp;저장된 기본 출발 주소</p>
+                <p style={{ margin: 0 }}> &nbsp;저장된 기본 출발 주소</p>
               </Box>
               {savedAddresses.map((addr) => (
                 <div key={addr.id} style={{
@@ -697,7 +754,10 @@ const EstimateForm_new = () => {
 
           {/* 차량 선택 */}
           <div className="form-row">
-            <select className="customInput" value={vehicleTypeId} onChange={(e) => setVehicleTypeId(e.target.value)}>
+            <select className="customInput" value={vehicleTypeId} onChange={(e) => {
+              setVehicleTypeId(e.target.value);
+              setSelectedOption(vehicleTypes.find(v => v.vehicleTypeId.toString() === e.target.value));
+            }}>
               <option value="">차량 선택</option>
               {vehicleTypes.map((v) => (
                 <option
@@ -715,7 +775,12 @@ const EstimateForm_new = () => {
           <div className="datepicker-row">
             <DatePicker
               selected={startDate}
-              onChange={(date) => setStartDate(date)}
+              onChange={(date) => {
+                setStartDate(date);
+                // 24시간 = 1000ms * 60s * 60m * 24h
+                const after24h = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+                setEndDate(after24h);
+              }}
               placeholderText="출발 날짜"
               showTimeSelect
               dateFormat="yyyy-MM-dd HH:mm"
@@ -723,11 +788,10 @@ const EstimateForm_new = () => {
             />
             <DatePicker
               selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              placeholderText="도착 날짜"
-              showTimeSelect
+              onChange={() => { }}
               dateFormat="yyyy-MM-dd HH:mm"
               className="customInput"
+              disabled
             />
           </div>
 

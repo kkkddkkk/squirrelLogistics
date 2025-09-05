@@ -30,8 +30,10 @@ public class VehicleTypeController {
 
 		// ✅ 엔티티 → DTO 매핑 (프록시 필드 직렬화 안 함)
 		return entities.stream().map(v -> new VehicleTypeResponseDTO(v.getVehicleTypeId(), // PK
-				v.getName() // 이름
+				v.getName(), // 이름
+				v.getMaxWeight()
 		// 필요하면 생성자 늘려서 maxWeight도 넣기
+				//필요해서 늘렸습니다(김도경 올림)
 		)).toList();
 	}
 } 

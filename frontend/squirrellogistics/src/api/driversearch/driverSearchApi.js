@@ -44,7 +44,7 @@ export const searchDrivers = async (searchParams) => {
         longitude: null,       // Double | null
         region: "",            // String
         page: 0,              // Integer
-        size: 10,             // Integer
+        size: 5,             // Integer
       };
     }
     
