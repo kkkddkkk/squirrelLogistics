@@ -20,12 +20,13 @@ import {
 import { searchDrivers } from "../../api/driversearch/driverSearchApi";
 import "./DriverSearchForm.css";
 import { CommonSubTitle, CommonTitle } from "../common/CommonText";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, MenuItem, OutlinedInput, Select, useTheme } from "@mui/material";
 import CommonList from "../common/CommonList";
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 import { ButtonContainer, OneButtonAtCenter, OneButtonAtLeft, OneButtonAtRight } from "../common/CommonButton";
 import LoadingComponent from '../common/LoadingComponent';
+import CommonSelect from "../common/CommonSelect";
 
 const STORAGE_KEY = "deliveryFlow";
 
@@ -41,7 +42,22 @@ const convertAddressToCoords = (address, callback) => {
 };
 
 const DriverSearchForm = () => {
-  applyThemeToCssVars(theme);
+  const thisTheme = useTheme();
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    console.log(thisTheme.palette.mode);
+    root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+    root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+    root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+    root.style.setProperty("--background-default", thisTheme.palette.background.default);
+    root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+    root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+    root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+
+  })
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +69,7 @@ const DriverSearchForm = () => {
     maxWeight: null,                // Integer: 최대 적재량 (kg)
     vehicleTypeId: null,            // Long: 차량 종류 ID
     sortOption: "",                 // String: 정렬 기준
+    // asRate: false,                  // Boolean: 별점 높은 순 정렬 여부
     latitude: null,                 // Double: 현재 위치 위도
     longitude: null,                // Double: 현재 위치 경도
     region: "",                     // String: 선호 지역
@@ -168,6 +185,13 @@ const DriverSearchForm = () => {
     // 자동 검색 제거 - 사용자가 화살표 버튼을 눌러야 검색 실행
   };
 
+  const handleAsRateToggle = () => {
+    const newAsRate = !searchParams.asRate;
+    if (newAsRate) {
+      handleFilterChange('sortOption', newAsRate);
+    }
+
+  }
   // 즉시 배차 토글
   const handleDrivableToggle = () => {
     const newDrivable = !searchParams.drivable;
@@ -334,9 +358,6 @@ const DriverSearchForm = () => {
           {/* 검색 필터 */}
           <div className="search-bar">
             {/* 주소 API 버튼 - 검색란 왼쪽 */}
-            <OneButtonAtLeft clickEvent={openAddressPopup}>
-              주소 선택
-            </OneButtonAtLeft>
             {/* 키워드 검색 */}
             <input
               type="text"
@@ -362,42 +383,44 @@ const DriverSearchForm = () => {
               />
               즉시 배차 가능
             </label>
+            {/* 별점 높은 순 */}
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={searchParams.sortOption === "rating"}
+                onChange={()=>handleFilterChange(
+                  'sortOption',
+                  searchParams.sortOption === "rating" ? "" : "rating"
+                )}
+              />
+              별점 높은 순
+            </label>
 
             {/* 최대 적재량 */}
-            <select
+            <CommonSelect
               value={searchParams.maxWeight || ""}
-              onChange={(e) => handleMaxWeightChange(e.target.value)}
+              changeEvent={(e) => handleMaxWeightChange(e.target.value)}
             >
-              <option value="">최대 적재량</option>
-              <option value="1000">1톤 이상</option>
-              <option value="2500">2.5톤 이상</option>
-              <option value="5000">5톤 이상</option>
-              <option value="8000">8톤 이상</option>
-              <option value="10000">10톤 이상</option>
-              <option value="15000">15톤 이상</option>
-              <option value="25000">25톤 이상</option>
-            </select>
+              <MenuItem value="">최대 적재량</MenuItem>
+              <MenuItem value="1000">1톤 이상</MenuItem>
+              <MenuItem value="2500">2.5톤 이상</MenuItem>
+              <MenuItem value="5000">5톤 이상</MenuItem>
+              <MenuItem value="8000">8톤 이상</MenuItem>
+              <MenuItem value="10000">10톤 이상</MenuItem>
+              <MenuItem value="15000">15톤 이상</MenuItem>
+              <MenuItem value="25000">25톤 이상</MenuItem>
+            </CommonSelect>
 
             {/* 차량 종류 */}
-            <select
+            <CommonSelect
               value={searchParams.vehicleTypeId || ""}
-              onChange={(e) => handleVehicleTypeChange(e.target.value)}
+              changeEvent={(e) => handleVehicleTypeChange(e.target.value)}
             >
-              <option value="">차량 종류</option>
+              <MenuItem value="">차량 종류</MenuItem>
               {vehicleTypes.map(type => (
-                <option key={type.id} value={type.id}>{type.name}</option>
+                <MenuItem key={type.id} value={type.id}>{type.name}</MenuItem>
               ))}
-            </select>
-
-            {/* 정렬 옵션 */}
-            <select
-              value={searchParams.sortOption}
-              onChange={(e) => handleSortChange(e.target.value)}
-            >
-              <option value="">정렬</option>
-              <option value="rating">별점순</option>
-              <option value="distance">거리순</option>
-            </select>
+            </CommonSelect>
           </div>
 
           {/* 검색 결과 */}
@@ -470,7 +493,7 @@ const DriverSearchForm = () => {
 
       </Grid>
       <Grid size={3} />
-    </Grid>
+    </Grid >
 
   );
 };

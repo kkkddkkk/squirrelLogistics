@@ -5,11 +5,12 @@
   justify-content: space-between;
   padding: 1rem;
   margin: 1rem 0;
-  border: 1px solid #ddd;
+  border: 1px solid var(--text-secondary);
   border-radius: 8px;
-  background: #fff;
+  background: var(--background-paper);
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  color: var(--text-primary);
 }
 
 .driver-card:hover {
@@ -53,11 +54,11 @@
 
 .driver-name-rating strong {
   font-size: 1.1rem;
-  color: #2A2A2A;
+  color: var(--text-primary);
 }
 
 .driver-rating {
-  color: #E8A93F;
+  color: var(--warning-main);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -65,12 +66,12 @@
 .driver-detail {
   margin: 0.3rem 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-primary);
   line-height: 1.4;
 }
 
 .driver-detail strong {
-  color: #2A2A2A;
+  color: var(--text-primary);
   margin-right: 0.5rem;
 }
 

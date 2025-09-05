@@ -2,13 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, MenuItem, FormHelperText,
-    Box
+    Box,
+    useTheme
 } from "@mui/material";
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import { theme } from "../common/CommonTheme";
 import { ButtonContainer } from "../common/CommonButton";
 
 export default function CargoDialog({ open, onClose, onSave, options = [], initialCargo }) {
+    const thisTheme = useTheme();
     const [description, setDescription] = useState("");
     const [handlingId, setHandlingId] = useState("");  // "" = 없음
     const [weightTon, setWeightTon] = useState(1);
@@ -95,8 +97,9 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
                         onChange={(e) => setWeightTon(Number(e.target.value))}
                         style={{
                             width: "92%", margin: "0 auto", display: "block", boxSizing: "border-box",
-                            accentColor: theme.palette.primary.main
+                            accentColor: thisTheme.palette.primary.main
                         }}
+                        //#region[here]
                     />
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, width: "92%", margin: "0 auto" }}>
                         <span>1톤</span>

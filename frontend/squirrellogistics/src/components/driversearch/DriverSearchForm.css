@@ -1,15 +1,14 @@
 /* 예상금액 데이터 표시 */
 .estimate-summary {
-  background: #f8f9fa;
   padding: 20px;
   margin-bottom: 20px;
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--text-secondary);
 }
 
 .estimate-summary h3 {
   margin: 0 0 15px 0;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .estimate-summary .data-grid {
@@ -20,7 +19,7 @@
 }
 
 .estimate-summary .data-item strong {
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .estimate-summary .price-highlight {
@@ -31,13 +30,12 @@
 .estimate-summary .memo-section {
   margin-top: 15px;
   padding: 10px;
-  background: #fff;
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--text-secondary);
 }
 
 .estimate-summary .memo-section strong {
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 /* 컨테이너 */
@@ -83,7 +81,9 @@
 .keyword-input {
   flex: 1;
   padding: 0.6rem 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--text-secondary);
+  background-color: var(--background-paper) !important;
+  color: var(--text-primary);
   border-radius: 6px;
   font-size: 1rem;
 }
@@ -104,6 +104,15 @@
   cursor: pointer;
   min-width: 60px;
   flex-shrink: 0;
+}
+
+.customSelect{
+    color: var(--text-primary); /* 선택된 값 글자색 */
+}
+
+.customSelect option {
+  background-color: var(--background-default); /* 드롭다운 배경 */
+  color: var(--text-primary);            /* 옵션 글자색 */
 }
 
 input[type="checkbox"] {
@@ -185,9 +194,9 @@ input[type="checkbox"] {
 
 .page-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #dee2e6;
-  background: #fff;
-  color: #495057;
+  border: 1px solid var(--text-secondary);
+  background: var(--background-page);
+  color: var(--text-primary);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -195,14 +204,14 @@ input[type="checkbox"] {
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #e9ecef;
-  border-color: #adb5bd;
+  background: var(--primary-main);
+  border-color: var(--primary-main);
 }
 
 .page-btn.active {
-  background: #E8A93F;
+  background: var(--primary-main);
   color: #fff;
-  border-color: #E8A93F;
+  
 }
 
 .page-btn:disabled {
@@ -213,7 +222,7 @@ input[type="checkbox"] {
 /* 검색 결과 정보 */
 .search-info {
   text-align: center;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin: 1rem 0;
 }

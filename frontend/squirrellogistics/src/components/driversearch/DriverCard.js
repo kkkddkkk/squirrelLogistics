@@ -1,10 +1,11 @@
 // src/components/driversearch/DriverCard.js
-import React from "react";
+import React, { useEffect } from "react";
 import "./DriverCard.css";
 import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 import { OneButtonAtRight } from "../common/CommonButton";
 import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
+import CommonList from "../common/CommonList";
 
 /**
  * 기사 카드 컴포넌트
@@ -14,6 +15,23 @@ import { Box } from "@mui/material";
  * @param {Function} onRequest - 요청 버튼 클릭 시 호출되는 함수
  */
 const DriverCard = ({ driver, onRequest }) => {
+
+    const thisTheme = useTheme();
+  
+    useEffect(() => {
+      const root = document.documentElement;
+  
+      console.log(thisTheme.palette.mode);
+      root.style.setProperty("--primary-main", thisTheme.palette.primary.main);
+      root.style.setProperty("--primary-dark", thisTheme.palette.primary.dark);
+      root.style.setProperty("--secondary-main", thisTheme.palette.secondary.main);
+      root.style.setProperty("--background-default", thisTheme.palette.background.default);
+      root.style.setProperty("--background-paper", thisTheme.palette.background.paper);
+      root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
+      root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
+  
+    })
+
   // 디버깅: 받은 데이터 확인
   console.log("DriverCard received driver data:", driver);
   applyThemeToCssVars(theme);

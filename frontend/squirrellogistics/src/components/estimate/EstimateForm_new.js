@@ -38,7 +38,7 @@ const EstimateForm_new = () => {
     root.style.setProperty("--text-primary", thisTheme.palette.text.primary);
     root.style.setProperty("--text-secondary", thisTheme.palette.text.secondary);
 
-  }, [thisTheme.palette.mode])
+  })
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
