@@ -21,8 +21,8 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useNavigate, useParams } from "react-router-dom";
 import DeliveryRouteMap from "../../components/driver/DeliveryRouteMap";
 import { fetchDeliveryDetail } from "../../api/deliveryRequest/deliveryCompletedAPI";
-import Header from "../Layout/Header"
-import Footer from "../Layout/Footer"
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 import dayjs from "dayjs";
 import PolylineMapComponent from "../../components/deliveryMap/PolylineMapComponent";
 
@@ -86,10 +86,10 @@ const DeliveredDetail = () => {
 
         // 지도 표시용 주소 배열 (dropOrder 기준 정렬)
         const sortedWps = [...rawWaypoints].sort(
-          (a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
+          (a, b) =>
+            (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
         );
-        setMapAddresses(sortedWps.map(w => w?.waypoint?.address || ""));
-
+        setMapAddresses(sortedWps.map((w) => w?.waypoint?.address || ""));
       } catch (err) {
         // console.error("운송 상세 정보 로드 실패:", err);
         // console.error("오류 상세:", err.response?.data || err.message);
@@ -130,7 +130,6 @@ const DeliveredDetail = () => {
     const actualDelivery = deliveryData.actualDelivery || {};
     const waypoints = deliveryData.waypoints || [];
     const midStops = Math.max((waypoints?.length || 0) - 2, 0);
-
 
     const distance = actualDelivery.distance || 0;
     const kmUnits = Math.ceil(distance / 1000);
@@ -193,9 +192,17 @@ const DeliveredDetail = () => {
 
   if (loading) {
     return (
-      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+      <Box
+        sx={{
+          bgcolor: thisTheme.palette.background.default,
+          minHeight: "100vh",
+        }}
+      >
         <Header />
-        <LoadingComponent open text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`} />
+        <LoadingComponent
+          open
+          text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`}
+        />
         <Footer />
       </Box>
     );
@@ -203,10 +210,17 @@ const DeliveredDetail = () => {
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+      <Box
+        sx={{
+          bgcolor: thisTheme.palette.background.default,
+          minHeight: "100vh",
+        }}
+      >
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
         </Container>
         <Footer />
       </Box>
@@ -215,7 +229,12 @@ const DeliveredDetail = () => {
 
   if (!deliveryData) {
     return (
-      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+      <Box
+        sx={{
+          bgcolor: thisTheme.palette.background.default,
+          minHeight: "100vh",
+        }}
+      >
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="warning">운송 데이터를 찾을 수 없습니다.</Alert>
@@ -286,7 +305,9 @@ const DeliveredDetail = () => {
   const buildRouteInfo = () => {
     const wps = (deliveryData?.waypoints || [])
       .slice()
-      .sort((a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0));
+      .sort(
+        (a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
+      );
 
     if (wps.length === 0) return [];
 
@@ -299,7 +320,11 @@ const DeliveredDetail = () => {
         ? dayjs(w.droppedAtFromLog).format("YYYY/MM/DD HH:mm")
         : "-";
       return {
-        label: isStart ? "상차 완료" : (isEnd ? "하차 완료" : `경유지 ${dropOrder}`),
+        label: isStart
+          ? "상차 완료"
+          : isEnd
+          ? "하차 완료"
+          : `경유지 ${dropOrder}`,
         location: w?.waypoint?.address || "-",
         time: timeStr,
         isStart,
@@ -361,13 +386,13 @@ const DeliveredDetail = () => {
               borderRadius: "50%",
               ...(isCompleted
                 ? {
-                  bgcolor: thisTheme.palette.success.main,
-                  color: "white",
-                }
+                    bgcolor: thisTheme.palette.success.main,
+                    color: "white",
+                  }
                 : {
-                  bgcolor: thisTheme.palette.text.secondary,
-                  color: "white",
-                }),
+                    bgcolor: thisTheme.palette.text.secondary,
+                    color: "white",
+                  }),
               zIndex: 2,
               position: "relative",
             }}
@@ -477,7 +502,9 @@ const DeliveredDetail = () => {
                   sx={{ color: thisTheme.palette.text.secondary, mt: 0.5 }}
                 >
                   하차 화물: {item.cargo.description}
-                  {item.cargo.handlingTags ? ` · ${item.cargo.handlingTags}` : ""}
+                  {item.cargo.handlingTags
+                    ? ` · ${item.cargo.handlingTags}`
+                    : ""}
                 </Typography>
               )}
             </Box>
@@ -488,12 +515,15 @@ const DeliveredDetail = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+    <Box
+      sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}
+    >
       <Header />
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
-          <Grid container
+          <Grid
+            container
             direction={"row"}
             justifyContent={"space-between"}
             alignContent={"end"}
@@ -501,7 +531,8 @@ const DeliveredDetail = () => {
               borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
               pb: 2,
               mb: 4,
-            }}>
+            }}
+          >
             <Typography
               variant="h4"
               fontWeight="bold"
@@ -518,7 +549,6 @@ const DeliveredDetail = () => {
               요청자: {deliveryData.request.companyName}
             </Typography>
           </Grid>
-
 
           {/* 메인 콘텐츠 영역 */}
           <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
@@ -548,19 +578,22 @@ const DeliveredDetail = () => {
                         ...(index === routeInfo.length - 1
                           ? {}
                           : {
-                            "&::after": {
-                              content: '""',
-                              position: "absolute",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              top: 40, // 마커 원 아래
-                              // 아이템 간 간격(mb: 2.5)만큼 더 내려서 다음 마커에 정확히 닿게
-                              bottom: `-${thisTheme.spacing(2.5)}`,
-                              width: 3,
-                              backgroundColor: lighten(thisTheme.palette.text.secondary, 0.1),
-                              zIndex: 1,
-                            },
-                          }),
+                              "&::after": {
+                                content: '""',
+                                position: "absolute",
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                                top: 40, // 마커 원 아래
+                                // 아이템 간 간격(mb: 2.5)만큼 더 내려서 다음 마커에 정확히 닿게
+                                bottom: `-${thisTheme.spacing(2.5)}`,
+                                width: 3,
+                                backgroundColor: lighten(
+                                  thisTheme.palette.text.secondary,
+                                  0.7
+                                ),
+                                zIndex: 1,
+                              },
+                            }),
                       }}
                     >
                       {/* 마커 */}
@@ -572,7 +605,9 @@ const DeliveredDetail = () => {
                           width: 40,
                           height: 40,
                           borderRadius: "50%",
-                          bgcolor: item.isMiddle ? thisTheme.palette.text.secondary : thisTheme.palette.success.main,
+                          bgcolor: item.isMiddle
+                            ? thisTheme.palette.text.secondary
+                            : thisTheme.palette.success.main,
                           color: "white",
                           zIndex: 2,
                           position: "relative",
@@ -592,12 +627,20 @@ const DeliveredDetail = () => {
                             {item.waypointNumber}
                           </Typography>
                         )} */}
-                        {item.isMiddle
-                          ? <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem' }}>
+                        {item.isMiddle ? (
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: "bold",
+                              color: "white",
+                              fontSize: "0.9rem",
+                            }}
+                          >
                             {item.markerNumber}
                           </Typography>
-                          : <CheckIcon sx={{ fontSize: 20, color: "white" }} />
-                        }
+                        ) : (
+                          <CheckIcon sx={{ fontSize: 20, color: "white" }} />
+                        )}
                       </Box>
 
                       {/* 연결선 */}
@@ -606,7 +649,10 @@ const DeliveredDetail = () => {
                           sx={{
                             width: 3,
                             height: 80,
-                            bgcolor: lighten(thisTheme.palette.text.secondary, 0.1),
+                            bgcolor: lighten(
+                              thisTheme.palette.text.secondary,
+                              0.1
+                            ),
                             position: "absolute",
                             top: 40,
                             left: "50%",
@@ -620,7 +666,10 @@ const DeliveredDetail = () => {
                           sx={{
                             width: 3,
                             height: 60,
-                            bgcolor: lighten(thisTheme.palette.text.secondary, 0.1),
+                            bgcolor: lighten(
+                              thisTheme.palette.text.secondary,
+                              0.7
+                            ),
                             position: "absolute",
                             top: 40,
                             left: "50%",
@@ -665,7 +714,14 @@ const DeliveredDetail = () => {
                                 ? "하차 완료"
                                 : `경유지 ${item.waypointNumber}`}
                           </Typography> */}
-                          <Typography variant="h6" sx={{ fontWeight: 'bold', color: thisTheme.palette.text.primary, fontSize: '1.1rem' }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: "bold",
+                              color: thisTheme.palette.text.primary,
+                              fontSize: "1.1rem",
+                            }}
+                          >
                             {item.label}
                           </Typography>
                           <Typography
@@ -693,7 +749,7 @@ const DeliveredDetail = () => {
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                             border: `1px solid ${thisTheme.palette.text.secondary}`,
                             width: "100%",
-                            maxWidth: "420px",
+                            maxWidth: "450px",
                           }}
                         >
                           <Typography
@@ -707,9 +763,17 @@ const DeliveredDetail = () => {
                             {item.location}
                           </Typography>
                           {!item.isStart && item.cargo && (
-                            <Typography variant="body2" sx={{ color: thisTheme.palette.text.secondary, mt: 0.5 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: thisTheme.palette.text.secondary,
+                                mt: 0.5,
+                              }}
+                            >
                               하차 화물: {item.cargo.description}
-                              {item.cargo.handlingTags ? ` · ${item.cargo.handlingTags}` : ""}
+                              {item.cargo.handlingTags
+                                ? ` · ${item.cargo.handlingTags}`
+                                : ""}
                             </Typography>
                           )}
                         </Box>

@@ -104,7 +104,13 @@ const DeliveredList = () => {
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: thisTheme.palette.background.paper, minHeight: "100vh", py: 6 }}>
+      <Box
+        sx={{
+          bgcolor: thisTheme.palette.background.paper,
+          minHeight: "100vh",
+          py: 6,
+        }}
+      >
         <Container maxWidth="lg">
           <Alert severity="error" sx={{ mb: 4 }}>
             {error}
@@ -239,7 +245,7 @@ const DeliveredList = () => {
     //                           py: 0.5,
     //                           borderRadius: 1,
     //                           border: `1px solid ${status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary}`,
-    //                           // bgcolor: 
+    //                           // bgcolor:
     //                           //   status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
     //                           color:
     //                             status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
@@ -304,12 +310,12 @@ const DeliveredList = () => {
       <Header />
       <CommonTitle>운송 완료 목록</CommonTitle>
       <Grid container>
+        {loading && (
+          <LoadingComponent open={loading} text="운송 내역을 불러오는 중..." />
+        )}
+        <Grid size={2} />
 
-        {loading && <LoadingComponent open={loading} text="운송 내역을 불러오는 중..." />}
-        <Grid size={3} />
-
-        
-        <Grid size={6} mb={2}>
+        <Grid size={8} mb={2}>
           {/* 검색 + 정렬 */}
           <Stack direction="row" spacing={2} mb={4}>
             <TextField
@@ -419,11 +425,17 @@ const DeliveredList = () => {
                               px: 2,
                               py: 0.5,
                               borderRadius: 1,
-                              border: `1px solid ${status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary}`,
-                              // bgcolor: 
+                              border: `1px solid ${
+                                status === "COMPLETED"
+                                  ? thisTheme.palette.success.main
+                                  : thisTheme.palette.text.secondary
+                              }`,
+                              // bgcolor:
                               //   status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
                               color:
-                                status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
+                                status === "COMPLETED"
+                                  ? thisTheme.palette.success.main
+                                  : thisTheme.palette.text.secondary,
                             }}
                           >
                             {status === "COMPLETED" ? "배송완료" : status}
@@ -478,7 +490,7 @@ const DeliveredList = () => {
           )}
         </Grid>
       </Grid>
-      <Grid size={3} />
+      <Grid size={2} />
       <Footer />
     </>
   );

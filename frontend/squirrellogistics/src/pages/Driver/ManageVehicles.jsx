@@ -44,7 +44,10 @@ import {
 import { carApi, vehicleTypeApi } from "../../api/cars";
 import PreferredTimeBlock from "../../components/Time/PreferredTimeBlock";
 import PreferredAreasSelect from "../../components/Area/PreferredAreasSelect";
-import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
+import {
+  CommonSubTitle,
+  CommonTitle,
+} from "../../components/common/CommonText";
 import CommonList from "../../components/common/CommonList";
 import { theme } from "../../components/common/CommonTheme";
 import dayjs from "dayjs";
@@ -66,7 +69,10 @@ export default function ManageVehicles() {
     severity: "success",
   });
 
-  const C = { blue: thisTheme.palette.primary.main, gold: thisTheme.palette.error.main };
+  const C = {
+    blue: thisTheme.palette.primary.main,
+    gold: thisTheme.palette.error.main,
+  };
 
   // Dialog 상태
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -154,12 +160,12 @@ export default function ManageVehicles() {
 
   useEffect(() => {
     if (!form?.inspection) {
-      setForm(prev => ({ ...prev, nextInspection: "" }));
+      setForm((prev) => ({ ...prev, nextInspection: "" }));
       return;
     }
     const next = dayjs(form.inspection).add(6, "month").format("YYYY-MM-DD");
     if (form.nextInspection !== next) {
-      setForm(prev => ({ ...prev, nextInspection: next }));
+      setForm((prev) => ({ ...prev, nextInspection: next }));
     }
   }, [form?.inspection]);
 
@@ -179,15 +185,21 @@ export default function ManageVehicles() {
     setSelectedCar(car);
 
     if (mode === "edit" && car) {
-      const inspectionStr = car.inspection ? dayjs(car.inspection).format("YYYY-MM-DD") : "";
-      const nextInspectionStr = inspectionStr ? dayjs(inspectionStr).add(6, "month").format("YYYY-MM-DD") : "";
+      const inspectionStr = car.inspection
+        ? dayjs(car.inspection).format("YYYY-MM-DD")
+        : "";
+      const nextInspectionStr = inspectionStr
+        ? dayjs(inspectionStr).add(6, "month").format("YYYY-MM-DD")
+        : "";
 
       setForm({
         // 수정 불가 영역
         carId: car.carId || "",
         carNum: car.carNum || "",
         vehicleTypeId: car.vehicleType?.vehicleTypeId || "",
-        regDate: car.regDate ? dayjs(car.regDate).format("YYYY-MM-DD") : todayStr,
+        regDate: car.regDate
+          ? dayjs(car.regDate).format("YYYY-MM-DD")
+          : todayStr,
 
         // 일반 입력
         mileage: car.mileage?.toString() || "",
@@ -269,7 +281,6 @@ export default function ManageVehicles() {
   const handleFormChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
-
 
   // 차량 저장 (생성/수정)
   const handleSaveCar = async () => {
@@ -365,7 +376,7 @@ export default function ManageVehicles() {
 
   // 차량 삭제
   const handleDeleteCar = async (carId) => {
-    if (!window.confirm("정말로 이 차량을 삭제하시겠습니까?")) {
+    if (!window.confirm("등록된 차량을 삭제하시겠습니까?")) {
       return;
     }
 
@@ -408,12 +419,18 @@ export default function ManageVehicles() {
         icon={statusInfo.icon}
         label={statusInfo.label}
         color={statusInfo.color}
-        size="small"
+        size="medium"
         variant="outlined"
+        sx={{
+          fontSize: "0.9rem",
+          height: 32,
+          "& .MuiChip-icon": {
+            fontSize: "1.1rem",
+          },
+        }}
       />
     );
   };
-
 
   const validateForm = () => {
     const errors = {};
@@ -461,7 +478,7 @@ export default function ManageVehicles() {
     const patternOld = /^[가-힣]{2,3}\d{2}[가-힣]\d{4}$/;
 
     return patternNew.test(v) || patternOld.test(v);
-  }
+  };
 
   // if (loading) {
   //   return (
@@ -489,168 +506,176 @@ export default function ManageVehicles() {
         {loading && (
           <LoadingComponent open={loading} text="차량 정보를 불러오는 중..." />
         )}
-        <Container maxWidth="lg">
-          <CommonTitle>내 차량 관리</CommonTitle>
+        <CommonTitle>내 차량 관리</CommonTitle>
+        <Grid container>
+          <Grid size={2} />
+          <Grid size={8}>
+            {/* 추가 버튼 */}
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => handleOpenDialog("create")}
+                sx={{
+                  bgcolor: C.blue,
+                  minWidth: 140,
+                  height: 50,
+                }}
+              >
+                차량 추가
+              </Button>
+            </Box>
 
-          {/* 추가 버튼 */}
-          <Box
-            sx={{ display: "flex", justifyContent: "flex-end", mb: 4, mx: 3 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog("create")}
-              sx={{
-                bgcolor: C.blue,
-                minWidth: 140,
-                height: 50,
-              }}
-            >
-              차량 추가
-            </Button>
-          </Box>
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
-          )}
-
-          {/* 리스트 */}
-          <Box>
-            {cars.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 8 }}>
-                <DirectionsCar
-                  sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{ color: "text.secondary", mb: 1 }}
-                >
-                  등록된 차량이 없습니다
-                </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  새로운 차량을 등록해보세요
-                </Typography>
-              </Box>
-            ) : (
-              cars.map((car) => (
-                <Paper
-                  key={car.carId}
-                  onClick={() => handleOpenDialog("edit", car)}
-                  sx={{
-                    p: 1.8,
-                    mb: 3,
-                    border: "0.8px solid",
-                    borderColor: thisTheme.palette.primary.light,
-                    boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: 1.5,
-                    fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    bgcolor: thisTheme.palette.background.paper,
-                    mx: 3,
-                    "&:hover": {
-                      bgcolor: thisTheme.palette.background.default,
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
-                      borderColor: thisTheme.palette.primary.main,
-                    },
-                  }}
-                >
-                  <Box
+            {/* 리스트 */}
+            <Box>
+              {cars.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 8 }}>
+                  <DirectionsCar
+                    sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "text.secondary", mb: 1 }}
+                  >
+                    등록된 차량이 없습니다
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    새로운 차량을 등록해보세요
+                  </Typography>
+                </Box>
+              ) : (
+                cars.map((car) => (
+                  <Paper
+                    key={car.carId}
+                    onClick={() => handleOpenDialog("edit", car)}
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                      p: 2.5,
+                      mb: 2,
+                      border: "0.8px solid",
+                      borderColor: thisTheme.palette.text.secondary,
+                      boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
+                      borderRadius: 1.5,
+                      fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      bgcolor: thisTheme.palette.background.paper,
+                      "&:hover": {
+                        bgcolor: thisTheme.palette.background.default,
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+                        borderColor: thisTheme.palette.primary.main,
+                      },
                     }}
                   >
                     <Box
                       sx={{
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 3,
-                        flex: 8,
+                        justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
-                      {/* 상단: 차량번호와 상태 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Avatar
-                            sx={{
-                              bgcolor: C.blue,
-                              width: 32,
-                              height: 32,
-                              fontSize: "1rem",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <DirectionsCar />
-                          </Avatar>
-                          <Typography
-                            variant="h6"
-                            fontWeight="bold"
-                            color={C.blue}
-                          >
-                            {car.carNum}
-                          </Typography>
-                        </Box>
-
-                        {/* 우측 상단: 상태 */}
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          {getStatusChip(car.carStatus)}
-                        </Box>
-                      </Box>
-
-                      {/* 하단: 차량 정보 */}
                       <Box
                         sx={{
                           display: "flex",
                           flexDirection: "column",
-                          gap: 0.5,
-                          mt: 1,
+                          gap: 1,
+                          flex: 8,
                         }}
                       >
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>차종:</strong> {car.vehicleType?.name || "-"}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>주행거리:</strong>{" "}
-                          {car.mileage?.toLocaleString()}km
-                        </Typography>
-                        {car.inspection && (
-                          <Typography variant="body2" color="text.secondary">
-                            <strong>점검일:</strong>{" "}
-                            {dayjs(car.inspection).format("MM/DD")}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
+                        {/* 상단: 차량번호와 상태 */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                bgcolor: C.blue,
+                                width: 36,
+                                height: 36,
+                                fontSize: "1.2rem",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <DirectionsCar />
+                            </Avatar>
+                            <Typography
+                              variant="h5"
+                              fontWeight="bold"
+                              color={C.blue}
+                            >
+                              {car.carNum}
+                            </Typography>
+                          </Box>
 
-                    {/* 화살표 아이콘 */}
-                    <ChevronRight
-                      sx={{ color: thisTheme.palette.text.secondary, fontSize: 24 }}
-                    />
-                  </Box>
-                </Paper>
-              ))
-            )}
-          </Box>
-        </Container>
+                          {/* 우측 상단: 상태 */}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
+                            {getStatusChip(car.carStatus)}
+                          </Box>
+                        </Box>
+
+                        {/* 하단: 차량 정보 - 차량번호 밑에 왼쪽 정렬 */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                            ml: 5, // 아이콘과 차량번호 영역만큼 왼쪽 여백 추가
+                          }}
+                        >
+                          <Typography variant="body1" color="text.secondary">
+                            <strong>차종:</strong>{" "}
+                            {car.vehicleType?.name || "-"}
+                          </Typography>
+                          <Typography variant="body1" color="text.secondary">
+                            <strong>주행거리:</strong>{" "}
+                            {car.mileage?.toLocaleString()}km
+                          </Typography>
+                          {car.inspection && (
+                            <Typography variant="body1" color="text.secondary">
+                              <strong>점검일:</strong>{" "}
+                              {dayjs(car.inspection).format("MM/DD")}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+
+                      {/* 화살표 아이콘 */}
+                      <ChevronRight
+                        sx={{
+                          color: thisTheme.palette.text.secondary,
+                          fontSize: 32,
+                        }}
+                      />
+                    </Box>
+                  </Paper>
+                ))
+              )}
+            </Box>
+          </Grid>
+          <Grid size={2} />
+        </Grid>
       </Box>
 
       {/* 차량 등록/수정 Dialog */}
@@ -701,12 +726,14 @@ export default function ManageVehicles() {
                   onChange={(e) => handleFormChange("regDate", e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   disabled
-                  sx={{
-                    // "& .MuiInputBase-input.Mui-disabled": {
-                    //   color: thisTheme.palette.text.primary,
-                    //   WebkitTextFillColor: thisTheme.palette.text.primary,
-                    // },
-                  }}
+                  sx={
+                    {
+                      // "& .MuiInputBase-input.Mui-disabled": {
+                      //   color: thisTheme.palette.text.primary,
+                      //   WebkitTextFillColor: thisTheme.palette.text.primary,
+                      // },
+                    }
+                  }
                   helperText=" "
                   FormHelperTextProps={helperProps}
                 />
@@ -736,7 +763,9 @@ export default function ManageVehicles() {
                       </MenuItem>
                     ))}
                   </Select>
-                  <FormHelperText>{formErrors.vehicleTypeId || " "}</FormHelperText>
+                  <FormHelperText>
+                    {formErrors.vehicleTypeId || " "}
+                  </FormHelperText>
                 </FormControl>
               </div>
               <div style={{ flex: "1 1 48%" }}>
@@ -745,7 +774,9 @@ export default function ManageVehicles() {
                   <Select
                     label="차량 상태"
                     value={form.carStatus}
-                    onChange={(e) => handleFormChange("carStatus", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("carStatus", e.target.value)
+                    }
                   >
                     <MenuItem value="OPERATIONAL">운행 가능</MenuItem>
                     <MenuItem value="MAINTENANCE">정비중</MenuItem>
@@ -801,9 +832,15 @@ export default function ManageVehicles() {
                   helperText={formErrors.mileage || " "}
                   FormHelperTextProps={helperProps}
                   type="number"
-                  inputProps={{ inputMode: "numeric", pattern: "[0-9]*", min: 0, step: 1 }}
+                  inputProps={{
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                    min: 0,
+                    step: 1,
+                  }}
                   onKeyDown={(e) => {
-                    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                    if (["e", "E", "+", "-", "."].includes(e.key))
+                      e.preventDefault();
                   }}
                 />
               </div>
@@ -863,22 +900,29 @@ export default function ManageVehicles() {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1, justifyContent: 'space-between' }}>
-          <Button onClick={() => handleDeleteCar(form.carId)} variant="contained"
+        <DialogActions sx={{ p: 3, pt: 1, justifyContent: "space-between" }}>
+          <Button
+            onClick={() => handleDeleteCar(form.carId)}
+            variant="contained"
             sx={{
               bgcolor: thisTheme.palette.error.main,
               "&:hover": {
                 bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
               },
-            }}>
+            }}
+          >
             삭제
           </Button>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             <Button onClick={handleCloseDialog} variant="outlined">
               취소
             </Button>
-            <Button onClick={handleSaveCar} variant="contained" sx={{ bgcolor: C.blue }}>
-              {dialogMode === 'create' ? '등록' : '저장'}
+            <Button
+              onClick={handleSaveCar}
+              variant="contained"
+              sx={{ bgcolor: C.blue }}
+            >
+              {dialogMode === "create" ? "등록" : "저장"}
             </Button>
           </Box>
         </DialogActions>
