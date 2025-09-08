@@ -13,6 +13,8 @@ import { useCompanyStream } from "../../api/deliveryRequest/driverStreamAPI";
 import { buildWaypointViews, buildMainStatus } from "./trackingUtil";
 import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import { OneButtonAtLeft, TwoButtonsAtRight } from "../../components/common/CommonButton";
+import { isBefore, parseISO, subHours } from "date-fns";
+import LoadingComponent from "../../components/common/LoadingComponent";
 
 //작성자: 고은설.
 //기능: 폴링 쿨타임 셋업용.
@@ -25,7 +27,9 @@ const DetailHistory = () => {
     const [params] = useSearchParams();
     const assignedId = params.get("assignId");
     const [detailContent, setDetailContent] = useState([]);
+    const [refundBoolean, setRefundBoolean] = useState(true);
     const thisTheme = useTheme();
+    const [Loading, setLoading] = useState(false);
 
     //고은설: 쿨타임 차감용.
     const [cooldown, setCooldown] = useState(POLL_INTERVAL);
@@ -63,22 +67,37 @@ const DetailHistory = () => {
 
     //고은설: 상태값 가져오기.
     const fetchDetail = () => {
+        setLoading(true);
         if (!assignedId) return;
         getDetailHistory({ assignedId })
             .then((data) => {
                 setDetailContent(data || {});
                 setCooldown(POLL_INTERVAL); // 성공 시 타이머 리셋
+                console.log(data);
             })
             .catch((err) => {
                 // console.error("데이터 가져오기 실패", err);
                 setCooldown(POLL_INTERVAL);
-            });
+            }).finally(setLoading(false));
     };
 
 
     useEffect(() => {
         fetchDetail();
     }, [assignedId]);
+
+    useEffect(() => {
+        if (!detailContent) return;
+         if (!detailContent?.wantToStart) return;
+        // 서버에서 받은 localDateTime 문자열을 Date로 변환
+        const targetDate = parseISO(detailContent.wantToStart);
+
+        // targetDate 기준 12시간 전
+        const twelveHoursBefore = subHours(targetDate, 12);
+
+        // 현재가 그 시점 이후라면 true
+        setRefundBoolean(isBefore(twelveHoursBefore, new Date()));
+    }, [detailContent])
 
     //고은설: 폴링 타이머.
     useEffect(() => {
@@ -118,7 +137,7 @@ const DetailHistory = () => {
         if (confirm("정말 예약을 취소하시겠습니까?")) {
             cancel({ assignedId })
                 .then((data) => {
-                    moveToActualCalc({assignedId, reported: false});
+                    moveToActualCalc({ assignedId, reported: false });
                 })
                 .catch((err) => {
                     // console.error("데이터 가져오기 실패", err);
@@ -141,8 +160,9 @@ const DetailHistory = () => {
     }, [detailContent, live]);
     return (
         <>
-            <CommonTitle>세부내역</CommonTitle>
+            <CommonTitle>배송현황</CommonTitle>
             <Grid container spacing={3} marginBottom={10} alignItems="stretch">
+                <LoadingComponent open={Loading} text="배송현황을 불러오는 중..."/>
                 <Grid size={2} />
                 <Grid size={4} sx={{ aspectRatio: 1 / 1 }}>
                     <LiveMapComponent route={mergedRoute} onRefresh />
@@ -180,6 +200,7 @@ const DetailHistory = () => {
                         <TwoButtonsAtRight
                             leftTitle={"예약 취소"}
                             leftClickEvent={handleCancel}
+                            leftDisabled={refundBoolean}
                             leftColor={thisTheme.palette.error.main}
                             rightTitle={"뒤로가기"}
                             rightClickEvent={() => moveBack()}

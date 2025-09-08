@@ -314,19 +314,22 @@ export const Payment = () => {
                     } else {
                         // 기존 결제 방법 처리
                         if (isSecondPayment) { // 2차 결제
-                            const secondPaymentBody = {
-                                paymentId: actualCalc.paymentId,
-                                prepaidId: prepaidId,
-                                payAmount: totalRate,
-                                payMethod: paymentMethod,
-                                payStatus: "PROCESSING",
-                                impUid: response.imp_uid
-                            };
+                            // const secondPaymentBody = {
+                            //     paymentId: actualCalc.paymentId,
+                            //     prepaidId: prepaidId,
+                            //     payAmount: totalRate,
+                            //     payMethod: paymentMethod,
+                            //     payStatus: "PROCESSING",
+                            //     impUid: response.imp_uid
+                            // };
 
                             try {
-                                const apiResponse = await successSecondPayment({
-                                    paymentId: actualCalc.paymentId,
-                                    successSecondPayment: secondPaymentBody
+                                await successSecondPayment(actualCalc.paymentId, {
+                                    prepaidId: prepaidId,
+                                    payAmount: totalRate - actualCalc.estimateFee,
+                                    payMethod: paymentMethod,
+                                    payStatus: "PROCESSING",
+                                    impUid: response.imp_uid
                                 });
                             } catch (error) {
                             }

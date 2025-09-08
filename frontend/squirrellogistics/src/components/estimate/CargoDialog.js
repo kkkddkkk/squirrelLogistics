@@ -87,12 +87,12 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
 
                 <div style={{ margin: "20px 0" }}>
                     <label style={{ display: "flex", alignItems: "center" }}>
-                        <Inventory2OutlinedIcon /> &nbsp;무게 선택 (1톤 ~ 26톤)
+                        <Inventory2OutlinedIcon /> &nbsp;무게 선택 (1톤 ~ 25톤)
                     </label>
                     <input
                         type="range"
                         min="1"
-                        max="26"
+                        max="25"
                         value={weightTon}
                         onChange={(e) => setWeightTon(Number(e.target.value))}
                         style={{
@@ -104,7 +104,7 @@ export default function CargoDialog({ open, onClose, onSave, options = [], initi
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, width: "92%", margin: "0 auto" }}>
                         <span>1톤</span>
                         <span>{weightTon}톤</span>
-                        <span>26톤</span>
+                        <span>25톤</span>
                     </div>
                 </div>
             </DialogContent>

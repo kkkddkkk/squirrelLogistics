@@ -240,6 +240,7 @@ public class DeliveryAssignmentService {
 	// 작성자: 김도경
 	// 기능: detailHistory(예약, 운송중 세부내역 확인)
 	// 수정일: 2025.09.01 고은설 => 상태값 및 경유지 정보 가져오는 구조로 수정.
+	// 수정일: 2025.09.08 김도경 => wantToStart 추가
 	public DetailHistoryDTO getDetailHistory(Long assignedId) {
 
 		DeliveryAssignment assignmentRef = deliveryAssignmentRepository.getReferenceById(assignedId);
@@ -254,9 +255,12 @@ public class DeliveryAssignmentService {
 
 		// Logs
 		List<DeliveryStatusLogSlimResponseDTO> logs = deliveryAssignmentRepository.findLogsByAssignId(assignedId);
+		
+		//wantToStart
+		LocalDateTime wantToStart = deliveryAssignmentRepository.findStartDateById(assignedId);
 
 		DetailHistoryDTO detailHistoryDTO = DetailHistoryDTO.builder().assignedId(assignedId)
-				.driverId(assignmentRef.getDriver().getDriverId()).waypoints(wps).statuses(logs).build();
+				.driverId(assignmentRef.getDriver().getDriverId()).wantToStart(wantToStart).waypoints(wps).statuses(logs).build();
 
 		return detailHistoryDTO;
 	}

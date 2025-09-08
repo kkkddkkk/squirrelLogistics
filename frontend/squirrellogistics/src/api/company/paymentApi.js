@@ -55,12 +55,12 @@ export const successFirstPayment = async ({ paymentId, options = {}, successFirs
 };
 
 //2차 결제 성공
-export const successSecondPayment = async ({ paymentId, options = {}, successSecondPayment }) => {
-  if (successSecondPayment === undefined) return;
-  console.log(">>> 2차 결제 API 요청 시작", successSecondPayment);
+export const successSecondPayment = async ({ paymentId, body, options = {}, successSecondPayment }) => {
+  if (body === undefined) return;
+  console.log(">>> 2차 결제 API 요청 시작", body);
   try {
     const res = await axios.put(`${API_SERVER_HOST}/second/${paymentId}/success`, {
-      ...successSecondPayment,
+      ...body,
       ...options,  // 필요하면 옵션을 body에 병합
     }, {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accesstoken}` }
