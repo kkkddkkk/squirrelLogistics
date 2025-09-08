@@ -39,7 +39,7 @@ public class HousekeepingServiceImpl implements HousekeepingService {
 
 	private final PlatformTransactionManager txm;
 
-	private static final int PROPOSAL_HOURS = 2; // WANT TO START기준 얼마 전까지 지명 제안 만료 처리 시길건지/
+	private static final int PROPOSAL_HOURS = 0; // WANT TO START기준 얼마 전까지 지명 제안 만료 처리 시길건지/
 	private static final long MAX_ALLOW_MINUTES = 12 * 60; // 12시간
 	private static final int UNMATCHED_GRACE_HOURS = 12; // 미매칭 요청 유예시간.
 
