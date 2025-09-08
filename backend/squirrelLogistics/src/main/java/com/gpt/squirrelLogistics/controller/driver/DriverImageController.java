@@ -2,6 +2,7 @@ package com.gpt.squirrelLogistics.controller.driver;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -33,82 +34,113 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 @RequestMapping("/api/public/driverImage")
 public class DriverImageController {
-    private final String uploadDir = new File("uploads").getAbsolutePath() + "/profile/";
-    private final DriverRepository driverRepository;
-    private final UserRepository userRepository;
+	private final String uploadDir = new File("uploads").getAbsolutePath() + "/profile/";
+	private final DriverRepository driverRepository;
+	private final UserRepository userRepository;
 	private final FindUserByTokenService findUserByTokenService;
-	
-    // 파일 불러오기
-    @GetMapping("/{fileName}")
-    public ResponseEntity<Resource> getFile(@PathVariable("fileName") String fileName) throws IOException {
 
-        Path path = Paths.get(uploadDir + fileName);
-        Resource resource = new UrlResource(path.toUri());
+	// 작성자: 고은설.
+	// 기능: 지우면 안 되는 기본 프로필 사진 이름 명시.
+	private static final String DEFAULT_PROFILE_NAME = "default_profile.png";
 
-        if (!resource.exists()) {
-            return ResponseEntity.notFound().build();
-        }
+	// 파일 불러오기
+	@GetMapping("/{fileName}")
+	public ResponseEntity<Resource> getFile(@PathVariable("fileName") String fileName) throws IOException {
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // png면 IMAGE_PNG
-                .body(resource);
-    }
-    
-    //파일명 가져오기
-    @GetMapping("/getName/{fileName}")
-    public String getFileName(@RequestHeader("Authorization")String token) {
+		Path path = Paths.get(uploadDir + fileName);
+		Resource resource = new UrlResource(path.toUri());
+
+		if (!resource.exists()) {
+			return ResponseEntity.notFound().build();
+		}
+
+		return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG) // png면 IMAGE_PNG
+				.body(resource);
+	}
+
+	// 파일명 가져오기
+	@GetMapping("/getName/{fileName}")
+	public String getFileName(@RequestHeader("Authorization") String token) {
 
 		Long userId = findUserByTokenService.getUserIdByToken(token);
-        Long driverId = driverRepository.findDriverIdByUserId(userId);
-        
-        return driverRepository.findProfileById(driverId);
-    }
-    
-    
-    @PutMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader("Authorization")String token) {
-        try {
-        	
-        	// 원본 파일명 가져오기
-        	String originalFilename = file.getOriginalFilename();
+		Long driverId = driverRepository.findDriverIdByUserId(userId);
 
-        	// 확장자 추출
-        	String extension = "";
-        	int i = originalFilename.lastIndexOf('.');
-        	if (i > 0) {
-        	    extension = originalFilename.substring(i); // .jpg, .png 등
-        	}
+		return driverRepository.findProfileById(driverId);
+	}
 
-        	// 랜덤 파일명 생성
-        	String randomFilename = UUID.randomUUID().toString() + extension;
-        	
-            // 저장할 경로
-            String filePath = uploadDir + randomFilename;
-            File dest = new File(filePath);
-            dest.getParentFile().mkdirs(); // 폴더 없으면 생성
-            file.transferTo(dest);
-            
-    		Long userId = findUserByTokenService.getUserIdByToken(token);
-            Long driverId = driverRepository.findDriverIdByUserId(userId);
-            
-            Driver driver = driverRepository.findById(driverId).orElseThrow();
-            
-            //기존 사진 삭제
-            String oldPath = driver.getProfileImagePath();
-            if (oldPath != null) {
-                File oldFile = new File(oldPath);
-                if (oldFile.exists()) oldFile.delete();
-            }
-            //새사진 set
-            driver.setProfileImageName(randomFilename);
-            driver.setProfileImagePath(filePath);
-            driver.setProfileImageUrl("/api/public/driverImage/"+randomFilename);
-            driverRepository.save(driver);
+	@PutMapping("/upload")
+	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
+			@RequestHeader("Authorization") String token) {
+		try {
 
-            // DB에는 file.getOriginalFilename()만 저장하면 됨
-            return ResponseEntity.ok(randomFilename);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
-        }
-    }
+			// 원본 파일명 가져오기
+			String originalFilename = file.getOriginalFilename();
+
+			// 확장자 추출
+			String extension = "";
+			int i = originalFilename.lastIndexOf('.');
+			if (i > 0) {
+				extension = originalFilename.substring(i); // .jpg, .png 등
+			}
+
+			// 랜덤 파일명 생성
+			String randomFilename = UUID.randomUUID().toString() + extension;
+
+			// 저장할 경로
+			String filePath = uploadDir + randomFilename;
+			File dest = new File(filePath);
+			dest.getParentFile().mkdirs(); // 폴더 없으면 생성
+			file.transferTo(dest);
+
+			Long userId = findUserByTokenService.getUserIdByToken(token);
+			Long driverId = driverRepository.findDriverIdByUserId(userId);
+
+			Driver driver = driverRepository.findById(driverId).orElseThrow();
+
+			// 기존 사진 삭제 + 디폴트 프로필은 유지.
+			String oldPath = driver.getProfileImagePath();
+			if (isDeletableUserImage(oldPath, uploadDir)) {
+				try {
+					Files.deleteIfExists(Paths.get(oldPath));
+				} catch (IOException ioe) {
+					log.warn("Failed!: {}", oldPath, ioe);
+				}
+			}
+			// 새사진 set
+			driver.setProfileImageName(randomFilename);
+			driver.setProfileImagePath(filePath);
+			driver.setProfileImageUrl("/api/public/driverImage/" + randomFilename);
+			driverRepository.save(driver);
+
+			// DB에는 file.getOriginalFilename()만 저장하면 됨
+			return ResponseEntity.ok(randomFilename);
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
+		}
+	}
+
+	// 작성자: 고은설.
+	// 기능: 삭제하려는게 기본 프로필 사진인지 감별 메서드.
+	private boolean isDeletableUserImage(String oldPath, String uploadDir) {
+		if (oldPath == null || oldPath.isBlank())
+			return false;
+		try {
+			Path old = Paths.get(oldPath).toAbsolutePath().normalize();
+			Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+
+			// 업로드 루트 밖의 파일은 건드리지 않음 (보안/안정성)
+			if (!old.startsWith(root))
+				return false;
+
+			// 파일명이 기본 이미지면 삭제 금지
+			String fileName = old.getFileName().toString();
+			if (DEFAULT_PROFILE_NAME.equalsIgnoreCase(fileName))
+				return false;
+
+			return true;
+		} catch (Exception e) {
+			return false; // 문제 있으면 보수적으로 삭제하지 않음
+		}
+	}
+
 }

@@ -10,6 +10,18 @@
   z-index: 1;
 }
 
+.live-map-truck img {
+  width: 45px;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+  transform: scaleX(1);
+  transition: transform 120ms ease;
+}
+.live-map-truck.flip img {
+  transform: scaleX(-1);
+}
+
 @keyframes pulse {
   0% {
     transform: scale(0.5);

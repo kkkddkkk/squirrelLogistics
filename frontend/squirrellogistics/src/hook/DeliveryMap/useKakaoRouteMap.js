@@ -69,6 +69,13 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
   const truckImageRef = useRef(null);
   const firstFitBoundsRef = useRef(true);
   const kakaoRef = useRef(null);
+
+  //좌우 반전을 위해 오버레이로 변경.
+  const truckOverlayRef = useRef(null);
+  const truckElRef = useRef(null);
+  const prevLatLngRef = useRef(null);
+  const directionHoldRef = useRef({ dir: 0, consec: 0 }); // 히스테리시스.
+
   useEffect(() => {
     let canceled = false;
 
@@ -124,6 +131,35 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
       (expectedPath.length ? expectedPath[expectedPath.length - 1] : null) ||
       (polylinePath.length ? polylinePath[polylinePath.length - 1] : null) ||
       null;
+
+    // --- 동서 방향 계산 (equirectangular 근사) ---
+    const prev = prevLatLngRef.current;
+    let flip = false;
+    if (prev) {
+      const R = 6371000; // m
+      const toRad = (deg) => (deg * Math.PI) / 180;
+      const lat0 = toRad((prev.getLat() + currentLatLng.getLat()) / 2);
+      const dLon = toRad(currentLatLng.getLng() - prev.getLng());
+      // 동서(x) 성분(m). +면 동쪽(→), -면 서쪽(←)
+      const dx = R * Math.cos(lat0) * dLon;
+      // 노이즈 방지 임계값(3m) + 연속 프레임 히스테리시스(2틱)
+      const THRESH = 3;
+      const H_CONSEC = 2;
+      let dir = 0;
+      if (dx > THRESH) dir = +1;
+      else if (dx < -THRESH) dir = -1;
+
+      const st = directionHoldRef.current;
+      if (dir !== 0) {
+        if (st.dir === dir) st.consec += 1;
+        else { st.dir = dir; st.consec = 1; }
+      }
+      // dir가 -1로 두 틱 이상 유지되면 flip
+      if (st.dir === -1 && st.consec >= H_CONSEC) flip = true;
+      if (st.dir === +1 && st.consec >= H_CONSEC) flip = false;
+    }
+    prevLatLngRef.current = currentLatLng;
+
 
     // visited polyline
     if (!visitedPolylineRef.current) {
@@ -190,6 +226,33 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
       endMarkerRef.current = null;
     }
 
+
+    // ▶ 커스텀 오버레이로 트럭 아이콘 렌더(좌우반전 지원)
+    if (!truckElRef.current) {
+      const wrap = document.createElement('div');
+      wrap.className = 'live-map-truck';
+      const img = document.createElement('img');
+      // 기존 truckImg 경로 그대로 사용
+      img.src = typeof truckImg === 'string' ? truckImg : '';
+      wrap.appendChild(img);
+      truckElRef.current = wrap;
+    }
+    if (flip) truckElRef.current.classList.add('flip');
+    else truckElRef.current.classList.remove('flip');
+
+    if (!truckOverlayRef.current) {
+      truckOverlayRef.current = new kakao.maps.CustomOverlay({
+        map: mapRef.current,
+        position: currentLatLng,
+        content: truckElRef.current,
+        yAnchor: 0.5,
+        xAnchor: 0.5,
+        zIndex: 3,
+      });
+    } else {
+      truckOverlayRef.current.setPosition(currentLatLng);
+    }
+
     // pulse overlay
     if (!pulseElRef.current) {
       const div = document.createElement("div");
@@ -209,16 +272,16 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
     }
 
     // current marker
-    if (!currentMarkerRef.current) {
-      currentMarkerRef.current = new kakao.maps.Marker({
-        map: mapRef.current,
-        position: currentLatLng,
-        ...(truckImageRef.current ? { image: truckImageRef.current } : {}),
-      });
-    } else {
-      currentMarkerRef.current.setPosition(currentLatLng);
-      if (truckImageRef.current) currentMarkerRef.current.setImage(truckImageRef.current);
-    }
+    // if (!currentMarkerRef.current) {
+    //   currentMarkerRef.current = new kakao.maps.Marker({
+    //     map: mapRef.current,
+    //     position: currentLatLng,
+    //     ...(truckImageRef.current ? { image: truckImageRef.current } : {}),
+    //   });
+    // } else {
+    //   currentMarkerRef.current.setPosition(currentLatLng);
+    //   if (truckImageRef.current) currentMarkerRef.current.setImage(truckImageRef.current);
+    // }
   }, [route]);
 
   // 언마운트 정리
@@ -227,7 +290,8 @@ export const useKakaoRouteMap = (mapContainerRef, route) => {
       const items = [
         visitedPolylineRef.current,
         expectedPolylineRef.current,
-        currentMarkerRef.current,
+        //currentMarkerRef.current,
+        truckOverlayRef.current,
         endMarkerRef.current,
         pulseOverlayRef.current,
       ];

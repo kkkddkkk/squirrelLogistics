@@ -2,6 +2,8 @@ import { Box } from "@mui/material";
 import RequestDetailComponent from "../../components/deliveryRequest/RequestDetailComponent";
 import { useLocation, useParams } from "react-router-dom";
 import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
+
 
 
 const RequestDetailPage = () => {
@@ -12,7 +14,8 @@ const RequestDetailPage = () => {
     return (
         <Box>
             <Header />
-            <RequestDetailComponent item={item}/>
+            <RequestDetailComponent item={item} />
+            <Footer />
         </Box>
     );
 }
