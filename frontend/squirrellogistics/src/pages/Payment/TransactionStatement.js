@@ -206,7 +206,7 @@ const TransactionStatement = () => {
                 </TableContainer>
             </FormControl>
             <Box sx={{ width: "40%", display: "flex", justifyContent: "space-around", marginBottom: "25px" }}>
-                <StatementButton ref={xlsxBtnRef}>내보내기</StatementButton>
+                {/* <StatementButton ref={xlsxBtnRef}>내보내기</StatementButton> */}
                 <StatementButton func={handlePrint} ref={printBtnRef}>인 쇄</StatementButton>
             </Box>
         </Box>
