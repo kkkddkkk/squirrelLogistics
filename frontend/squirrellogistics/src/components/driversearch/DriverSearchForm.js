@@ -77,7 +77,7 @@ const DriverSearchForm = () => {
     longitude: null,                // Double: 현재 위치 경도
     region: "",                     // String: 선호 지역
     page: 0,                        // Integer: 페이지 번호 (0부터 시작)
-    size: 10                        // Integer: 페이지 크기
+    size: 20                        // Integer: 페이지 크기
   });
 
   const normalizeFlow = (raw) => {
