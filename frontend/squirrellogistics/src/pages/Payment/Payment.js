@@ -98,7 +98,8 @@ export const Payment = () => {
 
     //데이터 생성용 useState
     const [refundDate, setRefundDate] = useState('3');
-    const [paymentMethod, setPaymentMethod] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [payment, setPayment] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -118,6 +119,21 @@ export const Payment = () => {
     const [params] = useSearchParams();
     const prepaidId = params.get("prepaidId");
     const paymentId = params.get("paymentId");
+
+
+    const paymentOptions = [
+        { value: '', label: '결제수단을 선택하세요', pg: '', pay_method: '' },
+        { value: 'html5_inicis', label: '신용카드', pg: 'html5_inicis', pay_method: 'card' },
+        { value: 'kakaopay', label: '카카오페이', pg: 'kakaopay', pay_method: 'card' },
+        { value: 'phone', label: '휴대폰 소액결제', pg: 'danal', pay_method: 'phone' },
+        { value: 'tosspay', label: '토스페이', pg: 'tosspay', pay_method: 'card' }
+    ];
+    useEffect(() => {
+        const selectedOption = paymentOptions.find(o => o.value === paymentMethod);
+        console.log(selectedOption);
+        setPayment(selectedOption);
+    }, [paymentMethod])
+
 
     //랜더링용 useEffect
     useEffect(() => {
@@ -152,6 +168,7 @@ export const Payment = () => {
         setAdditionalRate(addThisRate)
         if (actualCalc.distance === 0) {
             setBaseRate(0);
+            setAdditionalRate(0)
         } else {
             setBaseRate(
                 100000
@@ -222,12 +239,11 @@ export const Payment = () => {
                 const secondPaymentBody = {
                     paymentId: actualCalc.paymentId,
                     prepaidId: prepaidId,
-                    payAmount: totalRate,
+                    payAmount: totalRate - actualCalc.estimateFee,
                     payMethod: paymentMethod,
                     payStatus: "PROCESSING",
                     impUid: impUid
                 };
-
 
 
                 try {
@@ -286,11 +302,11 @@ export const Payment = () => {
 
         IMP.request_pay(
             {
-                pg: paymentMethod,
-                pay_method: paymentMethod,
+                pg: payment.pg,
+                pay_method: payment.pay_method,
                 merchant_uid: merchant_uid,
                 amount: paymentAmount,
-                name: '(주)다람쥑스프레스',
+                name: '다람쥑스프레스',
                 buyer_name: localStorage.getItem("userName"),
                 buyer_tel: '01012341234'
             },
@@ -319,7 +335,7 @@ export const Payment = () => {
                             const secondPaymentBody = {
                                 paymentId: actualCalc.paymentId,
                                 prepaidId: prepaidId,
-                                payAmount: totalRate-actualCalc.estimateFee,
+                                payAmount: totalRate - actualCalc.estimateFee,
                                 payMethod: paymentMethod,
                                 payStatus: "PROCESSING",
                                 impUid: response.imp_uid
@@ -411,9 +427,9 @@ export const Payment = () => {
                             mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
                             weight={actualCalc ? actualCalc.weight : 0}
                             baseRate={actualCalc ? baseRate : 0}
-                            stopOver1={actualCalc ? actualCalc.dropOrder1 : false}
-                            stopOver2={actualCalc ? actualCalc.dropOrder2 : false}
-                            stopOver3={actualCalc ? actualCalc.dropOrder3 : false}
+                            stopOver1={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder1:0): false}
+                            stopOver2={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder2:0) : false}
+                            stopOver3={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder3:0): false}
                             caution={actualCalc ? actualCalc.caution : false}
                             mountainous={actualCalc ? actualCalc.mountainous : false}
                             additionalRate={actualCalc ? additionalRate : 0}

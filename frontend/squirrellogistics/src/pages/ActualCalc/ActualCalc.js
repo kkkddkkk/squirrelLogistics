@@ -65,6 +65,7 @@ const ActualCalc = () => {
         setAdditionalRate(addThisRate)
         if (actualCalc.distance === 0) {
             setBaseRate(0);
+            setAdditionalRate(0);
         } else {
             setBaseRate(100000
                 + (3000 * Math.ceil((actualCalc.distance) / 1000))
@@ -123,12 +124,12 @@ const ActualCalc = () => {
                         mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
                         weight={actualCalc ? actualCalc.weight : 0}
                         baseRate={actualCalc ? baseRate : 0}
-                        stopOver1={actualCalc ? actualCalc.dropOrder1 : false}
-                        stopOver2={actualCalc ? actualCalc.dropOrder2 : false}
-                        stopOver3={actualCalc ? actualCalc.dropOrder3 : false}
+                        stopOver1={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder1:0) : false}
+                        stopOver2={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder2:0): false}
+                        stopOver3={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder3:0) : false}
                         caution={actualCalc ? actualCalc.caution : false}
                         mountainous={actualCalc ? actualCalc.mountainous : false}
-                        additionalRate={actualCalc ? additionalRate : 0}
+                        additionalRate={actualCalc ? (actualCalc.weight!=0?additionalRate:0) : 0}
                     />
                     <Box
                         sx={{
