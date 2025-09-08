@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DriverDeliveryHistoryDTO;
+import com.gpt.squirrelLogistics.dto.deliveryCompleted.DeliveryCompletedCardDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestRequestDTO;
 import com.gpt.squirrelLogistics.dto.deliveryStatusLog.DeliveryStatusLogSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.payment.PaymentDTO;
@@ -157,18 +158,49 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			@Param("blockingStatuses") Collection<com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum> blockingStatuses);
 
 	// 작성자: 고은설.
+	// 기능: 기존 WANT TO END기준 판정 호직 WANT TO START +24로 변경.
+	@Query("""
+			  select (count(a) > 0)
+			  from DeliveryAssignment a
+			  join a.deliveryRequest r
+			  where a.driver.driverId = :driverId
+			    and a.status in :blockingStatuses
+			    and r.wantToStart < :candidateEnd      
+			    and r.wantToStart > :candidateStartMinus24h 
+			""")
+	boolean existsOverlapping24h(@Param("driverId") Long driverId, @Param("candidateEnd") LocalDateTime candidateEnd, // =
+																														// candidateStart.plusHours(24)
+			@Param("candidateStartMinus24h") LocalDateTime candidateStartMinus24h, // = candidateStart.minusHours(24)
+			@Param("blockingStatuses") Collection<com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum> blockingStatuses);
+	// 작성자: 고은설.
 	// 기능: 환불기간 내 수락되지 않은 지명 제안 매칭 실패 상태로 전환.
+//	@Modifying(clearAutomatically = true, flushAutomatically = true)
+//	@Query(value = """
+//			  UPDATE delivery_assignment a
+//			  JOIN delivery_request r ON r.request_id = a.request_id
+//			  JOIN payment p         ON p.payment_id = r.payment_id
+//			  SET a.status = 'CANCELED',
+//			      a.cancelled_at = :now
+//			  WHERE a.status = 'UNKNOWN'
+//			    AND p.refund_date < :now
+//			""", nativeQuery = true)
+//	int cancelExpiredProposals(@Param("now") LocalDateTime now);
+
+	// 작성자: 고은설.
+	// 기능: 시작 시간 기준으로 특정 시간까지 수락되지 않은 지명 제안 매칭 실패 상태로 전환.
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = """
 			  UPDATE delivery_assignment a
 			  JOIN delivery_request r ON r.request_id = a.request_id
-			  JOIN payment p         ON p.payment_id = r.payment_id
 			  SET a.status = 'CANCELED',
 			      a.cancelled_at = :now
 			  WHERE a.status = 'UNKNOWN'
-			    AND p.refund_date < :now
+			    AND r.status = 'PROPOSED'
+			    AND r.want_to_start IS NOT NULL
+			    AND r.want_to_start <= :proposalDeadline
 			""", nativeQuery = true)
-	int cancelExpiredProposals(@Param("now") LocalDateTime now);
+	int cancelExpiredProposalsByStart(@Param("now") LocalDateTime now,
+			@Param("proposalDeadline") LocalDateTime proposalDeadline);
 
 	// 작성자: 고은설.
 	// 기능: 시스템 시간 기준 오늘 시작되는 운송 할당 배정됨에서 진행중으로 상태 변경을 위함.
@@ -193,6 +225,23 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 			""")
 	boolean existsByRequestAndDriverAndStatus(@Param("requestId") Long requestId, @Param("driverId") Long driverId,
 			@Param("status") com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum status);
+
+	// 작성자: 고은설.
+	// 기능: 특정 운송 요청의 수락전 만료 처리.
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = """
+			  UPDATE delivery_assignment a
+			  JOIN delivery_request r ON r.request_id = a.request_id
+			  SET a.status = 'CANCELED',
+			      a.cancelled_at = :now
+			  WHERE a.status = 'UNKNOWN'
+			    AND r.status = 'PROPOSED'
+			    AND r.request_id = :requestId
+			    AND r.want_to_start IS NOT NULL
+			    AND r.want_to_start <= :proposalDeadline
+			""", nativeQuery = true)
+	int cancelExpiredProposalsByStartForRequest(@Param("now") LocalDateTime now,
+			@Param("proposalDeadline") LocalDateTime proposalDeadline, @Param("requestId") Long requestId);
 
 	// 작성자: 고은설.
 	// 기능: 특정 기사에게 배정된 운송 할당 정보 중 UNKNOWN상태 추출을 위함.
@@ -363,16 +412,40 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 
 	// 작성자: 고은설.
 	// 기능: IN_PROGRESS 상태로 전환까지 된 assign데이터 중 종료 일이 지나도록 완료처리 안된 미완수건 검수.
+//	@Query("""
+//			    select a
+//			    from DeliveryAssignment a
+//			    join a.deliveryRequest r
+//			    where (a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+//			           or a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED)
+//			      and r.wantToEnd is not null
+//			      and r.wantToEnd < :threshold
+//			""")
+//	List<DeliveryAssignment> findInProgressOrAssignedPastEnd(@Param("threshold") LocalDateTime threshold);
+
+	// 작성자: 고은설
+	// 기능 : IN_PROGRESS 상태로 전환까지 된 assign데이터 중 want to start 기준 12시간이 지나도록 아무 행동을
+	// 취하지 않은 건 검수.
 	@Query("""
-			    select a
-			    from DeliveryAssignment a
-			    join a.deliveryRequest r
-			    where (a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
-			           or a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED)
-			      and r.wantToEnd is not null
-			      and r.wantToEnd < :threshold
+			    SELECT a
+			    FROM DeliveryAssignment a
+			    JOIN a.deliveryRequest r
+			    WHERE a.status = com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS
+			      AND r.wantToStart < :threshold
+			      AND NOT EXISTS (
+			          SELECT 1 FROM DeliveryStatusLog l
+			          WHERE l.deliveryAssignment = a
+			            AND l.status IN (
+			      com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.MOVING_TO_PICKUP,
+			       com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.PICKUP_COMPLETED,
+			       com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.MOVING_TO_WAYPOINT,
+			       com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.ARRIVED_AT_WAYPOINT,
+			       com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.DROPPED_AT_WAYPOINT,
+			       com.gpt.squirrelLogistics.enums.deliveryStatus.DeliveryStatusEnum.COMPLETED
+			            )
+			      )
 			""")
-	List<DeliveryAssignment> findInProgressOrAssignedPastEnd(@Param("threshold") LocalDateTime threshold);
+	List<DeliveryAssignment> findInProgressNotStartedBefore(@Param("threshold") LocalDateTime threshold);
 
 	// 작성자: 고은설.
 	// 기능: 특정 기사에게 할당된 해당 연·월 운송 일정(하루 1건: assignedAt 최솟값만) 조회
@@ -559,5 +632,20 @@ public interface DeliveryAssignmentRepository extends JpaRepository<DeliveryAssi
 	// 작성자: 고은설.
 	// 기능: 긴급신고용 더미 assignid가져오기.
 	Optional<DeliveryAssignment> findTopByDriver_DriverIdOrderByAssignedAtDescAssignedIdDesc(Long driverId);
+
+	@Query("""
+			    select new com.gpt.squirrelLogistics.dto.deliveryCompleted.DeliveryCompletedCardDTO(
+			        da.assignedId,
+			        dr.startAddress,
+			        dr.endAddress,
+			        da.completedAt
+			    )
+			    from DeliveryAssignment da
+			    join da.deliveryRequest dr
+			    where da.driver.id = :driverId
+			      and da.completedAt is not null
+			    order by da.completedAt desc
+			""")
+	List<DeliveryCompletedCardDTO> findCompletedCardsByDriverId(@Param("driverId") Long driverId);
 
 }

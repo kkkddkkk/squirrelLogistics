@@ -171,6 +171,7 @@ const DriverSearchForm = () => {
       const result = await searchDrivers(params);
 
 
+      console.log(result.drivers);
       //김도경 수정: 요청 차량과 일치하는 기사만 출력
       let newDrivers;
       const storedData = JSON.parse(sessionStorage.getItem("deliveryFlow"));
@@ -282,6 +283,10 @@ const DriverSearchForm = () => {
     handleSearch(page);
   };
 
+  const toApiRequest = (req) => {
+    const { vehicleTypeName, vehicleMaxWeight, ...rest } = req;
+    return rest;
+  };
   // 기사 지명 요청
   const handleDriverRequest = async (driverId) => {
     if (!flow) {
@@ -309,10 +314,13 @@ const DriverSearchForm = () => {
       //   request: flow.requestDto
       // });
 
+
+
       // console.log("driverId: " + driverId);
+      const requestForApi = toApiRequest(flow.requestDto);
 
       const { requestId, paymentId } = await createDeliveryPropose(
-        flow.requestDto,
+        requestForApi,
         paymentDto,
         driverId
       );
@@ -409,7 +417,7 @@ const DriverSearchForm = () => {
                 }
               }}
             />
-                {/* 검색 실행 버튼 */ }
+            {/* 검색 실행 버튼 */}
             <OneButtonAtRight clickEvent={() => handleSearch()}>검색</OneButtonAtRight>
 
             <label className="checkbox-label">

@@ -100,7 +100,8 @@ const EstimateForm_new = () => {
     setEndDate(req.wantToEnd ? new Date(req.wantToEnd) : null);
 
     // 차량/거리/요금
-    setDistance(Number(req.distance || 0)); // redux로 넣는다면 dispatch(setDistance(...)) 사용
+    //setDistance(Number(req.distance || 0)); // redux로 넣는다면 dispatch(setDistance(...)) 사용
+    dispatch(setDistance(Number(req.distance || 0)));
     setVehicleTypeId(req.vehicleTypeId ? String(req.vehicleTypeId) : "");
     // price는 아래 재계산 로직이 있으니 그대로 두거나 표기만 참조하게 둠
 
@@ -448,6 +449,7 @@ const EstimateForm_new = () => {
 
   // payload 빌드 (handlingId: null 허용)
   const buildPayload = (payment) => {
+
     let order = 1;
     const wp = [];
     wp.push({ address: hubAddress, dropOrder: order++, status: "PENDING" });
@@ -467,6 +469,14 @@ const EstimateForm_new = () => {
         : finalBase
     );
 
+    const getVId = (v) => String(v.id ?? v.vehicleTypeId ?? v.vehicle_type_id);
+    const resolvedSel =
+      selectedOption === "all"
+        ? "all"
+        : (selectedOption
+          || vehicleTypes.find(v => getVId(v) === String(vehicleTypeId))
+          || null);
+
     return {
       payment,
       request: {
@@ -480,12 +490,22 @@ const EstimateForm_new = () => {
         wantToStart: formatLocalDateTime(startDate),
         wantToEnd: formatLocalDateTime(endDate),
         companyId,
-        vehicleTypeId: vehicleTypeId ? Number(vehicleTypeId) : null,
-        vehicleTypeName: selectedOption ? (selectedOption==="all"?"차량 선택 안함": selectedOption.name) : null,
-        vehicleMaxWeight: selectedOption ? (selectedOption==="all"?totalCargoWeight:selectedOption.maxWeight) : null,
+        vehicleTypeId:
+          resolvedSel === "all"
+            ? null
+            : (Number.isFinite(Number(vehicleTypeId)) ? Number(vehicleTypeId) : null),
+        vehicleTypeName:
+          resolvedSel === "all" ? "차량 선택 안함" : (resolvedSel?.name ?? null),
+        vehicleMaxWeight:
+          resolvedSel === "all" ? totalCargoWeight : (resolvedSel?.maxWeight ?? null),
         waypoints: wp
       },
     };
+  };
+
+  const toApiRequest = (req) => {
+    const { vehicleTypeName, vehicleMaxWeight, ...rest } = req;
+    return rest;
   };
 
   // 기사님 검색
@@ -567,9 +587,16 @@ const EstimateForm_new = () => {
     };
 
     const payload = buildPayload(paymentDto);
+    const requestForApi = toApiRequest(payload.request);
+
     try {
+      // const { requestId, paymentId } = await createDeliveryRequest(
+      //   payload.request,
+      //   payload.payment
+      // );
+
       const { requestId, paymentId } = await createDeliveryRequest(
-        payload.request,
+        requestForApi,
         payload.payment
       );
 
@@ -748,16 +775,22 @@ const EstimateForm_new = () => {
 
           {/* 차량 선택 */}
           <div className="form-row">
-            <select className="customInput" value={vehicleTypeId} onChange={(e) => {
-              setVehicleTypeId(e.target.value);
-              if (e.target.value === "all") {
-                setSelectedOption(e.target.value);
-              } else {
-                setSelectedOption(vehicleTypes.find(v => v.vehicleTypeId.toString() === e.target.value));
-              }
-            }}>
+            <select
+              className="customInput"
+              value={vehicleTypeId}
+              onChange={(e) => {
+                const val = String(e.target.value);
+                setVehicleTypeId(val);
+                if (val === "all") {
+                  setSelectedOption(e.target.value);
+                } else {
+                  const getVId = (v) => String(v.id ?? v.vehicleTypeId ?? v.vehicle_type_id);
+                  const found = vehicleTypes.find((v) => getVId(v) === val);
+                  setSelectedOption(found || null);
+                }
+              }}>
               <option value="">차량 선택</option>
-              <option value="all">차량 선택 안함 (모든 차량 가능)</option>
+              {/*<option value="all">차량 선택 안함 (모든 차량 가능)</option>*/}
               {vehicleTypes.map((v) => (
                 <option
                   key={v.id ?? v.vehicleTypeId ?? v.vehicle_type_id}

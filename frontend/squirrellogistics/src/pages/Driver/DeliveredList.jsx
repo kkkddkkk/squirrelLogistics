@@ -23,7 +23,7 @@ import Footer from "../Layout/Footer";
 import dayjs from "dayjs";
 import LoadingComponent from "../../components/common/LoadingComponent";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 const DeliveredList = () => {
   const navigate = useNavigate();
@@ -53,31 +53,46 @@ const DeliveredList = () => {
     loadCompletedDeliveries();
   }, []);
 
+  // const filteredData = deliveredData
+  //   .filter((item) => {
+  //     // 새로운 응답 구조에서 additionalInfo를 통해 주소 정보에 접근
+  //     const additionalInfo = item.additionalInfo || {};
+  //     const startAddress = additionalInfo.startAddress || "";
+  //     const endAddress = additionalInfo.endAddress || "";
+  //     return `${startAddress}${endAddress}`
+  //       .toLowerCase()
+  //       .includes(search.toLowerCase());
+  //   })
+  //   .sort((a, b) => {
+  //     // 새로운 응답 구조에서 additionalInfo를 통해 완료일자에 접근
+  //     const additionalInfoA = a.additionalInfo || {};
+  //     const additionalInfoB = b.additionalInfo || {};
+  //     const completedAtA = additionalInfoA.completedAt;
+  //     const completedAtB = additionalInfoB.completedAt;
+
+  //     switch (sort) {
+  //       case "latest":
+  //         return new Date(completedAtB) - new Date(completedAtA);
+  //       case "oldest":
+  //         return new Date(completedAtA) - new Date(completedAtB);
+  //       default:
+  //         return 0;
+  //     }
+  //   });
+
+  const query = search.toLowerCase();
   const filteredData = deliveredData
     .filter((item) => {
-      // 새로운 응답 구조에서 additionalInfo를 통해 주소 정보에 접근
-      const additionalInfo = item.additionalInfo || {};
-      const startAddress = additionalInfo.startAddress || "";
-      const endAddress = additionalInfo.endAddress || "";
-      return `${startAddress}${endAddress}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const startAddress = item.startAddress || "";
+      const endAddress = item.endAddress || "";
+      return (startAddress + endAddress).toLowerCase().includes(query);
     })
     .sort((a, b) => {
-      // 새로운 응답 구조에서 additionalInfo를 통해 완료일자에 접근
-      const additionalInfoA = a.additionalInfo || {};
-      const additionalInfoB = b.additionalInfo || {};
-      const completedAtA = additionalInfoA.completedAt;
-      const completedAtB = additionalInfoB.completedAt;
-
-      switch (sort) {
-        case "latest":
-          return new Date(completedAtB) - new Date(completedAtA);
-        case "oldest":
-          return new Date(completedAtA) - new Date(completedAtB);
-        default:
-          return 0;
-      }
+      const aTime = a.completedAt ? dayjs(a.completedAt).valueOf() : 0;
+      const bTime = b.completedAt ? dayjs(b.completedAt).valueOf() : 0;
+      if (sort === "latest") return bTime - aTime;
+      if (sort === "oldest") return aTime - bTime;
+      return 0;
     });
 
   const paginatedData = filteredData.slice(
@@ -348,12 +363,11 @@ const DeliveredList = () => {
             {/* {filteredData} */}
             {paginatedData.map((row, idx) => {
               // 새로운 응답 구조에서 additionalInfo를 통해 필요한 데이터에 접근
-              const additionalInfo = row.additionalInfo || {};
-              const assignedId = additionalInfo.assignedId;
-              const status = additionalInfo.status;
-              const completedAt = additionalInfo.completedAt;
-              const startAddress = additionalInfo.startAddress;
-              const endAddress = additionalInfo.endAddress;
+              const assignedId = row.assignId;
+              const startAddress = row.startAddress;
+              const endAddress = row.endAddress;
+              const completedAt = row.completedAt;
+              const status = "COMPLETED";
 
               return (
                 <Paper
@@ -425,17 +439,11 @@ const DeliveredList = () => {
                               px: 2,
                               py: 0.5,
                               borderRadius: 1,
-                              border: `1px solid ${
-                                status === "COMPLETED"
-                                  ? thisTheme.palette.success.main
-                                  : thisTheme.palette.text.secondary
-                              }`,
-                              // bgcolor:
+                              border: `1px solid ${status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary}`,
+                              // bgcolor: 
                               //   status === "COMPLETED" ? "#e8f5e8" : "#f5f5f5",
                               color:
-                                status === "COMPLETED"
-                                  ? thisTheme.palette.success.main
-                                  : thisTheme.palette.text.secondary,
+                                status === "COMPLETED" ? thisTheme.palette.success.main : thisTheme.palette.text.secondary,
                             }}
                           >
                             {status === "COMPLETED" ? "배송완료" : status}

@@ -117,36 +117,30 @@ public class DeliveryAssignmentService {
 				.findEstimatedFeeById(deliveryAssignmentRepository.findRequestIdById(assignedId));
 		String estimatedPolyline = requestRepository.findExpectedRealPolylineByAssignedId(assignedId).get();
 		Long paymentId = deliveryAssignmentRepository.findFirstPaymentIdById(assignedId);
-		
+
 		DeliveryAssignment deliveryAssignment = deliveryAssignmentRepository.findById(assignedId)
 				.orElseThrow(() -> new RuntimeException("assignment not found!"));
-		
+
 		if (actualDelivery == null) {
-			
-			Payment payment = paymentRepository.findByPrepaidId(paymentId)
-			        .orElseGet(() -> {
-			            Payment newPayment = Payment.builder()
-			                    .prepaidId(paymentId)
-			                    .settlement(false)
-			                    .payStatus(PayStatusEnum.PENDING)
-			                    .build();
-			            return paymentRepository.save(newPayment); // DB에 먼저 저장
-			        });
+
+			Payment payment = paymentRepository.findByPrepaidId(paymentId).orElseGet(() -> {
+				Payment newPayment = Payment.builder().prepaidId(paymentId).settlement(false)
+						.payStatus(PayStatusEnum.PENDING).build();
+				return paymentRepository.save(newPayment); // DB에 먼저 저장
+			});
 
 			// 이후에 assignment와 연결
 			deliveryAssignment.setPayment(payment);
 			deliveryAssignmentRepository.save(deliveryAssignment);
 
-			
 			ActualCalcDTO actualCalcDTO = ActualCalcDTO.builder().paymentId(paymentId)
-					.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId)).assignedId(Long.valueOf(assignedId))
-					.dropOrder1(waypointList.size() >= 3).dropOrder2(waypointList.size() >= 4)
-					.dropOrder3(waypointList.size() >= 5).mountainous(false)
-					.caution(false).distance(0L)
-					.weight(0L)
+					.prepaidId(paymentRepository.findPrepaidIdByPaymentId(paymentId))
+					.assignedId(Long.valueOf(assignedId)).dropOrder1(waypointList.size() >= 3)
+					.dropOrder2(waypointList.size() >= 4).dropOrder3(waypointList.size() >= 5).mountainous(false)
+					.caution(false).distance(0L).weight(0L)
 					.requestId(deliveryAssignmentRepository.findRequestIdById(assignedId)).estimateFee(estimatedFee)
 					.actualPolyline(estimatedPolyline).build();
-			
+
 			return actualCalcDTO;
 		}
 
@@ -273,6 +267,11 @@ public class DeliveryAssignmentService {
 	@Transactional
 	public Map<String, String> accept(Long requestId, Long driverId) {
 
+		var now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+	    var proposalDeadline = now.plusHours(2);
+	    
+		deliveryAssignmentRepository.cancelExpiredProposalsByStartForRequest(now, proposalDeadline, requestId);
+		
 		// 요청 정보 + 운전자 정보 존재 여부 검사 => 로크로 트랜잭션 잠금.
 		DeliveryRequest req = requestRepository.findByIdForUpdate(requestId).orElse(null);
 
@@ -325,8 +324,11 @@ public class DeliveryAssignmentService {
 	// 작성자: 고은설.
 	// 기능: 운송 요청 정보에 명시된 내용과 운전 기사 개인 정보 대조 확인.
 	private String validateAcceptableCode(DeliveryRequest req, Driver driver) {
-		if (req.getStatus() != StatusEnum.REGISTERED && req.getStatus() != StatusEnum.PROPOSED)
+
+		if (req.getStatus() != com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.REGISTERED
+				&& req.getStatus() != com.gpt.squirrelLogistics.enums.deliveryRequest.StatusEnum.PROPOSED) {
 			return "REQUEST_ALREADY_TAKEN_2";
+		}
 
 		// 요청에 명시된 차량 운전자 소지 여부 확인.
 		boolean isCarAvailable = carRepository.hasEligibleCar(driver.getDriverId(),
@@ -337,15 +339,20 @@ public class DeliveryAssignmentService {
 		var blocking = List.of(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.ASSIGNED,
 				com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.IN_PROGRESS);
 
-		// 희망 시작시작, 종료 시간 제공되지 않은 경우.
-		if (req.getWantToStart() == null || req.getWantToEnd() == null) {
+		// 희망 시작시간 제공되지 않은 경우.
+		if (req.getWantToStart() == null) {
 			return null;
 		}
 
-		LocalDateTime start = req.getWantToStart();
+		LocalDateTime candidateStart = req.getWantToStart();
 
-		boolean hasConflict = deliveryAssignmentRepository.existsOverlappingByRequestDay(driver.getDriverId(), start,
-				blocking);
+		boolean hasConflict = deliveryAssignmentRepository.existsOverlapping24h(
+		    driver.getDriverId(),
+		    candidateStart.plusHours(24),  
+		    candidateStart.minusHours(24),  
+		    blocking
+		);
+
 		if (hasConflict)
 			return "SCHEDULE_CONFLICT";
 
@@ -534,10 +541,9 @@ public class DeliveryAssignmentService {
 //		var last = deliveryStatusLogRepository
 //				.findByDeliveryAssignment_DeliveryRequest_RequestIdOrderByCreatedAtDescStatusIdDesc(requestId,
 //						PageRequest.of(0, 1));
-		
+
 		var last = deliveryStatusLogRepository
-				.findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(assignId,
-						PageRequest.of(0, 1));
+				.findByDeliveryAssignment_AssignedIdOrderByCreatedAtDescStatusIdDesc(assignId, PageRequest.of(0, 1));
 		DeliveryStatusLogSlimResponseDTO lastDto = null;
 		Integer lastVisited = null;
 		if (!last.isEmpty()) {
@@ -925,24 +931,24 @@ public class DeliveryAssignmentService {
 		return Map.of("SUCCESS", request.getRequestId());
 
 	}
-	
+
 	public Long getLatestAssignmentIdByDriverId(Long driverId) {
-		Optional<DeliveryAssignment> latestAssignId = deliveryAssignmentRepository.findTopByDriver_DriverIdOrderByAssignedAtDescAssignedIdDesc(driverId);
-		
-		if(latestAssignId.isEmpty())
-		{
+		Optional<DeliveryAssignment> latestAssignId = deliveryAssignmentRepository
+				.findTopByDriver_DriverIdOrderByAssignedAtDescAssignedIdDesc(driverId);
+
+		if (latestAssignId.isEmpty()) {
 			return null;
 		}
-		
+
 		return latestAssignId.get().getAssignedId();
 	}
-	
-	//작성자: 김도경
-	//예약 취소
+
+	// 작성자: 김도경
+	// 예약 취소
 	@Transactional
 	public void cancel(Long assignedId) {
 		DeliveryAssignment deliveryAssignment = deliveryAssignmentRepository.findById(assignedId).orElseThrow();
-		
+
 		deliveryAssignment.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.CANCELED);
 	}
 

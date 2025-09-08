@@ -31,19 +31,35 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 
 	// 작성자: 고은설.
 	// 기능: 아직 배정되지 않았고, 지명 제안이 모두 만료된 케이스 공개로 전환.
+//	@Modifying(clearAutomatically = true, flushAutomatically = true)
+//	@Query(value = """
+//			  UPDATE delivery_request r
+//			  LEFT JOIN delivery_assignment a
+//			    ON a.request_id = r.request_id
+//			   AND a.status IN ('UNKNOWN','ASSIGNED','IN_PROGRESS')
+//			  SET r.status = 'REGISTERED',
+//			      r.payment_id = NULL
+//			  WHERE r.status = 'PROPOSED'
+//			    AND r.want_to_end >= :now
+//			    AND a.delivery_assignment_id IS NULL
+//			""", nativeQuery = true)
+//	int reopenAndDetachPaymentForRequestsNative(@Param("now") LocalDateTime now);
+
+	// 작성자: 고은설.
+	// 기능: 아직 배정되지 않았고, 지명 만료기일을 넘긴 요청 공개로 전환.
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = """
 			  UPDATE delivery_request r
 			  LEFT JOIN delivery_assignment a
 			    ON a.request_id = r.request_id
 			   AND a.status IN ('UNKNOWN','ASSIGNED','IN_PROGRESS')
-			  SET r.status = 'REGISTERED',
-			      r.payment_id = NULL
+			  SET r.status = 'REGISTERED'
 			  WHERE r.status = 'PROPOSED'
-			    AND r.want_to_end >= :now
+			    AND r.want_to_start IS NOT NULL
+			    AND r.want_to_start <= :proposalDeadline
 			    AND a.delivery_assignment_id IS NULL
 			""", nativeQuery = true)
-	int reopenAndDetachPaymentForRequestsNative(@Param("now") LocalDateTime now);
+	int reopenProposedToRegisteredByStart(@Param("proposalDeadline") LocalDateTime proposalDeadline);
 
 	// 작성자: 고은설
 	// 기능: 할당 없고 기간 지난 공개 요청 매칭 실패로 처리.
@@ -59,6 +75,19 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			    AND a.delivery_assignment_id IS NULL
 			""", nativeQuery = true)
 	int failExpiredUnassignedRequests(@Param("now") LocalDateTime now);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = """
+			    UPDATE delivery_request r
+			    LEFT JOIN delivery_assignment a
+			      ON a.request_id = r.request_id
+			     AND a.status IN ('ASSIGNED','IN_PROGRESS','COMPLETED')
+			    SET r.status = 'FAILED'
+			    WHERE r.status IN ('REGISTERED','PROPOSED')
+			      AND r.want_to_start < :threshold
+			      AND a.delivery_assignment_id IS NULL
+			""", nativeQuery = true)
+	int failUnmatchedRequestsBefore(@Param("threshold") LocalDateTime threshold);
 
 	// 작성자: 고은설.
 	// 기능: 요청 목록 화면에서 필요한 데이터만 추출하기 위함.
@@ -390,7 +419,7 @@ public interface DeliveryRequestRepository extends JpaRepository<DeliveryRequest
 			    where a.assignedId = :assignedId
 			""")
 	Optional<String> findExpectedPolylineByAssignedId(@Param("assignedId") Long assignedId);
-	
+
 	// 작성자: 고은설
 	// 기능: 특정 ID의 운송 요청의 예상 경로 추출하기.
 	@Query("""

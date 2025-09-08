@@ -141,6 +141,8 @@ export const createDeliveryPropose = async (
       driverId: driverId
     };
 
+    console.log(wrapped.request);
+
     const token =
       localStorage.getItem("accessToken") || localStorage.getItem("token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};

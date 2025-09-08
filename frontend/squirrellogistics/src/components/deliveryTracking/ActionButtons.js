@@ -187,7 +187,7 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
                 mode: 'confirm',
                 title: '집하 완료',
                 content: <>화물 집하 완료 처리하시겠습니까?</>,
-                next: legs.length > 1 ? buildNextRouteChoice() : null,
+                next: legs.length >= 1 ? buildNextRouteChoice() : null,
               })
             }
           >

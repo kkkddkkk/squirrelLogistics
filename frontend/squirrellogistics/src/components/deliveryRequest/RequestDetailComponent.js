@@ -80,7 +80,6 @@ const RequestDetailComponent = () => {
     waypoints: [],
   });
 
-  console.log(isProposed);
   useEffect(() => {
     if (!requestId) return;
 
@@ -105,7 +104,6 @@ const RequestDetailComponent = () => {
   // requestData → deliveryData 매핑
   useEffect(() => {
     if (!requestData) return;
-    console.log(requestData);
 
     const mapped = {
       request_id: requestData.requestId,
@@ -701,13 +699,10 @@ const RequestDetailComponent = () => {
                     요청 시간
                   </Typography>
                   <Typography variant="body2" mb={1} sx={textSx}>
-                    <strong>출발:</strong>{" "}
+                    <strong>시작일:</strong>{" "}
                     {fmtDateTime(deliveryData?.estimated_start_at)}
                   </Typography>
-                  <Typography variant="body2" mb={1} sx={textSx}>
-                    <strong>도착:</strong>{" "}
-                    {fmtDateTime(deliveryData?.estimated_end_at)}
-                  </Typography>
+
                   <Typography variant="body2" sx={textSx}>
                     <strong>등록일:</strong>{" "}
                     {fmtDateTime(deliveryData?.created_at)}

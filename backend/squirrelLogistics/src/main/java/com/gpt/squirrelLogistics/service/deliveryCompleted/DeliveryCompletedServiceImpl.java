@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.service.deliveryCompleted;
 import com.gpt.squirrelLogistics.dto.actualDelivery.ActualDeliveryDTO;
 import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryCargo.DeliveryCargoSlimResponseDTO;
+import com.gpt.squirrelLogistics.dto.deliveryCompleted.DeliveryCompletedCardDTO;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DeliveryRequestSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointSlimResponseDTO;
 import com.gpt.squirrelLogistics.dto.deliveryWaypoint.DeliveryWaypointWithCargoDTO;
@@ -86,6 +87,14 @@ public class DeliveryCompletedServiceImpl implements DeliveryCompletedService {
 		return result;
 	}
 
+	@Override
+	public List<DeliveryCompletedCardDTO> getCompletedListSlim(Long driverId) {
+
+		List<DeliveryCompletedCardDTO> result = deliveryAssignmentRepository.findCompletedCardsByDriverId(driverId);
+		
+		return result;
+	}
+
 	/**
 	 * 작성자: 임수현 기능: 운송 상세 정보 조회 (기존 DTO들을 조합하여 반환)
 	 */
@@ -152,30 +161,24 @@ public class DeliveryCompletedServiceImpl implements DeliveryCompletedService {
 			// 4-3. 로그로부터 경유지 하차 시간 추출.
 			Map<Integer, LocalDateTime> droppedAtByWaypoint = buildDroppedAtByWaypoint(assignedId);
 
-			//4-4. 경유지 정보 전체 조립.
+			// 4-4. 경유지 정보 전체 조립.
 			List<DeliveryWaypointWithCargoDTO> waypointDTOs = waypointEntities.stream().map(wp -> {
-				
+
 				DeliveryWaypointSlimResponseDTO wpSlim = convertWaypointToDTO(wp);
-				
+
 				LocalDateTime droppedAtFromLog = droppedAtByWaypoint.getOrDefault(wp.getDropOrder(), null);
-				
+
 				DeliveryCargoSlimResponseDTO cargoDto = null;
 				DeliveryCargo cargo = cargoByWaypointId.get(wp.getWaypointId());
-				if(cargo != null) {
+				if (cargo != null) {
 					CargoType ct = cargo.getCargoType();
-					cargoDto = DeliveryCargoSlimResponseDTO.builder()
-							.cargoId(cargo.getCargoId())
-							.description(cargo.getDescription())
-							.handlingId(ct != null ? ct.getHandlingId() : null)
+					cargoDto = DeliveryCargoSlimResponseDTO.builder().cargoId(cargo.getCargoId())
+							.description(cargo.getDescription()).handlingId(ct != null ? ct.getHandlingId() : null)
 							.handlingTags(ct != null ? ct.getHandlingTags() : null).build();
 				}
-				
-				return DeliveryWaypointWithCargoDTO.
-						builder()
-						.waypoint(wpSlim)
-						.droppedAtFromLog(droppedAtFromLog)
-						.cargo(cargoDto)
-						.build();
+
+				return DeliveryWaypointWithCargoDTO.builder().waypoint(wpSlim).droppedAtFromLog(droppedAtFromLog)
+						.cargo(cargoDto).build();
 			}).collect(Collectors.toList());
 
 			result.put("waypoints", waypointDTOs);

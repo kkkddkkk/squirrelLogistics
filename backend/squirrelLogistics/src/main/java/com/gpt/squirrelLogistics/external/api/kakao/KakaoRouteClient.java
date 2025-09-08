@@ -220,53 +220,74 @@ public class KakaoRouteClient {
 	// 작성자: 고은설.
 	// 기능: 실제 이동 좌표를 경로 정보로 환산하여 이동 거리 및 폴리라인 제작.
 	public EncodedRouteSummary summarizeRecordedPath(List<LatLng> rawPoints) {
-		List<LatLng> pts = normalizeTrackPoints(rawPoints);
+		
+		//중복 좌표 제거
+	    List<LatLng> pts = normalizeTrackPoints(rawPoints);
+	    if (pts.size() < 2) {
+	        return new EncodedRouteSummary(0L, encodePolyline(pts));
+	    }
 
-		if (pts.size() < 2)
-			return new EncodedRouteSummary(0L, encodePolyline(pts));
+	    //필요시 조정해주시면 됩니다~!(고은설).
+	    final double DUP_EPS_M       = 5.0; //사실상 동일점 기준값.
+	    final double TELEPORT_M      = 1500.0; //GPS 튐(거의 텔레포트) 기준값.
+	    final double TELEPORT_CAP_M  = 200.0; //튐 구간 거리 상한.
+	    final double ROUTE_MIN_M     = 3000.0; //이 이상일 때 라우팅.
+	    final double ROUTE_CAP_X     = 1.5; //라우팅 결과 과대치 보정.
 
-		long havTotal = 0;
-		long routedTotal = 0;
-		List<LatLng> finalPolyline = new ArrayList<>();
+	    long total = 0L;
+	    List<LatLng> outLine = new ArrayList<>();
+	    outLine.add(pts.get(0));
 
-		for (int i = 0; i < pts.size() - 1; i++) {
-			LatLng a = pts.get(i), b = pts.get(i + 1);
-			double gap = haversineMeters(a, b);
+	    for (int i = 0; i < pts.size() - 1; i++) {
+	        LatLng a = pts.get(i);
+	        LatLng b = pts.get(i + 1);
 
-			// 1) 중복/스파이크 제거
-			if (gap < 5)
-				continue; // 같은 좌표
-			if (gap > 2000) { // 2km 이상 튐
-				routedTotal += Math.round(gap);
-				continue;
-			}
+	        double gap = haversineMeters(a, b);
+	        if (gap < DUP_EPS_M) {
+	            //거의 같은 위치면 => 스킵.
+	            continue;
+	        }
 
-			// 2) 하버사인 기본
-			long havGap = Math.round(gap);
-			havTotal += havGap;
+	        if (gap >= TELEPORT_M) {
+	            //1.5키로 텔레포트급 좌표 차이 => 직선거리 사용.
+	            total += Math.round(TELEPORT_CAP_M);
+	            outLine.add(b);
+	            continue;
+	        }
 
-			// 3) 라우팅 (gap >= 1000m)
-			if (gap >= 1000) {
-				try {
-					RouteInfoDTO leg = requestRoute(a, b);
-					long d = leg.getDistance();
-					long capped = Math.min(d, Math.round(gap * 1.5));
-					routedTotal += capped;
-					finalPolyline.addAll(leg.getPolyline());
-				} catch (Exception e) {
-					routedTotal += havGap;
-				}
-			} else {
-				routedTotal += havGap;
-				finalPolyline.add(a);
-			}
-		}
+	        //3키로 이상 차이 => 여기부터 도로망 라우팅 사용.
+	        if (gap >= ROUTE_MIN_M) {
+	            try {
+	                RouteInfoDTO leg = requestRoute(a, b);  //카카오 호출.
+	                long d = (leg.getDistance() != null ? leg.getDistance() : Math.round(gap));
+	                long capped = Math.min(d, Math.round(gap * ROUTE_CAP_X));
+	                total += capped;
 
-		// 4) 전역 보정
-		long globalCap = Math.round(havTotal * 1.2); // 최대 20% 오차 허용
-		long safeTotal = Math.min(routedTotal, globalCap);
+	                List<LatLng> geom = leg.getPolyline();
+	                if (geom != null && !geom.isEmpty()) {
+	                    // 이전 마지막점과 중복 첫점 제거.
+	                    if (!outLine.isEmpty() && outLine.get(outLine.size()-1).equals(geom.get(0))) {
+	                        geom = geom.subList(1, geom.size());
+	                    }
+	                    outLine.addAll(geom);
+	                } else {
+	                    //이어붙이기만.
+	                    outLine.add(b);
+	                }
+	            } catch (Exception e) {
+	                //라우팅 실패 =>  하버사인.
+	                total += Math.round(gap);
+	                outLine.add(b);
+	            }
+	        } else {
+	            //짧은 구간 => 하버사인.
+	            total += Math.round(gap);
+	            outLine.add(b);
+	        }
+	    }
 
-		return new EncodedRouteSummary(safeTotal, encodePolyline(finalPolyline));
+	    String encoded = encodePolyline(outLine);
+	    return new EncodedRouteSummary(total, encoded);
 	}
 
 	private List<LatLng> straightLine(LatLng from, LatLng to) {
@@ -335,7 +356,7 @@ public class KakaoRouteClient {
 	}
 
 	private static long estimateDurationSec(long distanceMeters) {
-		double avgKmh = 35.0; // 정책값(도시부 평균) 필요시 설정화
+		double avgKmh = 35.0; 
 		return Math.max(60, Math.round(distanceMeters / 1000.0 / avgKmh * 3600));
 	}
 

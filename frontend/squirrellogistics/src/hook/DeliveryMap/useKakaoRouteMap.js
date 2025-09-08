@@ -365,21 +365,21 @@ export const useStaticRouteMap = ({
       });
 
       // 시작/경유/종료 마커
-      const startLL = path[0];
-      const endLL = path[path.length - 1];
+      // const startLL = path[0];
+      // const endLL = path[path.length - 1];
 
-      const startMarker = new Marker({
-        map: mapRef.current,
-        position: startLL,
-        ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
-        title: "출발",
-      });
-      const endMarker = new Marker({
-        map: mapRef.current,
-        position: endLL,
-        ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
-        title: "도착",
-      });
+      // const startMarker = new Marker({
+      //   map: mapRef.current,
+      //   position: startLL,
+      //   ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
+      //   title: "출발",
+      // });
+      // const endMarker = new Marker({
+      //   map: mapRef.current,
+      //   position: endLL,
+      //   ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
+      //   title: "도착",
+      // });
 
       const wpLLs = await geocodeIfNeeded(kakao, waypoints);
       const wpMarkers = wpLLs.map(wp => new Marker({
@@ -388,6 +388,8 @@ export const useStaticRouteMap = ({
         ...(markerImageRef.current ? { image: markerImageRef.current } : {}),
         title: wp.title || "경유지"
       }));
+
+      console.log(wpLLs);
 
       // markersRef.current = [startMarker, ...wpMarkers, endMarker];
       markersRef.current = [...wpMarkers];

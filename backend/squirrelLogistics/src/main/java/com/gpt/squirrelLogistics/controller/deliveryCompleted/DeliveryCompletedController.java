@@ -2,6 +2,7 @@ package com.gpt.squirrelLogistics.controller.deliveryCompleted;
 
 import com.gpt.squirrelLogistics.config.user.JwtTokenProvider;
 import com.gpt.squirrelLogistics.dto.actualDelivery.ActualDeliveryDTO;
+import com.gpt.squirrelLogistics.dto.deliveryCompleted.DeliveryCompletedCardDTO;
 import com.gpt.squirrelLogistics.service.deliveryCompleted.DeliveryCompletedService;
 import com.gpt.squirrelLogistics.service.driverAuth.AuthOutcome;
 import com.gpt.squirrelLogistics.service.driverAuth.DriverTokenValidService;
@@ -84,11 +85,13 @@ public class DeliveryCompletedController {
 				return toError(f);
 
 			Long driverId = ((AuthOutcome.Success) outcome).driverId();
-			log.info("사용할 driverId: {}", driverId);
-
-			List<Map<String, Object>> result = deliveryCompletedService
-					.getCompletedDeliveriesWithActualDelivery(driverId);
-			log.info("조회된 운송 건 수: {}", result.size());
+//			log.info("사용할 driverId: {}", driverId);
+//
+//			List<Map<String, Object>> result = deliveryCompletedService
+//					.getCompletedDeliveriesWithActualDelivery(driverId);
+//			log.info("조회된 운송 건 수: {}", result.size());
+			
+			List<DeliveryCompletedCardDTO> result = deliveryCompletedService.getCompletedListSlim(driverId);
 
 			return ResponseEntity.ok(result);
 		} catch (Exception e) {

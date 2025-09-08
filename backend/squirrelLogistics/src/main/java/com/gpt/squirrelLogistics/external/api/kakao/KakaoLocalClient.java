@@ -52,7 +52,6 @@ public class KakaoLocalClient {
         final String query = address.trim();
 
         try {
-            // ✅ 한글 쿼리 인코딩: build().encode(UTF-8).toUri()
             URI uri = UriComponentsBuilder.fromHttpUrl(LOCAL_API_URL)
                     .queryParam("query", query)
                     .build()
