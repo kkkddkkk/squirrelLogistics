@@ -57,7 +57,7 @@ const ReportList = () => {
                                                 header={`출발지: ${report.startAddress}\n도착지: ${report.endAddress}`}
                                                 title={report.rTitle}
                                                 content={report.rContent}
-                                                answer={"answer"}
+                                                answer={"아직 답변이 등록되지 않았습니다."}
                                                 preview={report.fileNames}
                                             ></ReportContent> : <></>
                                     ))

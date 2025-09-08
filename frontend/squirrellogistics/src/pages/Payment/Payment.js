@@ -295,14 +295,16 @@ export const Payment = () => {
                 buyer_tel: '01012341234'
             },
             async function (response) {
-
                 if (!merchant_uid) {
                     setIsProcessing(false);
                     return;
                 }
 
+                console.log(response);
                 if (response.success) {
+                    console.log("response.success");
                     if (!response.imp_uid) {
+                        console.log("response.imp_uid: " + response.imp_uid);
                         setIsProcessing(false);
                         return;
                     }
@@ -314,24 +316,23 @@ export const Payment = () => {
                     } else {
                         // 기존 결제 방법 처리
                         if (isSecondPayment) { // 2차 결제
-                            // const secondPaymentBody = {
-                            //     paymentId: actualCalc.paymentId,
-                            //     prepaidId: prepaidId,
-                            //     payAmount: totalRate,
-                            //     payMethod: paymentMethod,
-                            //     payStatus: "PROCESSING",
-                            //     impUid: response.imp_uid
-                            // };
+                            const secondPaymentBody = {
+                                paymentId: actualCalc.paymentId,
+                                prepaidId: prepaidId,
+                                payAmount: totalRate-actualCalc.estimateFee,
+                                payMethod: paymentMethod,
+                                payStatus: "PROCESSING",
+                                impUid: response.imp_uid
+                            };
 
                             try {
-                                await successSecondPayment(actualCalc.paymentId, {
-                                    prepaidId: prepaidId,
-                                    payAmount: totalRate - actualCalc.estimateFee,
-                                    payMethod: paymentMethod,
-                                    payStatus: "PROCESSING",
-                                    impUid: response.imp_uid
+                                console.log("secondPaymentBody", secondPaymentBody, "paymentId", actualCalc.paymentId);
+                                await successSecondPayment({
+                                    paymentId: actualCalc.paymentId,
+                                    successSecondPayment: secondPaymentBody
                                 });
                             } catch (error) {
+                                console.error(error);
                             }
 
                             moveToSuccess({ state: true, paymentId: actualCalc.paymentId });

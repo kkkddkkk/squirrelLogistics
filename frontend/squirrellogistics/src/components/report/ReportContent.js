@@ -27,7 +27,7 @@ const ReportContent = ({ header, title, content, answer, preview }) => {
                     }</Box> : <></>
                 }
                 <Box width={"93%"} border={"1px solid #909095"} margin={"5% 0"} />
-                <CommonSubTitle>A. {title}의 답변</CommonSubTitle> 
+                <CommonSubTitle>A. '{title}'의 답변</CommonSubTitle> 
                 <Typography textAlign={"justify"} marginTop={5}>
                     {answer}
                 </Typography>
