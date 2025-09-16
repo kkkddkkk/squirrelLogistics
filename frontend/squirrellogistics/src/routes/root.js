@@ -11,7 +11,7 @@ const RegisterPage = lazy(() => import("../pages/Layout/RegisterPage"));
 const EstimatePage = lazy(() => import("../pages/estimate/EstimatePage_new"));
 const DriverIndex = lazy(() => import("../pages/Driver/IndexPage"));
 const DriverSearchPage = lazy(() => import("../pages/driversearch/DriverSearchPage"));
-const AdminPage = lazy(() => import("./../components/admin/AdminLayout"));
+const Admin = lazy(() => import("../pages/admin/AdminLayout"));
 const Company = lazy(() => import("../pages/company/CompanyLayout"));
 const Reciept = lazy(() => import("../pages/Payment/Reciept"));
 const TransactionStatement = lazy(() => import("../pages/Payment/TransactionStatement"));
@@ -113,7 +113,7 @@ const root = createBrowserRouter([
                 path: "/admin",
                 element: (
                     <Suspense fallback={Loading}>
-                        <AdminPage></AdminPage>
+                        <Admin></Admin>
                     </Suspense>
                 ),
                 children: adminRouter()

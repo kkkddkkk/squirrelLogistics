@@ -33,14 +33,6 @@ const companyRouter = () => {
       path: "/company/edit",          // ✅ ② 정보수정 (인증 후 진입)
       element: <Suspense fallback={Loading}><CompanyEditPage /></Suspense>,
     },
-    // {
-    //   path: "/company/reset-password", // ✅ ③ 비밀번호 재설정
-    //   element: <Suspense fallback={Loading}><ResetPasswordPage /></Suspense>,
-    // },
-    // { 
-    //   path: "/company/auth/social-complete",
-    //   element: <Suspense fallback={Loading}><SocialAuthCallback /></Suspense> 
-    // },
     {
       path: "/company/oauth/success", // OAuth 성공 페이지
       element: <Suspense fallback={Loading}><OAuthSuccess /></Suspense>
