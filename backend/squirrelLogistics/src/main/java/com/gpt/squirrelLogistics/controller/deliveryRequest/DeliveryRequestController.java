@@ -32,7 +32,7 @@ import com.gpt.squirrelLogistics.service.driverAuth.DriverAuthException;
 import com.gpt.squirrelLogistics.service.driverAuth.DriverTokenValidService;
 import com.gpt.squirrelLogistics.service.driverAuth.ErrorResponse;
 import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
-import com.sun.istack.NotNull;
+import jakarta.validation.constraints.NotNull;
 import com.gpt.squirrelLogistics.dto.deliveryRequest.DriverAssignmentResponseDTO;
 
 import jakarta.validation.Valid;

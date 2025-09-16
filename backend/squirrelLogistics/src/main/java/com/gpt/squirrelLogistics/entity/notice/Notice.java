@@ -21,7 +21,8 @@ public class Notice {
 
     @Lob
     private String content;
-
+    
+    @Builder.Default
     @Column(nullable = false)
     private boolean pinned = false;
 
