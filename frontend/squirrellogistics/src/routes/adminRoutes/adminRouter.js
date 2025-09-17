@@ -1,16 +1,27 @@
-
+// adminRoutes/adminRouter.js
 import { lazy, Suspense } from "react";
-
 const Loading = <div>로딩 중...</div>;
-const Admin = lazy(() => import("../../pages/admin"));
 
-const adminRouter = () => {
+const UserList = lazy(() => import("../../pages/admin/UserList"));
+const VehiclesPage = lazy(() => import("../../pages/admin/VehiclesPage"));
+
+export default function adminRouter() {
   return [
-    // {
-    //   path: "/admin",
-    //   element: <Suspense fallback={Loading}><Admin /></Suspense>,
-    // },
+    {
+      path: "users",
+      element: (
+        <Suspense fallback={Loading}>
+          <UserList />
+        </Suspense>
+      ),
+    },
+    {
+      path: "vehicles",
+      element: (
+        <Suspense fallback={Loading}>
+          <VehiclesPage />
+        </Suspense>
+      ),
+    },
   ];
-};
-
-export default adminRouter;
+}

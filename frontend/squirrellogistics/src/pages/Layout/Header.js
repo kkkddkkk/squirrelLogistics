@@ -13,20 +13,20 @@ import {
   useTheme,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
+
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import LoginModal from "./LoginModal";
-import { useNavigate } from "react-router-dom";
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
-import BedtimeOutlinedIcon from '@mui/icons-material/BedtimeOutlined';
-import { theme } from "../../components/common/CommonTheme";
-import { useOutletContext } from "react-router-dom";
 import { useDarkMode } from "../../DarkModeContext";
 import { format } from "date-fns";
 
 export default function Header() {
-
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [user, setUser] = useState({
@@ -40,7 +40,7 @@ export default function Header() {
   const openMenu = (e) => setAnchorEl(e.currentTarget);
   const closeMenu = () => setAnchorEl(null);
 
-  // 로컬스토리지 변경(다른 탭 포함) 반영
+  // 다른 탭에서 로그인 상태가 바뀌어도 반영
   useEffect(() => {
     const onStorage = () => {
       setUser({
@@ -74,11 +74,7 @@ export default function Header() {
   const role = (user.role || "").toUpperCase();
   const isAuthed = !!user.token;
 
-  /**
-   * 역할별 네비게이션 설정
-   * - 여기서 라벨/경로를 원하는 대로 수정하세요.
-   * - 경로는 /company 같은 base 없이 바로 절대경로 사용.
-   */
+  // 역할별 네비
   const NAV = {
     GUEST: [
       { label: "서비스", path: "/service" },
@@ -98,27 +94,26 @@ export default function Header() {
       { label: "운송 기록", path: "/driver/deliveredlist" },
       { label: "마이페이지", path: "/driver/profile" },
     ],
-    ADMIN: [
-      // 대시보드 없이 일반 메뉴 예시
-      { label: "사용자", path: "/admin/users" },
-      { label: "공지관리", path: "/admin/notices" },
-      { label: "설정", path: "/admin/settings" },
-    ],
+    ADMIN: [{ label: "관리자페이지", path: "/admin/users" }],
   };
 
-  // 현재 노출할 네비 결정 (로그인 X -> GUEST, 로그인 O -> 해당 ROLE, 없으면 COMPANY 기본)
-  const navKey = !isAuthed
-    ? "GUEST"
-    : NAV[role]
-      ? role
-      : "COMPANY";
-
+  const navKey = !isAuthed ? "GUEST" : (NAV[role] ? role : "COMPANY");
   const leftNav = NAV[navKey];
 
-  const thisTheme = useTheme();
+  const isAdmin = location.pathname.startsWith("/admin");
+
   return (
     <>
-      <AppBar position="static" color={thisTheme.palette.background.default}>
+      <AppBar
+        position="static"
+        color="default"
+        sx={{
+          backgroundColor: theme.palette.background.default,
+          color: theme.palette.text.primary,
+          boxShadow: "none",
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }}
+      >
         <Toolbar className={styles.headerContainer}>
           {/* 로고 */}
           <Typography
@@ -129,30 +124,56 @@ export default function Header() {
             Squirrel Logistics
           </Typography>
 
-          {/* 좌측 네비: 역할에 따라 버튼 구성 */}
+          {/* 좌측 네비 */}
           <div className={styles.navButtons}>
-            {leftNav.map((item) => (
-              <Button
-                key={item.path}
-                color="inherit"
-                onClick={() => navigate(item.path)}
-              >
-                {item.label}
-              </Button>
-            ))}
+            {isAdmin ? (
+              <>
+                <Button color="inherit" onClick={() => navigate("/admin/users")}>
+                  회원관리
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/users")}>
+                  약관관리
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/vehicles")}>
+                  차량관리
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/")}>
+                  정산
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/")}>
+                  신고확인
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/")}>
+                  공지사항관리
+                </Button>
+                <Button color="inherit" onClick={() => navigate("/admin/")}>
+                  배너관리
+                </Button>
+              </>
+            ) : (
+              leftNav.map((item) => (
+                <Button
+                  key={item.path}
+                  color="inherit"
+                  onClick={() => navigate(item.path)}
+                >
+                  {item.label}
+                </Button>
+              ))
+            )}
           </div>
 
           {/* 우측 사용자 영역 */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {darkMode ? (
               <LightModeOutlinedIcon
-                sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
-                onClick={() => toggleDarkMode(prev => !prev)}
+                sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
+                onClick={() => toggleDarkMode((prev) => !prev)}
               />
             ) : (
               <BedtimeOutlinedIcon
-                sx={{ color: thisTheme.palette.primary.main, cursor: "pointer" }}
-                onClick={() => toggleDarkMode(prev => !prev)}
+                sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
+                onClick={() => toggleDarkMode((prev) => !prev)}
               />
             )}
 
@@ -170,10 +191,7 @@ export default function Header() {
                 <IconButton color="inherit" onClick={openMenu}>
                   <AccountCircleIcon />
                 </IconButton>
-                <Typography
-                  variant="body2"
-                  sx={{ display: { xs: "none", sm: "block" } }}
-                >
+                <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
                   {user.name} 님
                 </Typography>
 
@@ -187,8 +205,7 @@ export default function Header() {
                   <MenuItem
                     onClick={() => {
                       closeMenu();
-                      {user.role === 'COMPANY' ? navigate("/company") : navigate("/driver/profile")}
-                      
+                      navigate(user.role === "COMPANY" ? "/company" : "/driver/profile");
                     }}
                   >
                     내 정보

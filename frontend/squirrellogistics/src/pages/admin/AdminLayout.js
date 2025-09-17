@@ -1,15 +1,23 @@
+// src/admin/AdminLayout.jsx
 import { Outlet } from "react-router-dom"
-import Footer from "../Layout/Footer"
-import Header from "../Layout/Header"
+import { Suspense } from "react";
+import Header from "../Layout/Header";
+import {
+    AppBar,
+    Box,
+    Button,
+    Container,
+    CssBaseline,
+    Toolbar,
+    useTheme,
+} from "@mui/material";
 
-const AdminLayout=()=>{
-    return(
+export default function AdminLayout() {
+
+    return (
         <>
-            <Header/>
-                <Outlet/>
-            <Footer/>
+            <Header />
+            <Outlet />
         </>
-    )
+    );
 }
-
-export default AdminLayout;
