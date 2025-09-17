@@ -69,7 +69,6 @@ const History = () => {
     }
 
 
-
     return (
         <>
             <CommonTitle>이용기록</CommonTitle>

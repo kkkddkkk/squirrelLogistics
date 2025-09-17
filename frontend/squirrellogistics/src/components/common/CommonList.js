@@ -1,10 +1,11 @@
 import { Paper, useTheme } from "@mui/material";
 
-const CommonList = ({ clickEvent, children, padding, margin, sx }) => {
+const CommonList = ({ clickEvent, children, padding, margin, sx, ref }) => {
   const thisTheme = useTheme();
   return (
     <Paper
       onClick={clickEvent}
+      ref={ref}
       sx={{
         margin: { margin },
         p: padding,

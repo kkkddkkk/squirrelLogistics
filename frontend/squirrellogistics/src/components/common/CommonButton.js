@@ -10,6 +10,9 @@ export const ButtonContainer = ({ children, width, marginTop, marginBottom }) =>
             width={width}
             marginTop={marginTop}
             marginBottom={marginBottom}
+            sx={{
+                flex: '0 0 auto',
+            }}
         >
             {children}
         </Box>
@@ -411,7 +414,7 @@ export const One100ButtonAtCenter = ({ children, disabled, clickEvent, color, he
 
     const safeColor = color || thisTheme.palette.primary.main;
     return (
-        <Grid container>
+        <Grid container height={height}>
             <Grid size={12} display="flex" justifyContent="center">
                 <Button
                     type="submit"
