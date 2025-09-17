@@ -56,7 +56,7 @@ public class DeliveryAssignmentController {
 			return toError(f);
 		}
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 		log.info("driverId={}", driverId);
 		DeliveryAssignmentTrackingDTO result = assignmentService.getTodayAssignments(driverId);
 
@@ -93,7 +93,7 @@ public class DeliveryAssignmentController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 		List<DriverScheduleDTO> list = assignmentService.findMonthlySchedule(driverId, year, month);
 		return ResponseEntity.ok(list);
 	}
@@ -122,7 +122,7 @@ public class DeliveryAssignmentController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		var opt = deliveryAssignmentRepository.findById(assignedId);
 		if (opt.isEmpty()) {
@@ -150,7 +150,7 @@ public class DeliveryAssignmentController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		Pageable pageable = PageRequest.of(page, size, Sort.by("regDate").descending());
 		return ResponseEntity.ok(reviewService.getSubmittedReviews(driverId, pageable));
@@ -172,7 +172,7 @@ public class DeliveryAssignmentController {
 		}
 
 		// 토큰에서 driverId 꺼내기
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		Map<String, Object> result = assignmentService.cancelDeliveryReservation(requestId, driverId);
 

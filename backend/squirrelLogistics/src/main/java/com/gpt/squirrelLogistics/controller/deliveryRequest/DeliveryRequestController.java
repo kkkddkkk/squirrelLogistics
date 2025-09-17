@@ -78,7 +78,7 @@ public class DeliveryRequestController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		DeliveryRequestResponseDTO dto = requestService.readFullSafe(id, driverId);
 
@@ -145,33 +145,27 @@ public class DeliveryRequestController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 		Map<String, String> result = assignmentService.accept(requestId, driverId);
 
 		if (result.containsKey("FAILED")) {
-		    switch (result.get("FAILED")) {
-		        case "REQUEST_NOT_FOUND":
-		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		                                 .body(AuthErrorCode.REQUEST_NOT_FOUND.toString());
-		        case "DRIVER_NOT_FOUND":
-		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		                                 .body(AuthErrorCode.DRIVER_NOT_FOUND.toString());
-		        case "REQUEST_ALREADY_TAKEN":
-		            return ResponseEntity.status(HttpStatus.GONE)
-		                                 .body(AuthErrorCode.REQUEST_ALREADY_TAKEN.toString());
-		        case "VEHICLE_TYPE_MISMATCH":
-		            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-		                                 .body(AuthErrorCode.VEHICLE_TYPE_MISMATCH.toString());
-		        case "SCHEDULE_CONFLICT":
-		            return ResponseEntity.status(HttpStatus.CONFLICT)
-		                                 .body(AuthErrorCode.SCHEDULE_CONFLICT.toString());
-		        case "ALREADY_ACCEPTED":
-		            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-		                                 .body(AuthErrorCode.ALREADY_ACCEPTED.toString());
-		        default:
-		            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-		                                 .body(AuthErrorCode.UNKNOWN.toString());
-		    }
+			switch (result.get("FAILED")) {
+			case "REQUEST_NOT_FOUND":
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.REQUEST_NOT_FOUND.toString());
+			case "DRIVER_NOT_FOUND":
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthErrorCode.DRIVER_NOT_FOUND.toString());
+			case "REQUEST_ALREADY_TAKEN":
+				return ResponseEntity.status(HttpStatus.GONE).body(AuthErrorCode.REQUEST_ALREADY_TAKEN.toString());
+			case "VEHICLE_TYPE_MISMATCH":
+				return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+						.body(AuthErrorCode.VEHICLE_TYPE_MISMATCH.toString());
+			case "SCHEDULE_CONFLICT":
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(AuthErrorCode.SCHEDULE_CONFLICT.toString());
+			case "ALREADY_ACCEPTED":
+				return ResponseEntity.status(HttpStatus.NO_CONTENT).body(AuthErrorCode.ALREADY_ACCEPTED.toString());
+			default:
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthErrorCode.UNKNOWN.toString());
+			}
 		}
 
 		// 성공 케이스

@@ -45,13 +45,12 @@ public class DriverReportController {
 	public ResponseEntity<?> driverReportRegist(
 			@RequestHeader(value = "Authorization", required = false) String authHeader,
 			@RequestBody DriverReportRequestDTO dto) {
-		log.info("driverReportRegist");
 		AuthOutcome outcome = tokenValidService.resolve(authHeader);
 		if (outcome instanceof AuthOutcome.Failure f) {
 			return toError(f);
 		}
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 		Long assignId = null;
 		if (dto.getRCate() != ReportCategoryEnum.REVIEW) {
 			assignId = assignmentService.getLatestAssignmentIdByDriverId(driverId);

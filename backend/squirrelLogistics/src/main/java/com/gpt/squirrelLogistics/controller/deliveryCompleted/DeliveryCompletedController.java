@@ -30,12 +30,10 @@ public class DeliveryCompletedController {
 
 	// JWT 토큰에서 userId 추출하는 공통 메서드
 	private Long extractUserIdFromToken(String authHeader) {
-		log.info("extractUserIdFromToken 호출됨, authHeader: {}", authHeader);
 
 		try {
 			// test-token 처리
 			if (authHeader != null && authHeader.contains("test-token")) {
-				log.info("test-token 감지됨, userId = 9 반환");
 				return 9L; // test-token일 경우 userId = 9 반환
 			}
 
@@ -43,8 +41,6 @@ public class DeliveryCompletedController {
 			Jws<Claims> claims = jwtTokenProvider.parse(token);
 			Object uidObj = claims.getBody().get("uid");
 
-			log.info("JWT에서 추출된 uid 원본: {} (타입: {})", uidObj,
-					uidObj != null ? uidObj.getClass().getSimpleName() : "null");
 
 			if (uidObj instanceof Integer) {
 				return ((Integer) uidObj).longValue();
@@ -53,11 +49,9 @@ public class DeliveryCompletedController {
 			} else if (uidObj instanceof Double) {
 				return ((Double) uidObj).longValue();
 			} else {
-				log.error("예상치 못한 uid 타입: {}", uidObj != null ? uidObj.getClass().getSimpleName() : "null");
 				throw new RuntimeException("Invalid uid type in JWT token");
 			}
 		} catch (Exception e) {
-			log.error("JWT 토큰 파싱 실패: {}", e.getMessage());
 			throw new RuntimeException("Failed to parse JWT token", e);
 		}
 	}
@@ -69,11 +63,8 @@ public class DeliveryCompletedController {
 	public ResponseEntity<?> getCompletedDeliveries(
 			@RequestHeader("Authorization") String authHeader) {
 		try {
-			log.info("=== getCompletedDeliveries 호출됨 ===");
-			log.info("요청된 authHeader: {}", authHeader);
 
 			Long userId = extractUserIdFromToken(authHeader);
-			log.info("JWT에서 추출된 userId: {}", userId);
 
 			// userId로 driverId 조회 (임시로 하드코딩된 driverId = 9 사용)
 			//Long driverId = 9L; // TODO: userId로 driverId 조회하는 로직 추가
@@ -84,7 +75,7 @@ public class DeliveryCompletedController {
 			if (outcome instanceof AuthOutcome.Failure f)
 				return toError(f);
 
-			Long driverId = ((AuthOutcome.Success) outcome).driverId();
+			Long driverId = ((AuthOutcome.Success) outcome).Id();
 //			log.info("사용할 driverId: {}", driverId);
 //
 //			List<Map<String, Object>> result = deliveryCompletedService
@@ -107,12 +98,8 @@ public class DeliveryCompletedController {
 	public ResponseEntity<?> getDeliveryDetail(@PathVariable("assignedId") Long assignedId,
 			@RequestHeader("Authorization") String authHeader) {
 		try {
-			log.info("=== getDeliveryDetail 호출됨 ===");
-			log.info("요청된 assignedId: {}", assignedId);
-			log.info("요청된 authHeader: {}", authHeader);
-
+			
 			Long userId = extractUserIdFromToken(authHeader);
-			log.info("JWT에서 추출된 userId: {}", userId);
 
 			// userId로 driverId 조회 (임시로 하드코딩된 driverId = 9 사용)
 			//Long driverId = 9L; // TODO: userId로 driverId 조회하는 로직 
@@ -123,20 +110,16 @@ public class DeliveryCompletedController {
 			if (outcome instanceof AuthOutcome.Failure f)
 				return toError(f);
 
-			Long driverId = ((AuthOutcome.Success) outcome).driverId();
+			Long driverId = ((AuthOutcome.Success) outcome).Id();
 			
-			log.info("사용할 driverId: {}", driverId);
 
 			// 상세 정보 조회
-			log.info("getDeliveryDetail 호출 시작");
 			Map<String, Object> result = deliveryCompletedService.getDeliveryDetail(assignedId, driverId);
 
-			log.info("조회된 운송 상세 정보: assignedId={}", assignedId);
 
 			return ResponseEntity.ok(result);
 		} catch (Exception e) {
 			log.error("getDeliveryDetail 오류 발생: {}", e.getMessage(), e);
-			log.error("오류 스택 트레이스:", e);
 			throw e;
 		}
 	}

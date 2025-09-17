@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gpt.squirrelLogistics.dto.deliveryAssignment.DeliveryAssignmentProposalListDTO;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.service.driverAuth.AuthErrorCode;
 import com.gpt.squirrelLogistics.service.driverAuth.AuthOutcome;
@@ -40,15 +39,12 @@ public class DeliveryProposalController {
 	public ResponseEntity<?> getMyProposals(
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-		log.info("!!!!!==============================getMyProposals============================================");
 		AuthOutcome outcome = tokenValidService.resolve(authHeader);
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
-		log.info("!!!!!==============================getMyProposals============================================");
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
-		log.info("!!!!!driverId={}", driverId);
 		var result = assignmentService.getProposals(driverId);
 		return ResponseEntity.ok(result);
 	}
@@ -66,7 +62,7 @@ public class DeliveryProposalController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		var result = assignmentService.propose(requestId, driverId);
 
@@ -96,7 +92,7 @@ public class DeliveryProposalController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 
 		var result = assignmentService.acceptProposedByRequest(requestId, driverId);
 
@@ -138,7 +134,7 @@ public class DeliveryProposalController {
 		if (outcome instanceof AuthOutcome.Failure f)
 			return toError(f);
 
-		Long driverId = ((AuthOutcome.Success) outcome).driverId();
+		Long driverId = ((AuthOutcome.Success) outcome).Id();
 		
 		var result = assignmentService.cancelProposalByRequest(requestId, driverId);
 

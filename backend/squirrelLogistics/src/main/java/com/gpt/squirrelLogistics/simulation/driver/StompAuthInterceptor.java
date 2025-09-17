@@ -43,7 +43,7 @@ public class StompAuthInterceptor implements ChannelInterceptor{
 
 	            AuthOutcome outcome = tokenValidService.resolve(token);
 	            if (outcome instanceof AuthOutcome.Success s) {
-	                Long driverId = s.driverId();
+	                Long driverId = s.Id();
 	                acc.setUser(new UsernamePasswordAuthenticationToken(String.valueOf(driverId), "", List.of()));
 	                return message;
 	            } else {

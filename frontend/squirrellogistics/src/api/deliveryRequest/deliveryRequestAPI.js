@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAuthHeaders, buildConfig } from "./apiUtil"; // ← 경로 확인
+import { getAuthHeaders, buildConfig } from "./apiUtil";
 // 백엔드 서버 주소.
 export const API_SERVER_HOST = "http://localhost:8080";
 const BASE = `${API_SERVER_HOST}/api/delivery/requests`;
@@ -8,15 +8,12 @@ export async function fetchDeliveryRequests(pageReq = {}, options = {}) {
   const params = {
     page: pageReq.page ?? 1,
     size: pageReq.size ?? 10,
-    sortKey: pageReq.sortKey ?? "RECENT",
     q: pageReq.q ?? "",
-    scope: pageReq.scope ?? "",
-    startDate: pageReq.startDate ?? "",
   };
 
   const res = await axios.get(`${BASE}`, buildConfig({ params, ...options }));
-
-  return res.data;
+  console.log(buildConfig);
+  return res.data; 
 }
 
 // 2. 개별 요청 정보 조회

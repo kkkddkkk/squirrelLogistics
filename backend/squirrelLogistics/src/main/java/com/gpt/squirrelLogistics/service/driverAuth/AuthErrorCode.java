@@ -6,6 +6,7 @@ public enum AuthErrorCode {
     USER_NOT_FOUND,
     NOT_DRIVER,            // 유저 역할이 DRIVER 아님
     NOT_COMPANY,
+    NOT_ADMIN,
     DRIVER_NOT_FOUND,      // 유저에 driver 엔티티 연결 없음
     SCHEDULE_CONFLICT,	   // 해당 날짜에 일정 존재
     VEHICLE_TYPE_MISMATCH,   // 해당 기사 보유 차량 요청과 일치하지 않음

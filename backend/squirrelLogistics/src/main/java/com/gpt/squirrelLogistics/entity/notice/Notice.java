@@ -19,8 +19,12 @@ public class Notice {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Lob
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+    
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer viewCount = 0;
     
     @Builder.Default
     @Column(nullable = false)

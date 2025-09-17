@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {buildConfig} from './apiUtil'
-export const API_SERVER_HOST = "http://localhost:8080";
+import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+
 const BASE = `${API_SERVER_HOST}/api/delivery/assignments`;
 
 

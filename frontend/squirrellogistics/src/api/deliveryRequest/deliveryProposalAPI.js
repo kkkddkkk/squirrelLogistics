@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getAuthHeaders, buildConfig } from "./apiUtil";
 import { extractCodeFromData } from "./deliveryRequestAPI";
-// 백엔드 서버 주소.
-export const API_SERVER_HOST = "http://localhost:8080";
+import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+
 const BASE = `${API_SERVER_HOST}/api/delivery/proposals`;
 
 //driverId에 할당된 운송 제안 목록

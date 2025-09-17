@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+
 
 export function useDriverStream(getToken) {
   const [routeInfo, setRouteInfo] = useState(null);
@@ -10,7 +12,7 @@ export function useDriverStream(getToken) {
     if (!token) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(`${API_SERVER_HOST}/ws`),
       reconnectDelay: 3000,
       connectHeaders: { Authorization: `Bearer ${token}` }, // 👈 토큰 보내기
       onConnect: () => {
@@ -39,7 +41,7 @@ export function useCompanyStream(getToken, driverId) {
     if (!token || !driverId) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(`${API_SERVER_HOST}/ws`),
       reconnectDelay: 3000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,

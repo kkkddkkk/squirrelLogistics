@@ -1,154 +1,123 @@
-// src/main/java/com/gpt/squirrelLogistics/controller/notice/NoticeController.java
 package com.gpt.squirrelLogistics.controller.notice;
 
+import com.gpt.squirrelLogistics.dto.notice.NoticeDetailRequestDTO;
 import com.gpt.squirrelLogistics.dto.notice.NoticeRequestDTO;
-import com.gpt.squirrelLogistics.dto.notice.NoticeResponseDTO;
-import com.gpt.squirrelLogistics.service.notice.NoticeService;
+import com.gpt.squirrelLogistics.dto.notice.NoticeSlimCardDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageRequestDTO;
+import com.gpt.squirrelLogistics.dto.page.RequestPageResponseDTO;
+import com.gpt.squirrelLogistics.service.admin.AdminTokenValidService;
+import com.gpt.squirrelLogistics.service.driverAuth.AuthOutcome;
+import com.gpt.squirrelLogistics.service.driverAuth.ErrorResponse;
+import com.gpt.squirrelLogistics.service.notice.NoticeServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
 @RestController
-@RequestMapping("/api/public/notices")
+@RequestMapping("/api/notices")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class NoticeController {
 
-    private final NoticeService service;
+	private final NoticeServiceImpl service;
+	private final AdminTokenValidService tokenValidService;
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> list(@RequestParam(required = false) String search) {
-        try {
-            List<NoticeResponseDTO> notices;
-            if (search != null && !search.trim().isEmpty()) {
-                notices = service.search(search.trim());
-            } else {
-                notices = service.list();
-            }
-            
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "data", notices,
-                "count", notices.size(),
-                "message", "공지사항 목록을 성공적으로 조회했습니다."
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", "공지사항 목록 조회에 실패했습니다: " + e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
+	@PostMapping
+	public ResponseEntity<?> create(@Valid @RequestBody NoticeRequestDTO req,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-    @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> search(@RequestParam String keyword) {
-        try {
-            List<NoticeResponseDTO> notices = service.search(keyword);
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "data", notices,
-                "count", notices.size(),
-                "keyword", keyword,
-                "message", "검색 결과를 성공적으로 조회했습니다."
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", "검색에 실패했습니다: " + e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
+		// 토큰 검증.
+		AuthOutcome firstOutcome = tokenValidService.resolve(authHeader);
+		if (firstOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> get(@PathVariable("id") Long id) {
-        try {
-            NoticeResponseDTO notice = service.get(id);
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "data", notice,
-                "message", "공지사항을 성공적으로 조회했습니다."
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-        }
-    }
+		// 관리자 검증.
+		Long userId = ((AuthOutcome.Success) firstOutcome).Id();
+		AuthOutcome seconOutcome = tokenValidService.getAdmin(userId);
+		if (seconOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody NoticeRequestDTO d) {
-        try {
-            System.out.println("공지사항 생성 요청: " + d); // 로깅 추가
-            NoticeResponseDTO created = service.create(d);
-            System.out.println("공지사항 생성 성공: " + created); // 로깅 추가
-            
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "data", created,
-                "message", "공지사항이 성공적으로 등록되었습니다."
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            System.err.println("공지사항 생성 실패: " + e.getMessage()); // 로깅 추가
-            e.printStackTrace(); // 스택 트레이스 출력
-            
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", "공지사항 등록에 실패했습니다: " + e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+		// 토큰으로부터 확인된 어드민 아이디 요청 객체에 부착.
+		Long adminId = ((AuthOutcome.Success) seconOutcome).Id();
+		req.setAdminId(adminId);
 
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> update(@PathVariable("id") Long id, 
-                                    @Valid @RequestBody NoticeRequestDTO d) {
-        try {
-            NoticeResponseDTO updated = service.update(id, d);
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "data", updated,
-                "message", "공지사항이 성공적으로 수정되었습니다."
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+		Long id = service.create(req);
+		return ResponseEntity.ok(id);
+	}
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") Long id) {
-        try {
-        service.delete(id);
-            Map<String, Object> response = Map.of(
-                "success", true,
-                "message", "공지사항이 성공적으로 삭제되었습니다."
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = Map.of(
-                "success", false,
-                "message", e.getMessage()
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+	// 작성자: 고은설.
+	// 기능: 목록 (검색 + pinned 상단 + 최신순).
+	@GetMapping
+	public ResponseEntity<?> list(@ModelAttribute RequestPageRequestDTO req,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+		// 토큰 검증 => 1차 검증만, 목록은 일반 유저/관리자 모두 조회 가능.
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		return ResponseEntity.ok(service.list(req));
+	}
+
+	// 작성자: 고은설.
+	// 기능: 기존 공지 수정.
+	@PutMapping("/{id}")
+	public ResponseEntity<?> update(@PathVariable Long id,
+			@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@Valid @RequestBody NoticeRequestDTO req) {
+
+		// 토큰 검증.
+		AuthOutcome firstOutcome = tokenValidService.resolve(authHeader);
+		if (firstOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		// 관리자 검증.
+		Long userId = ((AuthOutcome.Success) firstOutcome).Id();
+		AuthOutcome seconOutcome = tokenValidService.getAdmin(userId);
+		if (seconOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		service.update(id, req);
+		return ResponseEntity.noContent().build();
+	}
+
+	// 작성자: 고은설.
+	// 기능: 단건 공지 조회.
+	@GetMapping("/{id}")
+	public ResponseEntity<?> getOne(@PathVariable Long id,
+			@RequestHeader(value = "Authorization", required = false) String authHeader,
+			@RequestParam(defaultValue = "true") boolean increaseView) {
+
+		// 토큰 검증 => 1차 검증만, 상세 공지는 일반 유저/관리자 모두 조회 가능.
+		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+		if (outcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		return ResponseEntity.ok(service.getOne(id, increaseView));
+	}
+
+	// 작성자: 고은설.
+	// 기능: 기존 공지 삭제.
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> delete(@PathVariable Long id,
+			@RequestHeader(value = "Authorization", required = false) String authHeader) {
+		// 토큰 검증.
+		AuthOutcome firstOutcome = tokenValidService.resolve(authHeader);
+		if (firstOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		// 관리자 검증.
+		Long userId = ((AuthOutcome.Success) firstOutcome).Id();
+		AuthOutcome seconOutcome = tokenValidService.getAdmin(userId);
+		if (seconOutcome instanceof AuthOutcome.Failure f)
+			return toError(f);
+
+		service.delete(id);
+		return ResponseEntity.noContent().build();
+	}
+
+	private ResponseEntity<ErrorResponse> toError(AuthOutcome.Failure f) {
+		return ResponseEntity.status(f.status()).body(ErrorResponse.of(f.code().name(), f.message()));
+	}
+
 }
