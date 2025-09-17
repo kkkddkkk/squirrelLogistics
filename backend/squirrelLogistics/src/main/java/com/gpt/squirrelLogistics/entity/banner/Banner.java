@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.entity.banner;
 import java.time.LocalDateTime;
 
 import com.gpt.squirrelLogistics.entity.admin.AdminUser;
+import com.gpt.squirrelLogistics.entity.notice.Notice;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +38,13 @@ public class Banner {
  
     @Column(length = 50)
 	private String title; //제목.
+    
+    @Column(length = 50)
+	private String subTitle; //부제목.
+    
+	@OneToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "notice_id", nullable = false) 
+    private Notice notice; //공지사항.
     
     @Column(length = 500)
 	private String imageUrl; //이미지 경로.
