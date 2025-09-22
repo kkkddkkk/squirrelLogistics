@@ -17,7 +17,7 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import BedtimeOutlinedIcon from "@mui/icons-material/BedtimeOutlined";
 
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import LoginModal from "./LoginModal";
 import { useDarkMode } from "../../DarkModeContext";
 import { format } from "date-fns";
@@ -101,6 +101,34 @@ export default function Header() {
   const leftNav = NAV[navKey];
 
   const isAdmin = location.pathname.startsWith("/admin");
+  const AdminNav = () => {
+    const items = [
+      { label: "회원관리", path: "/admin/users" },
+      { label: "약관관리", path: "/admin/terms" },       // ✅ 경로 수정
+      { label: "차량관리", path: "/admin/vehicles" },
+      { label: "정산", path: "/admin/settlement" },       // 필요시 라우트 구현
+      { label: "신고확인", path: "/admin/reports" },      // 필요시 라우트 구현
+      { label: "공지사항관리", path: "/admin/notices" },  // 필요시 라우트 구현
+    ];
+    return (
+      <>
+        {items.map((it) => (
+          <Button
+            key={it.path}
+            color="inherit"
+            component={NavLink}
+            to={it.path}
+            style={({ isActive }) => ({
+              fontWeight: isActive ? 700 : 400,
+              textDecoration: isActive ? "underline" : "none",
+            })}
+          >
+            {it.label}
+          </Button>
+        ))}
+      </>
+    );
+  };
 
   return (
     <>
@@ -127,29 +155,7 @@ export default function Header() {
           {/* 좌측 네비 */}
           <div className={styles.navButtons}>
             {isAdmin ? (
-              <>
-                <Button color="inherit" onClick={() => navigate("/admin/users")}>
-                  회원관리
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/users")}>
-                  약관관리
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/vehicles")}>
-                  차량관리
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/")}>
-                  정산
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/")}>
-                  신고확인
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/")}>
-                  공지사항관리
-                </Button>
-                <Button color="inherit" onClick={() => navigate("/admin/")}>
-                  배너관리
-                </Button>
-              </>
+              <AdminNav />
             ) : (
               leftNav.map((item) => (
                 <Button

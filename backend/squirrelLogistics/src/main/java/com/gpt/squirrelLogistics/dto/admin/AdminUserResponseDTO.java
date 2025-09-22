@@ -15,4 +15,6 @@ public class AdminUserResponseDTO {
 
 	private Long adminId; //관리자 아이디.
 	private User user; //회원 정보 객체.
+	private String name; 
+    private String email; 
 }

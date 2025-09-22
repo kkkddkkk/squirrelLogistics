@@ -37,26 +37,26 @@ export default function OAuthBridge() {
             return;
         }
 
-        if (pathname.endsWith("/failure")) {
-            const reason = q.get("reason") || "unknown";
-            const msgMap = {
-                withdrawn: "탈퇴 처리된 계정입니다.",
-                kakao_error: "카카오 인증 처리 중 오류가 발생했습니다.",
-                unknown: "소셜 로그인에 실패했습니다.",
-            };
+        // if (pathname.endsWith("/failure")) {
+        //     const reason = q.get("reason") || "unknown";
+        //     const msgMap = {
+        //         withdrawn: "탈퇴 처리된 계정입니다.",
+        //         kakao_error: "카카오 인증 처리 중 오류가 발생했습니다.",
+        //         unknown: "소셜 로그인에 실패했습니다.",
+        //     };
 
-            if (isPopup) {
-                window.opener.postMessage(
-                    { type: "SOCIAL_REAUTH_ERROR", error: reason },
-                    window.location.origin
-                );
-                window.close();
-                return;
-            }
+        //     if (isPopup) {
+        //         window.opener.postMessage(
+        //             { type: "SOCIAL_REAUTH_ERROR", error: reason },
+        //             window.location.origin
+        //         );
+        //         window.close();
+        //         return;
+        //     }
 
-            alert(msgMap[reason] || msgMap.unknown);
-            nav("/", { replace: true });
-        }
+        //     alert(msgMap[reason] || msgMap.unknown);
+        //     nav("/", { replace: true });
+        // }
     }, [search, pathname, nav]);
 
     return null;
