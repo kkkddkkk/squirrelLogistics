@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/squirrelLogistics_title.png" alt="다람쥑스프레스 타이틀" width="500"/>
+  <img src="./assets/squirrelLogistics_title.png" alt="다람쥑스프레스 타이틀" width="460"/>
 </p>
 <p align="center">
   <img src="./assets/squirrelLogistics_logo.gif" alt="다람쥑스프레스 로고" width="200"/>
@@ -27,10 +27,10 @@
 <br>
 
 **핵심 차별점**
-- 로그인 직후, 진행 중 운송의 **실시간 위치/상태 추적** 진입
-- **예상가 ↔ 실제 운행 데이터**를 분리한 **2단계 정산**(명세서/영수증 제공)
-- **최대 3개 경유지** 기반 경로 최적화(거리·무게·차종 반영)
-- **다크 모드** 지원(장시간 사용 피로 최소화)
+- 진행 중 운송의 실시간 위치/상태 추적 진입
+- 예상가 ↔ 실제 운행 데이터를 분리한 2단계 정산(명세서/영수증 제공)
+- 최대 3개 경유지 기반 경로 최적화(거리·무게·차종 반영)
+- 다크 모드 지원(장시간 사용 피로 최소화)
 
 ---
 ## 🐿️아키텍처 및 기술 스택
@@ -93,6 +93,8 @@
 <div align="center">
   <img src="./assets/data_model.png" alt="ERD" width="100%"/>
 </div>
+
+<br>
 
 - **User / Company / Driver**: 사용자·회사·기사 기초 정보 및 권한
 - **DeliveryRequest(운송요청)**: 출발/도착·경유지·화물/차종·요금 파라미터
@@ -287,4 +289,4 @@
 [link-meetings]: https://www.notion.so/.../meetings        
 [link-wireframes]: https://www.notion.so/.../wireframes     
 [link-process]: https://www.notion.so/.../process           
-[link-slides]: ./assets/slides.pdf                         
+[link-slides]: ./assets/sllides.pdf                         
