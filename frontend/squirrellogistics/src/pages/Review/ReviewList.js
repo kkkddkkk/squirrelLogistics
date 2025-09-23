@@ -61,13 +61,13 @@ const ReviewList = () => {
 
     return (
         <>
-        <CommonTitle>내 리뷰목록</CommonTitle>
-            <Grid  container width={"100%"} marginBottom={5} minHeight={"100vh"}>
+            <CommonTitle>내 리뷰목록</CommonTitle>
+            <Grid container width={"100%"} marginBottom={5} minHeight={"100vh"}>
                 <LoadingComponent open={loading} text="내 리뷰목록을 불러오는 중..." />
                 <Grid size={3} />
                 <Grid size={6}>
                     {dataLengths == 0 ?
-                        <NoneOfList logoSrc={thisTheme.palette.mode==="light"?Logo:darkLogo}>아직 작성한 리뷰가 없습니다.</NoneOfList> :
+                        <NoneOfList logoSrc={thisTheme.palette.mode === "light" ? Logo : darkLogo}>아직 작성한 리뷰가 없습니다.</NoneOfList> :
                         (dates.map((date) => (
                             <Box marginBottom={"5%"}>
                                 <CommonSubTitle>{date}</CommonSubTitle>
@@ -103,7 +103,7 @@ const ReviewList = () => {
                         setReview={setThisReview}
                         changed={changed}
                         setChanged={setChanged}
-                        
+
                     ></ReviewModalForList>
 
                     <ButtonContainer marginTop={10} marginBottom={5}>

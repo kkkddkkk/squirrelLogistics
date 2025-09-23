@@ -2,7 +2,6 @@ package com.gpt.squirrelLogistics.entity.payment;
 
 import java.time.LocalDateTime;
 
-import com.gpt.squirrelLogistics.entity.deliveryWaypoint.DeliveryWaypoint;
 import com.gpt.squirrelLogistics.enums.payment.FailureReasonEnum;
 import com.gpt.squirrelLogistics.enums.payment.PayStatusEnum;
 
@@ -51,6 +50,5 @@ public class Payment {//결제
 	@Enumerated(EnumType.STRING)
 	private FailureReasonEnum failureReason;//결제실패사유
 	
-
 	
 }

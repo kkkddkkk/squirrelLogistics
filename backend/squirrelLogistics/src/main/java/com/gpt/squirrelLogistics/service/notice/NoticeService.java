@@ -27,4 +27,7 @@ public interface NoticeService {
 	//작성자: 고은설.
 	//기능: 공지 사항 삭제.
 	void delete(Long id);
+	
+	//경량 고정 업데이트.
+	public void setPinned(Long id, boolean pinned);
 }

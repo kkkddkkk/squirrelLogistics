@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Box, CircularProgress, Grid } from "@mui/material";
+import { Box, Chip, CircularProgress, Grid } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommonTitle } from "../../components/common/CommonText";
 import NoticeDetail from "../../components/notice/NoticeDetail";
 import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonPopupComponent";
 import { fetchNotice } from "../../api/notice/noticeAPI";
+import LoadingComponent from "../../components/common/LoadingComponent";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-export default function NoticeReadPage({ isAdmin }) {
+export default function NoticeReadPage( ) {
   const { id } = useParams(); // 라우트: /notices/:id 또는 /admin/notice/:id
   const navigate = useNavigate();
 
@@ -40,8 +42,9 @@ export default function NoticeReadPage({ isAdmin }) {
         if (code === "NOTICE_NOT_FOUND" || status === 404) {
           openErrorPopup({ title: "대상 없음", content: "해당 공지를 찾을 수 없습니다.", redirectPath: "/notices" });
         } else if (code === "AUTH_INVALID_TOKEN" || code === "AUTH_EXPIRED_TOKEN" || status === 401) {
-          openErrorPopup({ title: "세션 만료", content: "로그인이 필요합니다.", redirectPath: "/login" });
+          openErrorPopup({ title: "세션 만료", content: "로그인이 필요합니다.", redirectPath: "/" });
         } else {
+          console.log(err);
           openErrorPopup({ title: "안내", content: "공지 정보를 불러오지 못했습니다." });
         }
       } finally {
@@ -51,37 +54,50 @@ export default function NoticeReadPage({ isAdmin }) {
     return () => { alive = false; };
   }, [id]);
 
-  const handleBack = () => {
-    // 목록 경로는 프로젝트 라우팅에 맞게 조정
-    navigate(isAdmin ? "/admin/notice/list" : "/notices");
-  };
-
   const handleEdit = () => {
-    // 수정 페이지 경로는 프로젝트 라우팅에 맞게 조정
     navigate(`/admin/notice/edit/${id}`);
   };
 
   return (
     <>
-      <CommonTitle>공지사항</CommonTitle>
-
+    <CommonTitle>공지사항</CommonTitle>
       <Grid container justifyContent="center" marginBottom={5} minHeight="50vh">
-        <Grid size={3} />
-        <Grid size={6}>
+        <Grid size={2} />
+        <Grid size={8}>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight={240}>
-              <CircularProgress />
+              <LoadingComponent
+                open={loading}
+                text="공지를 불러오는 중..." />
             </Box>
           ) : data ? (
-            <NoticeDetail
-              data={data}
-              isAdmin={!!isAdmin}
-              onBack={handleBack}
-              onEdit={handleEdit}
-            />
+            <>
+              <Box display="flex" justifyContent="flex-start" mb={2} mt={0}>
+                <Chip
+                  icon={<ArrowBackIcon sx={{ fontSize: 18 }} />}
+                  label="전체 목록 이동"
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={() =>
+                    navigate('/admin/notice/list')
+                  }
+                  sx={{
+                    height: 24,
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    px: 0.5,
+                  }}
+                />
+              </Box>
+              <NoticeDetail
+                data={data}
+                onEdit={handleEdit}
+              />
+            </>
           ) : null}
         </Grid>
-        <Grid size={3} />
+        <Grid size={2} />
       </Grid>
 
       <OneButtonPopupComponent

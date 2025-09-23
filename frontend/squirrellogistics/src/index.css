@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.recharts-tooltip-cursor {
+  fill: #f0f0f0;   /* hover 시 배경색 */
+  opacity: 0.6;    /* 투명도 */
+}

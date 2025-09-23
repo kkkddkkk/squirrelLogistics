@@ -2,16 +2,13 @@ import React, { useMemo } from "react";
 import { Box, Paper, Typography, Stack, Chip, Button, Divider, useTheme } from "@mui/material";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import DOMPurify from "dompurify";
-import "react-quill-new/dist/quill.snow.css"; // Quill 서식 적용
+import "react-quill-new/dist/quill.snow.css";
+import { API_SERVER_HOST } from "../../api/deliveryRequest/deliveryRequestAPI";
 
-/**
- * props:
- * - data: { title, content(HTML), viewCount, pinned, writer, bannerFileName, createdAt }
- * - isAdmin: boolean
- * - onBack: () => void
- * - onEdit: () => void
- */
-export default function NoticeDetail({ data, isAdmin, onBack, onEdit }) {
+export default function NoticeDetail({ data, onEdit }) {
+
+  const isAdmin = localStorage.getItem("userRole") === 'ADMIN' ? true : false;
+
   const t = useTheme();
 
   const safeHtml = useMemo(
@@ -19,12 +16,15 @@ export default function NoticeDetail({ data, isAdmin, onBack, onEdit }) {
     [data?.content]
   );
 
-  // bannerFileName이 절대/루트경로면 그대로 노출
-  const bannerSrc =
-    data?.bannerFileName &&
-    (data.bannerFileName.startsWith("http") || data.bannerFileName.startsWith("/"))
-      ? data.bannerFileName
-      : null;
+  const bannerSrc = React.useMemo(() => {
+    const file = data?.bannerFileName;
+    if (!file) return null;
+    return `${API_SERVER_HOST}/api/public/bannerImage/${data.bannerFileName}`;
+
+  }, [data?.bannerFileName]);
+
+
+
 
   return (
     <Paper
@@ -42,22 +42,20 @@ export default function NoticeDetail({ data, isAdmin, onBack, onEdit }) {
       {/* 헤더 */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            {data?.title}
+          </Typography>
           <PushPinIcon
-            fontSize="small"
+            fontSize="medium"
             sx={{
               color: data?.pinned ? t.palette.primary.main : t.palette.text.disabled,
               visibility: data?.pinned ? "visible" : "hidden",
             }}
             titleAccess="고정됨"
           />
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {data?.title}
-          </Typography>
-          {data?.pinned && <Chip size="small" color="primary" label="고정" variant="outlined" />}
         </Stack>
 
         <Stack direction="row" spacing={1}>
-          <Button variant="text" size="small" onClick={onBack}>목록</Button>
           {isAdmin && (
             <Button variant="contained" size="small" onClick={onEdit}>
               수정하기
@@ -75,13 +73,20 @@ export default function NoticeDetail({ data, isAdmin, onBack, onEdit }) {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* 배너(있으면) */}
+      {/* 배너 사진 */}
       {bannerSrc && (
         <Box
           component="img"
           src={bannerSrc}
           alt="배너 이미지"
-          sx={{ width: "100%", maxHeight: 360, objectFit: "cover", borderRadius: 1, mb: 2 }}
+          sx={{
+            width: "100%",
+            maxHeight: 360,
+            objectFit: "cover",
+            borderRadius: 1,
+            mb: 2,
+            display: "block",
+          }}
         />
       )}
 

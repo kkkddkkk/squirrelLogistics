@@ -11,7 +11,7 @@ import LoadingComponent from "../../components/common/LoadingComponent";
 
 
 
-const NoticePage = ({ isAdmin }) => {
+const NoticeListPage = ({ isAdmin }) => {
     const [notices, setNotices] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -143,7 +143,7 @@ const NoticePage = ({ isAdmin }) => {
                                 color="primary"
                                 size="small"
                                 onClick={() =>
-                                    navigate('/admin/notice/publish')
+                                    navigate('/admin/notice/new')
                                 }
                                 sx={{
                                     height: 24,
@@ -222,4 +222,4 @@ const NoticePage = ({ isAdmin }) => {
     );
 };
 
-export default NoticePage;
+export default NoticeListPage;

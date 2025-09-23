@@ -104,11 +104,12 @@ export default function Header() {
   const AdminNav = () => {
     const items = [
       { label: "회원관리", path: "/admin/users" },
-      { label: "약관관리", path: "/admin/terms" },       // ✅ 경로 수정
+      { label: "약관관리", path: "/admin/terms" },      
       { label: "차량관리", path: "/admin/vehicles" },
-      { label: "정산", path: "/admin/settlement" },       // 필요시 라우트 구현
-      { label: "신고확인", path: "/admin/reports" },      // 필요시 라우트 구현
-      { label: "공지사항관리", path: "/admin/notices" },  // 필요시 라우트 구현
+      { label: "정산관리", path: "/admin/settlement/view" },   
+      { label: "신고확인", path: "/admin/reports" },      
+      { label: "공지사항관리", path: "/admin/notice/list" },  
+      { label: "배너관리", path: "/admin/banner" }, 
     ];
     return (
       <>

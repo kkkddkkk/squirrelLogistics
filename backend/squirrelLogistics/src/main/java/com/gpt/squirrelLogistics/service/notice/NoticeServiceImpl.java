@@ -26,12 +26,12 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class NoticeServiceImpl implements NoticeService {
 	private final NoticeRepository noticeRepo;
 	private final AdminUserRepository adminRepo;
 
 	@Override
+	@Transactional
 	public Long create(NoticeRequestDTO dto) {
 		Notice n = Notice.builder().adminId(dto.getAdminId()).title(dto.getTitle()).content(dto.getContent())
 				.pinned(dto.getPinned()).viewCount(0).build();
@@ -54,7 +54,7 @@ public class NoticeServiceImpl implements NoticeService {
 		// 엔티티 -> 슬림 DTO 변환
 		List<NoticeSlimCardDTO> list = page.getContent().stream().map(n -> {
 			NoticeSlimCardDTO dto = new NoticeSlimCardDTO();
-			dto.setNoticeId(n.getId());
+			dto.setId(n.getId());
 			dto.setTitle(n.getTitle());
 			dto.setPinned(n.isPinned());
 			dto.setCreatedAt(n.getCreatedAt());
@@ -66,6 +66,7 @@ public class NoticeServiceImpl implements NoticeService {
 	}
 
 	@Override
+	@Transactional
 	public void update(Long id, NoticeRequestDTO dto) {
 		Notice n = noticeRepo.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notice not found"));
@@ -77,6 +78,7 @@ public class NoticeServiceImpl implements NoticeService {
 	}
 
 	@Override
+	@Transactional
 	public NoticeDetailRequestDTO getOne(Long id, boolean increaseView) {
 		if (increaseView) {
 			noticeRepo.incrementViewCount(id); 
@@ -86,6 +88,7 @@ public class NoticeServiceImpl implements NoticeService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notice not found"));
 
 		NoticeDetailRequestDTO dto = new NoticeDetailRequestDTO();
+		dto.setId(n.getId());
 		dto.setTitle(n.getTitle());
 		dto.setContent(n.getContent());
 		dto.setViewCount(n.getViewCount());
@@ -95,8 +98,8 @@ public class NoticeServiceImpl implements NoticeService {
 		Optional<String> writer = adminRepo.findUserNameByAdminId(n.getAdminId());
 		dto.setWriter(writer.isPresent() ? writer.get() : "미확인 작성자");
 
-		// TODO: 배너 연결된 파일명.
-		// dto.setBannerFileName();
+	    String bannerUrl = noticeRepo.findActiveImageUrlByNoticeId(n.getId()).orElse(null);
+	    dto.setBannerFileName(bannerUrl);
 
 		return dto;
 	}
@@ -108,6 +111,15 @@ public class NoticeServiceImpl implements NoticeService {
 		}
 		noticeRepo.deleteById(id);
 
+	}
+	
+	@Override
+	@Transactional
+	public void setPinned(Long id, boolean pinned) {
+	    int updated = noticeRepo.updatePinned(id, pinned);
+	    if (updated == 0) {
+	        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "NOTICE_NOT_FOUND");
+	    }
 	}
 
 	private Sort resolveSort(String sortKey) {

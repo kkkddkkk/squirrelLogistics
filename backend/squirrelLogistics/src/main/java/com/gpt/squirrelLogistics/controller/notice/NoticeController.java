@@ -52,9 +52,9 @@ public class NoticeController {
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 
 		// 토큰 검증 => 1차 검증만, 목록은 일반 유저/관리자 모두 조회 가능.
-		AuthOutcome outcome = tokenValidService.resolve(authHeader);
-		if (outcome instanceof AuthOutcome.Failure f)
-			return toError(f);
+//		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+//		if (outcome instanceof AuthOutcome.Failure f)
+//			return toError(f);
 
 		return ResponseEntity.ok(service.list(req));
 	}
@@ -62,7 +62,7 @@ public class NoticeController {
 	// 작성자: 고은설.
 	// 기능: 기존 공지 수정.
 	@PutMapping("/{id}")
-	public ResponseEntity<?> update(@PathVariable Long id,
+	public ResponseEntity<?> update(@PathVariable("id") Long id,
 			@RequestHeader(value = "Authorization", required = false) String authHeader,
 			@Valid @RequestBody NoticeRequestDTO req) {
 
@@ -84,14 +84,14 @@ public class NoticeController {
 	// 작성자: 고은설.
 	// 기능: 단건 공지 조회.
 	@GetMapping("/{id}")
-	public ResponseEntity<?> getOne(@PathVariable Long id,
+	public ResponseEntity<?> getOne(@PathVariable("id") Long id,
 			@RequestHeader(value = "Authorization", required = false) String authHeader,
-			@RequestParam(defaultValue = "true") boolean increaseView) {
+			 @RequestParam(name = "increaseView", defaultValue = "true") boolean increaseView) {
 
 		// 토큰 검증 => 1차 검증만, 상세 공지는 일반 유저/관리자 모두 조회 가능.
-		AuthOutcome outcome = tokenValidService.resolve(authHeader);
-		if (outcome instanceof AuthOutcome.Failure f)
-			return toError(f);
+//		AuthOutcome outcome = tokenValidService.resolve(authHeader);
+//		if (outcome instanceof AuthOutcome.Failure f)
+//			return toError(f);
 
 		return ResponseEntity.ok(service.getOne(id, increaseView));
 	}
@@ -99,7 +99,7 @@ public class NoticeController {
 	// 작성자: 고은설.
 	// 기능: 기존 공지 삭제.
 	@DeleteMapping("/{id}")
-	public ResponseEntity<?> delete(@PathVariable Long id,
+	public ResponseEntity<?> delete(@PathVariable("id") Long id,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		// 토큰 검증.
 		AuthOutcome firstOutcome = tokenValidService.resolve(authHeader);
@@ -116,6 +116,24 @@ public class NoticeController {
 		return ResponseEntity.noContent().build();
 	}
 
+	@PatchMapping("/{id}/pin")
+	public ResponseEntity<?> togglePin(
+	    @PathVariable("id") Long id,
+	    @RequestHeader(value = "Authorization", required = false) String authHeader,
+	    @RequestParam("pinned") boolean pinned // ✅ boolean 단독 (쿼리 파라미터)
+	) {
+	    // 토큰 검증
+//	    AuthOutcome first = tokenValidService.resolve(authHeader);
+//	    if (first instanceof AuthOutcome.Failure f) return toError(f);
+//
+//	    Long userId = ((AuthOutcome.Success) first).Id();
+//	    AuthOutcome second = tokenValidService.getAdmin(userId);
+//	    if (second instanceof AuthOutcome.Failure f) return toError(f);
+
+	    service.setPinned(id, pinned);
+	    return ResponseEntity.noContent().build();
+	}
+	
 	private ResponseEntity<ErrorResponse> toError(AuthOutcome.Failure f) {
 		return ResponseEntity.status(f.status()).body(ErrorResponse.of(f.code().name(), f.message()));
 	}

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class NoticeDetailRequestDTO {
+	 private Long id;
     private String title;
     private String content;
     private Integer viewCount;
