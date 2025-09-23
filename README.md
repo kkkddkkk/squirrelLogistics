@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./assets/squirrelLogistics_title.png" alt="다람쥑스프레스 타이틀" width="460"/>
+  <img src="./assets/squirrelLogistics_title.png" alt="다람쥑스프레스 타이틀" width="600"/>
 </p>
 <p align="center">
-  <img src="./assets/squirrelLogistics_logo.gif" alt="다람쥑스프레스 로고" width="200"/>
+  <img src="./assets/squirrelLogistics_logo.gif" alt="다람쥑스프레스 로고" width="280"/>
 </p>
 
 <br>
@@ -27,7 +27,7 @@
 <br>
 
 **핵심 차별점**
-- 진행 중 운송의 실시간 위치/상태 추적 진입
+- 진행 중 운송의 실시간 위치/상태 추적
 - 예상가 ↔ 실제 운행 데이터를 분리한 2단계 정산(명세서/영수증 제공)
 - 최대 3개 경유지 기반 경로 최적화(거리·무게·차종 반영)
 - 다크 모드 지원(장시간 사용 피로 최소화)
@@ -90,6 +90,9 @@
 ---
 
 ## 🐿️ 데이터 모델(ERD)
+
+<br>
+
 <div align="center">
   <img src="./assets/data_model.png" alt="ERD" width="100%"/>
 </div>
@@ -118,10 +121,15 @@
 
 - 로컬(ID/PW) + Google/Kakao OAuth
 - 비밀번호 재설정/본인인증 플로우
-  
+
 <p align="center">
-  <img src="./assets/signin.png" alt="Auth_1" width="49%"/>
-  <img src="./assets/login.png" alt="Auth_2" width="49%"/>
+  <img src="./assets/screenshot/1_1.png" alt="Auth_1" width="70%"/><br/>
+  <sub>로그인 화면 (구글 및 카카오 소셜 로그인 가능)</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/1_2.png" alt="Auth_2" width="70%"/><br/>
+  <sub>기업, 운전 기사 모두 개인 정보 수정 시 암호 재인증 요청</sub>
 </p>
 
 </details>
@@ -135,88 +143,123 @@
 - 화물/차량, 거리·무게 슬라이더 → 예상가 자동 산출
 - 평점/필터·프로필 열람 → 지명 요청
 
- <p align="center">
-  <img src="./assets/estimate.png" alt="Estimate_1" width="49%"/>
-  <img src="./assets/driverpick.png" alt="Estimate_1" width="49%"/>
- </p>
+<p align="center">
+  <img src="./assets/screenshot/2_1.png" alt="Estimate_1" width="70%"/><br/>
+  <sub>운송 의뢰 기업이 주소, 화물 입력 시 예산 견적 출력</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/2_2.png" alt="Estimate_1" width="70%"/><br/>
+  <sub>특정 운전 기사 지명 희망시 기사 검색 화면으로 이동</sub>
+</p>
 
 </details>
 
 
 <details>
-  <summary><b>4) 결제(1차) & 영수증</b></summary>
+  <summary><b>3) 결제(1차) & 영수증</b></summary>
 
 <br>
 
 - PortOne 결제 연동, 약관/수단 선택
 - 거래 명세서 및 영수증 출력
-  
+
 <p align="center">
-  <img src="./assets/pay1.png" alt="Payment_1" width="49%"/>
-  <img src="./assets/receipt.png" alt="Payment_2" width="49%"/>
+  <img src="./assets/screenshot/3_1.png" alt="Payment_1" width="70%"/><br/>
+  <sub>결제 수단 선택, 약관 동의 시 결제로 넘어감</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/3_2.png" alt="Payment_2" width="70%"/><br/>
+  <sub>결제 성공 화면, 영수증 출력 가능</sub>
 </p>
 
 </details>
 
 <details>
-  <summary><b>5) 운송 실시간 추적</b></summary>
+  <summary><b>4) 운송 실시간 추적</b></summary>
 
 <br>
 
 - WebSocket/STOMP 기반 위치/상태 실시간 반영
 - 지도 경로 시각화, 버튼 입력을 통한 운송 상태 변화 (픽업/도착/하차)
 - 이동 경로 기록 및 이탈 여부 확인을 위한 더미 운전자 모델
-  
+
 <p align="center">
-  <img src="./assets/tracking.gif" alt="Ongoing_1" width="49%"/>
-  <img src="./assets/ongoing.png" alt="Ongoing_2" width="49%"/>
+  <img src="./assets/screenshot/4_1.gif" alt="Ongoing_1" width="70%"/><br/>
+  <sub>운송 의뢰 기업측 진행중인 나의 운송 현황 실시간 확인 가능</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/4_2.png" alt="Ongoing_2" width="70%"/><br/>
+  <sub>운송 담당 운전 기사는 수동 버튼 입력으로 운송 상태 변경</sub>
 </p>
 
 </details>
 
 <details>
-  <summary><b> 6) 실계산(2차 정산)</b></summary>
+  <summary><b>5) 실계산(2차 정산)</b></summary>
 
 <br>
 
 - 실제 주행 거리/ 경로 출력
 - 길제 이동 경로 기반 최종 금액 산출
-  
+
 <p align="center">
-  <img src="./assets/actualmap.png" alt="Settlement_1" width="49%"/>
-  <img src="./assets/settlement.png" alt="Settlement_2" width="49%"/>
+  <img src="./assets/screenshot/5_1.png" alt="Settlement_1" width="70%"/><br/>
+  <sub>운송 완료시 실제 이동 경로에 따른 추가 요금 및 환불 2차 결제</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/5_2.png" alt="Settlement_2" width="70%"/><br/>
+  <sub>완료된 결제건에 대한 거래 명세서 출력 가능</sub>
 </p>
 
 </details>
 
 <details>
-  <summary><b>7) 이용기록/리뷰</b></summary>
+  <summary><b>6) 이용기록/리뷰</b></summary>
 
 <br>
 
 - 완료된 운송에 대한 리뷰 및 신고 작성/수정
 - 전체 완료 운송 내역 확인
-  
+
 <p align="center">
-  <img src="./assets/review.png" alt="Review" width="49%"/>
-  <img src="./assets/history.png" alt="History" width="49%"/>
+  <img src="./assets/screenshot/6_1.png" alt="Review" width="70%"/><br/>
+  <sub>운송 의뢰 기업은 완료된 운송건에 대하여 리뷰 및 신고 작성이 가능</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/6_2.png" alt="History" width="70%"/><br/>
+  <sub>작성된 운송 리뷰는 운전 기사 측에서 확인 가능</sub>
 </p>
 
 </details>
 
 <details>
-  <summary><b>8) 관리자 기능(회원/신고/정산 관리)</b></summary>
+  <summary><b>7) 관리자 기능(회원/신고/정산 관리)</b></summary>
 
 <br>
 
 - 회원/ 차종 관리
 - 신고 대시보드 및 신고 관리
 - 정산 대시보드 및 미정산 결제건 관리
-  
+
+
 <p align="center">
-  <img src="./assets/user.png" alt="Admin_1" width="33%"/>
-  <img src="./assets/report.png" alt="Admin_2" width="33%"/>
-  <img src="./assets/unsettled.png" alt="Admin_3" width="33%"/>
+  <img src="./assets/screenshot/7_1.png" alt="Admin_1" width="70%"/><br/>
+  <sub>회원 대시보드를 통한 가입 회원 정보 확인 및 탈퇴 처리 관리</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/7_2.png" alt="Admin_2" width="70%"/><br/>
+  <sub>정산 대시보드를 통한 추이 확인 및 미정산 결제건에 대한 정산 관리</sub>
+</p>
+
+<p align="center">
+  <img src="./assets/screenshot/7_2.png" alt="Admin_2" width="70%"/><br/>
+  <sub>신고 대시보드를 통한 현황 확인 및 신고 대응 및 답글을 통한 유저 서비스 지원</sub>
 </p>
 
 </details>
@@ -269,10 +312,12 @@
 
 ## 🐿️ 문서 & 링크 모음
 
-- 🗒️ 회의록 모음: [바로가기][link-meetings]
-- 🧩 와이어프레임 모음: [바로가기][link-wireframes]
-- 🐙 GitHub 브랜치 & Jira 태스크 스크린샷: [바로가기][link-process]
-- 🖼️ 프로젝트 설명 슬라이드(PDF): [열기][link-slides]
+- 📁 회의록 모음: [바로가기][link-meetings]
+- 🎨 와이어프레임 모음: [바로가기][link-wireframes]
+- 🔧 버그 리포트: [바로가기][link-wireframes]
+- 🎞️ 프로젝트 후기: [바로가기][link-wireframes]
+- 📷 Sourcetree & Jira 스크린샷: [바로가기][link-process]
+- 📑 프로젝트 설명 슬라이드(PDF): [열기][link-slides]
 
 
 [badge-notion]: https://img.shields.io/badge/Notion-Hub-222222?logo=notion&logoColor=white
@@ -281,12 +326,13 @@
 [badge-youtube]: https://img.shields.io/badge/Demo-YouTube-FF0000?logo=youtube&logoColor=white
 
 [link-web]: https://web.example.com
-[link-api]: https://api.example.com
-[link-notion]: https://www.notion.so/Squirrel-Logistics-238ee5b3591b80e5ad2ace4a11b3d48a
-[link-live]: https://example.com     
-[link-youtube]: https://youtu.be/xxxx  
+[link-api]: https://squirrellogistics.onrender.com/
+[link-notion]: https://psychedelic-deposit-53c.notion.site/Squirrel-Logistics-238ee5b3591b80e5ad2ace4a11b3d48a
+[link-youtube]: https://www.youtube.com/watch?v=G7L4YzGAvMA
 
-[link-meetings]: https://www.notion.so/.../meetings        
-[link-wireframes]: https://www.notion.so/.../wireframes     
-[link-process]: https://www.notion.so/.../process           
-[link-slides]: ./assets/sllides.pdf                         
+[link-meetings]: https://psychedelic-deposit-53c.notion.site/23aee5b3591b802aa139ca4f8e204fdd        
+[link-wireframes]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b812c8af1f8b341f84923 
+[link-QA]: https://psychedelic-deposit-53c.notion.site/QA-238ee5b3591b80eb948efb20ac38d1f7
+[link-review]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b80559ccaf7bc4d7484ac
+[link-process]: https://psychedelic-deposit-53c.notion.site/276ee5b3591b8042b733fe10e7507689           
+[link-slides]: ./assets/slides.pdf                         
