@@ -12,6 +12,13 @@ const NoticeRead = lazy(() => import("../../pages/Notice/NoticeReadPage"));
 const NoticeWirte = lazy(() => import("../../pages/Notice/NoticeWritePage"));
 const SettlementBoard = lazy(() => import("../../pages/Settlement/SettlementDashboardPage"));
 const UnsettledList = lazy(() => import("../../pages/Settlement/UnsettledListPage"));
+const ReportPage = lazy(() => import("../../pages/admin/ReportPage"));
+const DetailReportLayout = lazy(() => import("../../pages/admin/DetailReportLayout"));
+const DetailReportStatus = lazy(() => import("../../components/admin/Report/DetailReportStatus"));
+const DetailReportCate = lazy(() => import("../../components/admin/Report/DetailReportCate"));
+const DetailReportRank = lazy(() => import("../../components/admin/Report/DetailReportRank"));
+const DetailReportMonthly = lazy(() => import("../../components/admin/Report/DetailReportMonthly"));
+const CheckReportPage = lazy(() => import("../../pages/admin/CheckReportPage"));
 
 export default function adminRouter() {
   return [
@@ -39,7 +46,7 @@ export default function adminRouter() {
         </Suspense>
       ),
     },
-      {
+    {
       path: "banner",
       element: <Suspense fallback={Loading}><Banner /></Suspense>,
     },
@@ -58,7 +65,7 @@ export default function adminRouter() {
     {
       path: "notice/edit/:id",
       element: <Suspense fallback={Loading}><NoticeWirte /></Suspense>,
-    }, 
+    },
     {
       path: "notice/new",
       element: <Suspense fallback={Loading}><NoticeWirte /></Suspense>,
@@ -70,6 +77,44 @@ export default function adminRouter() {
     {
       path: "settlement/list",
       element: <Suspense fallback={Loading}><UnsettledList /></Suspense>,
+    },
+    {
+      path: "banner",
+      element: <Suspense fallback={Loading}><Banner /></Suspense>,
+    },
+    {
+      path: "banner/add",
+      element: <Suspense fallback={Loading}><AddBanner /></Suspense>,
+    },
+    {
+      path: "report",
+      element: <Suspense fallback={Loading}><ReportPage /></Suspense>,
+    },
+    {
+      path: "report/:reportId",
+      element: <Suspense fallback={Loading}><CheckReportPage /></Suspense>,
+    },
+    {
+      path: "report/list",
+      element: <Suspense fallback={Loading}><DetailReportLayout /></Suspense>,
+      children: [
+        {
+          path: "status",
+          element: <Suspense fallback={Loading}><DetailReportStatus /></Suspense>,
+        },
+        {
+          path: "cate",
+          element: <Suspense fallback={Loading}><DetailReportCate /></Suspense>,
+        },
+        {
+          path: "rank",
+          element: <Suspense fallback={Loading}><DetailReportRank /></Suspense>,
+        },
+        {
+          path: "monthly",
+          element: <Suspense fallback={Loading}><DetailReportMonthly /></Suspense>,
+        },
+      ]
     },
   ];
 }
