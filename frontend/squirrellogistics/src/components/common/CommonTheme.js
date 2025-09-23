@@ -13,13 +13,15 @@ export const theme = createTheme({
       light: "#F2F2F2"
     },
     success: {
-      main: "#31A04F" //GREEN
+      main: "#31A04F", //GREEN
     },
     warning: {
-      main: "#E8A93F" //YELLOW
+      main: "#E8A93F", //YELLOW
+      dark: "#6A1B9A" //PURPLE
     },
     error: {
-      main: "#A20025" //RED
+      main: "#A20025", //RED
+      light: "#F57C00" //ORENGE
     },
     background: {
       default: "#FDFDFD",

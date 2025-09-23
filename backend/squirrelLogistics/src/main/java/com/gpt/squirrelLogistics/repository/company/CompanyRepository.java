@@ -25,4 +25,14 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 	@Query("SELECT c.companyId FROM Company c "
 			+ "JOIN c.user u WHERE u.userId =:userId")
 	Long findCompanyIdByUserId(@Param("userId")Long userId);
+	
+	//companyId로 userName 조회
+	//작성자: 김도경
+	@Query("SELECT c.user.name FROM Company c WHERE c.companyId =:companyId")
+	String findUserNameByCompanyId(@Param("companyId") Long companyId);
+	
+	//companyId로 userName 조회
+	//작성자: 김도경
+	@Query("SELECT c.user.Pnumber FROM Company c WHERE c.companyId =:companyId")
+	String findUserNumByCompanyId(@Param("companyId") Long companyId);
 }

@@ -54,4 +54,15 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 			AND d.drivable = true
 			""")
 	List<Object[]> findDriverList();
+	
+	//driverId로 userName 조회
+	//작성자: 김도경
+	@Query("SELECT d.user.name FROM Driver d WHERE d.driverId =:driverId")
+	String findUserNameByDriverId(@Param("driverId") Long driverId);
+	
+	//companyId로 userName 조회
+	//작성자: 김도경
+	@Query("SELECT d.user.Pnumber FROM Driver d WHERE d.driverId =:driverId")
+	String findUserNumByDriverId(@Param("driverId") Long driverId);
+	
 }
