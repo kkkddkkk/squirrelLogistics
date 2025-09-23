@@ -18,7 +18,12 @@ export default function Footer() {
         <Box component="footer" sx={{ bgcolor: "#0B1220", color: "rgba(255,255,255,.88)" }}>
             {/* 본문 */}
             <Container maxWidth="lg" sx={{ py: 6 }}>
-                <Grid container columnSpacing={6} rowSpacing={6} alignItems="flex-start">
+                <Grid
+                    container
+                    columnSpacing={6}
+                    rowSpacing={6}
+                    alignItems="flex-start"
+                >
                     {/* 브랜드 */}
                     <Grid item xs={12} md={4}>
                         <Typography variant="h6" className={styles.brand}>

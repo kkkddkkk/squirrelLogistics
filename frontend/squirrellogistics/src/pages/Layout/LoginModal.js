@@ -1,3 +1,4 @@
+// src/pages/Layout/LoginModal.js
 import {
   Dialog,
   DialogContent,
@@ -14,22 +15,23 @@ import {
   Divider,
   Alert,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import ChatBubbleIcon from "@mui/icons-material/ChatBubble"; // 카카오 대체 아이콘
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/user/api";
 import { GoogleLogin } from "@react-oauth/google";
-import logo from "../../components/common/squirrelLogisticsLogo.png"
-import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png"
+import logo from "../../components/common/squirrelLogisticsLogo.png";
+import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png";
 
 export default function LoginModal({ open, onClose, onLoggedIn }) {
   const navigate = useNavigate();
-
-  const thisTheme = useTheme();
+  const theme = useTheme();
+  const isSm = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +40,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ loginId: "", password: "" });
 
-  // ✅ 신규: 역할 선택
+  // 역할
   const [role, setRole] = useState(""); // "DRIVER" | "COMPANY"
   const [roleError, setRoleError] = useState("");
 
@@ -61,22 +63,16 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
       setRoleError("역할을 먼저 선택해 주세요.");
       return;
     }
-
-    // 백업: 콜백에서 읽을 수 있게 저장
     sessionStorage.setItem("socialRole", role);
-
-    // Kakao는 state로 role 전달
     const state = encodeURIComponent(role);
     const url =
       "https://kauth.kakao.com/oauth/authorize" +
       `?response_type=code&client_id=${encodeURIComponent(REST_KEY)}` +
       `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
       `&state=${state}`;
-
     window.location.href = url;
   };
 
-  // 저장된 아이디/초기화
   useEffect(() => {
     if (!open) return;
     const saved = localStorage.getItem("savedLoginId");
@@ -106,10 +102,8 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
       const { data } = await api.post("/api/auth/login", { loginId, password });
       if (String(data?.role).toUpperCase() === "ETC") {
         setErrors({ loginId: "", password: "탈퇴 처리된 계정입니다. 고객센터로 문의해 주세요." });
-        return; // 토큰 저장/진행 중단
+        return;
       }
-
-      // 서버 응답 예: { accessToken, name, role }
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("userName", data.name || "");
       localStorage.setItem("userRole", data.role || "");
@@ -130,23 +124,36 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
     }
   };
 
-  const snsDisabled = !role; // 역할 선택 전 SNS 비활성화
+  const snsDisabled = !role;
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogContent sx={{ width: 420, p: 4, position: "relative" }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen={isSm}
+      fullWidth={!isSm}
+      maxWidth="xs"          // 데스크톱에서 자연스러운 폭(약 444px)
+      PaperProps={{
+        sx: {
+          m: { xs: 1.5, sm: 3 },
+          borderRadius: { xs: 2, sm: 3 },
+        },
+      }}
+    >
+      <DialogContent sx={{ p: { xs: 2.5, sm: 4 } }}>
         {/* 닫기 */}
         <IconButton
           onClick={onClose}
           sx={{ position: "absolute", top: 8, right: 8 }}
+          aria-label="닫기"
         >
-          <CloseIcon sx={{color: thisTheme.palette.text.primary}}/>
+          <CloseIcon sx={{ color: theme.palette.text.primary }} />
         </IconButton>
 
         {/* 로고/인사 */}
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <img
-            src={thisTheme.palette.mode==="light"?logo:darkLogo}
+            src={theme.palette.mode === "light" ? logo : darkLogo}
             alt="logo"
             style={{ width: 80, marginBottom: 8 }}
           />
@@ -158,7 +165,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
           </Typography>
         </Box>
 
-        {/* ✅ 역할 선택 */}
+        {/* 역할 선택 */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
             먼저 역할을 선택해 주세요
@@ -171,27 +178,37 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               setRoleError("");
             }}
             fullWidth
+            size={isSm ? "small" : "medium"}
+            sx={{
+              "& .MuiToggleButton-root": { flex: 1 }, // 동일 폭
+            }}
           >
-            <ToggleButton value="DRIVER" sx={{
-              color: thisTheme.palette.text.secondary,
-              "&.Mui-selected": {
-                backgroundColor: thisTheme.palette.primary.main,
-                color: thisTheme.palette.background.default,
-                "&:hover": {
-                  backgroundColor: thisTheme.palette.primary.main,
-                }
-              }
-            }}>배송기사</ToggleButton>
-            <ToggleButton value="COMPANY" sx={{
-              color: thisTheme.palette.text.secondary,
-              "&.Mui-selected": {
-                backgroundColor: thisTheme.palette.primary.main,
-                color: thisTheme.palette.background.default,
-                "&:hover": {
-                  backgroundColor: thisTheme.palette.primary.main,
-                }
-              }
-            }}>기업고객</ToggleButton>
+            <ToggleButton
+              value="DRIVER"
+              sx={{
+                color: theme.palette.text.secondary,
+                "&.Mui-selected": {
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.background.default,
+                  "&:hover": { backgroundColor: theme.palette.primary.main },
+                },
+              }}
+            >
+              배송기사
+            </ToggleButton>
+            <ToggleButton
+              value="COMPANY"
+              sx={{
+                color: theme.palette.text.secondary,
+                "&.Mui-selected": {
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.background.default,
+                  "&:hover": { backgroundColor: theme.palette.primary.main },
+                },
+              }}
+            >
+              기업고객
+            </ToggleButton>
           </ToggleButtonGroup>
           {roleError && (
             <Alert severity="warning" sx={{ mt: 1, py: 0.5 }}>
@@ -235,7 +252,8 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                   <IconButton
                     onClick={() => setShowPassword((v) => !v)}
                     tabIndex={-1}
-                    sx={{color: thisTheme.palette.text.primary}}
+                    aria-label="비밀번호 보기"
+                    sx={{ color: theme.palette.text.primary }}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -288,21 +306,17 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               onSuccess={async (cred) => {
                 try {
                   const idToken = cred.credential;
-                  // 역할 함께 전송
                   const { data } = await api.post("/api/auth/oauth/google", {
                     idToken,
-                    role, // "DRIVER" | "COMPANY"
+                    role,
                   });
-                  console.log(data)
                   if (String(data?.role).toUpperCase() === "ETC") {
                     alert("탈퇴 처리된 계정입니다. 고객센터로 문의해 주세요.");
-                    return; // 토큰 저장/진행 중단
+                    return;
                   }
-
                   localStorage.setItem("accessToken", data.accessToken);
                   if (data.name) localStorage.setItem("userName", data.name);
                   if (data.role) localStorage.setItem("userRole", data.role);
-
                   onLoggedIn?.(data);
                   onClose();
                 } catch (e) {
@@ -311,7 +325,10 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
                 }
               }}
               onError={() => alert("구글 로그인에 실패했습니다.")}
-              useOneTap={false} // 역할 선택 흐름을 위해 자동 원탭 비활성 권장
+              useOneTap={false}
+              theme={theme.palette.mode === "dark" ? "outline" : "filled_blue"}
+              size={isSm ? "medium" : "large"}
+              width="100%"     // ✅ 전체 폭 채우기
             />
           </Box>
 
@@ -320,9 +337,15 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
             variant="contained"
             fullWidth
             startIcon={<ChatBubbleIcon />}
-            sx={{ backgroundColor: "#fee500", color: "#000", flex: 1 }}
+            sx={{
+              backgroundColor: "#fee500",
+              color: "#000",
+              flex: 1,
+              "&:hover": { backgroundColor: "#fee500" },
+              opacity: snsDisabled ? 0.5 : 1,
+              pointerEvents: snsDisabled ? "none" : "auto",
+            }}
             onClick={handleKakaoLogin}
-            disabled={snsDisabled}
           >
             카카오 로그인
           </Button>
@@ -353,6 +376,6 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
           </Button>
         </Box>
       </DialogContent>
-    </Dialog >
+    </Dialog>
   );
 }

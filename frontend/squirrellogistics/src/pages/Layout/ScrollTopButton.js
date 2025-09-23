@@ -1,39 +1,38 @@
 import { useEffect, useState } from "react";
-import { Fab } from "@mui/material";
-import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import { Fab, Zoom, Portal } from "@mui/material";
+import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 
 export default function ScrollTopButton() {
     const [visible, setVisible] = useState(false);
 
-    // 스크롤 감지
     useEffect(() => {
-        const onScroll = () => {
-            setVisible(window.scrollY > 300); // 300px 이상 스크롤 시 표시
-        };
-        window.addEventListener("scroll", onScroll);
+        const onScroll = () => setVisible(window.scrollY > 300);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    if (!visible) return null;
+    const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
     return (
-        <Fab
-            color="primary"
-            onClick={scrollToTop}
-            sx={{
-                position: "fixed",
-                bottom: 24,
-                right: 24,
-                zIndex: 9999,
-            }}
-            size="medium"
-            aria-label="scroll top"
-        >
-            <KeyboardDoubleArrowUpIcon />
-        </Fab>
+        <Portal>
+            <Zoom in={visible} unmountOnExit>
+                <Fab
+                    color="primary"
+                    onClick={scrollToTop}
+                    size="medium"
+                    aria-label="scroll top"
+                    sx={{
+                        position: "fixed",
+                        // iOS 안전영역 고려 + 반응형 여백
+                        right: { xs: `calc(16px + env(safe-area-inset-right))`, md: 24 },
+                        bottom: { xs: `calc(16px + env(safe-area-inset-bottom))`, md: 24 },
+                        zIndex: (t) => t.zIndex.tooltip + 1, // 거의 최상단
+                    }}
+                >
+                    <KeyboardDoubleArrowUpIcon />
+                </Fab>
+            </Zoom>
+        </Portal>
     );
 }

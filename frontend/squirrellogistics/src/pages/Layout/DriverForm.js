@@ -494,7 +494,7 @@ export default function DriverForm() {
                     운전면허 진위확인
                 </Button>
 
-                <div ref={refs.timeWindow} style={{ flex: "1 1 100%" }}>
+                <div ref={refs.timeWindow} style={{ flex: "1 1 100%", minWidth: 0 }}>
                     <PreferredTimeBlock
                         start={startTime}
                         end={endTime}
