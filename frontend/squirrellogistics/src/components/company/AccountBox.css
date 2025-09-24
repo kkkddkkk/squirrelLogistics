@@ -25,3 +25,36 @@
   color: #2a2a2a;
   cursor: pointer;
 }
+
+/* 반응형 스타일 */
+@media (max-width: 600px) {
+  .account-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+
+  .account-right {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.8rem;
+  }
+
+  .mask-toggle {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .account-box {
+    padding: 0.8rem 1rem;
+  }
+
+  .mask-toggle {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+  }
+}

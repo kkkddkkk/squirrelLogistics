@@ -351,12 +351,20 @@ const DriverSearchForm = () => {
   };
 
   return (
-    <Grid container marginBottom={5}>
-      <Grid size={3} />
-      <Grid size={6}>
-        <CommonTitle>기사 검색</CommonTitle>
+    <Grid container sx={{ 
+      bgcolor: thisTheme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
+      <Grid size={{ xs: 12, sm: 12, md: 6 }} sx={{ px: { xs: 2, sm: 3, md: 0 } }}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            기사 검색
+          </CommonTitle>
+        </Box>
 
-        <CommonList padding={5}>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           {/* 예상금액 데이터 표시 */}
           {flow && (
             <div className="estimate-summary">

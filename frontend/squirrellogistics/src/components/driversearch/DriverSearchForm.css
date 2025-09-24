@@ -93,6 +93,60 @@
   border: 2px solid var(--primary-main); /* 원하는 색 */
 }
 
+/* 반응형 검색바 */
+@media (max-width: 600px) {
+  .search-bar {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+    margin-bottom: 2rem;
+  }
+  
+  .keyword-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px; /* iOS 줌 방지 */
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+
+  .checkbox-label {
+    font-size: 1rem;
+    padding: 8px 0;
+    justify-content: center;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    transform: scale(1.3);
+    margin-right: 8px;
+  }
+
+  /* 예상금액 데이터 그리드 모바일 최적화 */
+  .estimate-summary {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .data-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    font-size: 0.9rem;
+  }
+
+  .data-item {
+    padding: 12px;
+    background-color: var(--background-default);
+    border-radius: 6px;
+    border: 1px solid var(--divider);
+  }
+
+  .price-highlight {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-main);
+  }
+}
+
 .search-btn {
   background-color: #E8A93F;
   border: none;
@@ -211,12 +265,25 @@ input[type="checkbox"] {
 .page-btn.active {
   background: var(--primary-main);
   color: #fff;
-  
 }
 
 .page-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 반응형 페이지네이션 */
+@media (max-width: 600px) {
+  .page-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-width: 36px;
+  }
+  
+  .pagination {
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
 }
 
 /* 검색 결과 정보 */

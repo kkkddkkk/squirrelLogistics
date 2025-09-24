@@ -237,15 +237,23 @@ const MyPage = () => {
 
 
   return (
-    <Grid container sx={{backgroundColor: thisTheme.palette.background.default}}>
+    <Grid container sx={{
+      backgroundColor: thisTheme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
       <LoadingComponent open={deliveryLoading} text='마이페이지 정보를 불러오는 중...'></LoadingComponent>
-      <Grid size={3} />
-      <Grid size={6}>
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
+      <Grid size={{ xs: 12, sm: 12, md: 6 }} sx={{ px: { xs: 2, sm: 3, md: 0 } }}>
         {/* 페이지 제목 */}
-        <CommonTitle>마이페이지</CommonTitle>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            마이페이지
+          </CommonTitle>
+        </Box>
 
         {/* 회원정보 */}
-        <CommonList padding={5}>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           <div className="info-header">
             <CommonSubTitle>회원정보</CommonSubTitle>
             <EditDocumentIcon
@@ -298,7 +306,7 @@ const MyPage = () => {
         </CommonList>
 
         {/* 배송 정보 */}
-        <CommonList padding={"5%"}>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           {/* <h3></h3> */}
           <CommonSubTitle>배송정보</CommonSubTitle>
 
@@ -308,7 +316,10 @@ const MyPage = () => {
             borderColor: thisTheme.palette.background.default
             }}>
             <div className="filter-row" >
-              <Box display={"flex"} gap={3}>
+              <Box display={"flex"} gap={3} sx={{
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "stretch", sm: "center" }
+              }}>
                 <div className="filter-item">
                   <label htmlFor="name" style={{color: thisTheme.palette.text.primary}}>기사명:</label>
                   <input
@@ -320,7 +331,7 @@ const MyPage = () => {
                     placeholder="기사명을 입력하세요"
                     className='searchInput'
                     style={{
-                      width: "300px",
+                      width: "100%",
                       backgroundColor: thisTheme.palette.background.paper,
                       color: thisTheme.palette.text.primary
                     }}
@@ -346,7 +357,7 @@ const MyPage = () => {
                   </select>
                 </div>
               </Box>
-              <ButtonContainer width={"22%"}>
+              <ButtonContainer width={{ xs: "100%", sm: "22%" }}>
                 <TwoButtonsAtEnd
                   leftTitle={"검색"}
                   leftClickEvent={handleSearch}
@@ -425,7 +436,7 @@ const MyPage = () => {
         </ButtonContainer>
 
       </Grid>
-      <Grid size={3} />
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
     </Grid>
   );
 };

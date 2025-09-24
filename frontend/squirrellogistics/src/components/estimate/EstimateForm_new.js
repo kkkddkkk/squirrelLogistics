@@ -631,16 +631,25 @@ const EstimateForm_new = () => {
   const middleWaypointCount = waypoints.filter(w => (w?.address || "").trim() !== "").length;
 
   return (
-    <Grid container sx={{ bgcolor: thisTheme.palette.background.default }}>
-      <Grid size={3} />
-      <Grid size={6} marginBottom={"5%"}>
-        <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
-          <CommonTitle>예상 금액 계산 &nbsp;</CommonTitle>
-          <LocalShippingOutlinedIcon sx={{ fontSize: "40px", color: thisTheme.palette.primary.main }} />
+    <Grid container sx={{ 
+      bgcolor: thisTheme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
+      <Grid size={{ xs: 12, sm: 12, md: 6 }} sx={{ px: { xs: 2, sm: 3, md: 0 } }}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            예상 금액 계산 &nbsp;
+          </CommonTitle>
+          <LocalShippingOutlinedIcon sx={{ 
+            fontSize: { xs: "30px", sm: "35px", md: "40px" }, 
+            color: thisTheme.palette.primary.main 
+          }} />
         </Box>
 
 
-        <CommonList padding={5}>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           {/* 주소 입력 */}
           <ButtonContainer marginBottom={5}>
             <Three100Buttons

@@ -25,12 +25,12 @@ const DeliveryTable = ({ deliveries }) => {
         ) : (
           deliveries.map((item, idx) => (
             <tr key={idx}>
-              <td>{item.title}</td>
-              <td>{item.trackingNumber}</td>
-              <td>{item.driverName}</td>
-              <td>{item.status}</td>
-              <td>{item.paymentMethod}</td>
-              <td>{item.price?.toLocaleString()}원</td>
+              <td data-label="상품 제목">{item.title}</td>
+              <td data-label="운송장 번호">{item.trackingNumber}</td>
+              <td data-label="기사명">{item.driverName}</td>
+              <td data-label="배송 상태">{item.status}</td>
+              <td data-label="결제 방법">{item.paymentMethod}</td>
+              <td data-label="금액">{item.price?.toLocaleString()}원</td>
             </tr>
           ))
         )}

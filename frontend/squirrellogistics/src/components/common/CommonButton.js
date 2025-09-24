@@ -26,11 +26,20 @@ export const Three100Buttons = ({ leftTitle, rightTitle, middleTitle, leftClickE
     const safeRightColor = rightColor || thisTheme.palette.primary.main;
     const safeMiddleColor = middleColor || thisTheme.palette.primary.main;
     return (
-        <Box display={"flex"} justifyContent={"center"} gap={gap}>
+        <Box sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: gap,
+            flexDirection: { xs: "column", sm: "row" }
+        }}>
             <Button
                 variant="contained"
                 sx={{
-                    width: "33%",
+                    width: { xs: "100%", sm: "33%" },
+                    minHeight: { xs: "52px", sm: "36px" },
+                    fontSize: { xs: "1rem", sm: "0.875rem" },
+                    borderRadius: { xs: "8px", sm: "4px" },
+                    fontWeight: { xs: "bold", sm: "normal" },
                     backgroundColor: safeLeftColor,
                     "&:hover": {
                         backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
@@ -45,7 +54,11 @@ export const Three100Buttons = ({ leftTitle, rightTitle, middleTitle, leftClickE
             <Button
                 variant="contained"
                 sx={{
-                    width: "33%",
+                    width: { xs: "100%", sm: "33%" },
+                    minHeight: { xs: "52px", sm: "36px" },
+                    fontSize: { xs: "1rem", sm: "0.875rem" },
+                    borderRadius: { xs: "8px", sm: "4px" },
+                    fontWeight: { xs: "bold", sm: "normal" },
                     backgroundColor: safeMiddleColor,
                     "&:hover": {
                         backgroundColor: lighten(safeMiddleColor, 0.1), // 10% 밝게
@@ -60,7 +73,11 @@ export const Three100Buttons = ({ leftTitle, rightTitle, middleTitle, leftClickE
             <Button
                 variant="contained"
                 sx={{
-                    width: "33%",
+                    width: { xs: "100%", sm: "33%" },
+                    minHeight: { xs: "52px", sm: "36px" },
+                    fontSize: { xs: "1rem", sm: "0.875rem" },
+                    borderRadius: { xs: "8px", sm: "4px" },
+                    fontWeight: { xs: "bold", sm: "normal" },
                     backgroundColor: safeRightColor,
                     "&:hover": {
                         backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
@@ -139,41 +156,48 @@ export const Two100Buttons = ({ leftTitle, rightTitle, leftClickEvent, rightClic
     const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
-        <Grid container spacing={gap}>
-            <Grid size={6}>
-                <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                        backgroundColor: safeLeftColor,
-                        "&:hover": {
-                            backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
-                        },
-
-                    }}
-                    onClick={leftClickEvent}
-                    disabled={leftDisabled}
-                >
-                    {leftTitle}
-                </Button>
-            </Grid>
-            <Grid size={6}>
-                <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                        backgroundColor: safeRightColor,
-                        "&:hover": {
-                            backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
-                        },
-                    }}
-                    onClick={rightClickEvent}
-                    disabled={rightDisabled}
-                >
-                    {rightTitle}
-                </Button>
-            </Grid>
-        </Grid>
+        <Box sx={{
+            display: "flex",
+            gap: gap,
+            flexDirection: { xs: "column", sm: "row" }
+        }}>
+            <Button
+                variant="contained"
+                sx={{
+                    flex: 1,
+                    minHeight: { xs: "52px", sm: "36px" },
+                    fontSize: { xs: "1rem", sm: "0.875rem" },
+                    borderRadius: { xs: "8px", sm: "4px" },
+                    fontWeight: { xs: "bold", sm: "normal" },
+                    backgroundColor: safeLeftColor,
+                    "&:hover": {
+                        backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
+                    },
+                }}
+                onClick={leftClickEvent}
+                disabled={leftDisabled}
+            >
+                {leftTitle}
+            </Button>
+            <Button
+                variant="contained"
+                sx={{
+                    flex: 1,
+                    minHeight: { xs: "52px", sm: "36px" },
+                    fontSize: { xs: "1rem", sm: "0.875rem" },
+                    borderRadius: { xs: "8px", sm: "4px" },
+                    fontWeight: { xs: "bold", sm: "normal" },
+                    backgroundColor: safeRightColor,
+                    "&:hover": {
+                        backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
+                    },
+                }}
+                onClick={rightClickEvent}
+                disabled={rightDisabled}
+            >
+                {rightTitle}
+            </Button>
+        </Box>
     );
 }
 
@@ -229,39 +253,43 @@ export const TwoButtonsAtEnd = ({ leftTitle, rightTitle, leftClickEvent, rightCl
     const safeRightColor = rightColor || thisTheme.palette.primary.main;
 
     return (
-        <Grid container>
-            <Grid size={6} display={"flex"} justifyContent={"-moz-initial"}>
-                <Button
-                    variant="contained"
-                    sx={{
-                        backgroundColor: safeLeftColor,
-                        "&:hover": {
-                            backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
-                        },
-
-                    }}
-                    onClick={leftClickEvent}
-                    disabled={leftDisabled}
-                >
-                    {leftTitle}
-                </Button>
-            </Grid>
-            <Grid size={6} display={"flex"} justifyContent={"end"}>
-                <Button
-                    variant="contained"
-                    sx={{
-                        backgroundColor: safeRightColor,
-                        "&:hover": {
-                            backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
-                        },
-                    }}
-                    onClick={rightClickEvent}
-                    disabled={rightDisabled}
-                >
-                    {rightTitle}
-                </Button>
-            </Grid>
-        </Grid>
+        <Box sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 0 }
+        }}>
+            <Button
+                variant="contained"
+                sx={{
+                    minHeight: { xs: "48px", sm: "36px" },
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" },
+                    backgroundColor: safeLeftColor,
+                    "&:hover": {
+                        backgroundColor: lighten(safeLeftColor, 0.1), // 10% 밝게
+                    },
+                }}
+                onClick={leftClickEvent}
+                disabled={leftDisabled}
+            >
+                {leftTitle}
+            </Button>
+            <Button
+                variant="contained"
+                sx={{
+                    minHeight: { xs: "48px", sm: "36px" },
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" },
+                    backgroundColor: safeRightColor,
+                    "&:hover": {
+                        backgroundColor: lighten(safeRightColor, 0.1), // 10% 밝게
+                    },
+                }}
+                onClick={rightClickEvent}
+                disabled={rightDisabled}
+            >
+                {rightTitle}
+            </Button>
+        </Box>
     );
 }
 
@@ -474,24 +502,28 @@ export const OneButtonAtRight = ({ children, disabled, clickEvent, color }) => {
     const thisTheme = useTheme();
     const safeColor = color || thisTheme.palette.primary.main;
     return (
-        <Grid container>
-            <Grid size={12} display="flex" justifyContent="end">
-                <Button
-                    type="submit"
-                    variant="contained"
-                    sx={{
-                        backgroundColor: safeColor,
-                        "&:hover": {
-                            backgroundColor: lighten(safeColor, 0.1), // 10% 밝게
-                        },
-                    }}
-                    onClick={clickEvent}
-                    disabled={disabled}
-                >
-                    {children}
-                </Button>
-            </Grid>
-        </Grid>
+        <Box sx={{
+            display: "flex",
+            justifyContent: { xs: "stretch", sm: "flex-end" }
+        }}>
+            <Button
+                type="submit"
+                variant="contained"
+                sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    minHeight: { xs: "48px", sm: "36px" },
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" },
+                    backgroundColor: safeColor,
+                    "&:hover": {
+                        backgroundColor: lighten(safeColor, 0.1), // 10% 밝게
+                    },
+                }}
+                onClick={clickEvent}
+                disabled={disabled}
+            >
+                {children}
+            </Button>
+        </Box>
 
     )
 }

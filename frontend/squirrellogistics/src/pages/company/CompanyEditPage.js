@@ -5,7 +5,7 @@ import { updateCompanyProfile } from '../../api/company/companyApi';
 import { fetchCompanyMyPageInfo } from '../../slice/company/companySlice';
 import './CompanyEditPage.css';
 import { CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
-import { Grid, useTheme } from '@mui/material';
+import { Box, Grid, useTheme } from '@mui/material';
 import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
 import LockIcon from '@mui/icons-material/Lock';
 import CallIcon from '@mui/icons-material/Call';
@@ -207,7 +207,27 @@ const CompanyEditPage = () => {
   // 주소 검색 핸들러
   const handleAddressSearch = (e) => {
     e.preventDefault();
+    
+    // 화면 크기에 따라 팝업 크기 조정
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    
+    let popupWidth, popupHeight;
+    
+    if (screenWidth <= 600) {
+      popupWidth = Math.min(screenWidth * 0.95, 400);
+      popupHeight = Math.min(screenHeight * 0.8, 500);
+    } else if (screenWidth <= 900) {
+      popupWidth = Math.min(screenWidth * 0.8, 500);
+      popupHeight = Math.min(screenHeight * 0.7, 600);
+    } else {
+      popupWidth = 500;
+      popupHeight = 600;
+    }
+    
     new window.daum.Postcode({
+      width: popupWidth,
+      height: popupHeight,
       oncomplete: function (data) {
         setFormData(prev => ({
           ...prev,
@@ -347,10 +367,18 @@ const CompanyEditPage = () => {
   const goBack = () => navigate("/company");
 
   return (
-    <Grid container marginBottom={"5%"}>
-      <Grid size={3} />
-      <Grid size={6}>
-        <CommonTitle>회원정보 수정</CommonTitle>
+    <Grid container sx={{
+      backgroundColor: thisTheme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
+      <Grid size={{ xs: 12, sm: 12, md: 6 }} sx={{ px: { xs: 2, sm: 3, md: 0 } }}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            회원정보 수정
+          </CommonTitle>
+        </Box>
         <p className="edit-subtitle">수정하고 싶은 항목만 입력하세요. 빈 필드는 기존 정보가 유지됩니다.</p>
 
         <div className="edit-card">
@@ -456,8 +484,16 @@ const CompanyEditPage = () => {
                     onChange={handleInputChange}
                     placeholder="주소를 입력하세요"
                     readOnly
+                    style={{ flex: 1 }}
                   />
-                  <OneButtonAtRight clickEvent={handleAddressSearch}>
+                  <OneButtonAtRight 
+                    clickEvent={handleAddressSearch}
+                    sx={{
+                      minWidth: { xs: "100%", sm: "auto" },
+                      fontSize: { xs: "0.9rem", sm: "0.875rem" },
+                      minHeight: { xs: "48px", sm: "36px" }
+                    }}
+                  >
                     주소 검색
                   </OneButtonAtRight>
                 </div>
@@ -496,7 +532,7 @@ const CompanyEditPage = () => {
           {success && <div className="success-text" aria-live="assertive">{success}</div>}
         </div>
       </Grid>
-      <Grid size={3} />
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
     </Grid>
   );
 };

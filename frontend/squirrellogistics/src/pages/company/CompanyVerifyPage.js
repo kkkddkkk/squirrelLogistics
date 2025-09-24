@@ -143,10 +143,27 @@ const CompanyVerifyPage = () => {
         const resetUrl = `${window.location.origin}${response.resetUrl}?token=${response.token}&email=${encodeURIComponent(response.email)}`;
         // console.log("🔍 비밀번호 재설정 팝업 URL:", resetUrl);
 
+        // 화면 크기에 따라 팝업 크기 조정
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        
+        let popupWidth, popupHeight;
+        
+        if (screenWidth <= 600) {
+          popupWidth = Math.min(screenWidth * 0.95, 400);
+          popupHeight = Math.min(screenHeight * 0.8, 500);
+        } else if (screenWidth <= 900) {
+          popupWidth = Math.min(screenWidth * 0.8, 500);
+          popupHeight = Math.min(screenHeight * 0.7, 600);
+        } else {
+          popupWidth = 500;
+          popupHeight = 600;
+        }
+        
         const popup = window.open(
           resetUrl,
           'passwordReset',
-          'width=500,height=600,scrollbars=yes,resizable=yes,status=yes'
+          `width=${popupWidth},height=${popupHeight},scrollbars=yes,resizable=yes,status=yes,center=yes`
         );
 
         if (popup) {
@@ -177,14 +194,20 @@ const CompanyVerifyPage = () => {
 
   return (
 
-    <Grid container marginBottom={"5%"}>
-      <Grid size={3} />
-      <Grid size={6}>
-        <CommonTitle>
-          회원정보 수정
-        </CommonTitle>
+    <Grid container sx={{
+      backgroundColor: thisTheme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
+      <Grid size={{ xs: 12, sm: 12, md: 6 }} sx={{ px: { xs: 2, sm: 3, md: 0 } }}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
+            회원정보 수정
+          </CommonTitle>
+        </Box>
 
-        <CommonList padding={5}>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           <CommonSubTitle>본인인증</CommonSubTitle>
           <p className="verify-description">
             회원정보 수정을 위해 본인인증이 필요합니다.
@@ -328,7 +351,7 @@ const CompanyVerifyPage = () => {
 
 
       </Grid>
-      <Grid size={3} />
+      <Grid size={{ xs: 0, sm: 0, md: 3 }} />
     </Grid>
 
   );

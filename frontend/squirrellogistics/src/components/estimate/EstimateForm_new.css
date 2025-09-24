@@ -1,7 +1,7 @@
 .customInput{
   background-color: var(--background-paper);
   border: 1px solid var(--text-secondary);
-    color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .customInput:focus {
@@ -22,4 +22,102 @@
   background-color: var(--background-paper);
   color: var(--text-primary);
   border-radius: 6px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 600px) {
+  .customInput {
+    padding: 16px;
+    font-size: 16px; /* iOS 줌 방지 */
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .memo-input {
+    padding: 16px;
+    font-size: 16px; /* iOS 줌 방지 */
+    min-height: 100px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .form-row {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .delivery-label {
+    font-size: 1rem;
+    margin: 0 0 10px 0;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+
+  .datepicker-row {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .datepicker-row .customInput {
+    width: 100%;
+  }
+
+  /* 버튼 그룹을 모바일에서 더 명확하게 */
+  .MuiButton-root {
+    min-height: 48px !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* 폼 요소들 간격 조정 */
+  .MuiBox-root {
+    margin-bottom: 16px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .customInput {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  .memo-input {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  .datepicker-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .datepicker-row .customInput {
+    flex: 1;
+  }
+}
+
+@media (min-width: 961px) {
+  .customInput {
+    padding: 8px;
+    font-size: 1rem;
+  }
+
+  .memo-input {
+    padding: 8px;
+    font-size: 1rem;
+  }
+
+  .datepicker-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .datepicker-row .customInput {
+    flex: 1;
+  }
 }

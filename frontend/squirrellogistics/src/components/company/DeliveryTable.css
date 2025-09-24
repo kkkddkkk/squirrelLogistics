@@ -27,3 +27,115 @@
   text-align: center;
   color: gray;
 }
+
+/* 반응형 스타일 */
+@media (max-width: 480px) {
+  .delivery-table {
+    font-size: 0.75rem;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .delivery-table thead,
+  .delivery-table tbody,
+  .delivery-table th,
+  .delivery-table td,
+  .delivery-table tr {
+    display: block;
+  }
+
+  .delivery-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .delivery-table tr {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: #f9f9f9;
+    padding: 10px;
+  }
+
+  .delivery-table td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding: 8px 0 8px 50%;
+    text-align: left;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+  }
+
+  .delivery-table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #666;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .delivery-table td:last-child {
+    border-bottom: none;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .delivery-table {
+    font-size: 0.8rem;
+  }
+
+  .delivery-table th,
+  .delivery-table td {
+    padding: 0.6rem 0.4rem;
+    word-break: break-word;
+  }
+
+  .delivery-table th:nth-child(n+5),
+  .delivery-table td:nth-child(n+5) {
+    display: none; /* 5번째 컬럼부터 숨김 */
+  }
+
+  .delivery-table th:first-child,
+  .delivery-table td:first-child {
+    text-align: left;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 960px) {
+  .delivery-table {
+    font-size: 0.85rem;
+  }
+
+  .delivery-table th,
+  .delivery-table td {
+    padding: 0.7rem 0.5rem;
+  }
+
+  .delivery-table th:nth-child(n+6),
+  .delivery-table td:nth-child(n+6) {
+    display: none; /* 6번째 컬럼부터 숨김 */
+  }
+}
+
+@media (min-width: 961px) {
+  .delivery-table {
+    font-size: 0.9rem;
+  }
+
+  .delivery-table th,
+  .delivery-table td {
+    padding: 0.8rem;
+  }
+}

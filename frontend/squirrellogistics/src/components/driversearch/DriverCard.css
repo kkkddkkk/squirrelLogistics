@@ -18,6 +18,81 @@
   transform: translateY(-2px);
 }
 
+/* 반응형 레이아웃 */
+@media (max-width: 600px) {
+  .driver-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    padding: 20px;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+  }
+  
+  .driver-info {
+    margin-left: 0;
+    order: 2;
+  }
+  
+  .driver-name-rating {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .driver-name-rating strong {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .driver-rating {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .driver-detail {
+    font-size: 0.95rem;
+    margin: 0.5rem 0;
+    padding: 8px 12px;
+    background-color: var(--background-default);
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-main);
+  }
+
+  .driver-detail strong {
+    color: var(--primary-main);
+    margin-right: 0.8rem;
+  }
+
+  /* 요청 버튼을 하단에 전체 너비로 */
+  .driver-card > .MuiButton-root {
+    order: 3;
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* 프로필 이미지 중앙 정렬 */
+  .driver-image {
+    order: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .driver-img-placeholder,
+  .driver-profile-img {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+    line-height: 80px;
+  }
+}
+
 .driver-img-placeholder {
   width: 60px;
   height: 60px;

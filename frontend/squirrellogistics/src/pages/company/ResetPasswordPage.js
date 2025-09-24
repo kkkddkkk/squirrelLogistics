@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './CompanyVerifyPage.css';
-import { Grid } from '@mui/material';
+import './ResetPasswordPage.css';
+import { Box, Grid } from '@mui/material';
 import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from '../../components/common/CommonText';
 import CommonList from '../../components/common/CommonList';
 import { ButtonContainer, TwoButtonsAtRight } from '../../components/common/CommonButton';
@@ -111,10 +112,18 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <Grid container p={5}>
-      <Grid size={12}>
-        <CommonTitle>비밀번호 재설정</CommonTitle>
-        <CommonList padding={5}>
+    <Grid container sx={{
+      backgroundColor: theme.palette.background.default,
+      minHeight: '100vh',
+      py: { xs: 2, sm: 3, md: 4 }
+    }}>
+      <Grid size={{ xs: 12, sm: 10, md: 8, lg: 6 }} sx={{ mx: 'auto', px: { xs: 2, sm: 3, md: 0 } }}>
+        <Box display={"flex"} alignItems={"center"} justifyContent={"center"} mb={{ xs: 3, sm: 4 }}>
+          <CommonTitle sx={{ fontSize: { xs: '1.3rem', sm: '1.8rem', md: '2.2rem' } }}>
+            비밀번호 재설정
+          </CommonTitle>
+        </Box>
+        <CommonList padding={{ xs: 2, sm: 3, md: 5 }}>
           {/* <h3 className="section-title">새 비밀번호 설정</h3> */}
           <CommonSmallerTitle>새 비밀번호 설정</CommonSmallerTitle>
           <p className="verify-description">
