@@ -2,18 +2,38 @@
 import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { ButtonContainer, OneButtonAtLeft, OneButtonAtRight, TwoButtonsAtEnd } from "../../common/CommonButton";
 import styles from "../../../css/Body.module.css";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import logo from "../../common/squirrelLogisticsLogo.png";
+import { API_SERVER_HOST } from "../../../api/admin/bannerApi";
 
-const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setBannerForm }) => {
+const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setBannerForm, selectedNotice, id }) => {
     const thisTheme = useTheme();
     const fileRef = useRef(null);
     const [preview, setPreview] = useState(null);
+    const accessToken = localStorage.getItem('accessToken');
 
     const previewUrl = useMemo(() => {
-        if (!preview) return `url(${logo})`; // 초기 로고
-        return `url(${URL.createObjectURL(preview)})`;
-    }, [preview]);
+
+        if (preview) return `url(${URL.createObjectURL(preview)})`;
+
+        if (adding) {
+            if (id) {
+                if (!src) return;
+                if (src && typeof src === "string") {
+                    const normalizedSrc = src.startsWith('http')
+                        ? src
+                        : `${API_SERVER_HOST}/public/banner/${src}`;
+                    return `url("${normalizedSrc}?t=${Date.now()}")`;
+                }
+            } else {
+                return `url(${logo})`;
+            }
+        } else {
+            if (!src) return;
+            const normalizedSrc = src.startsWith('http') ? src : `${API_SERVER_HOST}/public/banner/${src}`;
+            return `url("${normalizedSrc}?t=${Date.now()}")`;
+        }
+    }, [preview, src]);
 
     const onChange = (key) => (e) => {
         const v = e.target.value;
@@ -26,15 +46,20 @@ const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setB
 
     const handleImgChange = (e) => {//사진 입력
         setPreview(e.target.files[0]);
-        setBannerForm((prev)=>({...prev, "img":e.target.files[0]}));
+        setBannerForm((prev) => ({ ...prev, "img": e.target.files[0] }));
     };
 
-    const handleImgRemove = (e, idx) => {
-        e.stopPropagation();//이벤트 상위 전파 방지
-        // eslint-disable-next-line no-restricted-globals
-        if (confirm('사진을 삭제하시겠습니까?')) {//선택한 사진만 삭제
-            setPreview('');
+    const handleClickNavigate = () => {
+        if (adding) {
+            if (!selectedNotice.id) {
+                alert("아직 공지사항이 연결되지 않았습니다.");
+            } else {
+                alert(`클릭 시 ${selectedNotice.id}번 공지사항(제목: ${selectedNotice.title})의 상세보기 페이지로 이동됩니다.`);
+            }
+        } else {
+            alert(`클릭 시 ${bannerForm.bannerId}번 공지사항(제목: ${bannerForm.title})의 상세보기 페이지로 이동됩니다.`);
         }
+
     }
 
     return adding ?
@@ -47,7 +72,7 @@ const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setB
                     style={{ display: "none" }}
                     onChange={handleImgChange}
                 />
-                <Box role="img" aria-label={bannerForm.title} sx={{
+                <Box role="img" key={src} aria-label={bannerForm.title} sx={{
                     aspectRatio: 3,
                     width: "100%",
                     borderRadius: '10px',
@@ -73,7 +98,7 @@ const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setB
                         <ButtonContainer width={"100%"} marginTop={2}>
                             <TwoButtonsAtEnd
                                 leftTitle={"바로가기"}
-                                leftDisabled={true}
+                                leftClickEvent={handleClickNavigate}
                                 rightTitle={"사진추가"}
                                 rightClickEvent={handleClickAddImg}
                             />
@@ -88,18 +113,42 @@ const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setB
             <Box sx={{
                 aspectRatio: 3,
                 width: "100%",
-                border: `1px dashed ${thisTheme.palette.text.secondary} !important`,
+                border: src ? 'none' : `1px dashed ${thisTheme.palette.text.secondary} !important`,
                 borderRadius: '10px',
                 marginBottom: 5,
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                color: thisTheme.palette.text.secondary,
-                backgroundColor: thisTheme.palette.background.paper
+                alignItems: src ? "end" : "center",
+                justifyContent: src ? "space-between" : "center",
+                paddingLeft: 5,
+                paddingRight: 5,
+                paddingBottom: src ? 3 : 0,
+                color: src ? thisTheme.palette.text.primary : thisTheme.palette.text.secondary,
+                backgroundImage: src ? previewUrl : "",
+                backgroundColor: thisTheme.palette.background.paper,
+                backgroundSize: 'cover',        // 박스를 완전히 채우면서 비율 유지
+                backgroundPosition: 'center',   // 중앙 기준으로 잘라서 보여줌
+                backgroundRepeat: 'no-repeat',  // 반복 없이 한 장만
             }}>
-                {bannerLength == 0 ?
-                    "아직 등록된 배너가 없습니다. 배너 추가 버튼으로 새 배너를 등록해주세요." :
-                    "배너 리스트를 클릭하여 배너를 미리 확인할 수 있습니다."}
+                {src ?
+                    <Box width={"100%"}>
+                        <Typography variant={"h6"} fontWeight={800} lineHeight={1.15} width={"100%"}>
+                            {bannerForm.title}
+                        </Typography>
+                        <Typography variant="body1" className={styles.desc} width={"100%"}>
+                            {bannerForm.subTitle}
+                        </Typography>
+                        <ButtonContainer width={"100%"} marginTop={2}>
+                            <OneButtonAtLeft clickEvent={handleClickNavigate}>
+                                바로가기
+                            </OneButtonAtLeft>
+                        </ButtonContainer>
+
+                    </Box> :
+                    bannerLength == 0 ?
+                        "아직 등록된 배너가 없습니다. 배너 추가 버튼으로 새 배너를 등록해주세요." :
+                        "배너 리스트를 클릭하여 배너를 미리 확인할 수 있습니다."
+                }
+
 
             </Box>
         )

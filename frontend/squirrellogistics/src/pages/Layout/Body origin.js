@@ -13,8 +13,6 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { API_SERVER_HOST, getPublicBanners } from "../../api/admin/bannerApi";
-import { OneButtonAtLeft } from "../../components/common/CommonButton";
-import { useNavigate } from "react-router-dom";
 
 const bannerImages = [
     { src: "/images/banner1.jpeg", title: "프로모션 1", desc: "첫번째 배너" },
@@ -29,7 +27,6 @@ export default function Body({ fullBleed = false }) {
     const theme = useTheme();
     const isSm = useMediaQuery(theme.breakpoints.down("md"));
     const [banners, setBanners] = useState([]);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,10 +57,6 @@ export default function Body({ fullBleed = false }) {
         }),
         [autoplay]
     );
-
-    const detailNotice = (noticeId)=>{
-        navigate(`/admin/notice/read/${noticeId}`);
-    }
 
     const go = (i) => sliderRef.current?.slickGoTo(i);
     const prev = () => sliderRef.current?.slickPrev();
@@ -100,7 +93,7 @@ export default function Body({ fullBleed = false }) {
                                 {/* 배경 이미지 */}
                                 <Box
                                     component="img"
-                                    src={`${API_SERVER_HOST}/public/banner/${b.imageUrl}`}
+                                    src={`url(${API_SERVER_HOST}/public/banner/${b.src})`}
                                     alt={b.title}
                                     loading="lazy"
                                     decoding="async"
@@ -115,7 +108,7 @@ export default function Body({ fullBleed = false }) {
                                 />
 
                                 {/* 상단 좌→우 그라디언트 + 하단 그라디언트 */}
-                                {/* <Box
+                                <Box
                                     sx={{
                                         position: "absolute",
                                         inset: 0,
@@ -130,7 +123,7 @@ export default function Body({ fullBleed = false }) {
                                         background:
                                             "linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,.25))",
                                     }}
-                                /> */}
+                                />
 
                                 {/* 우상단 큰 원(워터마크용) — md 이상에서만 */}
                                 <Box
@@ -175,10 +168,31 @@ export default function Body({ fullBleed = false }) {
                                         display: "flex",
                                         alignItems: "center",
                                         px: { xs: 2, sm: 4, md: 6, lg: 8 },
-                                        marginTop: 10
                                     }}
                                 >
                                     <Box sx={{ maxWidth: 760, color: "#fff" }}>
+                                        <Typography
+                                            sx={{
+                                                display: { xs: "none", md: "block" },
+                                                opacity: 0.75,
+                                                mb: 1,
+                                                fontWeight: 600,
+                                                letterSpacing: ".08em",
+                                            }}
+                                        >
+                                           
+                                        </Typography>
+
+                                        <Chip
+                                            label="물류 중개 플랫폼"
+                                            size="small"
+                                            sx={{
+                                                mb: 1.2,
+                                                bgcolor: "rgba(255,255,255,.15)",
+                                                color: "#fff",
+                                                backdropFilter: "blur(4px)",
+                                            }}
+                                        />
 
                                         <Typography
                                             fontWeight={800}
@@ -192,7 +206,7 @@ export default function Body({ fullBleed = false }) {
                                             }}
                                         >
                                             {b.title}
-
+                                            
                                         </Typography>
 
                                         <Typography
@@ -203,10 +217,11 @@ export default function Body({ fullBleed = false }) {
                                         </Typography>
 
                                         <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-                                            <Button variant="contained" size={isSm ? "medium" : "large"} 
-                                                onClick={()=>detailNotice(b.noticeId)}
-                                            >
-                                                상세보기
+                                            <Button variant="contained" size={isSm ? "medium" : "large"}>
+                                                지금 시작하기
+                                            </Button>
+                                            <Button variant="outlined" size={isSm ? "medium" : "large"} href="/service">
+                                                서비스 보기
                                             </Button>
                                         </Stack>
                                     </Box>
@@ -291,7 +306,7 @@ export default function Body({ fullBleed = false }) {
                             gap: 1,
                         }}
                     >
-                        {banners?.map((_, i) => (
+                        {bannerImages.map((_, i) => (
                             <Button
                                 key={i}
                                 size="small"

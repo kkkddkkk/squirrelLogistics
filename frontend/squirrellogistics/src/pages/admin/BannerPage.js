@@ -7,30 +7,35 @@ import { ButtonContainer, Two100Buttons } from "../../components/common/CommonBu
 import ReactDragList from 'react-drag-list';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { getBannerList } from "../../api/admin/bannerApi";
-import { useNavigate } from "react-router-dom";
+import { API_SERVER_HOST, deleteBanner, getBannerList } from "../../api/admin/bannerApi";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const BannerPage = () => {
 
     const thisTheme = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const { moveToMain } = usePaymentMove();
 
     const [refreshKey, setRefreshKey] = useState(0);
     const [bannerList, setBannerList] = useState([]);
+    const [bannerForm, setBannerForm] = useState([]);
+
 
     useEffect(() => {
         const accessToken = localStorage.getItem("accessToken");
         if (!accessToken) return moveToMain();
-
-        getBannerList({ accessToken })
-            .then(res => {
+        const fetchData = async () => {
+            try {
+                const res = await getBannerList({ accessToken });
                 setBannerList(res.data);
-            })
-            .catch(err => {
-            })
-        // .finally(() => setLoading(false));
-    }, [])
+                console.log(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchData();
+    }, [refreshKey])
 
     const NumberBox = ({ index }) => {
         return (
@@ -51,11 +56,18 @@ const BannerPage = () => {
         navigate({ pathname: `/admin/banner/add` });
     }
 
-    const deleteBanner = () => {
+    const handleDeleteBanner = (bannerId) => {
+        console.log(bannerId);
         if (!window.confirm("배너를 삭제하시겠습니까? 삭제된 배너는 복구되지 않습니다.")) return;
+        const accessToken = localStorage.getItem("accessToken");
+        deleteBanner({ accessToken, bannerId })
+            .then(
+                console.log('삭제성공')
+            );
         console.log('deleted');
     }
-    const showBanner = () => {
+    const showBanner = (record) => {
+        navigate({ pathname: `/admin/banner/add`, search: `?id=${record.bannerId}` });
 
     }
     const returnBanner = () => {
@@ -64,8 +76,8 @@ const BannerPage = () => {
     const saveBanner = () => {
 
     }
-    const showThumbnail = () => {
-        console.log('clicked');
+    const showThumbnail = (record) => {
+        setBannerForm(record);
     }
 
     return (
@@ -74,33 +86,52 @@ const BannerPage = () => {
             <Grid container spacing={3} marginBottom={10}>
                 <Grid size={3} />
                 <Grid size={6}>
-                    <BannerThumbnail bannerLength={bannerList?.length} />
+                    <BannerThumbnail bannerLength={bannerList?.length}
+                        src={bannerForm.imageUrl}
+                        bannerForm={bannerForm} adding={false} />
                     {bannerList?.length > 0 ?
-                        <ReactDragList
-                            key={refreshKey}
-                            dataSource={bannerList}
-                            row={(record, index) => (
-                                <Grid container spacing={1} onClick={showThumbnail}>
-                                    <Grid size={1} >
-                                        <NumberBox index={index + 1} />
-                                    </Grid>
-                                    <Grid size={11}>
-                                        <BannerList
-                                            key={record.id}
-                                            title={record.title}
-                                            deleteFunc={deleteBanner}
-                                            showFunc={showBanner}
-                                            isBanner={true}
-                                            showThumbnail={showThumbnail}
-                                        />
-                                    </Grid>
+                        bannerList?.map((record, index) => (
+                            <Grid container spacing={1} onClick={() => showThumbnail(record)}>
+                                <Grid size={1} >
+                                    <NumberBox index={index + 1} />
                                 </Grid>
-                            )}
-                            handles={false}
-                            onUpdate={() => {
-                                setRefreshKey(prev => prev + 1);
-                            }}
-                        />
+                                <Grid size={11}>
+                                    <BannerList
+                                        key={record.id}
+                                        title={record.title}
+                                        deleteFunc={() => handleDeleteBanner(record.bannerId)}
+                                        showFunc={() => showBanner(record)}
+                                        isBanner={true}
+                                        showThumbnail={showThumbnail}
+                                    />
+                                </Grid>
+                            </Grid>
+                        ))
+                        // <ReactDragList
+                        //     key={refreshKey}
+                        //     dataSource={bannerList}
+                        //     row={(record, index) => (
+                        //         <Grid container spacing={1} onClick={() => showThumbnail(record)}>
+                        //             <Grid size={1} >
+                        //                 <NumberBox index={index + 1} />
+                        //             </Grid>
+                        //             <Grid size={11}>
+                        //                 <BannerList
+                        //                     key={record.id}
+                        //                     title={record.title}
+                        //                     deleteFunc={()=>handleDeleteBanner(record.bannerId)}
+                        //                     showFunc={() => showBanner(record)}
+                        //                     isBanner={true}
+                        //                     showThumbnail={showThumbnail}
+                        //                 />
+                        //             </Grid>
+                        //         </Grid>
+                        //     )}
+                        //     handles={false}
+                        //     onUpdate={() => {
+                        //         setRefreshKey(prev => prev + 1);
+                        //     }}
+                        // />
                         : <></>}
 
                     {bannerList.length < 3 ?

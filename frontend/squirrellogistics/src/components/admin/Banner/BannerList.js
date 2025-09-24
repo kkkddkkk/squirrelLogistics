@@ -14,8 +14,10 @@ const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner, idx, 
                     sx={{
                         display: "flex",
                         justifyContent: "space-between",
-                        alignItems: "center"
-                    }}>
+                        alignItems: "center",
+                        cursor: "pointer" 
+                    }}
+                >
                     <Box>
                         {title}
                     </Box>
@@ -24,7 +26,7 @@ const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner, idx, 
                         leftClickEvent={deleteFunc}
                         leftColor={thisTheme.palette.error.main}
 
-                        rightTitle={"상세 보기"}
+                        rightTitle={"수정"}
                         rightClickEvent={showFunc}
                         rightColor={thisTheme.palette.primary.main}
 

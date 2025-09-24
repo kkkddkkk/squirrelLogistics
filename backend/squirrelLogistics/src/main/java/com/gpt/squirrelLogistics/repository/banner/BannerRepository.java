@@ -10,16 +10,20 @@ import com.gpt.squirrelLogistics.dto.banner.BannerListDTO;
 import com.gpt.squirrelLogistics.entity.banner.Banner;
 
 public interface BannerRepository extends JpaRepository<Banner, Long> {
-	
-	//김도경
-	//모든 bannerList 찾기
-	@Query("SELECT b.bannerId, b.adminUser.adminId, b.notice.id, b.title, b.subTitle, b.imageUrl FROM Banner b")
+
+	// 김도경
+	// 모든 bannerList 찾기
+	@Query("SELECT new com.gpt.squirrelLogistics.dto.banner.BannerListDTO("
+			+ "b.bannerId, b.adminUser.adminId, b.notice.id, b.title, b.subTitle, b.imageUrl) " + "FROM Banner b "+
+			"ORDER BY b.regDate ASC")
 	List<BannerListDTO> findAllBannerList();
 	
-//	private Long bannerId; //배너 아이디.
-//	private Long adminId;//관리자Id
-//	private Long noticeId;//공지Id
-//	private String title; //제목.
-//	private String subTitle;//부제목
-//	private String imageUrl; //이미지 경로.
+	// 김도경
+	// 모든 bannerList 하나만 찾기
+	@Query("SELECT new com.gpt.squirrelLogistics.dto.banner.BannerListDTO("
+			+ "b.bannerId, b.adminUser.adminId, b.notice.id, b.title, b.subTitle, b.imageUrl) " + "FROM Banner b "+
+			"WHERE b.bannerId = :bannerId")
+	List<BannerListDTO> findOneBanner(@Param("bannerId") Long bannerId);
+	
+
 }
