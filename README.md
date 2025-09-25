@@ -281,9 +281,9 @@
       <th>핵심 기여</th>
     </tr>
     <tr>
-      <td nowrap><nobr>이준원</nobr></td>
-      <td>메인, 로그인, 공통 Header/Footer, 관리자단 회원/차량/정책 관리</td>
-      <td>통합 네비게이션/레이아웃 설계, 인증 플로우 구현, 관리자 정책 관리 UI/CRUD</td>
+      <td nowrap><nobr>고은설</nobr></td>
+      <td>실시간 위치 추적, 요청 목록, 캘린더(이용기록/기사 일정), 관리자단 공지/정산 관리</td>
+      <td>WebSocket 실시간 트래킹, 요청 리스트/필터, 일정 캘린더, 관리자 공지·정산 대시보드</td>
     </tr>
     <tr>
        <td nowrap><nobr>김도경</nobr></td>
@@ -291,19 +291,19 @@
       <td>PortOne 결제·영수증, 1차/2차 정산 로직, 기록/리뷰/신고 도메인 + 관리자 배너 운영</td>
     </tr>
     <tr>
-      <td nowrap><nobr>정윤진</nobr></td>
-      <td>예상 금액 산정, 기사 요청/배송 조회, 회사 정보</td>
-      <td>거리·무게 기반 요금 산정, 기사 검색/지명, 회사 정보 화면 및 상태관리</td>
-    </tr>
-    <tr>
-      <td nowrap><nobr>고은설</nobr></td>
-      <td>실시간 위치 추적, 요청 목록, 캘린더(이용기록/기사 일정), 관리자단 공지/정산 관리</td>
-      <td>WebSocket 실시간 트래킹, 요청 리스트/필터, 일정 캘린더, 관리자 공지·정산 대시보드</td>
+      <td nowrap><nobr>이준원</nobr></td>
+      <td>메인, 로그인, 공통 Header/Footer, 관리자단 회원/차량/정책 관리</td>
+      <td>통합 네비게이션/레이아웃 설계, 인증 플로우 구현, 관리자 정책 관리 UI/CRUD</td>
     </tr>
     <tr>
       <td nowrap><nobr>임수현</nobr></td>
       <td>차량 정보, 운송 내역, 기사 정보, 신고/문의</td>
       <td>차량 등록/상태 관리, 운송 기록·상세, 기사 프로필, 문의/신고 UX</td>
+    </tr>
+    <tr>
+      <td nowrap><nobr>정윤진</nobr></td>
+      <td>예상 금액 산정, 기사 요청/배송 조회, 회사 정보</td>
+      <td>거리·무게 기반 요금 산정, 기사 검색/지명, 회사 정보 화면 및 상태관리</td>
     </tr>
   </table>
 </p>
@@ -325,14 +325,14 @@
 [badge-render]: https://img.shields.io/badge/API-Render-8A05FF?logo=render&logoColor=white
 [badge-youtube]: https://img.shields.io/badge/Demo-YouTube-FF0000?logo=youtube&logoColor=white
 
-[link-web]: https://web.example.com
+[link-web]: https://squirrellogistics.vercel.app/
 [link-api]: https://squirrellogistics.onrender.com/
 [link-notion]: https://psychedelic-deposit-53c.notion.site/Squirrel-Logistics-238ee5b3591b80e5ad2ace4a11b3d48a
 [link-youtube]: https://www.youtube.com/watch?v=G7L4YzGAvMA
 
-[link-meetings]: https://psychedelic-deposit-53c.notion.site/23aee5b3591b802aa139ca4f8e204fdd        
-[link-wireframes]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b812c8af1f8b341f84923 
+[link-meetings]: https://psychedelic-deposit-53c.notion.site/23aee5b3591b802aa139ca4f8e204fdd  
+[link-wireframes]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b812c8af1f8b341f84923
 [link-QA]: https://psychedelic-deposit-53c.notion.site/QA-238ee5b3591b80eb948efb20ac38d1f7
 [link-review]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b80559ccaf7bc4d7484ac
-[link-process]: https://psychedelic-deposit-53c.notion.site/276ee5b3591b8042b733fe10e7507689           
+[link-process]: https://psychedelic-deposit-53c.notion.site/276ee5b3591b8042b733fe10e7507689       
 [link-slides]: ./assets/slides.pdf                         
