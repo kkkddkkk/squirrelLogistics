@@ -7,9 +7,12 @@ import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonP
 import { fetchNotice } from "../../api/notice/noticeAPI";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Footer from "../Layout/Footer";
+import Header from "../Layout/Header";
 
-export default function NoticeReadPage( ) {
-  const { id } = useParams(); // 라우트: /notices/:id 또는 /admin/notice/:id
+export default function NoticeReadPage() {
+  const { id } = useParams();
+  const isAdmin = localStorage.getItem("userRole") === "ADMIN";
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
@@ -55,12 +58,24 @@ export default function NoticeReadPage( ) {
   }, [id]);
 
   const handleEdit = () => {
-    navigate(`/admin/notice/edit/${id}`);
+    if (isAdmin) {
+      navigate(`/admin/notice/edit/${id}`);
+    }
   };
 
+  const handleBack = () => {
+    if (isAdmin) {
+      navigate('/admin/notice/list');
+    } else {
+      navigate('/notice');
+    }
+  }
   return (
     <>
-    <CommonTitle>공지사항</CommonTitle>
+      {!isAdmin && (
+        <Header />
+      )}
+      <CommonTitle>공지사항</CommonTitle>
       <Grid container justifyContent="center" marginBottom={5} minHeight="50vh">
         <Grid size={2} />
         <Grid size={8}>
@@ -79,9 +94,7 @@ export default function NoticeReadPage( ) {
                   variant="outlined"
                   color="primary"
                   size="small"
-                  onClick={() =>
-                    navigate('/admin/notice/list')
-                  }
+                  onClick={handleBack}
                   sx={{
                     height: 24,
                     fontSize: 12,
@@ -111,6 +124,9 @@ export default function NoticeReadPage( ) {
           if (to) navigate(to);
         }}
       />
+      {!isAdmin && (
+        <Footer />
+      )}
     </>
   );
 }

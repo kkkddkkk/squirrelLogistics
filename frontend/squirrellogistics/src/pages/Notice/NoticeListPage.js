@@ -7,11 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { fetchNotices } from "../../api/notice/noticeAPI";
 import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonPopupComponent";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import Header from "../Layout/Header";
+import Footer from "../Layout/Footer";
 
 
-
-
-const NoticeListPage = ({ isAdmin }) => {
+const NoticeListPage = () => {
     const [notices, setNotices] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -26,8 +26,9 @@ const NoticeListPage = ({ isAdmin }) => {
     const [errKind, setErrKind] = useState(null);
     const [redirectPath, setRedirectPath] = useState(null);
 
-    isAdmin = true;
     const pageSize = 10;
+
+    const isAdmin = localStorage.getItem("userRole") === "ADMIN";
 
     const openErrorPopup = ({ title, content, kind, redirectPath }) => {
         setErrTitle(title);
@@ -130,6 +131,9 @@ const NoticeListPage = ({ isAdmin }) => {
 
     return (
         <>
+            {!isAdmin && (
+                <Header />
+            )}
             <CommonTitle>{isAdmin ? '공지사항 관리' : '공지사항'}</CommonTitle>
             <Grid container marginBottom={5} justifyContent={"center"} minHeight={"100vh"}>
                 <Grid size={3} />
@@ -172,7 +176,7 @@ const NoticeListPage = ({ isAdmin }) => {
                     {/* 진짜 공지 목록 */}
                     <NoticeList
                         notices={notices}
-                        isAdmin={!!isAdmin}
+                        isAdmin={isAdmin}
                         refresh={() => loadNotices()}
                         loading={loading}
                     />
@@ -217,6 +221,9 @@ const NoticeListPage = ({ isAdmin }) => {
                     open={loading}
                     text="공지 목록을 불러오는 중..."
                 />
+            )}
+            {!isAdmin && (
+                <Footer />
             )}
         </>
     );

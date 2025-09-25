@@ -17,8 +17,18 @@ export default function NoticeCard({ notice, isAdmin, refresh }) {
 
   const handleEdit = (e) => {
     e.stopPropagation();
-    navigate(`/admin/notice/edit/${notice.noticeId}`);
+    if (isAdmin) {
+      navigate(`/admin/notice/edit/${notice.noticeId}`);
+    }
   };
+
+  const handleClickCard = () => {
+    if (isAdmin) {
+      navigate(`/admin/notice/read/${notice.noticeId}`);
+    } else {
+      navigate(`/notice/read/${notice.noticeId}`)
+    }
+  }
 
   const handleDelete = async (e) => {
     e.stopPropagation();
@@ -33,7 +43,7 @@ export default function NoticeCard({ notice, isAdmin, refresh }) {
       borderLeft: notice.pinned && `3px solid ${t.palette.primary.main}`,
     })}>
       <CardContent
-        onClick={() => navigate(`/admin/notice/read/${notice.noticeId}`)}
+        onClick={handleClickCard}
         sx={{ px: 1.5, py: 1.5, '&:last-child': { pb: 1.5 } }}
       >
         <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap" columnSpacing={1}>

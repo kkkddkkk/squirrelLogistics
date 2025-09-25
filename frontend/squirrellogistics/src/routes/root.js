@@ -19,6 +19,7 @@ const ResetPasswordPage = lazy(() => import("../pages/company/ResetPasswordPage"
 const OAuthSuccess = lazy(() => import("../api/user/OAuthSuccess"));
 const OAuthBridge = lazy(() => import("../pages/Layout/error/OAuthBridge"));
 const Notice = lazy(() => import("../pages/Notice/NoticeListPage"));
+const NoticeRead = lazy(() => import("../pages/Notice/NoticeReadPage"));
 
 const root = createBrowserRouter([
     {
@@ -79,7 +80,7 @@ const root = createBrowserRouter([
                         <TransactionStatement></TransactionStatement>
                     </Suspense>
                 )
-            },  {
+            }, {
                 path: "/company/reset-password",
                 element: (
                     <Suspense fallback={Loading}>
@@ -126,14 +127,17 @@ const root = createBrowserRouter([
                         <OAuthSuccess />
                     </Suspense>
                 ),
-            },{
+            }, {
                 path: "/notice",
                 element: (
                     <Suspense fallback={Loading}>
                         <Notice></Notice>
                     </Suspense>
                 ),
-                children: adminRouter()
+            }, 
+            {
+                path: "notice/read/:id",
+                element: <Suspense fallback={Loading}><NoticeRead /></Suspense>,
             },
         ],
     },
