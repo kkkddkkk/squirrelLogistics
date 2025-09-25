@@ -12,9 +12,10 @@ import PauseIcon from "@mui/icons-material/Pause";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { API_SERVER_HOST, getPublicBanners } from "../../api/admin/bannerApi";
+import { getPublicBanners } from "../../api/admin/bannerApi";
 import { OneButtonAtLeft } from "../../components/common/CommonButton";
 import { useNavigate } from "react-router-dom";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 const bannerImages = [
     { src: "/images/banner1.jpeg", title: "프로모션 1", desc: "첫번째 배너" },

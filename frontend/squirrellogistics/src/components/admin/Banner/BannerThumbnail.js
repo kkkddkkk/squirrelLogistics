@@ -4,7 +4,7 @@ import { ButtonContainer, OneButtonAtLeft, OneButtonAtRight, TwoButtonsAtEnd } f
 import styles from "../../../css/Body.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import logo from "../../common/squirrelLogisticsLogo.png";
-import { API_SERVER_HOST } from "../../../api/admin/bannerApi";
+import API_SERVER_HOST from "../../../api/apiServerHost";
 
 const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setBannerForm, selectedNotice, id }) => {
     const thisTheme = useTheme();
