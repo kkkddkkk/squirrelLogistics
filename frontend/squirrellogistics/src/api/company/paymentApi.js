@@ -1,12 +1,12 @@
 import axios from "axios";
+import API_SERVER_HOST from "../apiServerHost";
 
-const API_SERVER_HOST = "http://localhost:8080/api/payment";
 const accesstoken = localStorage.getItem('accessToken');
 
 //1차 payBox 랜더링
 export const getFirstPayBox = async ({ paymentId, options = {} }) => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/first/${paymentId}`, {
+    const res = await axios.get(`${API_SERVER_HOST}/payment/first/${paymentId}`, {
       params: { paymentId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -22,7 +22,7 @@ export const getFirstPayBox = async ({ paymentId, options = {} }) => {
 //2차 payBox 랜더링
 export const getSecondPayBox = async ({ prepaidId, options = {} }) => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/second/${prepaidId}`, {
+    const res = await axios.get(`${API_SERVER_HOST}/payment/second/${prepaidId}`, {
       params: { prepaidId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -41,7 +41,7 @@ export const successFirstPayment = async ({ paymentId, options = {}, successFirs
   if (successFirstPayment === undefined) return;
   console.log(">>> 1차 결제 API 요청 시작", successFirstPayment);
   try {
-    const res = await axios.put(`${API_SERVER_HOST}/first/${paymentId}/success`, {
+    const res = await axios.put(`${API_SERVER_HOST}/payment/first/${paymentId}/success`, {
       ...successFirstPayment,
       ...options,  // 필요하면 옵션을 body에 병합
     }, {
@@ -59,7 +59,7 @@ export const successSecondPayment = async ({ paymentId, options = {}, successSec
   if (successSecondPayment === undefined) return;
   console.log(">>> 2차 결제 API 요청 시작", successSecondPayment);
   try {
-    const res = await axios.put(`${API_SERVER_HOST}/second/${paymentId}/success`, {
+    const res = await axios.put(`${API_SERVER_HOST}/payment/second/${paymentId}/success`, {
       ...successSecondPayment,
       ...options,  // 필요하면 옵션을 body에 병합
     }, {
@@ -77,7 +77,7 @@ export const successRefundPayment = async ({ paymentId, options = {}, refundPaym
   if (refundPayment === undefined) return;
   console.log(">>> 2차 결제 API 요청 시작", refundPayment);
   try {
-    const res = await axios.put(`${API_SERVER_HOST}/refund/${paymentId}/success`, {
+    const res = await axios.put(`${API_SERVER_HOST}/payment/refund/${paymentId}/success`, {
       ...refundPayment,
       ...options,  // 필요하면 옵션을 body에 병합
     }, {
@@ -93,7 +93,7 @@ export const successRefundPayment = async ({ paymentId, options = {}, refundPaym
 //결제 실패
 export const failureSecondPayment = async ({ paymentId, options = {}, failureSecondPayment }) => {
   try {
-    const res = await axios.put(`${API_SERVER_HOST}/second/${paymentId}/failure`, {
+    const res = await axios.put(`${API_SERVER_HOST}/payment/second/${paymentId}/failure`, {
       ...failureSecondPayment,
       ...options,  // 필요하면 옵션을 body에 병합
     }, {
@@ -109,7 +109,7 @@ export const failureSecondPayment = async ({ paymentId, options = {}, failureSec
 //영수증 보기
 export const getReciept = async ({ paymentId, options = {} }) => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/reciept`, {
+    const res = await axios.get(`${API_SERVER_HOST}/payment/reciept`, {
       params: { paymentId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -125,7 +125,7 @@ export const getReciept = async ({ paymentId, options = {} }) => {
 //명세서 보기
 export const getTransactionStatement = async ({ paymentId, options = {} }) => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/transactionStatement`, {
+    const res = await axios.get(`${API_SERVER_HOST}/payment/transactionStatement`, {
       params: { paymentId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -144,7 +144,7 @@ export const getTransactionStatement = async ({ paymentId, options = {} }) => {
 export const fetchCompleteWithoutPayment = async ({ paymentId, options = {} }) => {
   try {
     const res = await axios.put(
-      `${API_SERVER_HOST}/second/${paymentId}/complete-without-payment`,
+      `${API_SERVER_HOST}/payment/second/${paymentId}/complete-without-payment`,
       null,
       {
         params: { ...options },

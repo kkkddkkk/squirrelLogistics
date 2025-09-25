@@ -10,6 +10,7 @@ import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import { CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 const ReviewList = () => {
     const accesstoken = localStorage.getItem('accessToken');
@@ -29,7 +30,7 @@ const ReviewList = () => {
 
     useEffect(() => {
         setLoading(true);
-        axios.get(`http://localhost:8080/api/review/list`, {
+        axios.get(`${API_SERVER_HOST}/review/list`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -43,7 +44,7 @@ const ReviewList = () => {
     }, [changed])
 
     const handleDelReview = (review) => {
-        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
+        axios.delete(`${API_SERVER_HOST}/review/${review.reviewId}`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -77,7 +78,7 @@ const ReviewList = () => {
                                         <ReviewContent
                                             key={idx}
                                             header={`출발지: ${isMobile ? cutAddress(review.startAddress) : review.startAddress}\n도착지: ${isMobile ? cutAddress(review.endAddress) : review.endAddress}`}
-                                            driverImg={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
+                                            driverImg={`${API_SERVER_HOST}/public/driverImage/${review.profileImg}`}
                                             driverName={review.driverName}
                                             content={review.reason}
                                             setModal={setModal}

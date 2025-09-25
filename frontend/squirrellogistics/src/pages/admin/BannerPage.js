@@ -4,10 +4,9 @@ import BannerList from "../../components/admin/Banner/BannerList";
 import CommonList from "../../components/common/CommonList";
 import BannerThumbnail from "../../components/admin/Banner/BannerThumbnail";
 import { ButtonContainer, Two100Buttons } from "../../components/common/CommonButton";
-import ReactDragList from 'react-drag-list';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import { API_SERVER_HOST, deleteBanner, getBannerList } from "../../api/admin/bannerApi";
+import { deleteBanner, getBannerList } from "../../api/admin/bannerApi";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const BannerPage = () => {

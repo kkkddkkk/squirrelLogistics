@@ -10,6 +10,7 @@ import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../component
 import { ButtonContainer, One100ButtonAtCenter } from "../../components/common/CommonButton";
 import CommonList from "../../components/common/CommonList";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 
 const Report = () => {
@@ -43,7 +44,7 @@ const Report = () => {
     useEffect(() => {
         if (reportId !== "0" && reportId !== null) {
             setLoading(true);
-            axios.get(`http://localhost:8080/api/report`, {
+            axios.get(`${API_SERVER_HOST}/report`, {
                 params: { reportId: reportId },
                 headers: {
                     Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -106,7 +107,7 @@ const Report = () => {
             }
         });
 
-        await axios.post(`http://localhost:8080/api/report`, formData, {
+        await axios.post(`${API_SERVER_HOST}/report`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -120,7 +121,7 @@ const Report = () => {
             }
 
 
-            axios.get(`http://localhost:8080/api/companyHistory/getTodayContent`, {
+            axios.get(`${API_SERVER_HOST}/companyHistory/getTodayContent`, {
                 params: { assignedId: assignedId },
                 headers: {
                     Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -173,7 +174,7 @@ const Report = () => {
                                         preview && preview.map((fileName, idx) => (
                                             <img
                                                 key={idx}
-                                                src={`http://localhost:8080/api/public/reportImage/${fileName}`}
+                                                src={`${API_SERVER_HOST}/public/reportImage/${fileName}`}
                                                 alt={`${fileName}`}
                                                 style={{ margin: "5px" }}
                                             />

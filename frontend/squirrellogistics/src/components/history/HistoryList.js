@@ -10,6 +10,7 @@ import useHistoryMove from "../../hook/historyHook/useHistoryMove";
 import LoadingComponent from "../common/LoadingComponent";
 import { TwoButtonsAtLeft, TwoButtonsAtRight } from "../common/CommonButton";
 import { theme } from "../common/CommonTheme";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 export const Buttons = ({ children, func, disabled }) => {
     return (
@@ -82,7 +83,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, isMobile, width }) 
     }
 
     const openModal = () => {
-        axios.get(`http://localhost:8080/api/review`, {
+        axios.get(`${API_SERVER_HOST}/review`, {
             params: { assignedId: assignedId },
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -148,7 +149,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, isMobile, width }) 
                                             marginTop: "2%"
                                         }}
                                         alt="Img"
-                                        src={`http://localhost:8080/api/public/driverImage/${todayContent.driverImg}`}
+                                        src={`${API_SERVER_HOST}/public/driverImage/${todayContent.driverImg}`}
                                     />
                                     <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}<br />({todayContent.carName})</Typography>
                                 </Box>

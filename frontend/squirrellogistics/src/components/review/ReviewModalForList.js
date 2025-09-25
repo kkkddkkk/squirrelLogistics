@@ -4,6 +4,7 @@ import { OneBigBtn, SubTitle, TwoBtns } from "../common/CommonForCompany";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import StarRateMemo from "./StarRate";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 
 const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setChanged, isMobile }) => {
@@ -13,7 +14,7 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
         review.regDate = review.regDate.split('.')[0];
         review.regDate = review.regDate.replace('T', ' ');
         console.log(review);
-        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, review, {
+        axios.put(`${API_SERVER_HOST}/review/${review.reviewId}`, review, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -26,7 +27,7 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
     }
 
     const delReview = () => {//삭제
-        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
+        axios.delete(`${API_SERVER_HOST}/review/${review.reviewId}`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -99,7 +100,7 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                                 marginBottom: "5%"
                             }}
                             alt="profile"
-                            src={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
+                            src={`${API_SERVER_HOST}/public/driverImage/${review.profileImg}`}
                         />
                         <Typography sx={{
                             marginBottom: "10%", width: "100%",

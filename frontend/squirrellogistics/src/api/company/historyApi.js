@@ -1,12 +1,12 @@
 import axios from "axios";
+import API_SERVER_HOST from "../apiServerHost";
 
-const API_SERVER_HOST = "http://localhost:8080/api/companyHistory";
 const accessToken = localStorage.getItem('accessToken');
 
 
 export const getHistoryDate = async ({ options = {} }={}) => {//HistoryCalendar -> clear
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/calendar`, {
+    const res = await axios.get(`${API_SERVER_HOST}/companyHistory/calendar`, {
       params: { ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가
@@ -21,7 +21,7 @@ export const getHistoryDate = async ({ options = {} }={}) => {//HistoryCalendar 
 
 export const getHistoryList = async ({ date, options={} }) => {
     try {
-        const res = await axios.get(API_SERVER_HOST, {
+        const res = await axios.get(`${API_SERVER_HOST}/companyHistory`, {
             params: { date, ...options },
             headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -42,7 +42,7 @@ export const getHistoryList = async ({ date, options={} }) => {
 
 export const getTodayContent = async ({ assignedId, options = {} }) => {//HistoryList
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/getTodayContent`, {
+    const res = await axios.get(`${API_SERVER_HOST}/companyHistory/getTodayContent`, {
       params: { assignedId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가
@@ -57,7 +57,7 @@ export const getTodayContent = async ({ assignedId, options = {} }) => {//Histor
 
 export const getDetailHistory = async ({ assignedId, options = {} }) => {//HistoryList
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/detailHistory`, {
+    const res = await axios.get(`${API_SERVER_HOST}/companyHistory/detailHistory`, {
       params: { assignedId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가
@@ -72,7 +72,7 @@ export const getDetailHistory = async ({ assignedId, options = {} }) => {//Histo
 
 export const cancel = async ({ assignedId, options = {} }) => {//HistoryList
   try {
-    const res = await axios.put(`${API_SERVER_HOST}/cancel`, null,{
+    const res = await axios.put(`${API_SERVER_HOST}/companyHistory/cancel`, null,{
       params: { assignedId, ...options }, // GET 쿼리 파라미터로 전달
       headers: {
         Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import StarRateMemo from "./StarRate";
 import { ButtonContainer, One100ButtonAtCenter, Two100Buttons, TwoButtonsAtCenter } from "../common/CommonButton";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 
 const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged, driverImg }) => {
@@ -71,7 +72,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
             ...localReview,  // TextField 등 입력값
             rating: scope    // 사용자가 선택한 별점
         };
-        axios.post(`http://localhost:8080/api/review`, payload, {
+        axios.post(`${API_SERVER_HOST}/review`, payload, {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
@@ -90,7 +91,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
             ...localReview,  // TextField 등 입력값
             rating: scope    // 사용자가 선택한 별점
         };
-        axios.put(`http://localhost:8080/api/review/${review.reviewId}`, payload, {
+        axios.put(`${API_SERVER_HOST}/review/${review.reviewId}`, payload, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -103,7 +104,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
     }
 
     const delReview = () => {//삭제
-        axios.delete(`http://localhost:8080/api/review/${review.reviewId}`, {
+        axios.delete(`${API_SERVER_HOST}/review/${review.reviewId}`, {
             headers: {
                 Authorization: `Bearer ${accesstoken}`, // JWT 토큰 추가
             },
@@ -156,7 +157,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                                 marginBottom: "5%"
                             }}
                             alt="profile"
-                            src={`http://localhost:8080/api/public/driverImage/${driverImg}`}
+                            src={`${API_SERVER_HOST}/public/driverImage/${driverImg}`}
                         />
                         <Typography sx={{ marginBottom: "10%", width: "100%", 
                             display: "flex", justifyContent: "center"

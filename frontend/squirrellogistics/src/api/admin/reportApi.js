@@ -1,6 +1,6 @@
 import axios from "axios";
+import API_SERVER_HOST from "../apiServerHost";
 
-const API_SERVER_HOST = "http://localhost:8080/api";
 
 export const getReportDashBoard = async ({ accessToken }) => {
   try {

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { createAnswer, getDetailReport, getReportDashBoard, updateAnswer } from "../../api/admin/reportApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
+import API_SERVER_HOST from "../../api/apiServerHost";
 const ReportPage = () => {
 
     const thisTheme = useTheme();
@@ -112,7 +113,7 @@ const ReportPage = () => {
                                 preview && preview.map((fileName, idx) => (
                                     <img
                                         key={idx}
-                                        src={`http://localhost:8080/api/public/reportImage/${fileName}`}
+                                        src={`${API_SERVER_HOST}/public/reportImage/${fileName}`}
                                         alt={`${fileName}`}
                                         style={{ margin: "5px" }}
                                     />

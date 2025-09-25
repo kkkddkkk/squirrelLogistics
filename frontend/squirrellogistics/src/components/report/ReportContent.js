@@ -4,6 +4,7 @@ import { useState } from "react";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CommonSmallerTitle, CommonSubTitle } from "../common/CommonText";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 const ReportContent = ({ header, title, content, answer, preview, isMobile }) => {
     const [isExpand, setIsExpand] = useState(false);
@@ -19,7 +20,7 @@ const ReportContent = ({ header, title, content, answer, preview, isMobile }) =>
                         preview && preview.map((fileName, idx) => (
                             <img
                                 key={idx}
-                                src={`http://localhost:8080/api/public/reportImage/${fileName}`}
+                                src={`${API_SERVER_HOST}/public/reportImage/${fileName}`}
                                 alt={`${fileName}`}
                                 style={{ margin: "5px" }}
                             />
