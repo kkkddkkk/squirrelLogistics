@@ -1,20 +1,16 @@
 import axios from "axios";
 import { getRouteDistanceFromAddresses } from "../../hook/DeliveryMap/useKakaoRouteMap";
+import API_SERVER_HOST from "../apiServerHost";
 
 /* =========================
  * 기본 설정
  * ========================= */
-
-// ✅ API 서버 주소 (.env가 있으면 우선 사용)
-export const API_SERVER_HOST =
-  process.env.REACT_APP_API_HOST || "http://localhost:8080";
 
 // ✅ Kakao Developers REST API 키
 const KAKAO_REST_API_KEY = "KakaoAK c0e48ee321373e897ad48c8bf2d72460";
 
 // 공통 axios 인스턴스
 const http = axios.create({
-  baseURL: API_SERVER_HOST,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -90,7 +86,7 @@ export const calculateDistance = async (addresses) => {
 
 export const fetchExpectedPay = async ({ distance, weight, hasSpecialCargo }) => {
   try {
-    const { data } = await http.post("/api/company/ExpectedPay", {
+    const { data } = await http.post(`${API_SERVER_HOST}/company/ExpectedPay`, {
       distance,
       weight,
       special: hasSpecialCargo,
@@ -115,7 +111,7 @@ export const createDeliveryRequest = async (requestPayload, paymentPayload = nul
   try {
     const wrapped = { payment: paymentPayload, request: requestPayload };
     // console.log(wrapped);
-    const { data } = await http.post("/api/delivery/requests", wrapped);
+    const { data } = await http.post(`${API_SERVER_HOST}/delivery/requests`, wrapped);
 
     return data;
   } catch (error) {
@@ -148,7 +144,7 @@ export const createDeliveryPropose = async (
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const { data } = await http.post(
-      "/api/delivery/requests/propose",
+      `${API_SERVER_HOST}/delivery/requests/propose`,
       wrapped,
       { headers }
     );
@@ -278,7 +274,7 @@ export const createDeliveryPropose = async (
  * ========================= */
 
 export const fetchVehicleTypes = async () => {
-  const { data } = await http.get("/api/vehicle-types");
+  const { data } = await http.get(`${API_SERVER_HOST}/vehicle-types`);
   return data || [];
 };
 
@@ -288,7 +284,7 @@ export const fetchVehicleTypes = async () => {
 
 export const fetchCargoTypes = async () => {
   try {
-    const { data } = await http.get("/api/cargo-types");
+    const { data } = await http.get(`${API_SERVER_HOST}/cargo-types`);
     return data || [];
   } catch (error) {
     console.error("화물 종류 로드 실패:", error);
@@ -302,14 +298,14 @@ export const fetchCargoTypes = async () => {
 
 export const fetchSavedAddresses = async (companyId) => {
   if (!companyId) return [];
-  const { data } = await http.get("/api/saved-addresses", {
+  const { data } = await http.get(`${API_SERVER_HOST}/saved-addresses`, {
     params: { companyId },
   });
   return data || [];
 };
 
 export const saveSavedAddressesBulk = async (companyId, items) => {
-  const { data } = await http.post("/api/saved-addresses/bulk", {
+  const { data } = await http.post(`${API_SERVER_HOST}/saved-addresses/bulk`, {
     companyId,
     items,
   });
@@ -317,7 +313,7 @@ export const saveSavedAddressesBulk = async (companyId, items) => {
 };
 
 export const deleteSavedAddress = async (id) => {
-  await http.delete(`/api/saved-addresses/${id}`);
+  await http.delete(`${API_SERVER_HOST}/saved-addresses/${id}`);
 };
 
 export default http;

@@ -1,8 +1,7 @@
 // src/api/driversearch/driverSearchApi.js
 import axios from "axios";
-
-const API_SERVER_HOST = "http://localhost:8080";
-const BASE_URL = `${API_SERVER_HOST}/api/search-drivers`;
+import API_SERVER_HOST from "../apiServerHost";
+const BASE_URL = `${API_SERVER_HOST}/search-drivers`;
 
 /**
  * 🔍 기사 검색 (필터 조건 포함, 페이징 지원)
@@ -99,7 +98,7 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
  */
 export const sendDriverRequest = async (driverId) => {
   try {
-    const response = await axios.post(`${API_SERVER_HOST}/api/company/drivers/${driverId}/request`);
+    const response = await axios.post(`${API_SERVER_HOST}/company/drivers/${driverId}/request`);
     return response.data;
   } catch (error) {
     // console.error("기사 요청 실패:", error);
