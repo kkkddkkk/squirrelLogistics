@@ -25,6 +25,51 @@ function FeatureLine({ text }) {
     );
 }
 
+function ServiceCard({ t, d, img }) {
+    return (
+        <Card variant="outlined" sx={{ width: "100%", height: "100%" }}>
+            <CardContent
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    py: 2.5,
+                    minHeight: { xs: 110, sm: 116, md: 124 },  // ✅ 높이 통일
+                }}
+            >
+                <Box
+                    component="img"
+                    src={img}
+                    alt={t}
+                    loading="lazy"
+                    decoding="async"
+                    sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: 2 }}
+                />
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                        fontWeight={700}
+                        sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", mb: 0.3 }}
+                    >
+                        {t}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                            display: "-webkit-box",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: 2,
+                            overflow: "hidden",
+                        }}
+                    >
+                        {d}
+                    </Typography>
+                </Box>
+            </CardContent>
+        </Card>
+    );
+}
+
 /** ● 반응형 2열 섹션: xs=세로 스택, md=양옆 배치 */
 function FeatureRow({
     reverse = false,
@@ -278,7 +323,19 @@ export default function HomeLanding() {
                         다람로지틱스의 차별화된 서비스
                     </Typography>
 
-                    <Grid container spacing={3} sx={{ mt: 1 }}>
+                    {/* ✅ CSS Grid: 모든 칸 너비/높이 동일 */}
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: {
+                                xs: "1fr",
+                                sm: "repeat(2, minmax(0, 1fr))",
+                                md: "repeat(3, minmax(0, 1fr))",
+                            },
+                            gap: 3,              // = 24px
+                            alignItems: "stretch",
+                        }}
+                    >
                         {[
                             { t: "기업 전용 대시보드", d: "여러 지점/계정을 한 번에 관리", img: "/images/svc-dashboard.jpeg" },
                             { t: "예약·배차 자동화", d: "규칙/선호 기반 자동 처리", img: "/images/svc-automation.jpeg" },
@@ -287,21 +344,9 @@ export default function HomeLanding() {
                             { t: "알림/메신저", d: "지연/변경 실시간 통지", img: "/images/svc-alert.jpeg" },
                             { t: "보안/권한 관리", d: "역할 기반 접근 제어", img: "/images/svc-security.jpeg" },
                         ].map((s, i) => (
-                            <Grid item xs={12} sm={6} md={4} key={i}>
-                                <Card variant="outlined" sx={{ height: "100%" }}>
-                                    <CardContent sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                                        <Box component="img" src={s.img} alt={s.t} sx={{ width: 56, height: 56 }} />
-                                        <Box>
-                                            <Typography fontWeight={700}>{s.t}</Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {s.d}
-                                            </Typography>
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                            <ServiceCard key={i} {...s} />
                         ))}
-                    </Grid>
+                    </Box>
                 </Container>
             </Box>
 
