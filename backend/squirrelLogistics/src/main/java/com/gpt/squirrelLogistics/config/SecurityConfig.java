@@ -33,9 +33,12 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsSource() {
 		CorsConfiguration cors = new CorsConfiguration();
-		cors.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "*")); // 필요시 정확히 지정
-		cors.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE")); // ✅ OPTIONS
-																											// 포함
+		cors.setAllowedOriginPatterns(Arrays.asList(
+			    "http://localhost:3000",
+			    "https://squirrellogistics-bji1mff2u-teamgpts-projects.vercel.app",   // 프론트 배포 주소.
+			    "https://squirrellogistics.onrender.com"  // 백엔드 배포 주소.
+			));		cors.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE")); 
+																									
 		cors.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
 		cors.setAllowCredentials(true);
 
