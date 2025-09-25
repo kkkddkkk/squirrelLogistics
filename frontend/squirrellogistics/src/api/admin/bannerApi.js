@@ -1,6 +1,7 @@
 import axios from "axios";
+import API_SERVER_HOST from "../apiServerHost";
 
-export const API_SERVER_HOST = "http://localhost:8080/api";
+// export const API_SERVER_HOST = "http://localhost:8080/api";
 
 export const getBannerList = async ({ accessToken }) => {
   try {
