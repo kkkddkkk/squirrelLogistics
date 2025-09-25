@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from '../apiServerHost';
 
 
 export function useDriverStream(getToken) {

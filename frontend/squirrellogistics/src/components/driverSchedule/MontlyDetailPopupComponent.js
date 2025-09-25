@@ -4,7 +4,8 @@ import {
   Button, Box, Typography, Divider, Grid,
   Paper,
   IconButton,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close"
@@ -13,6 +14,8 @@ import { renderWarningTags } from "../deliveryRequest/deliveryFormatUtil";
 import { useNavigate } from "react-router-dom";
 import { fetchDeliveryReservationById } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 import LoadingComponent from '../../components/common/LoadingComponent';
+import { FONT_SIZE_SMALL_TITLE } from "../common/CommonText";
+import { FONT_SIZE } from "../deliveryRequest/ListComponent";
 
 
 export default function MontlyDetailPopupComponent(
@@ -27,6 +30,7 @@ export default function MontlyDetailPopupComponent(
   const thisTheme = useTheme();
 
   const handlingTagString = renderWarningTags(data?.waypoints);
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   useEffect(() => {
     if (!open || !requestId) {
@@ -65,7 +69,7 @@ export default function MontlyDetailPopupComponent(
 
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open={open} onClose={onClose} maxWidth={isSmaller900 ? "xs" : "md"} fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle>
         <Box display="flex" alignItems="center">
           <Typography
@@ -73,7 +77,7 @@ export default function MontlyDetailPopupComponent(
               flexGrow: 1,
               textAlign: "center",
               fontFamily: "inherit",
-              fontSize: "1.5rem",
+              fontSize: isSmaller900 ? "1.0rem" : "1.5rem",
               fontWeight: "bold",
               color: thisTheme.palette.text.primary,
             }}
@@ -109,79 +113,81 @@ export default function MontlyDetailPopupComponent(
               container
               spacing={2}
               width={"100%"}
-              justifyContent={"space-between"}
+              justifyContent={isSmaller900 ? "center" : "space-between"}
               justifySelf={"center"}
-              mb={3}
+              mb={isSmaller900 ? 1: 3}
               mt={1}
             >
-              {/* 지도 */}
-              <Grid item sx={{ width: "50%" }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    width: "100%",
-                    height: 400,
-                    p: 1,
-                    border: "1px solid #2a2a2a5d",
-                    boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: 1.2,
-                    backgroundColor: thisTheme.palette.background.default
-                  }}
-                >
-                  <RouteMapComponent
-                    expectedRoute={data?.expectedRoute}
-                    expectedPolyline={data?.expectedPolyline}
-                    waypoints={data?.waypoints}
-                  />
-                </Paper>
-              </Grid>
+              {!isSmaller900 && (
+                <Grid item sx={{ width: "50%" }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      width: "100%",
+                      height: 400,
+                      p: 1,
+                      border: "1px solid #2a2a2a5d",
+                      boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
+                      borderRadius: 1.2,
+                      backgroundColor: thisTheme.palette.background.default
+                    }}
+                  >
+                    <RouteMapComponent
+                      expectedRoute={data?.expectedRoute}
+                      expectedPolyline={data?.expectedPolyline}
+                      waypoints={data?.waypoints}
+                    />
+                  </Paper>
+                </Grid>
+              )}
 
               {/* 상세 텍스트 */}
-              <Grid container direction={"column"} width={"40%"} justifyContent={"space-between"}>
-                <Box sx={{ display: "grid", rowGap: 0.6, mt: 3 }}>
-                  <Typography variant="body2">
+              <Grid container direction={"column"} 
+              width={isSmaller900 ? "90%" : "40%"} justifyContent={"space-between"}>
+                <Box sx={{ display: "grid", rowGap: 0.6, mt: isSmaller900 ? 0 : 3 }}>
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>운송 예약 ID:</strong> #RESV-{data?.requestId}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>요청자:</strong> {data?.companyName}
                   </Typography>
                   <Divider sx={{ my: 1 }} />
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>출발지:</strong> {data?.startAddress}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>도착지:</strong> {data?.endAddress}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>경유지 수:</strong> {data?.waypoints?.length ?? 0}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>총 이동 거리:</strong>{" "}
                     {data?.distance != null ? `약 ${(data.distance / 1000).toFixed(1)} km` : " - "}
                   </Typography>
                   <Divider sx={{ my: 1 }} />
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>화물 총 수량:</strong> {data?.totalCargoCount ?? 0}박스
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>화물 중량:</strong> {data?.totalCargoWeight ?? 0}kg
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>특수 태그:</strong> {handlingTagString}
                   </Typography>
                   <Divider sx={{ my: 1 }} />
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE }}>
                     <strong>총 운송 수익:</strong>{" "}
                     {data?.estimatedFee != null ? `${data.estimatedFee.toLocaleString()}원` : "-"}
                   </Typography>
                 </Box>
 
-                <DialogActions sx={{ p: 0, mt: 2, justifyContent: "center" }}>
+                <DialogActions sx={{ p: 0, mt: isSmaller900 ? 0 : 2, justifyContent: "center" }}>
                   <Button
                     variant="contained"
-                    size="large"
+                    size={isSmaller900 ? "small" : "large"}
                     onClick={goDetailPage}
-                    disabled={loading || !requestId} 
+                    disabled={loading || !requestId}
                     sx={{ borderRadius: 2, width: "100%" }}
                   >
                     {completed ? "완료된 운송 정보 자세히 보기" : "예약된 운송 정보 자세히 보기"}

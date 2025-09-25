@@ -9,6 +9,7 @@ import {
   Alert,
   CircularProgress,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import LockIcon from "@mui/icons-material/Lock";
@@ -25,6 +26,7 @@ const VerificationPage = () => {
   const [success, setSuccess] = useState("");
 
   const thisTheme = useTheme();
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   // 비밀번호 확인
   const handlePasswordConfirm = async () => {
@@ -69,7 +71,7 @@ const VerificationPage = () => {
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth="sm" sx={{ mt: isSmaller900 ? 4 : 0, py: 6 }}>
         <Paper
           elevation={3}
           sx={{
@@ -83,7 +85,8 @@ const VerificationPage = () => {
             <Button
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate("/driver/profile")}
-              sx={{ position: "absolute", left: 16, top: 16 
+              sx={{
+                position: "absolute", left: 16, top: 16
               }}
             >
               뒤로가기

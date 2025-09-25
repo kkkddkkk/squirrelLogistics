@@ -14,6 +14,7 @@ import {
   Grid,
   Collapse,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { fetchDriverReviews } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 import { useParams } from "react-router-dom";
@@ -32,6 +33,8 @@ export default function ReviewListComponent() {
   const [err, setErr] = useState("");
   const [expanded, setExpanded] = useState(() => new Set());
   const thisTheme = useTheme();
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
+
   //DB데이터 연동.
   useEffect(() => {
     const ctrl = new AbortController();
@@ -93,12 +96,13 @@ export default function ReviewListComponent() {
   console.log("loading: " + loading);
   return (
     <>
-      <CommonTitle>사용자 리뷰</CommonTitle>
+      <Box pt={isSmaller900 ? 2 : 4}>
+        <CommonTitle>사용자 리뷰</CommonTitle>
+      </Box>
       <Grid container>
-        <Grid size={3} />
-        <Grid size={6} mb={2}>
+        <Grid size={isSmaller900 ? 0 : 3} />
+        <Grid size={isSmaller900 ? 12 : 6} mt={isSmaller900 ? 2 : 0} mb={2}>
           <Box>
-
             {/* 정렬/페이지크기 선택 */}
             <Stack
               direction="row"
@@ -279,7 +283,7 @@ export default function ReviewListComponent() {
           {/* 로딩 모달 */}
           {loading && <LoadingComponent open={loading} text="리뷰 목록을 불러오는 중..." />}
         </Grid>
-        <Grid size={3} />
+        <Grid size={isSmaller900 ? 0 : 3} />
       </Grid>
 
     </>

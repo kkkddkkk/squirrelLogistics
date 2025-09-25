@@ -2,6 +2,8 @@ import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, Pap
 import CloseIcon from "@mui/icons-material/Close"
 import { formatAddress, formatDistanceKm } from "./deliveryFormatUtil";
 import { useNavigate, useParams } from "react-router-dom";
+import { FONT_SIZE_SMALL_TITLE } from "../common/CommonText";
+import { FONT_SIZE } from "./ListComponent";
 
 export function formatRemaining(isoString) {
     if (!isoString) return '';
@@ -24,7 +26,7 @@ export function formatRemaining(isoString) {
     return `${parts.join(' ')}`;
 };
 
-const DriverProposalComponent = ({ open, proposals, onClose }) => {
+const DriverProposalComponent = ({ open, proposals, onClose, isMobile = false }) => {
 
     const { driverId } = useParams();
     const navigate = useNavigate();
@@ -52,7 +54,7 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
                             flexGrow: 1,
                             textAlign: 'center',
                             fontFamily: 'inherit',
-                            fontSize: '1.5rem',
+                            fontSize: isMobile ? '1.2rem' :'1.5rem',
                             fontWeight: 'bold',
                             color: thisTheme.palette.text.primary,
                         }}
@@ -103,7 +105,9 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
                                     fontFamily: 'Spoqa Han Sans Neo, Montserrat, sans-serif'
                                 }}
                             >
-                                <Typography variant="subtitle1" fontWeight="bold">{formatAddress(item.startAddress)} → {formatAddress(item.endAddress)}</Typography>
+                                <Typography variant="subtitle1" fontWeight="bold"
+                                sx={{fontSize:FONT_SIZE_SMALL_TITLE}}
+                                >{formatAddress(item.startAddress, isMobile)} → {formatAddress(item.endAddress, isMobile)}</Typography>
 
 
                                 <Typography variant="body2" sx={{ color: 'gray' }}>
@@ -113,7 +117,10 @@ const DriverProposalComponent = ({ open, proposals, onClose }) => {
                                 <Divider sx={{ my: 2 }} />
 
                                 <Box display="flex" justifyContent="space-between">
-                                    <Typography sx={{ fontWeight: 'bold' }}>수익: {item.estimatedFee.toLocaleString()}원</Typography>
+                                    <Typography sx={{ 
+                                        fontWeight: 'bold',
+                                        fontSize: FONT_SIZE
+                                        }}>수익: {item.estimatedFee.toLocaleString()}원</Typography>
                                     <Typography variant="body1" sx={{ color: 'gray' }}>{formatRemaining(item.refundDate)}</Typography>
                                 </Box>
                             </Paper>

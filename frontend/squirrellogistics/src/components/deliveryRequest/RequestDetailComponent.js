@@ -12,6 +12,7 @@ import {
   Snackbar,
   useTheme,
   lighten,
+  useMediaQuery,
 } from "@mui/material";
 import RouteMapComponent from "../../components/deliveryMap/RouteMapComponent";
 import { useCallback, useEffect, useState } from "react";
@@ -38,6 +39,7 @@ import { CommonTitle } from "../common/CommonText";
 import { cancelDeliveryReservation } from "../../api/deliveryRequest/deliveryAssignmentAPI";
 import { fetchRegisterReport } from "../../api/company/reportApi";
 import EmergencyReportModal from "../driver/EmergencyReportModal";
+import { FONT_SIZE } from "./ListComponent";
 
 const RequestDetailComponent = () => {
   const navigate = useNavigate();
@@ -63,6 +65,7 @@ const RequestDetailComponent = () => {
   const [showReport, setShowReport] = useState(false);
 
   const unautorized = false;
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   const [deliveryData, setDeliveryData] = useState({
     request_id: null,
@@ -289,7 +292,7 @@ const RequestDetailComponent = () => {
             setErrKind(null);
           }}
           title={
-           <>
+            <>
               {errKind === "forbidden" && (
                 <>
                   잘못된 접근
@@ -336,14 +339,14 @@ const RequestDetailComponent = () => {
         width={"100%"}
         sx={{
           bgcolor: thisTheme.palette.background.default,
-          minHeight: 190,
+          minHeight: isSmaller900 ? 100 : 190,
         }}
       >
-        <Box pt={4}>
+        <Box pt={isSmaller900 ? 2 : 4}>
           <CommonTitle>{scheduled ? "예약된 운송 정보" : "운송 요청 정보"}</CommonTitle>
         </Box>
 
-        <Grid container m={4} mb={1} justifySelf="center" width={"80%"}>
+        <Grid container m={4} mt={isSmaller900 ? 3 : 4} mb={1} justifySelf="center" width={"80%"}>
           {proposed && (
             <Paper
               variant="outlined"
@@ -361,7 +364,7 @@ const RequestDetailComponent = () => {
               <Grid
                 container
                 spacing={2}
-                direction="row"
+                direction={isSmaller900 ? "column" : "row"}
                 justifyContent="space-between"
                 sx={{ width: "100%" }}
               >
@@ -372,27 +375,20 @@ const RequestDetailComponent = () => {
                       fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
                       color: "#e3effcff",
                       fontSize: "clamp(12px, 1.5vw, 14px)",
+                      textAlign: isSmaller900 ? "center" : "left"
                     }}
                   >
                     <Box
                       component="span"
-                      sx={{ color: thisTheme.palette.error.main, fontWeight: 700, mr: 1 }}
+                      sx={{
+                        color: thisTheme.palette.error.main,
+                        fontWeight: 700,
+                        mr: isSmaller900 ? 0 : 1,
+                      }}
                     >
                       [알림]
                     </Box>{" "}
                     기사님께 지명된 운송 요청입니다.
-                  </Typography>
-                </Grid>
-                <Grid item>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: "Spoqa Han Sans Neo, Montserrat, sans-serif",
-                      color: "#e3effcff",
-                      fontSize: "clamp(12px, 1.5vw, 14px)",
-                    }}
-                  >
-                    {formatRemaining(refundDate)}
                   </Typography>
                 </Grid>
               </Grid>
@@ -406,7 +402,7 @@ const RequestDetailComponent = () => {
               pt: 2,
               pb: 2,
               width: "100%",
-              borderColor: thisTheme.palette.text.secondary,
+              borderColor: "#bbc5d0",
               boxShadow: "0px 5px 5px rgba(0, 0, 0, 0.05)",
             }}
           >
@@ -456,7 +452,7 @@ const RequestDetailComponent = () => {
         <Grid
           container
           spacing={1}
-          direction="row"
+          direction={isSmaller900 ? "column" : "row"}
           justifyContent={"space-between"}
           sx={{ width: "80%" }}
           mb={4}
@@ -465,7 +461,7 @@ const RequestDetailComponent = () => {
             container
             sx={{
               direction: "column",
-              width: "65%",
+              width: isSmaller900 ? "100%" : "65%",
               justifyContent: "space-between",
             }}
           >
@@ -474,7 +470,7 @@ const RequestDetailComponent = () => {
                 variant="outlined"
                 sx={{
                   width: "100%",
-                  height: 500,
+                  height: isSmaller900 ? 300 : 500,
                   p: 1,
                   border: "1px solid #2a2a2a5d",
                   boxShadow: "0px 5px 8px rgba(0, 0, 0, 0.1)",
@@ -494,126 +490,126 @@ const RequestDetailComponent = () => {
             <Grid item width={"100%"}>
               <Box mt={2}>
                 <Typography fontWeight="bold">안내 및 주의 사항</Typography>
-                <Typography variant="body2" color="text.secondary" mt={1}>
+                <Typography variant="body2" color="text.secondary" mt={isSmaller900 ? 0 : 1}>
                   {deliveryData.memo_to_driver}
                 </Typography>
               </Box>
             </Grid>
 
-            <Grid item width={"100%"}>
-              <Grid
-                container
-                direction={"row"}
-                justifyContent="space-around"
-                mt={4}
-                width={"100%"}
-              >
-                {scheduled ? (
-                  // 1) 일정인 건: 취소 버튼만
+            {!isSmaller900 && (
+              <Grid item width={"100%"}>
+                <Grid
+                  container
+                  direction="row"
+                  justifyContent={isSmaller900 ? "space-between" : "space-around"}
+                  mt={isSmaller900 ? 1 : 4}
+                  width={"100%"}
+                >
+                  {scheduled ? (
+                    // 1) 일정인 건: 취소 버튼만
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size={isSmaller900 ? "small" : "large"}
+                        onClick={handleCancel}
+                        disabled={loading}
+                        sx={{
+                          minWidth: 'auto',
+                          height: isSmaller900 ? '36px' : '48px',
+                          fontSize: isSmaller900 ? FONT_SIZE : '18px',
+                          lineHeight: 1.2,
+                          bgcolor: thisTheme.palette.primary.main,
+                          p: isSmaller900 ? 3 : 4, pt: 0, pb: 0,
+                        }}
+                      >
+                        예약 취소
+                      </Button>
+                    </Grid>
+                  ) : (
+                    // 2) 일정이 아닌 건: 기본 수락 버튼 + (proposed면) 거절 버튼 추가
+                    <>
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size={isSmaller900 ? "small" : "large"}
+                          onClick={handleAccept}
+                          disabled={loading}
+                          sx={{
+                            minWidth: 'auto',
+                            height: isSmaller900 ? '36px' : '48px',
+                            fontSize: isSmaller900 ? FONT_SIZE : '18px',
+                            lineHeight: 1.2,
+                            p: isSmaller900 ? 3 : 4, pt: 0, pb: 0,
+                          }}
+                        >
+                          {isSmaller900 ? '수락' : '운송 수락'}
+                        </Button>
+                      </Grid>
+
+                      {proposed && (
+                        <Grid item>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size={isSmaller900 ? "small" : "large"}
+                            onClick={handleDecline}
+                            disabled={loading}
+                            sx={{
+                              minWidth: 'auto',
+                              height: isSmaller900 ? '36px' : '48px',
+                              padding: '2px 8px',
+                              fontSize: isSmaller900 ? FONT_SIZE : '18px',
+                              lineHeight: 1.2,
+                              bgcolor: thisTheme.palette.error.main,
+                              "&:hover": {
+                                bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+                              },
+                              p: isSmaller900 ? 3 : 4, pt: 0, pb: 0,
+                            }}
+                          >
+                            {isSmaller900 ? '거절' : '지명 거절'}
+                          </Button>
+                        </Grid>
+                      )}
+                    </>
+                  )}
+
                   <Grid item>
                     <Button
                       variant="contained"
                       color="primary"
                       size="large"
-                      onClick={handleCancel}
+                      onClick={handleReport}
                       disabled={loading}
                       sx={{
                         minWidth: 'auto',
-                        height: '48px',
-                        padding: '2px 8px',
-                        fontSize: '18px',
+                        height: isSmaller900 ? '36px' : '48px',
+                        padding: '2px 4px',
+                        fontSize: isSmaller900 ? FONT_SIZE : '18px',
                         lineHeight: 1.2,
-                        bgcolor: thisTheme.palette.primary.main,
-                        p: 6, pt: 0, pb: 0,
+                        bgcolor: thisTheme.palette.error.main,
+                        "&:hover": {
+                          bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+                        },
+                        p: isSmaller900 ? 3 : 6, pt: 0, pb: 0,
                       }}
                     >
-                      예약 취소하기
+                      신고
                     </Button>
                   </Grid>
-                ) : (
-                  // 2) 일정이 아닌 건: 기본 수락 버튼 + (proposed면) 거절 버튼 추가
-                  <>
-                    <Grid item>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        onClick={handleAccept}
-                        disabled={loading}
-                        sx={{
-                          minWidth: 'auto',
-                          height: '48px',
-                          padding: '2px 8px',
-                          fontSize: '18px',
-                          lineHeight: 1.2,
-                          p: 6, pt: 0, pb: 0,
-                        }}
-                      >
-                        운송 수락하기
-                      </Button>
-                    </Grid>
-
-                    {proposed && (
-                      <Grid item>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="large"
-                          onClick={handleDecline}
-                          disabled={loading}
-                          sx={{
-                            minWidth: 'auto',
-                            height: '48px',
-                            padding: '2px 8px',
-                            fontSize: '18px',
-                            lineHeight: 1.2,
-                            bgcolor: thisTheme.palette.error.main,
-                            "&:hover": {
-                              bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
-                            },
-                            p: 6, pt: 0, pb: 0,
-                          }}
-                        >
-                          지명 거절하기
-                        </Button>
-                      </Grid>
-                    )}
-                  </>
-                )}
-
-                <Grid item>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    onClick={handleReport}
-                    disabled={loading}
-                    sx={{
-                      minWidth: 'auto',
-                      height: '48px',
-                      padding: '2px 4px',
-                      fontSize: '18px',
-                      lineHeight: 1.2,
-                      bgcolor: thisTheme.palette.error.main,
-                      "&:hover": {
-                        bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
-                      },
-                      p: 6, pt: 0, pb: 0,
-                    }}
-                  >
-                    신고
-                  </Button>
                 </Grid>
               </Grid>
-            </Grid>
+            )}
           </Grid>
 
           {/* 정보 영역 */}
-          <Grid item sx={{ width: "30%" }}>
-            <Grid container spacing={2} direction="column">
+          <Grid item sx={{ width: isSmaller900 ? "100%" : "30%" }}>
+            <Grid container spacing={2} direction="column" mt={isSmaller900 ? 2 : 0}>
               {/* 경로 정보 */}
               <Grid item>
-                <Paper variant="outlined" sx={{ p: 2, borderColor: thisTheme.palette.text.secondary }}>
+                <Paper variant="outlined" sx={{ p: 2, borderColor: "#bbc5d0" }}>
                   <Typography fontWeight="bold" gutterBottom>
                     경로 정보
                   </Typography>
@@ -716,15 +712,6 @@ const RequestDetailComponent = () => {
                   <Typography fontWeight="bold" gutterBottom>
                     운송 수익 정보
                   </Typography>
-                  {/* <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>기본 운임:</strong> {formatWon(deliveryData.estimated_fee)}
-                                    </Typography>
-                                    <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>경유지 가산금:</strong> {formatWon(30000)}
-                                    </Typography>
-                                    <Typography variant="body2" mb={1} sx={textSx}>
-                                        <strong>신선화물 가산금:</strong> {formatWon(20000)}
-                                    </Typography> */}
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="body1" fontWeight="bold" sx={textSx}>
                     <strong>예상 수익:</strong>{" "}
@@ -732,6 +719,109 @@ const RequestDetailComponent = () => {
                   </Typography>
                 </Paper>
               </Grid>
+
+              {isSmaller900 && (
+                <Grid item width={"100%"}>
+                  <Grid
+                    container
+                    direction="row"
+                    justifyContent={isSmaller900 ? "space-between" : "space-around"}
+                    mt={isSmaller900 ? 1 : 4}
+                    width={"100%"}
+                  >
+                    {scheduled ? (
+                      // 1) 일정인 건: 취소 버튼만
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size={isSmaller900 ? "small" : "large"}
+                          onClick={handleCancel}
+                          disabled={loading}
+                          sx={{
+                            height: '36px',
+                            fontSize: FONT_SIZE,
+                            lineHeight: 1.2,
+                            p: 3, pt: 0, pb: 0,
+                            bgcolor: thisTheme.palette.primary.main,
+                          }}
+                        >
+                          예약 취소
+                        </Button>
+                      </Grid>
+                    ) : (
+                      // 2) 일정이 아닌 건: 기본 수락 버튼 + (proposed면) 거절 버튼 추가
+                      <>
+                        <Grid item>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size={"large"}
+                            onClick={handleAccept}
+                            disabled={loading}
+                            sx={{
+                              height: '36px',
+                              fontSize: FONT_SIZE,
+                              lineHeight: 1.2,
+                              p: 3, pt: 0, pb: 0,
+                            }}
+                          >
+                            수락
+                          </Button>
+                        </Grid>
+
+                        {proposed && (
+                          <Grid item>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size={"medium"}
+                              onClick={handleDecline}
+                              disabled={loading}
+                              sx={{
+                                width: 'auto',
+                                height: '36px',
+                                fontSize: FONT_SIZE,
+                                lineHeight: 1.2,
+                                bgcolor: thisTheme.palette.error.main,
+                                "&:hover": {
+                                  bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+                                },
+                                p: 3, pt: 0, pb: 0,
+                              }}
+                            >
+                              {isSmaller900 ? '거절' : '지명 거절'}
+                            </Button>
+                          </Grid>
+                        )}
+                      </>
+                    )}
+
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        onClick={handleReport}
+                        disabled={loading}
+                        sx={{
+                          height: '36px',
+                          fontSize: FONT_SIZE,
+                          lineHeight: 1.2,
+                          p: 3, pt: 0, pb: 0,
+                          bgcolor: thisTheme.palette.error.main,
+                          "&:hover": {
+                            bgcolor: lighten(thisTheme.palette.error.main, 0.1), // 호버 시 색상 변경
+                          },
+                        }}
+                      >
+                        신고
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              )}
+
             </Grid>
           </Grid>
         </Grid>

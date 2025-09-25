@@ -9,6 +9,7 @@ import {
   ListItemText,
   Divider,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
 import { useStartDummyRoute } from "../../hook/DeliveryMap/useKakaoRouteMap";
@@ -37,6 +38,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
     isLastDropped,
   } = pickActiveLeg(data);
   const hasNextLeg = activeLeg != null; // 다음으로 달릴 구간이 있나
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
 
   // 웹소켓으로 들어오는 실시간 경로
@@ -50,11 +52,13 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
     <Box width={"100%"} sx={{ bgcolor: thisTheme.palette.background.default }}>
       {/* 페이지 최상단 제목 */}
       <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, py: 4, minHeight: 190 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, py: isSmaller900 ? 2 :4, minHeight: isSmaller900 ? 100 : 190 }}
       >
-        <CommonTitle>현재 운송 정보</CommonTitle>
+        <Box pt={isSmaller900 ? 2 : 4}>
+          <CommonTitle>현재 운송 정보</CommonTitle>
+        </Box>
 
-        <Grid container m={4} mb={0} justifySelf="center" width={"80%"}>
+        <Grid container m={4} mt={isSmaller900 ? 3 : 4} mb={0} justifySelf="center" width={"80%"}>
           <Paper
             variant="outlined"
             sx={{
@@ -201,7 +205,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
       </Box>
 
       {/* 중앙 지도 + 운송 정보 영역*/}
-      <Box sx={{ px: 4, py: 3, bgcolor: thisTheme.palette.background.default }}>
+      <Box sx={{ px: 0, py: 0, bgcolor: thisTheme.palette.background.default }}>
         <Grid
           container
           sx={{
@@ -212,21 +216,21 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
           }}
         >
           {/* 좌측 지도 + 버튼 영역 */}
-          <Grid item xs={12} md={6} sx={{ width: "100%" }}>
+          <Grid item sx={{ width: "100%" }}>
             <Grid
               container
-              direction={"row"}
+              direction={isSmaller900 ? "column" : "row"}
               justifyContent={"space-between"}
               width={"100%"}
               mb={4}
             >
-              <Grid item width={"60%"}>
+              <Grid item width={isSmaller900 ? "100%" : "60%"}>
                 {/* 상단 지도 영역 */}
                 <Paper
                   variant="outlined"
                   sx={{
                     width: "100%",
-                    height: 500,
+                    height: isSmaller900 ? 300 : 500,
                     p: 1,
                     borderColor: thisTheme.palette.text.secondary,
                     bgcolor: thisTheme.palette.background.paper,
@@ -243,7 +247,8 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                 container
                 direction="column"
                 justifyContent="space-between"
-                sx={{ width: "35%" }}
+                mt={isSmaller900 ? 2 : 0}
+                sx={{ width: isSmaller900 ? "100%" : "35%" }}
               >
                 <Grid item>
                   {/* 상단 화물 정보 영역 */}
@@ -368,7 +373,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                         <Typography
                           sx={{
                             fontSize: "clamp(10px, 1.5vw, 14px)",
-                            color:  thisTheme.palette.text.primary,
+                            color: thisTheme.palette.text.primary,
                           }}
                         >
                           특수 태그:{" "}
@@ -394,7 +399,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                   ) : (
                     <>
                       {/* 하단 경유지 목록 영역 */}
-                      <Paper variant="outlined" sx={{ p: 2 }}>
+                      <Paper variant="outlined" sx={{ mt:isSmaller900 ? 2 : 0, p: 2 }}>
                         <Typography
                           variant="subtitle1"
                           fontWeight="bold"
@@ -458,7 +463,8 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
             <ActionButtons
               data={data}
               onRefresh={onRefresh}
-              onActionRun={onActionRun} />
+              onActionRun={onActionRun}
+              isMobile={isSmaller900} />
           </Grid>
         </Grid>
       </Box>

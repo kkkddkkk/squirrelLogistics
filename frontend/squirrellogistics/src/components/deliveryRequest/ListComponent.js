@@ -11,6 +11,7 @@ import {
   FormControl,
   Pagination,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,6 +24,7 @@ import DatePicker from "react-datepicker";
 import TwoButtonPopupComponent from './TwoButtonPopupComponent';
 import OneButtonPopupComponent from './OneButtonPopupComponent';
 import { CommonTitle } from "../common/CommonText";
+import { theme } from "../common/CommonTheme";
 
 const SORT_MAP = {
   recent: "RECENT",
@@ -32,13 +34,12 @@ const SORT_MAP = {
   "long-distance": "DIST_DESC",
   "short-distance": "DIST_ASC",
 };
-
+export const FONT_SIZE = "clamp(12px, 1.5vw, 14px)";
 const ListComponent = () => {
   const { driverId } = useParams();
 
   const thisTheme = useTheme();
-
-  const [pageData, setPageData] = useState(null);
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md')); const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
@@ -177,116 +178,181 @@ const ListComponent = () => {
         <Grid
           sx={{
             bgcolor: thisTheme.palette.background.default,
-            minHeight: 190,
           }}
         >
-          <Box pt={4}>
+          <Box pt={isSmaller900 ? 2 : 4}>
             <CommonTitle>배송 요청</CommonTitle>
           </Box>
 
-          <Grid
-            container
-            spacing={10}
-            justifySelf={"center"}
-            justifyContent="center"
-            width={"90%"}
-            p={4}
-          >
-            <Grid item sx={{ minWidth: 200 }}>
-              <FormControl fullWidth>
-                <InputLabel>검색 영역</InputLabel>
-                <Select
-                  label="검색 영역"
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value)}
-                >
-                  <MenuItem value="START">출발 지역</MenuItem>
-                  <MenuItem value="END">도착 지역</MenuItem>
-                  <MenuItem value="MEMO">요청 설명</MenuItem>
-                  <MenuItem value="ALL">모두</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+          {!isSmaller900 && (
 
-            <Grid item sx={{ flex: 1, minWidth: 300 }}>
-              <TextField
-                fullWidth
-                placeholder="키워드를 입력하세요"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
+            <Grid
+              container
+              spacing={isSmaller900 ? 2 : 10}
+              justifySelf={"center"}
+              justifyContent="center"
+              width={"80%"}
+              mt={2}
+            >
+
+              <Grid item sx={{ minWidth: isSmaller900 ? "40%" : 200 }}>
+                <FormControl fullWidth size={isSmaller900 ? "small" : "medium"}>
+                  <InputLabel>{isSmaller900 ? '항목' : '검색 영역'}</InputLabel>
+                  <Select
+                    label={isSmaller900 ? '항목' : '검색 영역'}
+                    value={scope}
+                    onChange={(e) => setScope(e.target.value)}
+                    sx={{
+                      fontSize: FONT_SIZE,
+                      '& .MuiSelect-select': { fontSize: FONT_SIZE },
+                      '& .MuiOutlinedInput-input': { fontSize: FONT_SIZE },
+                    }}
+                  >
+                    <MenuItem value="START">출발 지역</MenuItem>
+                    <MenuItem value="END">도착 지역</MenuItem>
+                    <MenuItem value="MEMO">요청 설명</MenuItem>
+                    <MenuItem value="ALL">모두</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item sx={{ flex: 1, minWidth: isSmaller900 ? "50%" : 300 }}>
+                <TextField
+                  fullWidth
+                  placeholder="키워드를 입력하세요"
+                  sx={{
+                    '& .MuiOutlinedInput-input': { fontSize: FONT_SIZE },
+                  }}
+                  value={q}
+                  size={isSmaller900 ? "small" : "medium"}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </Grid>
             </Grid>
-          </Grid>
+          )}
         </Grid>
 
         {/* 필터 및 검색 */}
         <Grid
           container
-          width={"90%"}
-          p={4}
-          pt={0}
-          spacing={10}
+          width={"80%"}
+          spacing={isSmaller900 ? 2 : 10}
           justifySelf={"center"}
-          justifyContent={"space-between"}
+          alignContent={"center"}
         >
           {/* 좌측 필터 영역 */}
-          <Grid item minWidth={200}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              정렬 기준 선택
-            </Typography>
+          <Grid
+            container
+            direction={isSmaller900 ? "row" : "column"}
+            justifyContent="flex-start"
+            item
+            xs={12}
+            md="auto"
+            alignItems="flex-start"
+            wrap="nowrap"
+            sx={{ width: { xs: "100%", md: 200 }, gap: 1 }}
+            mb={isSmaller900 ? 0 : 2}
+            mt={isSmaller900 ? 2 : 0}
+          >
 
-            <Grid item sx={{ mb: 5 }}>
-              <FormControl fullWidth variant="standard" size="small">
-                <Select
-                  value={sortSel}
-                  onChange={(e) => setSortSel(e.target.value)}
-                >
-                  <MenuItem value="recent">최신 등록 순</MenuItem>
-                  <MenuItem value="profit">수익 높은 순</MenuItem>
-                  <MenuItem value="less-waypoint">경유지 적은 순</MenuItem>
-                  <MenuItem value="more-waypoint">경유지 많은 순</MenuItem>
-                  <MenuItem value="long-distance">거리 긴 순</MenuItem>
-                  <MenuItem value="short-distance">거리 짧은 순</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+            <Grid
+              container
+              direction={isSmaller900 ? "row" : "column"}
+              alignContent={"center"}
+              mt={isSmaller900 ? 0 : 2}
+              minWidth={isSmaller900 ? "20%" : 200}
+              wrap="nowrap"
+              rowGap={1}
+            >
 
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              시작일 선택
-            </Typography>
+              <Grid item>
+                {!isSmaller900 && (
+                  <Typography variant="subtitle1" sx={{ mb: isSmaller900 ? 0 : 1, fontSize: FONT_SIZE }}>
+                    정렬 기준 선택
+                  </Typography>
+                )}
+                <FormControl fullWidth variant="standard" size="small">
+                  <Select
+                    value={sortSel}
+                    onChange={(e) => setSortSel(e.target.value)}
+                    sx={{
+                      '& .MuiSelect-select': { fontSize: FONT_SIZE },
+                    }}
+                  >
+                    <MenuItem value="recent">최신 등록 순</MenuItem>
+                    <MenuItem value="profit">수익 높은 순</MenuItem>
+                    <MenuItem value="less-waypoint">경유지 적은 순</MenuItem>
+                    <MenuItem value="more-waypoint">경유지 많은 순</MenuItem>
+                    <MenuItem value="long-distance">거리 긴 순</MenuItem>
+                    <MenuItem value="short-distance">거리 짧은 순</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
 
-            <Grid item sx={{ minWidth: 180 }}>
-              {/* 간단 시작일 필터: 해당 날짜의 wantToStart 만 */}
-              <TextField
-                fullWidth
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+              {!isSmaller900 && (
+
+                <Grid item>
+                  <Typography variant="subtitle1" sx={{ mb: isSmaller900 ? 0 : 1, fontSize: FONT_SIZE }}>
+                    시작일 선택
+                  </Typography>
+                  {/* 간단 시작일 필터: 해당 날짜의 wantToStart 만 */}
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size={isSmaller900 ? "small" : "medium"}
+                    sx={{
+                      '& .MuiOutlinedInput-input': { fontSize: FONT_SIZE },
+                    }}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </Grid>
+              )}
             </Grid>
 
             <Grid
               container
-              direction={"row"}
-              justifyContent={"space-between"}
-              mt={2}
+              direction="row"
+              justifyContent={{ xs: "flex-end", md: "space-between" }}
+              alignItems="center"
+              columnGap={1}
+              rowGap={1}
+              mt={isSmaller900 ? 0 : 2}
+              wrap={isSmaller900 ? "wrap" : "nowrap"}
+              sx={{ width: { xs: '100%', md: 200 } }}
             >
-              <Grid item>
-                <Button variant="contained" onClick={applyFilters}>
+              <Grid item xs={12} md="auto">
+                <Button
+                  variant="contained"
+                  onClick={applyFilters}
+                  size={isSmaller900 ? "small" : "medium"}
+                  fullWidth={isSmaller900}
+                  sx={{ minWidth: 0, px: 1.5 }}
+                >
                   적용
                 </Button>
               </Grid>
-              <Grid item>
-                <Button variant="outlined" onClick={resetFilters}>
+
+              <Grid item xs={12} md="auto">
+                <Button
+                  variant="outlined"
+                  onClick={resetFilters}
+                  size={isSmaller900 ? "small" : "medium"}
+                  fullWidth={isSmaller900}
+                  sx={{ minWidth: 0, px: 1.5 }}
+                >
                   초기화
                 </Button>
               </Grid>
             </Grid>
+
           </Grid>
 
           {/* 리스트 영역 */}
-          <Grid item sx={{ flex: 1, minWidth: 300 }}>
+          <Grid item sx={{ flex: 1, minWidth: isSmaller900 ? 0 : 300 }}
+            mt={isSmaller900 ? 0 : 2}
+            mb={isSmaller900 ? 2 : 0}
+            >
             {/* 운전자 지명 제안 도착 */}
             {openToast ? (
               <Paper
@@ -315,12 +381,12 @@ const ListComponent = () => {
                   >
                     [알림]
                   </Box>{" "}
-                  기사님께 지명 운송 요청이 {proposals.length}건 도착하였습니다!
+                  {isSmaller900 ? `지명 요청 ${proposals.length}건 도착!` : `기사님께 지명 운송 요청이 ${proposals.length}건 도착하였습니다!`}
                   <Box
                     component="span"
                     sx={{ ml: 1, color: thisTheme.palette.background.default, fontWeight: 700 }}
                   >
-                    (클릭하여 확인하기)
+                    {isSmaller900 ? '(클릭 이동)' : '(클릭하여 확인하기)'}
                   </Box>{" "}
                 </Typography>
               </Paper>
@@ -366,6 +432,7 @@ const ListComponent = () => {
           open={dialogOpen}
           proposals={proposals}
           onClose={closeProposalDialog}
+          isMobile={isSmaller900}
         />
       )}
       {loading && (

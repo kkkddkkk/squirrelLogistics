@@ -1,12 +1,12 @@
 import axios from "axios";
 import dayjs from "dayjs";
 import { buildConfig } from "../deliveryRequest/apiUtil";
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from "../apiServerHost";
 
 //작성자: 고은설.
 //기능: 관리자 => 정산 대시보드 및 미정산 처리 위한 백단 연결 API.
 
-const BASE = `${API_SERVER_HOST}/api/settlements`;
+const BASE = `${API_SERVER_HOST}/settlements`;
 
 //======================================[HELPER].
 // YYYY-MM 문자열.

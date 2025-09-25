@@ -5,6 +5,8 @@ import {
     Grid,
     useTheme
 } from '@mui/material';
+import { FONT_SIZE } from './ListComponent';
+import { FONT_SIZE_SMALL_TITLE } from '../common/CommonText';
 
 function TwoButtonPopupComponent({
     open,
@@ -40,7 +42,7 @@ function TwoButtonPopupComponent({
                                 flexGrow: 1,
                                 textAlign: 'center',
                                 fontFamily: 'inherit',
-                                fontSize: '1.2rem',
+                                fontSize: FONT_SIZE_SMALL_TITLE,
                                 fontWeight: 'bold',
                                 color: thisTheme.palette.text.primary,
                             }}
@@ -52,14 +54,14 @@ function TwoButtonPopupComponent({
             )}
 
             {content && (
-                <DialogContent sx={{pb:4}}>
+                <DialogContent sx={{ pb: 4 }}>
                     <Box display="flex" alignItems="center">
                         <Typography
                             sx={{
                                 flexGrow: 1,
                                 textAlign: 'center',
                                 fontFamily: 'inherit',
-                                fontSize: '1.0rem',
+                                fontSize: FONT_SIZE,
                                 color: thisTheme.palette.text.primary,
                             }}
                         >
@@ -75,7 +77,10 @@ function TwoButtonPopupComponent({
                     variant="outlined"
                     size='large'
                     onClick={onLeftClick}
-                    sx={{ minWidth: 120 }}
+                    sx={{
+                        minWidth: 120,
+                        fontSize: FONT_SIZE
+                    }}
                 >
                     {leftTxt}
                 </Button>
@@ -83,7 +88,10 @@ function TwoButtonPopupComponent({
                 <Button
                     variant="contained"
                     onClick={onRightClick}
-                    sx={{ minWidth: 120 }}
+                    sx={{
+                        minWidth: 120,
+                        fontSize: FONT_SIZE
+                    }}
                 >
                     {rightTxt}
                 </Button>

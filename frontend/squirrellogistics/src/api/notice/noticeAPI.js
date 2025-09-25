@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getAuthHeaders, buildConfig } from "../deliveryRequest/apiUtil";
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from "../apiServerHost";
 
-const BASE = `${API_SERVER_HOST}/api/notices`;
+const BASE = `${API_SERVER_HOST}/notices`;
 
 export async function createNotice(body, options = {}) {
     const { data } = await axios.post(`${BASE}`, body, buildConfig(options));

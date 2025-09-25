@@ -1,14 +1,16 @@
-import { Paper, Typography, Divider, Box, useTheme } from "@mui/material";
+import { Paper, Typography, Divider, Box, useTheme, useMediaQuery, Grid } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDeliveryDTO } from "./deliveryFormatUtil";
 import { theme } from "../common/CommonTheme";
-import { CommonSmallerTitle } from "../common/CommonText";
+import { CommonSmallerTitle, CommonSmallerTitleMedia } from "../common/CommonText";
+import { FONT_SIZE } from "./ListComponent";
 
 const DeliveryCard = ({ item }) => {
   const { driverId } = useParams();
   const thisTheme = useTheme();
   const navigate = useNavigate();
-  const formatted = formatDeliveryDTO(item); // 여기서 포맷 수행
+  const isSmaller900 = useMediaQuery(theme.breakpoints.down('md'));
+  const formatted = formatDeliveryDTO(item, isSmaller900); // 여기서 포맷 수행
 
   const handleClick = () => {
     navigate(`/driver/detail/${item.requestId}`);
@@ -35,26 +37,43 @@ const DeliveryCard = ({ item }) => {
         },
       }}
     >
-      <CommonSmallerTitle>{formatted.title}</CommonSmallerTitle>
+      <CommonSmallerTitleMedia>{formatted.title}</CommonSmallerTitleMedia>
 
-      <Typography variant="body2" sx={{ color: thisTheme.palette.text.secondary }}>
-        {formatted.distance}
-      </Typography>
 
-    
+      <Grid container
+        direction={isSmaller900 ? "row" : "column"}
+        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+      >
 
-      <Typography variant="body2" sx={{ color: thisTheme.palette.text.secondary }}>
-        총 하차지: {item.waypointCount -1}곳
-      </Typography>
+        <Typography variant="body2"
+          sx={{
+            color: thisTheme.palette.text.secondary,
+            fontSize: FONT_SIZE
+          }}>
+          {formatted.distance}
+        </Typography>
+
+        <Typography variant="body2"
+          sx={{
+            color: thisTheme.palette.text.secondary,
+            fontSize: FONT_SIZE
+          }}>
+          총 하차지: {item.waypointCount - 1}곳
+        </Typography>
+      </Grid>
       <Divider sx={{ my: 1 }} />
 
       <Box display="flex" justifyContent="space-between">
         <Typography
-          sx={{ fontWeight: "bold", color: thisTheme.palette.text.primary }}
+          sx={{ 
+            fontWeight: "bold", 
+            color: thisTheme.palette.text.primary,
+            fontSize: FONT_SIZE 
+          }}
         >
           {formatted.profit}
         </Typography>
-        <Typography sx={{ color: thisTheme.palette.text.secondary }}>
+        <Typography sx={{ color: thisTheme.palette.text.secondary, fontSize: FONT_SIZE }}>
           {formatted.registered}
         </Typography>
       </Box>

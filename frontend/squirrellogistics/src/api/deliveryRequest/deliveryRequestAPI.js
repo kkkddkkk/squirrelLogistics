@@ -1,8 +1,9 @@
 import axios from "axios";
 import { getAuthHeaders, buildConfig } from "./apiUtil";
+import API_SERVER_HOST from "../apiServerHost";
+
 // 백엔드 서버 주소.
-export const API_SERVER_HOST = "http://localhost:8080";
-const BASE = `${API_SERVER_HOST}/api/delivery/requests`;
+const BASE = `${API_SERVER_HOST}/delivery/requests`;
 
 export async function fetchDeliveryRequests(pageReq = {}, options = {}) {
   const params = {

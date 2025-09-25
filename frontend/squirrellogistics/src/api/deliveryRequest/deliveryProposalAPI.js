@@ -1,9 +1,9 @@
 import axios from "axios";
 import { getAuthHeaders, buildConfig } from "./apiUtil";
 import { extractCodeFromData } from "./deliveryRequestAPI";
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from "../apiServerHost";
 
-const BASE = `${API_SERVER_HOST}/api/delivery/proposals`;
+const BASE = `${API_SERVER_HOST}/delivery/proposals`;
 
 //driverId에 할당된 운송 제안 목록
 export async function fetchDeliveryProposals(options = {}) {

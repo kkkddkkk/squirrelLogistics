@@ -2,14 +2,13 @@ import { useCallback, useEffect, useRef } from "react";
 import axios from "axios";
 import markerImg from '../../pages/Driver/images/marker_blue.png';
 import truckImg from '../../pages/Driver/images/truck.png';
-
+import API_SERVER_HOST from '../../api/apiServerHost'
 
 //---------- 환경 상수 ----------.
 //카카오 맵 API용 자바스크립트 키 (지도 렌더링용).
 const KAKAO_JAVASCRIPT_KEY = "3fc6c3128e9cb8839fceb113aba2924a";
 //카카오 맵 API용 REST API 키 (경로 추출용).
 const KAKAO_NAVIGATION_REST_KEY = "866375a2baec52acc22ae2904599355c";
-const API_SERVER_HOST = "http://localhost:8080";
 
 //---------- 공용 카카오 SDK 로드 함수 ----------.
 function loadKakaoSdk({ libraries } = {}) {
@@ -33,7 +32,7 @@ function loadKakaoSdk({ libraries } = {}) {
 export const useStartDummyRoute = () => {
   const startDummyRoute = useCallback(async ({ driverId, startLat, startLng, endLat, endLng }) => {
     try {
-      const res = await axios.get(`${API_SERVER_HOST}/api/route/start`, {
+      const res = await axios.get(`${API_SERVER_HOST}/route/start`, {
         params: {
           driverId,
           startLat,

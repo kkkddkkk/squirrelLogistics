@@ -3,7 +3,7 @@ import { Box, Paper, Typography, Stack, Chip, Button, Divider, useTheme } from "
 import PushPinIcon from "@mui/icons-material/PushPin";
 import DOMPurify from "dompurify";
 import "react-quill-new/dist/quill.snow.css";
-import { API_SERVER_HOST } from "../../api/deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 export default function NoticeDetail({ data, onEdit }) {
 

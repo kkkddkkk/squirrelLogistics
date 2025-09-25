@@ -1,10 +1,10 @@
 import axios from "axios";
+import API_SERVER_HOST from "../apiServerHost";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 // axios 인스턴스 생성
 const driverApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/driver`,
+  baseURL: `${API_SERVER_HOST}/driver`,
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,8 +1,8 @@
 import axios from 'axios';
 import {buildConfig} from './apiUtil'
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from '../apiServerHost';
 
-const BASE = `${API_SERVER_HOST}/api/delivery/assignments`;
+const BASE = `${API_SERVER_HOST}/delivery/assignments`;
 
 
 // 오늘 진행중인 운송 정보 가져오기.

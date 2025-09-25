@@ -30,6 +30,7 @@ import {
   useTheme,
   FormHelperText,
   lighten,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Edit,
@@ -54,6 +55,7 @@ import dayjs from "dayjs";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import { FONT_SIZE } from "../../components/deliveryRequest/ListComponent";
 
 const helperProps = { sx: { minHeight: "20px" } }; // helperText 높이 고정
 
@@ -82,6 +84,7 @@ export default function ManageVehicles() {
   const VALID_STATUSES = ["OPERATIONAL", "MAINTENANCE"];
   //에러 송출용.
   const [formErrors, setFormErrors] = useState({});
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   // Form 상태
   const [form, setForm] = useState({
@@ -398,7 +401,7 @@ export default function ManageVehicles() {
   };
 
   // 차량 상태 표시
-  const getStatusChip = (status) => {
+  const getStatusChip = (status, isMobile) => {
     const statusMap = {
       OPERATIONAL: {
         label: "운행 가능",
@@ -422,8 +425,8 @@ export default function ManageVehicles() {
         size="medium"
         variant="outlined"
         sx={{
-          fontSize: "0.9rem",
-          height: 32,
+          fontSize: isMobile ? "0.7rem" : "0.9rem",
+          height: isMobile ? 26 : 32,
           "& .MuiChip-icon": {
             fontSize: "1.1rem",
           },
@@ -500,7 +503,7 @@ export default function ManageVehicles() {
         sx={{
           bgcolor: thisTheme.palette.background.default,
           minHeight: "100vh",
-          py: 6,
+          py: isSmaller900 ? 3 : 6,
         }}
       >
         {loading && (
@@ -508,18 +511,19 @@ export default function ManageVehicles() {
         )}
         <CommonTitle>내 차량 관리</CommonTitle>
         <Grid container>
-          <Grid size={2} />
-          <Grid size={8}>
+          <Grid size={isSmaller900 ? 1 : 2} />
+          <Grid size={isSmaller900 ? 10 : 8}>
             {/* 추가 버튼 */}
             <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
               <Button
                 variant="contained"
                 startIcon={<Add />}
                 onClick={() => handleOpenDialog("create")}
+                size={isSmaller900 ? "small" : "medium"}
                 sx={{
                   bgcolor: C.blue,
-                  minWidth: 140,
-                  height: 50,
+                  minWidth: isSmaller900 ? 100 : 140,
+                  height: isSmaller900 ? 35 : 50,
                 }}
               >
                 차량 추가
@@ -615,7 +619,7 @@ export default function ManageVehicles() {
                               <DirectionsCar />
                             </Avatar>
                             <Typography
-                              variant="h5"
+                              variant={isSmaller900 ? "h6" : "h5"}
                               fontWeight="bold"
                               color={C.blue}
                             >
@@ -631,7 +635,7 @@ export default function ManageVehicles() {
                               gap: 2,
                             }}
                           >
-                            {getStatusChip(car.carStatus)}
+                            {getStatusChip(car.carStatus, isSmaller900)}
                           </Box>
                         </Box>
 
@@ -644,16 +648,16 @@ export default function ManageVehicles() {
                             ml: 5, // 아이콘과 차량번호 영역만큼 왼쪽 여백 추가
                           }}
                         >
-                          <Typography variant="body1" color="text.secondary">
+                          <Typography variant="body1" color="text.secondary" fontSize={FONT_SIZE}>
                             <strong>차종:</strong>{" "}
                             {car.vehicleType?.name || "-"}
                           </Typography>
-                          <Typography variant="body1" color="text.secondary">
+                          <Typography variant="body1" color="text.secondary" fontSize={FONT_SIZE}>
                             <strong>주행거리:</strong>{" "}
                             {car.mileage?.toLocaleString()}km
                           </Typography>
                           {car.inspection && (
-                            <Typography variant="body1" color="text.secondary">
+                            <Typography variant="body1" color="text.secondary" fontSize={FONT_SIZE}>
                               <strong>점검일:</strong>{" "}
                               {dayjs(car.inspection).format("MM/DD")}
                             </Typography>
@@ -674,7 +678,7 @@ export default function ManageVehicles() {
               )}
             </Box>
           </Grid>
-          <Grid size={2} />
+          <Grid size={isSmaller900 ? 1 : 2} />
         </Grid>
       </Box>
 

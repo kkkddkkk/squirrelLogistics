@@ -20,8 +20,9 @@ import {
   useTheme,
   darken,
   lighten,
+  useMediaQuery,
 } from "@mui/material";
-import { CommonTitle } from "../common/CommonText";
+import { CommonTitle, FONT_SIZE_SMALL_TITLE } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -41,6 +42,7 @@ import MontlyDetailPopupComponent from "./MontlyDetailPopupComponent";
 import { fetchDriverMonthlySchedule } from "./../../api/deliveryRequest/deliveryAssignmentAPI";
 import LoadingComponent from "../../components/common/LoadingComponent";
 import OneButtonPopupComponent from "../deliveryRequest/OneButtonPopupComponent";
+import { FONT_SIZE } from "../deliveryRequest/ListComponent";
 
 const RBC_OVERRIDE_STYLE_ID = "rbc-overrides-inline";
 
@@ -156,6 +158,7 @@ export default function DriverMonthlyComponent() {
   const thisTheme = useTheme();
   useAttachRbcOverrides();
   const navigate = useNavigate();
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   //URL 파라미터 받기 => { driverId, year, month }
   const params = useParams();
@@ -247,12 +250,17 @@ export default function DriverMonthlyComponent() {
     [currentYM]
   );
 
+  const MonthEventComponent = useMemo(
+    () => (isSmaller900 ? () => <span /> : MonthEvent),
+    [isSmaller900]
+  );
+
   //완료 일정 / 미완료 일정 마커 색상 구분.
   const eventPropGetter = useCallback((event) => {
     const isCompleted = event.type === "completed";
     const isFailed = event.type === "failed";
 
-    let backgroundColor, borderColor;
+    let backgroundColor;
     if (isCompleted) {
       backgroundColor = thisTheme.palette.success.main;
     } else if (isFailed) {
@@ -265,11 +273,11 @@ export default function DriverMonthlyComponent() {
       style: {
         backgroundColor,
         color: "#fff",
-        border: `1px solid ${borderColor}`,
         borderRadius: 999,
         lineHeight: 1.2,
         paddingTop: 2,
         paddingBottom: 2,
+        height: "auto",
       },
     };
   }, []);
@@ -336,13 +344,23 @@ export default function DriverMonthlyComponent() {
   );
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
+
+  const formats = useMemo(() => ({
+    //01일 => 1일.
+    dateFormat: (date, culture, l) => l.format(date, isSmaller900 ? "d" : "d일", culture),
+    //모바일의 경우 월요일 => 월.
+    weekdayFormat: (date, culture, l) => l.format(date, isSmaller900 ? 'EEE' : 'EEEE', culture),
+    monthHeaderFormat: (date, culture, l) => l.format(date, "yyyy년 M월", culture),
+
+  }), [isSmaller900]);
+
   return (
     <Box width={"100%"} justifyItems={"center"} sx={{ backgroundColor: thisTheme.palette.background.default, pb: 4, }}>
       <GlobalStyles
         styles={{
           ".rbc-calendar": {
             background: thisTheme.palette.background.default,
-            borderRadius: 16,
+            borderRadius: 5,
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             width: "90%",
           },
@@ -360,66 +378,86 @@ export default function DriverMonthlyComponent() {
             background: thisTheme.palette.background.paper,
             color: thisTheme.palette.text.primary,
           },
-          ".rbc-date-cell": { padding: 8 },
+          ".rbc-date-cell": { padding: isSmaller900 ? 0 : 2 },
           ".rbc-off-range-bg": {
-            background: thisTheme.palette.mode === "light" ?
-              lighten(thisTheme.palette.text.secondary, 0.9)+" !important"
-              : thisTheme.palette.background.paper+" !important"
+            background:
+              thisTheme.palette.mode === "light"
+                ? lighten(thisTheme.palette.text.secondary, 0.9) + " !important"
+                : thisTheme.palette.background.paper + " !important",
           },
+
+          // 기본 이벤트 스타일 (웹/데스크탑)
           ".rbc-event, .rbc-event-allday": {
             boxShadow: "none",
             border: "none",
-            fontSize: '10px',
+            fontSize: 12,
             borderRadius: 999,
-            padding: 0,
-            height: 24,
+            padding: "0 6px",
+            height: 22,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           },
+
           ".rbc-today": { background: "transparent" },
-          ".rbc-row-segment": { display: "flex", alignItems: "flex-end" },
-          ".rbc-month-view .rbc-row-bg .rbc-day-bg + .rbc-day-bg": {
-            borderLeft: `1px solid ${thisTheme.palette.text.secondary} !important`,
-          },
-          ".rbc-month-view .rbc-header + .rbc-header": {
-            borderLeft: `1px solid ${thisTheme.palette.text.secondary} !important`,
-          },
-          //+더보기 버튼 스타일 지정 영역.
+          ".rbc-row-segment": { display: "flex", alignItems: "flex-start" },
+
+          // 더보기 버튼
           ".rbc-show-more": {
             margin: "4px 0px",
             padding: "2px 8px",
             borderRadius: 999,
             fontWeight: 700,
-            fontSize: '10px',
+            fontSize: "10px",
             lineHeight: 1.2,
             background: thisTheme.palette.background.paper,
             color: thisTheme.palette.primary.main,
             border: `1px solid ${thisTheme.palette.primary.main}`,
             boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             cursor: "pointer",
+            [theme.breakpoints.down("md")]: {
+              fontSize: 9,
+              padding: "1px 4px",
+              maxWidth: "calc(100% - 4px)",
+            },
           },
+
+          // 오버레이 팝업
           ".rbc-overlay": {
-            background: thisTheme.palette.background.default,   
+            background: thisTheme.palette.background.default,
             color: thisTheme.palette.text.primary,
             border: `1px solid ${thisTheme.palette.divider}`,
             borderRadius: 12,
             boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
             padding: 8,
-            zIndex: 2, 
+            zIndex: 2,
+            maxWidth: "min(360px, 90vw)",
           },
           ".rbc-overlay-header": {
             fontWeight: 700,
             padding: "6px 8px 8px",
             borderBottom: `none`,
-            textAlign: 'center',
+            textAlign: "center",
             marginBottom: 6,
           },
           ".rbc-overlay .rbc-event": {
-            borderRadius: 8,
-            height: 28,
+            borderRadius: 999,
+            height: 24,                // 팝업에서는 항상 정식 pill 형태
+            fontSize: 12,
+            padding: "0 6px",
+            display: "flex",
             alignItems: "center",
             justifyContent: "center",
+          },
+
+          // 모바일일 때 달력 셀 안 이벤트만 얇게
+          "@media (max-width:900px)": {
+            ".rbc-month-view .rbc-event": {
+              height: 6,
+              fontSize: 0,
+              borderRadius: 3,
+              padding: 0,
+            },
           },
         }}
       />
@@ -427,9 +465,9 @@ export default function DriverMonthlyComponent() {
       <Grid
         width={"100%"}
         justifyItems={"center"}
-        sx={{ bgcolor: thisTheme.palette.background.default, minHeight: 160 }}
+        sx={{ bgcolor: thisTheme.palette.background.default }}
       >
-        <Box pt={4}>
+        <Box pt={isSmaller900 ? 2 : 4}>
           <CommonTitle>월별 일정표</CommonTitle>
         </Box>
         <Grid
@@ -438,9 +476,14 @@ export default function DriverMonthlyComponent() {
           alignItems="center"
           justifyContent={"space-between"}
           width={"90%"}
-          pt={2}
+          pt={isSmaller900 ? 3 : 2}
+          pb={isSmaller900 ? 2 : 0}
         >
-          <Grid container direction="row" spacing={1} alignSelf={"flex-start"}>
+          <Grid
+            container
+            direction="row"
+            spacing={1}
+            alignSelf={"center"}>
             <Button
               variant="outlined"
               startIcon={<ChevronLeftIcon />}
@@ -448,8 +491,10 @@ export default function DriverMonthlyComponent() {
                 color: thisTheme.palette.primary.main,
                 backgroundColor: thisTheme.palette.background.paper,
                 borderColor: thisTheme.palette.primary.main,
+                fontSize: FONT_SIZE
               }}
               onClick={goPrev}
+              size={isSmaller900 ? "small" : "medium"}
             >
               지난달
             </Button>
@@ -460,7 +505,9 @@ export default function DriverMonthlyComponent() {
                 color: thisTheme.palette.primary.main,
                 backgroundColor: thisTheme.palette.background.paper,
                 borderColor: thisTheme.palette.primary.main,
+                fontSize: FONT_SIZE
               }}
+              size={isSmaller900 ? "small" : "medium"}
               onClick={goNext}
             >
               다음달
@@ -472,7 +519,7 @@ export default function DriverMonthlyComponent() {
               align="center"
               sx={{
                 fontFamily: "inherit",
-                fontSize: "1.2rem",
+                fontSize: FONT_SIZE_SMALL_TITLE,
                 fontWeight: "bold",
                 color: thisTheme.palette.primary.main,
                 m: 0,
@@ -541,11 +588,13 @@ export default function DriverMonthlyComponent() {
         events={events}
         startAccessor="start"
         endAccessor="end"
+        culture="ko"
+        formats={formats}
         defaultView="month"
         date={currentDate}
         views={["month"]}
         style={{
-          height: "calc(100vh - 240px)",
+          height: isSmaller900 ? "calc(100vh - 400px)" : "calc(100vh - 240px)",
           width: "90%",
           // margin: "0 auto",
           backgroundColor: thisTheme.palette.background.default
@@ -565,11 +614,19 @@ export default function DriverMonthlyComponent() {
         }}
         eventPropGetter={eventPropGetter}
         dayPropGetter={dayPropGetter}
-        components={{ month: { event: MonthEvent } }}
+        components={{ month: { event: MonthEventComponent } }}
         onSelectEvent={handleSelectEvent}
         min={startOfMonth(currentDate)}
         max={endOfMonth(currentDate)}
         popup
+        popupOffset={{ x: 8, y: 8 }}
+        dayLayoutAlgorithm={(events) => {
+          const limit = isSmaller900 ? 3 : 2;
+          return {
+            events: events.slice(0, limit),
+            extra: events.slice(limit),
+          };
+        }}
       />
 
       {/* 상세 모달 */}

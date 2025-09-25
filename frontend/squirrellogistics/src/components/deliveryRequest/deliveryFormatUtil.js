@@ -2,8 +2,13 @@ import { Typography } from '@mui/material';
 
 
 
-export function formatAddress(address) {
-  return address.length > 15 ? address.slice(0, 15) + '...' : address;
+export function formatAddress(address, isMobile) {
+  if (isMobile) {
+    return address.length > 10 ? address.slice(0, 10) + '...' : address;
+
+  } else {
+    return address.length > 15 ? address.slice(0, 15) + '...' : address;
+  }
 }
 
 function formatCreatedAt(createdAt, now = new Date()) {
@@ -100,10 +105,10 @@ export function formatDistanceKm(meters) {
   })}km`;
 };
 
-export function formatDeliveryDTO(dto) {
+export function formatDeliveryDTO(dto, isMobile = false) {
   return {
     request_id: dto.requestId,
-    title: `${formatAddress(dto.startAddress)} → ${formatAddress(dto.endAddress)}`,
+    title: `${formatAddress(dto.startAddress, isMobile)} → ${formatAddress(dto.endAddress, isMobile)}`,
     distance: `${formatDistanceKm(dto.distance)}`,
 
     profit: `수익: ${dto.estimatedFee.toLocaleString()}원`,

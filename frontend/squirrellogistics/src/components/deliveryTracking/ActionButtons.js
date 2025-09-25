@@ -2,9 +2,10 @@ import { Button, Grid, Stack, useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { postDriverAction } from '../../api/deliveryRequest/deliveryAssignmentAPI';
 import TwoButtonPopupComponent from '../deliveryRequest/TwoButtonPopupComponent'; // 경로는 프로젝트 구조에 맞춰 조정
+import { FONT_SIZE } from '../deliveryRequest/ListComponent';
 
 // props: data(=trackData), onRefresh(), onActionRun(fn) // onActionRun은 페이지 로딩 오버레이 래퍼
-export function ActionButtons({ data, onRefresh, onActionRun }) {
+export function ActionButtons({ data, onRefresh, onActionRun, isMobile }) {
   const last = data?.lastStatusLog || null;
   const status = last?.status || null;
 
@@ -69,10 +70,17 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
     status === 'MOVING_TO_WAYPOINT' ? Math.min((lastVisited ?? -1) + 1, finalNodeIndex) : null;
   const dropTargetIndex = status === 'ARRIVED_AT_WAYPOINT' ? lastVisited : null;
 
-  const arriveLabel =
-    rules.arrived && arriveTargetIndex != null ? `${labelForNode(arriveTargetIndex)} 도착` : '하차지 도착';
-  const dropLabel =
-    rules.dropped && dropTargetIndex != null ? `${labelForNode(dropTargetIndex)} 하차 완료` : '하차 완료';
+  const arriveLabel = isMobile
+    ? "도착"
+    : rules.arrived && arriveTargetIndex != null
+      ? `${labelForNode(arriveTargetIndex)} 도착`
+      : "하차지 도착";
+
+  const dropLabel = isMobile
+    ? "하차 완료"
+    : rules.dropped && dropTargetIndex != null
+      ? `${labelForNode(dropTargetIndex)} 하차 완료`
+      : "하차 완료";
 
   const assignedId = data?.assignedId;
 
@@ -165,23 +173,25 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
   return (
     <Grid container width="100%" direction="column">
       {/* 1줄 */}
-      <Grid container direction="row" justifyContent="space-between" mb={2}>
+      <Grid container direction="row"
+        justifyContent="space-between" mb={isMobile ? 1 : 2}>
         <Grid item width="30%">
           <Button
             fullWidth
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             disabled={disabledAll || !rules.startToPickup}
+            sx={{ fontSize: FONT_SIZE, }}
             onClick={() => doAction('START_TO_PICKUP')}
           >
-            집하지 이동 시작
+            {isMobile ? '이동 시작' : '집하지 이동 시작'}
           </Button>
         </Grid>
         <Grid item width="30%">
           <Button
             fullWidth
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             disabled={disabledAll || !rules.pickupCompleted}
-            // onClick={() => doAction('PICKUP_COMPLETED')}
+            sx={{ fontSize: FONT_SIZE }}
             onClick={() =>
               showConfirm('PICKUP_COMPLETED', {
                 mode: 'confirm',
@@ -191,14 +201,15 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
               })
             }
           >
-            화물 집하 완료
+            {isMobile ? '집하 완료' : '화물 집하 완료'}
           </Button>
         </Grid>
         <Grid item width="30%">
           <Button
             fullWidth
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             disabled={disabledAll || !rules.arrived}
+            sx={{ fontSize: FONT_SIZE }}
             onClick={() =>
               showConfirm('ARRIVED_AT_WAYPOINT', {
                 title: '도착 처리',
@@ -216,8 +227,9 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             disabled={disabledAll || !rules.dropped}
+            sx={{ fontSize: FONT_SIZE }}
             onClick={() =>
               showConfirm('DROPPED_AT_WAYPOINT', {
                 mode: 'confirm',
@@ -233,8 +245,9 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
         <Grid item width="30%">
           <Button
             fullWidth
-            variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+            variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
             disabled={disabledAll || !rules.complete}
+            sx={{ fontSize: FONT_SIZE }}
             onClick={() =>
               showConfirm('COMPLETE', {
                 title: '전체 운송 완료',
@@ -248,15 +261,15 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
               })
             }
           >
-            전체 운송 완료
+            {isMobile ? '운송 완료' : '전체 운송 완료'}
           </Button>
         </Grid>
         <Grid item width="30%">
           <Stack direction="row" spacing={1}>
             <Button
-              variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
+              variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
               color="error"
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, fontSize: FONT_SIZE }}
               disabled={disabledAll || !rules.skip}
               onClick={() =>
                 showConfirm('SKIPPED_WAYPOINT', {
@@ -269,50 +282,55 @@ export function ActionButtons({ data, onRefresh, onActionRun }) {
                       <br />
                       정산에 반영될 수 있습니다. 진행하시겠습니까?
                     </>
-                  ), next: buildNextRouteChoice() ,
+                  ), next: buildNextRouteChoice(),
                 })
               }
             >
-              하차지 건너뛰기
+              {isMobile ? '스킵' : '하차지 건너뛰기'}
             </Button>
-            <Button
-              variant={thisTheme.palette.mode==="light"?"outlined":"contained"}
-              color="error"
-              sx={{ flex: 1 }}
-              disabled={disabledAll}
-              onClick={() =>
-                showConfirm('PAUSE', {
-                  title: '정지/사고 발생',
-                  content: (
-                    <>
-                      운송을 일시 정지 처리합니다.
-                      <br />
-                      해당 조치는 의뢰자에게도 모니터링되며
-                      <br />
-                      정산에 반영될 수 있습니다. 진행하시겠습니까?
-                    </>
-                  ),
-                })
-              }
-            >
-              정지/사고 발생
-            </Button>
+            {!isMobile && (
+              <Button
+                variant={thisTheme.palette.mode === "light" ? "outlined" : "contained"}
+                color="error"
+                sx={{ flex: 1, fontSize: FONT_SIZE }}
+                disabled={disabledAll}
+                size={isMobile ? 'small' : 'medium'}
+                onClick={() =>
+                  showConfirm('PAUSE', {
+                    title: '정지/사고 발생',
+                    content: (
+                      <>
+                        운송을 일시 정지 처리합니다.
+                        <br />
+                        해당 조치는 의뢰자에게도 모니터링되며
+                        <br />
+                        정산에 반영될 수 있습니다. 진행하시겠습니까?
+                      </>
+                    ),
+                  })
+                }
+              >
+                정지/사고 발생
+              </Button>
+            )}
           </Stack>
         </Grid>
       </Grid>
 
       {/* 확인 팝업 */}
-      {confirmOpen && (
-        <TwoButtonPopupComponent
-          open={confirmOpen}
-          leftTxt={confirmMode === 'routeChoice' ? '정상경로' : '취소'}
-          rightTxt={confirmMode === 'routeChoice' ? '이탈경로' : '확인'}
-          onLeftClick={handleConfirmLeft}
-          onRightClick={handleConfirmRight}
-          title={confirmTitle}
-          content={confirmContent}
-        />
-      )}
-    </Grid>
+      {
+        confirmOpen && (
+          <TwoButtonPopupComponent
+            open={confirmOpen}
+            leftTxt={confirmMode === 'routeChoice' ? '정상경로' : '취소'}
+            rightTxt={confirmMode === 'routeChoice' ? '이탈경로' : '확인'}
+            onLeftClick={handleConfirmLeft}
+            onRightClick={handleConfirmRight}
+            title={confirmTitle}
+            content={confirmContent}
+          />
+        )
+      }
+    </Grid >
   );
 }

@@ -1,7 +1,7 @@
 import axios from "axios";
-import { API_SERVER_HOST } from "../deliveryRequest/deliveryRequestAPI";
+import API_SERVER_HOST from "../apiServerHost";
 
-const BASE = `${API_SERVER_HOST}/api/delivery/completed`;
+const BASE = `${API_SERVER_HOST}/delivery/completed`;
 
 // Authorization 헤더를 가져오는 함수
 const getAuthHeaders = () => {

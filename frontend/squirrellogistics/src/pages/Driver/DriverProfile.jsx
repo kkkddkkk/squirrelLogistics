@@ -20,6 +20,7 @@ import {
   Alert,
   useTheme,
   lighten,
+  useMediaQuery,
 } from "@mui/material";
 import { ReportProblemOutlined as ReportProblemOutlinedIcon } from "@mui/icons-material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -41,9 +42,12 @@ import {
   verifyPassword,
 } from "../../api/driver/driverApi";
 import { fetchRegisterReport } from "../../api/company/reportApi";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 const DriverProfile = () => {
   const thisTheme = useTheme();
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
+
   const navigate = useNavigate();
   const location = useLocation();
   const [driver, setDriver] = useState({
@@ -392,14 +396,14 @@ const DriverProfile = () => {
       minHeight: "100vh",
     }}>
       <Header />
-      <Container sx={{ maxWidth: "1000px", py: 6 }}>
+      <Container sx={{ maxWidth: "1000px", py: isSmaller900 ? 2 : 6 }}>
         <Typography
           variant="h3"
           component="h1"
           align="center"
           gutterBottom
           sx={{
-            mb: 6,
+            mb: isSmaller900 ? 2 : 6,
             fontWeight: "bold",
             color: "#757575",
           }}
@@ -409,7 +413,7 @@ const DriverProfile = () => {
         <Paper
           elevation={0}
           sx={{
-            mb: 5,
+            mb: isSmaller900 ? 1 : 5,
             position: "relative",
             borderRadius: 0,
             bgcolor: "transparent",
@@ -421,10 +425,10 @@ const DriverProfile = () => {
             sx={{
               position: "absolute",
               right: 26,
-              top: 15,
+              top: isSmaller900 ? 50 : 15,
               color: thisTheme.palette.primary.main,
               // "&:hover": { color: "#34699A" },
-              fontSize: "1rem",
+              fontSize: isSmaller900 ? "0.9rem" : "1rem",
               fontWeight: "bold",
               zIndex: 10,
             }}
@@ -432,65 +436,76 @@ const DriverProfile = () => {
             수정하기
           </Button>
 
-          <Box mb={4}>
+          <Box mb={isSmaller900 ? 8 : 4}>
             <CommonTitle>운전자 개인 정보</CommonTitle>
           </Box>
 
           {/* 2단 레이아웃 */}
-          <Box display="flex" sx={{
-            minHeight: "800px",
-            border: "1px solid",
-            borderColor: thisTheme.palette.mode === "light"
-              ? thisTheme.palette.secondary.light
-              : thisTheme.palette.primary.dark,
-          }}>
+          <Box display="flex"
+            sx={{
+              flexDirection: isSmaller900 ? "column" : "row",
+              minHeight: "800px",
+              border: "1px solid",
+              borderColor: thisTheme.palette.mode === "light"
+                ? thisTheme.palette.secondary.light
+                : thisTheme.palette.primary.dark,
+            }}>
             {/* 왼쪽 컬럼 - 어두운 배경 */}
             <Box
               sx={{
-                width: "35%",
+                width: isSmaller900 ? "100%" : "35%",
                 bgcolor: thisTheme.palette.primary.main,
                 color: "white",
                 p: 5,
                 display: "flex",
                 flexDirection: "column",
-
               }}
             >
-              {/* 프로필 사진 */}
-              <Box display="flex" justifyContent="center" mb={4}>
-                <ProfileImage
-                  imageUrl={`http://localhost:8080/api/public/driverImage/${profileImageUrl}`}
-                  alt="프로필 이미지"
-                  size={150}
-                  editable={false}
-                  showEditIcon={false}
-                  sx={{
-                    "& .MuiAvatar-root": {
-                      boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                    },
-                  }}
-                />
+              <Box
+                display="flex"
+                flexWrap={"wrap"}
+                alignItems={"center"}
+                justifyContent={isSmaller900 ? "space-between" : "center"}
+                sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+              >
+                {/* 프로필 사진 */}
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  mb={4}
+                  textAlign={"center"}
+                >
+                  <ProfileImage
+                    imageUrl={`${API_SERVER_HOST}/public/driverImage/${profileImageUrl}`}
+                    alt="프로필 이미지"
+                    size={isSmaller900 ? 80 : 150}
+                    editable={false}
+                    showEditIcon={false}
+                    sx={{
+                      "& .MuiAvatar-root": {
+                        boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* 이름 */}
+                <Typography
+                  variant={isSmaller900 ? "h6" : "h4"}
+                  fontWeight="bold"
+                  textAlign="center"
+                  sx={{ mb: 4 }}
+                >
+                  {driver.name} 기사님
+                </Typography>
               </Box>
 
-              {/* 이름 */}
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                textAlign="center"
-                sx={{ mb: 4 }}
-              >
-                {driver.name} 기사님
-              </Typography>
 
               {/* 개인 정보 영역 */}
               {hasUserInfo() ? (
                 <>
                   <Box sx={{ mb: 4 }}>
-                    <Typography
-                      variant="h5"
-                      fontWeight="bold"
-                      sx={{ mb: 2, color: "white" }}
-                    >
+                    <Typography variant={isSmaller900 ? "h6" : "h5"} fontWeight="bold" sx={{ mb: isSmaller900 ? 1 : 2 }}>
                       개인 정보
                     </Typography>
                     <Box
@@ -499,12 +514,16 @@ const DriverProfile = () => {
                         mb: 3,
                       }}
                     />
-                    <Stack spacing={3}>
-                      <Box>
+                    <Stack spacing={isSmaller900 ? 0 : 3}>
+                      <Box
+                        display="flex"
+                        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+                        sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+                      >
                         <Typography
                           variant="body2"
                           color="rgba(255,255,255,0.6)"
-                          sx={{ mb: 1 }}
+                          sx={{ mb: isSmaller900 ? 0 : 1 }}
                         >
                           생년월일
                         </Typography>
@@ -512,11 +531,15 @@ const DriverProfile = () => {
                           {driver.birth}
                         </Typography>
                       </Box>
-                      <Box>
+                      <Box
+                        display="flex"
+                        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+                        sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+                      >
                         <Typography
                           variant="body2"
                           color="rgba(255,255,255,0.6)"
-                          sx={{ mb: 1 }}
+                          sx={{ mb: isSmaller900 ? 0 : 1 }}
                         >
                           연락처
                         </Typography>
@@ -524,11 +547,15 @@ const DriverProfile = () => {
                           {driver.phone}
                         </Typography>
                       </Box>
-                      <Box>
+                      <Box
+                        display="flex"
+                        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+                        sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+                      >
                         <Typography
                           variant="body2"
                           color="rgba(255,255,255,0.6)"
-                          sx={{ mb: 1 }}
+                          sx={{ mb: isSmaller900 ? 0 : 1 }}
                         >
                           이메일
                         </Typography>
@@ -541,7 +568,7 @@ const DriverProfile = () => {
 
                   {/* 사업 정보 영역 */}
                   <Box sx={{ mb: 4 }}>
-                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+                    <Typography variant={isSmaller900 ? "h6" : "h5"} fontWeight="bold" sx={{ mb: isSmaller900 ? 1 : 2 }}>
                       사업 정보
                     </Typography>
                     <Box
@@ -550,12 +577,16 @@ const DriverProfile = () => {
                         mb: 3,
                       }}
                     />
-                    <Stack spacing={3}>
-                      <Box>
+                    <Stack spacing={isSmaller900 ? 0 : 3}>
+                      <Box
+                        display="flex"
+                        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+                        sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+                      >
                         <Typography
                           variant="body2"
                           color="rgba(255,255,255,0.6)"
-                          sx={{ mb: 1 }}
+                          sx={{ mb: isSmaller900 ? 0 : 1 }}
                         >
                           계좌번호
                         </Typography>
@@ -563,7 +594,11 @@ const DriverProfile = () => {
                           {driver.bankAccount}
                         </Typography>
                       </Box>
-                      <Box>
+                      <Box
+                        display="flex"
+                        justifyContent={isSmaller900 ? "space-between" : "flex-start"}
+                        sx={{ flexDirection: isSmaller900 ? "row" : "column", }}
+                      >
                         <Typography
                           variant="body2"
                           color="rgba(255,255,255,0.6)"
@@ -685,25 +720,25 @@ const DriverProfile = () => {
             {/* 오른쪽 컬럼 - 흰색 배경 */}
             <Box
               sx={{
-                width: "65%",
+                width: isSmaller900 ? "100%" : "65%",
                 bgcolor: thisTheme.palette.background.paper,
-                p: 5,
+                p: isSmaller900 ? 2 : 5,
                 border: `1px solid ${thisTheme.palette.mode === "light"
-                      ? thisTheme.palette.secondary.light
-                      : thisTheme.palette.background.default}`,
-                
+                  ? thisTheme.palette.secondary.light
+                  : thisTheme.palette.background.default}`,
+
               }}
             >
               {/* 차량 정보 */}
-              <Box sx={{ mb: 5 }}>
-                <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: isSmaller900 ? 2 : 5 }}>
+                <Box sx={{ mb: isSmaller900 ? 2 : 4 }}>
                   <CommonSubTitle>차량 정보</CommonSubTitle>
                 </Box>
 
                 {/* 항상 "차량 조회하기" 버튼으로 표시 */}
                 <Box
                   sx={{
-                    p: 10,
+                    p: isSmaller900 ? 3 : 10,
                     bgcolor: thisTheme.palette.mode === "light"
                       ? thisTheme.palette.secondary.light
                       : thisTheme.palette.background.default,
@@ -725,32 +760,35 @@ const DriverProfile = () => {
                 >
                   <LocalShippingIcon
                     sx={{
-                      fontSize: 100,
-                      mb: 3,
+                      fontSize: isSmaller900 ? 40 : 100,
+                      mb: isSmaller900 ? 0 : 3,
                       color: thisTheme.palette.primary.main,
                     }}
                   />
                   <Typography
-                    variant="h4"
+                    variant={isSmaller900 ? "h6" : "h4"}
                     color={thisTheme.palette.text.secondary}
-                    sx={{ mb: 3, fontWeight: "bold" }}
+                    sx={{ mb: isSmaller900 ? 0 : 3, fontWeight: "bold" }}
                   >
                     차량 조회하기
                   </Typography>
-                  <Typography variant="h6" color={thisTheme.palette.text.secondary}>
-                    차량 정보를 조회하고 관리할 수 있습니다
-                  </Typography>
+                  {!isSmaller900 && (
+                    <Typography variant={isSmaller900 ? "body6" : "h6"}
+                      color={thisTheme.palette.text.secondary}>
+                      차량 정보를 조회하고 관리할 수 있습니다
+                    </Typography>
+                  )}
                 </Box>
               </Box>
 
               {/* 일정 관리 */}
               <Box>
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: isSmaller900 ? 2 : 4 }}>
                   <CommonSubTitle>일정 관리</CommonSubTitle>
                 </Box>
                 <Box
                   sx={{
-                    p: 10,
+                    p: isSmaller900 ? 3 : 10,
                     bgcolor: thisTheme.palette.mode === "light"
                       ? thisTheme.palette.secondary.light
                       : thisTheme.palette.background.default,
@@ -776,21 +814,23 @@ const DriverProfile = () => {
                 >
                   <EditCalendarIcon
                     sx={{
-                      fontSize: 100,
-                      mb: 3,
+                      fontSize: isSmaller900 ? 40 : 100,
+                      mb: isSmaller900 ? 0 : 3,
                       color: thisTheme.palette.primary.main,
                     }}
                   />
                   <Typography
-                    variant="h4"
+                    variant={isSmaller900 ? "h6" : "h4"}
                     color={thisTheme.palette.text.secondary}
-                    sx={{ mb: 3, fontWeight: "bold" }}
+                    sx={{ mb: isSmaller900 ? 0 : 3, fontWeight: "bold" }}
                   >
                     일정 관리하기
                   </Typography>
-                  <Typography variant="h6" color={thisTheme.palette.text.secondary}>
-                    달력에서 일정을 확인하고 관리할 수 있습니다
-                  </Typography>
+                  {!isSmaller900 && (
+                    <Typography variant="h6" color={thisTheme.palette.text.secondary}>
+                      달력에서 일정을 확인하고 관리할 수 있습니다
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </Box>
