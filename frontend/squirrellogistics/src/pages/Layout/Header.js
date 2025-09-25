@@ -40,6 +40,7 @@ export default function Header() {
   const closeMenu = () => setAnchorEl(null);
 
   useEffect(() => {
+    console.log(process.env.REACT_APP_API_BASE);
     const onStorage = () => {
       setUser({
         name: localStorage.getItem("userName") || null,
