@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.gpt.squirrelLogistics.controller.answer.AnswerController.RequestAnswerDto;
 import com.gpt.squirrelLogistics.dto.banner.BannerListDTO;
 import com.gpt.squirrelLogistics.dto.banner.CreateBannerDTO;
+import com.gpt.squirrelLogistics.gitImageUpload.GitHubUploader;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
 import com.gpt.squirrelLogistics.repository.admin.AdminUserRepository;
 import com.gpt.squirrelLogistics.service.banner.BannerService;
@@ -49,6 +50,7 @@ public class BannerController {
 	private final BannerService bannerService;
 	private final AdminUserRepository adminUserRepository;
 	private final String uploadDir = new File("uploads").getAbsolutePath() + "/banner/";
+	private final GitHubUploader gitHubUploader;
 
 	@Getter
 	@Setter
@@ -84,6 +86,8 @@ public class BannerController {
 			@RequestParam("subTitle") String subTitle, @RequestParam("noticeId") Long noticeId) {
 
 		try {
+			// GitHub 업로드 -> raw Url 얻기
+			String rawUrl = gitHubUploader.uploadImage(img.getBytes(), img.getOriginalFilename());
 
 			String filePath = uploadDir + img.getOriginalFilename();
 			File dest = new File(filePath);
@@ -93,8 +97,11 @@ public class BannerController {
 			Long userId = findUserByTokenService.getUserIdByToken(token);
 			Long adminId = adminUserRepository.findAdminIdByUserId(userId).orElseThrow();
 
-			CreateBannerDTO dto = CreateBannerDTO.builder().imageUrl(img.getOriginalFilename()).title(title)
-					.subTitle(subTitle).noticeId(noticeId).build();
+//			CreateBannerDTO dto = CreateBannerDTO.builder().imageUrl(img.getOriginalFilename()).title(title)
+//					.subTitle(subTitle).noticeId(noticeId).build();
+			// 파일명이 아니라 raw URL 저장
+			CreateBannerDTO dto = CreateBannerDTO.builder().imageUrl(rawUrl).title(title).subTitle(subTitle)
+					.noticeId(noticeId).build();
 
 			Long bannerId = bannerService.createBanner(dto, adminId);
 
@@ -114,11 +121,14 @@ public class BannerController {
 		try {
 			String imageUrl = null;
 			if (img != null && !img.isEmpty()) {
-				String filePath = uploadDir + img.getOriginalFilename();
-				File dest = new File(filePath);
-				dest.getParentFile().mkdirs();
-				img.transferTo(dest);
-				imageUrl = img.getOriginalFilename();
+//				String filePath = uploadDir + img.getOriginalFilename();
+//				File dest = new File(filePath);
+//				dest.getParentFile().mkdirs();
+//				img.transferTo(dest);
+//				imageUrl = img.getOriginalFilename();
+				
+				// 새 이미지 업로드 시에만 갱신
+                imageUrl = gitHubUploader.uploadImage(img.getBytes(), img.getOriginalFilename());
 			}
 
 			Long userId = findUserByTokenService.getUserIdByToken(token);
@@ -138,9 +148,8 @@ public class BannerController {
 
 	@DeleteMapping
 	@TimedEndpoint("deleteBanner")
-	public void modifyBanner(@RequestHeader("Authorization") String token,
-			@RequestParam("bannerId") Long bannerId) {
-		
+	public void modifyBanner(@RequestHeader("Authorization") String token, @RequestParam("bannerId") Long bannerId) {
+
 		bannerService.deleteBanner(bannerId);
 	}
 

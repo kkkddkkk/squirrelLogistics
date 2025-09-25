@@ -101,7 +101,8 @@ export default function Body({ fullBleed = false }) {
                                 {/* 배경 이미지 */}
                                 <Box
                                     component="img"
-                                    src={`${API_SERVER_HOST}/public/banner/${b.imageUrl}`}
+                                    src={`${b.imageUrl}`}
+                                    // src={`${API_SERVER_HOST}/public/banner/${b.imageUrl}`}
                                     alt={b.title}
                                     loading="lazy"
                                     decoding="async"
