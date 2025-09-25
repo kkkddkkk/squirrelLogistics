@@ -279,31 +279,37 @@
       <th>이름</th>
       <th>담당 영역</th>
       <th>핵심 기여</th>
+      <th>Git Hub</th>
     </tr>
     <tr>
       <td nowrap><nobr>고은설</nobr></td>
       <td>실시간 위치 추적, 요청 목록, 캘린더(이용기록/기사 일정), 관리자단 공지/정산 관리</td>
       <td>WebSocket 실시간 트래킹, 요청 리스트/필터, 일정 캘린더, 관리자 공지·정산 대시보드</td>
+      <td nowrap><a href="">[바로가기]</a></td>
     </tr>
     <tr>
-       <td nowrap><nobr>김도경</nobr></td>
+      <td nowrap><nobr>김도경</nobr></td>
       <td>결제/실계산, 이용기록, 리뷰, 신고/문의, 관리자단 신고/배너 관리</td>
       <td>PortOne 결제·영수증, 1차/2차 정산 로직, 기록/리뷰/신고 도메인 + 관리자 배너 운영</td>
+      <td nowrap><a href="">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>이준원</nobr></td>
       <td>메인, 로그인, 공통 Header/Footer, 관리자단 회원/차량/정책 관리</td>
       <td>통합 네비게이션/레이아웃 설계, 인증 플로우 구현, 관리자 정책 관리 UI/CRUD</td>
+      <td nowrap><a href="">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>임수현</nobr></td>
       <td>차량 정보, 운송 내역, 기사 정보, 신고/문의</td>
       <td>차량 등록/상태 관리, 운송 기록·상세, 기사 프로필, 문의/신고 UX</td>
+      <td nowrap><a href="">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>정윤진</nobr></td>
       <td>예상 금액 산정, 기사 요청/배송 조회, 회사 정보</td>
       <td>거리·무게 기반 요금 산정, 기사 검색/지명, 회사 정보 화면 및 상태관리</td>
+      <td nowrap><a href="">[바로가기]</a></td>
     </tr>
   </table>
 </p>
