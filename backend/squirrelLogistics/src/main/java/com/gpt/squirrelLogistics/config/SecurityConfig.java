@@ -33,12 +33,12 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsSource() {
 		CorsConfiguration cors = new CorsConfiguration();
-		cors.setAllowedOriginPatterns(Arrays.asList(
-			    "http://localhost:3000",
-			    "https://squirrellogistics-bji1mff2u-teamgpts-projects.vercel.app",   // 프론트 배포 주소.
-			    "https://squirrellogistics.onrender.com"  // 백엔드 배포 주소.
-			));		cors.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE")); 
-																									
+		cors.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", // 로컬 개발용
+				"https://squirrellogistics.vercel.app", // 고정 프로덕션 프론트
+				"https://*.vercel.app" // Vercel preview (커밋별 배포)
+		));
+		cors.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"));
+
 		cors.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
 		cors.setAllowCredentials(true);
 
@@ -58,15 +58,24 @@ public class SecurityConfig {
 
 						// ✅ 공개 엔드포인트 (로그인, 회원가입, 메타, 차량종류, 중복확인, 기사 관련 등)
 						.requestMatchers("/api/auth/login", "/api/auth/register/**", "/api/public/**",
-								"/api/vehicle-types/**", "/api/auth/exists/**", "/api/driver/**", "/api/search-drivers/**", "/error", "/oauth/kakao/**", "/api/auth/oauth/google", // 스프링 기본 에러 페이지 허용 (의외로 필요한 경우
+								"/api/vehicle-types/**", "/api/auth/exists/**", "/api/driver/**",
+								"/api/search-drivers/**", "/error", "/oauth/kakao/**", "/api/auth/oauth/google", // 스프링
+																													// 기본
+																													// 에러
+																													// 페이지
+																													// 허용
+																													// (의외로
+																													// 필요한
+																													// 경우
 								"/api/company/password/reset/**", // 비밀번호 재설정 관련 엔드포인트 공개 허용
 								"/api/company/verify", // 본인인증 엔드포인트 공개 허용
 								"/api/company/auth/social-complete" // 소셜 재인증 완료 엔드포인트 공개 허용
-																							// 있음)
+																	// 있음)
 						).permitAll()
 						// 드라이버 측 요청 확인.
-						.requestMatchers("/api/delivery/requests/**","/api/delivery/assignments/**", "/api/delivery/proposals/**").permitAll()
-						.requestMatchers("/ws/**", "/api/route/live").permitAll()
+						.requestMatchers("/api/delivery/requests/**", "/api/delivery/assignments/**",
+								"/api/delivery/proposals/**")
+						.permitAll().requestMatchers("/ws/**", "/api/route/live").permitAll()
 						// 그 외는 인증 필요
 						.anyRequest().authenticated())
 				// 401/403 명확히 구분해서 응답
