@@ -3,23 +3,16 @@ import {
   Box,
   Typography,
   Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
   Button,
-  IconButton,
-  CircularProgress,
   Alert,
   Paper,
   useTheme,
   lighten,
   Grid,
+  useMediaQuery,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useNavigate, useParams } from "react-router-dom";
-import DeliveryRouteMap from "../../components/driver/DeliveryRouteMap";
 import { fetchDeliveryDetail } from "../../api/deliveryRequest/deliveryCompletedAPI";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
@@ -27,14 +20,12 @@ import dayjs from "dayjs";
 import PolylineMapComponent from "../../components/deliveryMap/PolylineMapComponent";
 
 import { theme } from "../../components/common/CommonTheme";
-import {
-  CommonTitle,
-  CommonSubTitle,
-} from "../../components/common/CommonText";
 import LoadingComponent from "../../components/common/LoadingComponent";
 
 const DeliveredDetail = () => {
   const thisTheme = useTheme();
+  const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
+
   const navigate = useNavigate();
   const { assignedId } = useParams();
   const [deliveryData, setDeliveryData] = useState(null);
@@ -56,43 +47,25 @@ const DeliveredDetail = () => {
     setLoading(true);
     const loadDeliveryDetail = async () => {
       try {
-        //console.log("API 호출 시작:", assignedId);
-
         // 운송 상세 정보 조회 (기존 DTO들을 조합한 Map 사용)
         const data = await fetchDeliveryDetail(assignedId);
 
-        // console.log("=== API 응답 데이터 ===");
-        // console.log("전체 데이터:", data);
-
         // 새로운 응답 구조에서 데이터 추출
-        const additionalInfo = data?.additionalInfo || {};
-        const request = data?.request || {};
         const actualDelivery = data?.actualDelivery || {};
-        //const waypoints = data?.waypoints || [];
         const rawWaypoints = data?.waypoints || [];
-
-        // console.log("additionalInfo:", additionalInfo);
-        // console.log("request:", request);
-        // console.log("actualDelivery:", actualDelivery);
-        // console.log("waypoints:", waypoints);
-        // console.log("URL 파라미터 assignedId:", assignedId);
 
         setDeliveryData(data);
         setDistanceWeight({
           distance: actualDelivery.distance || 0,
           weight: actualDelivery.weight || 0,
         });
-        //setWaypoints(waypoints.map((wp) => wp.address || wp.waypointId));
 
         // 지도 표시용 주소 배열 (dropOrder 기준 정렬)
         const sortedWps = [...rawWaypoints].sort(
-          (a, b) =>
-            (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
+          (a, b) => (a?.waypoint?.dropOrder ?? 0) - (b?.waypoint?.dropOrder ?? 0)
         );
         setMapAddresses(sortedWps.map((w) => w?.waypoint?.address || ""));
       } catch (err) {
-        // console.error("운송 상세 정보 로드 실패:", err);
-        // console.error("오류 상세:", err.response?.data || err.message);
         setError(`운송 상세 정보를 불러오는데 실패했습니다: ${err.message}`);
       } finally {
         setLoading(false);
@@ -105,13 +78,6 @@ const DeliveredDetail = () => {
   }, [assignedId]);
 
   const formatPrice = (price) => `₩${price?.toLocaleString() || 0}`;
-  const formatDate = (dateString) => {
-    return dayjs(dateString).format("YYYY.MM.DD");
-  };
-
-  const formatTime = (dateString) => {
-    return dayjs(dateString).format("HH:mm");
-  };
 
   // 요금 계산 함수
   const calculateFees = (deliveryData) => {
@@ -159,13 +125,7 @@ const DeliveredDetail = () => {
     const cautionFee = caution ? 50000 : 0;
 
     // 총 요금
-    const totalFee =
-      baseFee +
-      distanceFee +
-      weightFee +
-      waypointFee +
-      mountainousFee +
-      cautionFee;
+    const totalFee = baseFee + distanceFee + weightFee + waypointFee + mountainousFee + cautionFee;
 
     return {
       baseFee,
@@ -178,44 +138,13 @@ const DeliveredDetail = () => {
     };
   };
 
-  const tableStyle = {
-    backgroundColor: theme.palette.background.paper,
-    "& .MuiTableCell-root": {
-      borderBottom: `1px solid ${theme.palette.primary.light}`,
-      borderRight: "none",
-    },
-  };
-
-  const handleIconClick = () => {
-    navigate("/admin/Support/Policy/PolicyPage");
-  };
-
   if (loading) {
-    return (
-      <Box
-        sx={{
-          bgcolor: thisTheme.palette.background.default,
-          minHeight: "100vh",
-        }}
-      >
-        <Header />
-        <LoadingComponent
-          open
-          text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`}
-        />
-        <Footer />
-      </Box>
-    );
+    return (<LoadingComponent open text={`운송 번호 #${assignedId}의 상세내역을 불러오는 중...`} />);
   }
 
   if (error) {
     return (
-      <Box
-        sx={{
-          bgcolor: thisTheme.palette.background.default,
-          minHeight: "100vh",
-        }}
-      >
+      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh", }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="error" sx={{ mb: 4 }}>
@@ -229,12 +158,7 @@ const DeliveredDetail = () => {
 
   if (!deliveryData) {
     return (
-      <Box
-        sx={{
-          bgcolor: thisTheme.palette.background.default,
-          minHeight: "100vh",
-        }}
-      >
+      <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh", }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Alert severity="warning">운송 데이터를 찾을 수 없습니다.</Alert>
@@ -243,64 +167,6 @@ const DeliveredDetail = () => {
       </Box>
     );
   }
-
-  // ✅ 경로 정보 구성 - 올바른 데이터 구조 사용
-  // const buildRouteInfo = () => {
-  //   const info = [];
-
-  //   // 1. 상차지 (시작점)
-  //   const startAddress =
-  //     deliveryData.request?.startAddress ||
-  //     deliveryData.additionalInfo?.startAddress ||
-  //     "상차지 정보 없음";
-  //   const startTime = formatTime(
-  //     deliveryData.assignment?.assignedAt ||
-  //     deliveryData.additionalInfo?.assignedAt
-  //   );
-
-  //   info.push({
-  //     location: startAddress,
-  //     time: startTime,
-  //     status: "completed", // 상차 완료
-  //   });
-
-  //   // 2. 경유지들 (중간점들) - dropOrder 순서대로
-  //   if (waypoints && waypoints.length > 0) {
-  //     waypoints.forEach((waypoint, index) => {
-  //       info.push({
-  //         location: waypoint || `경유지 ${index + 1}`,
-  //         time: "시간 미정",
-  //         status: "waypoint", // 경유지
-  //         waypointNumber: index + 1,
-  //       });
-  //     });
-  //   }
-
-  //   // 3. 하차지 (도착점)
-  //   const endAddress =
-  //     deliveryData.request?.endAddress ||
-  //     deliveryData.additionalInfo?.endAddress ||
-  //     "하차지 정보 없음";
-  //   const endTime = formatTime(
-  //     deliveryData.assignment?.completedAt ||
-  //     deliveryData.additionalInfo?.completedAt
-  //   );
-
-  //   info.push({
-  //     location: endAddress,
-  //     time: endTime,
-  //     status: "completed", // 하차 완료
-  //   });
-
-  //   console.log("=== 구성된 routeInfo ===");
-  //   console.log("routeInfo:", info);
-  //   console.log(
-  //     "locations for map:",
-  //     info.map((r) => r.location)
-  //   );
-
-  //   return info;
-  // };
 
   const buildRouteInfo = () => {
     const wps = (deliveryData?.waypoints || [])
@@ -323,8 +189,8 @@ const DeliveredDetail = () => {
         label: isStart
           ? "상차 완료"
           : isEnd
-          ? "하차 완료"
-          : `경유지 ${dropOrder}`,
+            ? "하차 완료"
+            : `경유지 ${dropOrder}`,
         location: w?.waypoint?.address || "-",
         time: timeStr,
         isStart,
@@ -340,179 +206,31 @@ const DeliveredDetail = () => {
   const routeInfo = buildRouteInfo();
   const fees = calculateFees(deliveryData);
 
-  // 타임라인 아이템 렌더링 함수
-  const renderTimelineItem = (item, index) => {
-    const isCompleted = item.status === "completed";
-    const isWaypoint = item.status === "waypoint";
-
-    let label = "";
-    if (index === 0) {
-      label = "상차 완료";
-    } else if (index === routeInfo.length - 1) {
-      label = "하차 완료";
-    } else {
-      label = `경유지 ${item.waypointNumber}`;
-    }
-
+  const SpaceBetween = ({ children }) => {
     return (
       <Box
-        key={index}
         sx={{
           display: "flex",
-          alignItems: "flex-start",
-          mb: 1.8,
-          position: "relative",
+          justifyContent: "space-between",
+          alignItems: "center",
+          py: 1,
         }}
       >
-        {/* 왼쪽: 마커와 연결선 영역 */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            mr: 2,
-            position: "relative",
-            width: 40,
-          }}
-        >
-          {/* 마커 */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              ...(isCompleted
-                ? {
-                    bgcolor: thisTheme.palette.success.main,
-                    color: "white",
-                  }
-                : {
-                    bgcolor: thisTheme.palette.text.secondary,
-                    color: "white",
-                  }),
-              zIndex: 2,
-              position: "relative",
-            }}
-          >
-            {isCompleted ? (
-              <CheckIcon sx={{ fontSize: 20, color: "white" }} />
-            ) : (
-              <Typography
-                variant="body1"
-                sx={{
-                  fontWeight: "bold",
-                  color: "white",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {item.waypointNumber}
-              </Typography>
-            )}
-          </Box>
-
-          {/* 연결선 (마지막 아이템이 아닌 경우) */}
-          {index < routeInfo.length - 1 && (
-            <Box
-              sx={{
-                width: 2,
-                height: 45,
-                bgcolor: thisTheme.palette.text.secondary,
-                position: "absolute",
-                top: 40,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 1,
-              }}
-            />
-          )}
-        </Box>
-
-        {/* 내용과 시간 영역 */}
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            mt: 0.2,
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
-            {/* 상단: 제목과 시간을 한 줄에 */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 0.8,
-              }}
-            >
-              <Typography
-                variant="body1"
-                sx={{
-                  fontWeight: "bold",
-                  color: "#2A2A2A",
-                  fontSize: "1rem",
-                }}
-              >
-                {label}
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  fontWeight: "bold",
-                  color: "#2A2A2A",
-                  fontSize: "1rem",
-                }}
-              >
-                {item.time}
-              </Typography>
-            </Box>
-
-            {/* 하단: 주소 박스 */}
-            <Box
-              sx={{
-                bgcolor: "white",
-                borderRadius: 1,
-                px: 1.5,
-                py: 1,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                border: "1px solid #E8E8E8",
-                width: "fit-content",
-                minWidth: "180px",
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#333",
-                  lineHeight: 1.3,
-                  fontSize: "0.875rem",
-                }}
-              >
-                {item.location}
-              </Typography>
-              {/* 화물 정보: 상차지(dropOrder 0)는 없음, 그 외에 cargo 있으면 표시 */}
-              {!item.isFirst && item.cargo && (
-                <Typography
-                  variant="body2"
-                  sx={{ color: thisTheme.palette.text.secondary, mt: 0.5 }}
-                >
-                  하차 화물: {item.cargo.description}
-                  {item.cargo.handlingTags
-                    ? ` · ${item.cargo.handlingTags}`
-                    : ""}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-        </Box>
+        {children}
       </Box>
     );
-  };
+  }
+
+  const Body1 = ({ children }) => {
+    return (
+      <Typography
+        variant="body1"
+        color={thisTheme.palette.text.primary}
+      >
+        {children}
+      </Typography>
+    );
+  }
 
   return (
     <Box
@@ -523,14 +241,11 @@ const DeliveredDetail = () => {
         <Container maxWidth="lg">
           {/* 운송 번호 헤더 */}
           <Grid
-            container
-            direction={"row"}
-            justifyContent={"space-between"}
-            alignContent={"end"}
+            container direction={"row"}
+            justifyContent={"space-between"} alignContent={"end"}
             sx={{
               borderBottom: `1px solid ${thisTheme.palette.primary.main}`,
-              pb: 2,
-              mb: 4,
+              pb: 2, mb: 4,
             }}
           >
             <Typography
@@ -551,241 +266,187 @@ const DeliveredDetail = () => {
           </Grid>
 
           {/* 메인 콘텐츠 영역 */}
-          <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
-            {/* 왼쪽: 운송 단계 타임라인 */}
-            <Box sx={{ width: "45%" }}>
-              {/* 타임라인 */}
-              <Box>
-                {routeInfo.map((item, index) => (
+          <Grid container gap={4} marginBottom={4}>
+            <Grid size={isMobile?12:5}>
+              {/* <Box> */}
+              {routeInfo.map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex", mb: 2.5,
+                    position: "relative", alignItems: "stretch",
+                    width: "100%"
+                  }}
+                >
+                  {/* 왼쪽: 마커와 연결선 영역 */}
                   <Box
-                    key={index}
                     sx={{
                       display: "flex",
-                      mb: 2.5,
-                      position: "relative",
+                      flexDirection: "column",
                       alignItems: "stretch",
-                    }}
-                  >
-                    {/* 왼쪽: 마커와 연결선 영역 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "stretch",
-                        mr: 2.5,
-                        position: "relative",
-                        width: 40,
-                        ...(index === routeInfo.length - 1
-                          ? {}
-                          : {
-                              "&::after": {
-                                content: '""',
-                                position: "absolute",
-                                left: "50%",
-                                transform: "translateX(-50%)",
-                                top: 40, // 마커 원 아래
-                                // 아이템 간 간격(mb: 2.5)만큼 더 내려서 다음 마커에 정확히 닿게
-                                bottom: `-${thisTheme.spacing(2.5)}`,
-                                width: 3,
-                                backgroundColor: lighten(
-                                  thisTheme.palette.text.secondary,
-                                  0.7
-                                ),
-                                zIndex: 1,
-                              },
-                            }),
-                      }}
-                    >
-                      {/* 마커 */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          bgcolor: item.isMiddle
-                            ? thisTheme.palette.text.secondary
-                            : thisTheme.palette.success.main,
-                          color: "white",
-                          zIndex: 2,
-                          position: "relative",
-                        }}
-                      >
-                        {/* {item.status === "completed" ? (
-                          <CheckIcon sx={{ fontSize: 20, color: "white" }} />
-                        ) : (
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: "bold",
-                              color: "white",
-                              fontSize: "0.9rem",
-                            }}
-                          >
-                            {item.waypointNumber}
-                          </Typography>
-                        )} */}
-                        {item.isMiddle ? (
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: "bold",
-                              color: "white",
-                              fontSize: "0.9rem",
-                            }}
-                          >
-                            {item.markerNumber}
-                          </Typography>
-                        ) : (
-                          <CheckIcon sx={{ fontSize: 20, color: "white" }} />
-                        )}
-                      </Box>
-
-                      {/* 연결선 */}
-                      {index < routeInfo.length - 1 ? (
-                        <Box
-                          sx={{
+                      mr: 2.5, position: "relative", width: 40,
+                      ...(index === routeInfo.length - 1
+                        ? {} : {
+                          "&::after": {
+                            content: '""',
+                            position: "absolute", transform: "translateX(-50%)",
+                            left: "50%", top: 40, // 마커 원 아래
+                            // 아이템 간 간격(mb: 2.5)만큼 더 내려서 다음 마커에 정확히 닿게
+                            bottom: `-${thisTheme.spacing(2.5)}`,
                             width: 3,
-                            height: 80,
-                            bgcolor: lighten(
-                              thisTheme.palette.text.secondary,
-                              0.1
-                            ),
-                            position: "absolute",
-                            top: 40,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            zIndex: 1,
-                          }}
-                        />
-                      ) : (
-                        // 마지막 아이템에도 긴 선 추가
-                        <Box
-                          sx={{
-                            width: 3,
-                            height: 60,
-                            bgcolor: lighten(
+                            backgroundColor: lighten(
                               thisTheme.palette.text.secondary,
                               0.7
-                            ),
-                            position: "absolute",
-                            top: 40,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            zIndex: 1,
+                            ), zIndex: 1,
+                          },
+                        }),
+                    }}>
+                    {/* 마커 */}
+                    <Box
+                      sx={{
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        width: 40, height: 40,
+                        borderRadius: "50%",
+                        bgcolor: item.isMiddle
+                          ? thisTheme.palette.text.secondary
+                          : thisTheme.palette.success.main,
+                        color: "white", zIndex: 2, position: "relative",
+                      }}
+                    >
+                      {item.isMiddle ? (
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: "bold",
+                            color: "white",
+                            fontSize: "0.9rem",
                           }}
-                        />
+                        >
+                          {item.markerNumber}
+                        </Typography>
+                      ) : (
+                        <CheckIcon sx={{ fontSize: 20, color: "white" }} />
                       )}
                     </Box>
 
-                    {/* 내용과 시간 영역 */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mt: 0.5,
+                    {/* 연결선 */}
+                    {index < routeInfo.length - 1 ? (
+                      <Box
+                        sx={{
+                          width: 3,
+                          height: 80,
+                          bgcolor: lighten(
+                            thisTheme.palette.text.secondary,
+                            0.1
+                          ),
+                          position: "absolute",
+                          top: 40,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          zIndex: 1,
+                        }}
+                      />
+                    ) : (
+                      // 마지막 아이템에도 긴 선 추가
+                      <Box sx={{
+                        width: 3, height: 60,
+                        bgcolor: lighten(thisTheme.palette.text.secondary, 0.7),
+                        position: "absolute",
+                        top: 40, left: "50%",
+                        transform: "translateX(-50%)",
+                        zIndex: 1,
                       }}
-                    >
-                      <Box sx={{ flex: 1 }}>
-                        {/* 상단: 제목과 시간을 한 줄에 */}
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            mb: 1,
-                          }}
-                        >
-                          {/* <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: "bold",
-                              color: thisTheme.palette.text.primary,
-                              fontSize: "1.1rem",
-                            }}
-                          >
-                            {index === 0
-                              ? "상차 완료"
-                              : index === routeInfo.length - 1
-                                ? "하차 완료"
-                                : `경유지 ${item.waypointNumber}`}
-                          </Typography> */}
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: "bold",
-                              color: thisTheme.palette.text.primary,
-                              fontSize: "1.1rem",
-                            }}
-                          >
-                            {item.label}
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              fontWeight: "normal",
-                              color:
-                                item.status === "completed"
-                                  ? thisTheme.palette.success.main
-                                  : thisTheme.palette.text.secondary,
-                              fontSize: "0.9rem",
-                            }}
-                          >
-                            {item.time}
-                          </Typography>
-                        </Box>
+                      />
+                    )}
+                  </Box>
 
-                        {/* 하단: 주소 박스 */}
-                        <Box
+                  {/* 내용과 시간 영역 */}
+                  <Box sx={{
+                    flex: 1,
+                    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                    mt: 0.5,
+                  }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      {/* 상단: 제목과 시간을 한 줄에 */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
                           sx={{
-                            bgcolor: thisTheme.palette.background.paper,
-                            borderRadius: 1,
-                            px: 2,
-                            py: 1.5,
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            border: `1px solid ${thisTheme.palette.text.secondary}`,
-                            width: "100%",
-                            maxWidth: "450px",
+                            fontWeight: "bold",
+                            color: thisTheme.palette.text.primary,
+                            fontSize: "1.1rem",
                           }}
                         >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontWeight: "normal",
+                            color:
+                              item.status === "completed"
+                                ? thisTheme.palette.success.main
+                                : thisTheme.palette.text.secondary,
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {item.time}
+                        </Typography>
+                      </Box>
+
+                      {/* 하단: 주소 박스 */}
+                      <Box
+                        sx={{
+                          bgcolor: thisTheme.palette.background.paper,
+                          borderRadius: 1,
+                          px: 2,
+                          py: 1.5,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          border: `1px solid ${thisTheme.palette.text.secondary}`,
+                          width: "100%",
+                          maxWidth: "450px",
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: thisTheme.palette.text.primary,
+                            lineHeight: 1.4,
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {item.location}
+                        </Typography>
+                        {!item.isStart && item.cargo && (
                           <Typography
-                            variant="body1"
+                            variant="body2"
                             sx={{
-                              color: thisTheme.palette.text.primary,
-                              lineHeight: 1.4,
-                              fontSize: "0.95rem",
+                              color: thisTheme.palette.text.secondary,
+                              mt: 0.5,
                             }}
                           >
-                            {item.location}
+                            하차 화물: {item.cargo.description}
+                            {item.cargo.handlingTags
+                              ? ` · ${item.cargo.handlingTags}`
+                              : ""}
                           </Typography>
-                          {!item.isStart && item.cargo && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: thisTheme.palette.text.secondary,
-                                mt: 0.5,
-                              }}
-                            >
-                              하차 화물: {item.cargo.description}
-                              {item.cargo.handlingTags
-                                ? ` · ${item.cargo.handlingTags}`
-                                : ""}
-                            </Typography>
-                          )}
-                        </Box>
+                        )}
                       </Box>
                     </Box>
                   </Box>
-                ))}
-              </Box>
-            </Box>
-
-            {/* 오른쪽: 지도 영역 */}
-            <Box sx={{ width: "55%" }}>
+                </Box>
+              ))}
+              {/* </Box> */}
+            </Grid>
+            <Grid size={isMobile?12:6}>
               {/* 지도 */}
               <Box
                 sx={{
@@ -830,8 +491,22 @@ const DeliveredDetail = () => {
               >
                 지도를 확대하거나 축소해서 경로를 확인해보세요.
               </Typography>
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
+          {/* <Box sx={{ display: "flex", gap: 4, mb: 4 }}> */}
+          {/* 왼쪽: 운송 단계 타임라인 */}
+          {/* <Box sx={{ width: isMobile ? "100%" : "45%" }}> */}
+          {/* 타임라인 */}
+          {/* </Box> */}
+
+
+          {/* 오른쪽: 지도 영역
+            <Box sx={{ width: isMobile ? "100%" : "55%" }}>
+
+
+
+            </Box> */}
+          {/* </Box> */}
 
           {/* 정산 내역 */}
           <Paper
@@ -861,13 +536,8 @@ const DeliveredDetail = () => {
                 const waypointFee = waypoints.length * 50000;
                 const mountainousFee = actualDelivery.mountainous ? 50000 : 0;
                 const cautionFee = actualDelivery.caution ? 50000 : 0;
-                const totalFee =
-                  baseFee +
-                  distanceFee +
-                  weightFee +
-                  waypointFee +
-                  mountainousFee +
-                  cautionFee;
+                const totalFee = baseFee + distanceFee + weightFee +
+                  waypointFee + mountainousFee + cautionFee;
 
                 return (
                   <Box>
@@ -891,171 +561,51 @@ const DeliveredDetail = () => {
                     />
 
                     <Box sx={{ pl: 2 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          py: 1,
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          ㄴ 기본 요금
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          {formatPrice(fees.baseFee)}
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          py: 1,
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          ㄴ 거리별 요금
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          {formatPrice(fees.distanceFee)}
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          py: 1,
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          ㄴ 무게별 요금
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          color={thisTheme.palette.text.primary}
-                        >
-                          {formatPrice(fees.weightFee)}
-                        </Typography>
-                      </Box>
+                      <SpaceBetween>
+                        <Body1>ㄴ 기본 요금</Body1>
+                        <Body1>{formatPrice(fees.baseFee)}</Body1>
+                      </SpaceBetween>
+                      <SpaceBetween>
+                        <Body1>ㄴ 거리별 요금</Body1>
+                        <Body1>{formatPrice(fees.distanceFee)}</Body1>
+                      </SpaceBetween>
+                      <SpaceBetween>
+                        <Body1>ㄴ 무게별 요금</Body1>
+                        <Body1>{formatPrice(fees.weightFee)}</Body1>
+                      </SpaceBetween>
 
                       {waypointFee > 0 && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            py: 1,
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            ㄴ 경유지 요금
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            {formatPrice(fees.waypointFee)}
-                          </Typography>
-                        </Box>
+                        <SpaceBetween>
+                          <Body1>ㄴ 경유지 요금</Body1>
+                          <Body1>{formatPrice(fees.waypointFee)}</Body1>
+                        </SpaceBetween>
                       )}
 
                       {mountainousFee > 0 && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            py: 1,
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            ㄴ 산간지역 요금
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            {formatPrice(fees.mountainousFee)}
-                          </Typography>
-                        </Box>
+                        <SpaceBetween>
+                          <Body1>ㄴ 산간지역 요금</Body1>
+                          <Body1>{formatPrice(fees.mountainousFee)}</Body1>
+                        </SpaceBetween>
                       )}
 
                       {cautionFee > 0 && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            py: 1,
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            ㄴ 취급주의 요금
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            color={thisTheme.palette.text.primary}
-                          >
-                            {formatPrice(fees.cautionFee)}
-                          </Typography>
-                        </Box>
+                        <SpaceBetween>
+                          <Body1>ㄴ 취급주의 요금</Body1>
+                          <Body1>{formatPrice(fees.cautionFee)}</Body1>
+                        </SpaceBetween>
                       )}
                     </Box>
 
                     {/* 총 운송료 */}
-                    <Box
-                      sx={{
-                        mt: 3,
-                        pt: 2,
+                    <Box sx={{ mt: 3, pt: 2, }}>
+                      <Box sx={{
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
                       }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
                       >
-                        <Typography
-                          variant="h6"
-                          fontWeight="bold"
-                          color={thisTheme.palette.primary.main}
-                        >
+                        <Typography variant="h6" fontWeight="bold" color={thisTheme.palette.primary.main}>
                           총 운송료
                         </Typography>
-                        <Typography
-                          variant="h6"
-                          fontWeight="bold"
-                          color={thisTheme.palette.primary.main}
-                        >
+                        <Typography variant="h6" fontWeight="bold" color={thisTheme.palette.primary.main}>
                           {formatPrice(fees.totalFee)}
                         </Typography>
                       </Box>
