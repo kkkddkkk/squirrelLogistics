@@ -101,7 +101,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
 
     try {
       setLoading(true);
-      const { data } = await api.post("/api/auth/login", { loginId, password });
+      const { data } = await api.post("/auth/login", { loginId, password });
       if (String(data?.role).toUpperCase() === "ETC") {
         setErrors({ loginId: "", password: "탈퇴 처리된 계정입니다. 고객센터로 문의해 주세요." });
         return;
@@ -308,7 +308,7 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
               onSuccess={async (cred) => {
                 try {
                   const idToken = cred.credential;
-                  const { data } = await api.post("/api/auth/oauth/google", {
+                  const { data } = await api.post("/auth/oauth/google", {
                     idToken,
                     role,
                   });

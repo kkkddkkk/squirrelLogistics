@@ -60,7 +60,7 @@ export default function CompanyForm() {
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await api.get("/api/public/register-meta");
+                const { data } = await api.get("/public/register-meta");
                 setTerms(Array.isArray(data?.terms) ? data.terms : []);
                 // vehicleTypes도 함께 세팅 중이라면 기존 로직 유지
             } catch {
@@ -140,7 +140,7 @@ export default function CompanyForm() {
         }
         setIdStatus("checking");
         try {
-            const { data } = await api.get("/api/auth/exists/loginId", { params: { loginId: form.loginId } });
+            const { data } = await api.get("/auth/exists/loginId", { params: { loginId: form.loginId } });
             setIdStatus(data.exists ? "dup" : "ok");
             setErrors((e) => ({ ...e, loginId: data.exists ? "이미 사용 중인 아이디입니다." : "" }));
         } catch {
@@ -157,7 +157,7 @@ export default function CompanyForm() {
         }
         setEmailStatus("checking");
         try {
-            const { data } = await api.get("/api/auth/exists/email", { params: { email: form.email } });
+            const { data } = await api.get("/auth/exists/email", { params: { email: form.email } });
             setEmailStatus(data.exists ? "dup" : "ok");
             setErrors((e) => ({ ...e, email: data.exists ? "이미 사용 중인 이메일입니다." : "" }));
         } catch {
@@ -233,7 +233,7 @@ export default function CompanyForm() {
 
         try {
             setLoading(true);
-            await api.post("/api/auth/register/company", payload);
+            await api.post("/auth/register/company", payload);
             alert("회사 회원가입이 완료되었습니다.");
             navigate("/");
         } catch (err) {

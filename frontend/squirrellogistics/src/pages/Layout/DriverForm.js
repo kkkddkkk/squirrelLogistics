@@ -123,7 +123,7 @@ export default function DriverForm() {
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await api.get("/api/public/register-meta");
+                const { data } = await api.get("/public/register-meta");
                 // 차종
                 const vts = (data?.vehicleTypes || []).map(v => ({ id: v.vehicleTypeId, name: v.name }));
                 setVehicleTypes(vts.length ? vts : DEFAULT_VEHICLES);
@@ -146,7 +146,7 @@ export default function DriverForm() {
         }
         setIdStatus("checking");
         try {
-            const { data } = await api.get("/api/auth/exists/loginId", { params: { loginId: form.loginId } });
+            const { data } = await api.get("/auth/exists/loginId", { params: { loginId: form.loginId } });
             setIdStatus(data.exists ? "dup" : "ok");
             setErrors((e) => ({ ...e, loginId: data.exists ? "이미 사용 중인 아이디입니다." : "" }));
         } catch {
@@ -164,7 +164,7 @@ export default function DriverForm() {
         }
         setEmailStatus("checking");
         try {
-            const { data } = await api.get("/api/auth/exists/email", { params: { email: form.email } });
+            const { data } = await api.get("/auth/exists/email", { params: { email: form.email } });
             setEmailStatus(data.exists ? "dup" : "ok");
             setErrors((e) => ({ ...e, email: data.exists ? "이미 사용 중인 이메일입니다." : "" }));
         } catch {
@@ -257,7 +257,7 @@ export default function DriverForm() {
 
         try {
             setLoading(true);
-            await api.post("/api/auth/register/driver", payload);
+            await api.post("/auth/register/driver", payload);
             alert("기사 회원가입이 완료되었습니다.");
             navigate("/");
         } catch (err) {
