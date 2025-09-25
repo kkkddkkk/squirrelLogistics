@@ -5,7 +5,7 @@ import API_SERVER_HOST from "../apiServerHost";
 
 export const getBannerList = async ({ accessToken }) => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/banner/list`, {
+    const res = await axios.get(`${process.env.REACT_APP_API_BASE}/banner/list`, {
       headers: {
         Authorization: `Bearer ${accessToken}`, // JWT 토큰 추가
       },
