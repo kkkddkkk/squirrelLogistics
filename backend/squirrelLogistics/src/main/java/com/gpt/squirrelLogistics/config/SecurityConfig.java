@@ -34,7 +34,8 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsSource() {
 		CorsConfiguration cors = new CorsConfiguration();
 		cors.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", // 로컬 개발용
-				"https://squirrellogistics.vercel.app", // 고정 프로덕션 프론트
+				"https://squirrellogistics.vercel.app", 
+				"https://squirrellogistics.onrender.com",// 고정 프로덕션 프론트
 				"https://*.vercel.app" // Vercel preview (커밋별 배포)
 		));
 		cors.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"));
@@ -69,8 +70,8 @@ public class SecurityConfig {
 																													// 경우
 								"/api/company/password/reset/**", // 비밀번호 재설정 관련 엔드포인트 공개 허용
 								"/api/company/verify", // 본인인증 엔드포인트 공개 허용
-								"/api/company/auth/social-complete" // 소셜 재인증 완료 엔드포인트 공개 허용
-																	// 있음)
+								"/api/company/auth/social-complete", // 소셜 재인증 완료 엔드포인트 공개 허용
+								"/api/notices/**"
 						).permitAll()
 						// 드라이버 측 요청 확인.
 						.requestMatchers("/api/delivery/requests/**", "/api/delivery/assignments/**",
