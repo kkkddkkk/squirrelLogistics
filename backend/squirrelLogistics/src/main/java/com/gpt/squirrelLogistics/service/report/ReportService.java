@@ -25,6 +25,7 @@ import com.gpt.squirrelLogistics.repository.reportImage.ReportImageRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.DeliveryAssignmentService;
 import com.gpt.squirrelLogistics.repository.answer.AnswerRepository;
 import com.gpt.squirrelLogistics.enums.report.ReportStatusEnum;
+import com.gpt.squirrelLogistics.gitImageUpload.GitHubUploader;
 import com.gpt.squirrelLogistics.enums.report.ReportCategoryEnum;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class ReportService {
 	private final DeliveryAssignmentRepository deliveryAssignmentRepository;
 	private final ReportImageRepository reportImageRepository;
 	private final AnswerRepository answerRepository;
+	private final GitHubUploader gitHubUploader;
 
 	/**
 	 * 🔧 공통 Report 데이터 변환 메서드
@@ -503,9 +505,12 @@ public class ReportService {
 
 			for (MultipartFile image : images) {
 				if (!image.isEmpty()) {
+					
+					String rawUrl = gitHubUploader.uploadImage(image.getBytes(), image.getOriginalFilename());
+					
 					ReportImage reportImage = ReportImage.builder()
 						.report(report)
-						.fileName(image.getOriginalFilename()) // fileName 필드만 사용
+						.fileName(rawUrl) // fileName 필드만 사용
 						.build();
 
 					reportImageRepository.save(reportImage);

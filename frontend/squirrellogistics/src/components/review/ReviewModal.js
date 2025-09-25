@@ -157,7 +157,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                                 marginBottom: "5%"
                             }}
                             alt="profile"
-                            src={`${API_SERVER_HOST}/public/driverImage/${driverImg}`}
+                            src={`${driverImg}`}
                         />
                         <Typography sx={{ marginBottom: "10%", width: "100%", 
                             display: "flex", justifyContent: "center"
