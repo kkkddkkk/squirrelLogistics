@@ -71,11 +71,11 @@ export const deleteBanner = async ({ accessToken, bannerId }) => {
 
 export const getPublicBanners = async () => {
   try {
-    const res = await axios.get(`${process.env.REACT_APP_API_BASE}/public/banner/list`, {
+    const res = await axios.get(`${API_SERVER_HOST}/public/banner/list`, {
     });
     return res.data; // 필요하면 반환
   } catch (err) {
-    console.log(process.env.REACT_APP_API_BASE);
+    console.log(API_SERVER_HOST);
     console.error(err); // res.data.err → err 자체에 에러 정보 있음
   }
 };
