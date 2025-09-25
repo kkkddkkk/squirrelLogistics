@@ -113,7 +113,7 @@ const ReportPage = () => {
                                 preview && preview.map((fileName, idx) => (
                                     <img
                                         key={idx}
-                                        src={`${API_SERVER_HOST}/public/reportImage/${fileName}`}
+                                        src={`${fileName}`}
                                         alt={`${fileName}`}
                                         style={{ margin: "5px" }}
                                     />

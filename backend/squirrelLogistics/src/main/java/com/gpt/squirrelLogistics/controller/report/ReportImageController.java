@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gpt.squirrelLogistics.gitImageUpload.GitHubUploader;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -26,18 +28,20 @@ import lombok.extern.log4j.Log4j2;
 @RequestMapping("/api/public/reportImage")
 public class ReportImageController {
     private final String uploadDir = new File("uploads").getAbsolutePath() + "/";
+	private final GitHubUploader gitHubUploader;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             // 저장할 경로
+			String rawUrl = gitHubUploader.uploadImage(file.getBytes(), file.getOriginalFilename());
             String filePath = uploadDir + file.getOriginalFilename();
             File dest = new File(filePath);
             dest.getParentFile().mkdirs(); // 폴더 없으면 생성
             file.transferTo(dest);
 
             // DB에는 file.getOriginalFilename()만 저장하면 됨
-            return ResponseEntity.ok(file.getOriginalFilename());
+            return ResponseEntity.ok(rawUrl);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
         }

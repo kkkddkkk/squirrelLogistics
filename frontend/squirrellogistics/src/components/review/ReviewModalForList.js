@@ -100,7 +100,7 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                                 marginBottom: "5%"
                             }}
                             alt="profile"
-                            src={`${API_SERVER_HOST}/public/driverImage/${review.profileImg}`}
+                            src={`${review.profileImg}`}
                         />
                         <Typography sx={{
                             marginBottom: "10%", width: "100%",

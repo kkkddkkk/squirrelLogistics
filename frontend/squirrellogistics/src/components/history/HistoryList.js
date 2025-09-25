@@ -149,7 +149,7 @@ const HistoryList = ({ assignedId, start, end, assignStatus, isMobile, width }) 
                                             marginTop: "2%"
                                         }}
                                         alt="Img"
-                                        src={`${API_SERVER_HOST}/public/driverImage/${todayContent.driverImg}`}
+                                        src={`${todayContent.driverImg}`}
                                     />
                                     <Typography sx={{ display: "inline-block", marginLeft: "7px" }}>{todayContent.driverName}<br />({todayContent.carName})</Typography>
                                 </Box>

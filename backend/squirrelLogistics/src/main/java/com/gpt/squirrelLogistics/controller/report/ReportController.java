@@ -31,6 +31,7 @@ import com.gpt.squirrelLogistics.dto.review.ReviewRequestDTO;
 import com.gpt.squirrelLogistics.entity.report.Report;
 import com.gpt.squirrelLogistics.entity.user.User;
 import com.gpt.squirrelLogistics.enums.user.UserRoleEnum;
+import com.gpt.squirrelLogistics.gitImageUpload.GitHubUploader;
 import com.gpt.squirrelLogistics.monitoring.TimedEndpoint;
 import com.gpt.squirrelLogistics.repository.company.CompanyRepository;
 import com.gpt.squirrelLogistics.repository.deliveryAssignment.DeliveryAssignmentRepository;
@@ -55,6 +56,7 @@ public class ReportController {
 	private final CompanyRepository companyRepository;
 	private final DriverRepository driverRepository;
 	private final UserRepository userRepository;
+	private final GitHubUploader gitHubUploader;
 
 	// 김도경: userId로 reportList 찾기
 	@GetMapping("/list")
@@ -91,22 +93,6 @@ public class ReportController {
 
 		ObjectMapper mapper = JsonMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES).build();
 		ReportRequestDTO reportRequestDTO = mapper.readValue(reportJson, ReportRequestDTO.class);
-
-		if (files != null) {
-			for (MultipartFile file : files) {
-				try {
-					String filePath = uploadDir + file.getOriginalFilename();
-					File dest = new File(filePath);
-					dest.getParentFile().mkdirs();
-					file.transferTo(dest);
-
-					// DB에는 file.getOriginalFilename() 저장
-				} catch (Exception e) {
-					log.error("File upload failed for {}: {}", file.getOriginalFilename(), e.getMessage(), e);
-					return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
-				}
-			}
-		}
 
 		reportService.regiReport(reportRequestDTO, files);
 
