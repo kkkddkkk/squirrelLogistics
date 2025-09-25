@@ -75,6 +75,7 @@ export const getPublicBanners = async () => {
     });
     return res.data; // 필요하면 반환
   } catch (err) {
+    console.log(process.env.REACT_APP_API_BASE);
     console.error(err); // res.data.err → err 자체에 에러 정보 있음
   }
 };
