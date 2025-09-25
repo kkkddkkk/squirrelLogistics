@@ -8,7 +8,7 @@ import ReviewModal from "./ReviewModal";
 import { TwoButtonsAtRight } from "../common/CommonButton";
 import { theme } from "../common/CommonTheme";
 
-const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope, setScope, delReviewFunc, modiReviewFunc }) => {
+const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope, setScope, delReviewFunc, modiReviewFunc, isMobile }) => {
     const [isExpand, setIsExpand] = useState(false);
     const [modal, setModal] = useState(false);
     const handleExpand = () => {
@@ -27,7 +27,7 @@ const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope
                                 <Box
                                     component="img"
                                     sx={{
-                                        width: "50%",
+                                        width: isMobile?"70%":"50%",
                                         aspectRatio: "1/1",
                                         borderRadius: "100%",
                                         marginBottom: "5%"
@@ -39,11 +39,10 @@ const ReviewContent = ({ header, driverImg, driverName, reviewId, content, scope
 
                             </Box>
                             <Box marginRight={"5%"}>
-                                <StarRate scope={scope} setScope={setScope} size={"50px"}></StarRate>
+                                <StarRate scope={scope} setScope={setScope} size={isMobile?"30px":"50px"}></StarRate>
                             </Box>
                         </Box>
 
-                        {/* <Box width={"100%"} border={"1px solid #909095"} margin={"5% 0"} /> */}
                         <Divider color={theme.palette.text.secondary}></Divider>
                         <Typography textAlign={"justify"} margin={"5% 0"}>
                             {content}

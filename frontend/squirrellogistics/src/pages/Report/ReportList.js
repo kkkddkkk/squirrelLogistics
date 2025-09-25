@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Layout, ListBoxContainer, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
-import { Box, Grid, Typography, useTheme } from "@mui/material";
+import { cutAddress, Layout, ListBoxContainer, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
+import { Box, Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ReportContent from "../../components/report/ReportContent";
 import axios from "axios";
 import { getReportList } from "../../api/company/reportApi";
@@ -21,6 +21,7 @@ const ReportList = () => {
     const { moveBack } = useHistoryMove();
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
 
     useEffect(() => {
         setLoading(true);
@@ -38,14 +39,16 @@ const ReportList = () => {
     }, []);
 
 
+
     return (
         <>
             <Box>
                 <CommonTitle>내 문의내역</CommonTitle>
                 <LoadingComponent open={loading} text="내 신고내역 불러오는 중..." />
-                <Grid container width={"100%"} marginBottom={5} minHeight={"100vh"}>
-                    <Grid size={3} />
-                    <Grid size={6}>
+                <Grid container width={"100%"} marginBottom={5} minHeight={isMobile?"90vh":"100vh"}
+                    paddingLeft={isMobile ? "10%" : "25%"} paddingRight={isMobile ? "10%" : "25%"}>
+                    {/* <Grid size={3} /> */}
+                    <Grid size={12} maxHeight={isMobile ? "65vh" : ""} overflow={"auto"}>
                         {dataLengths == 0 ?
                             <NoneOfList logoSrc={thisTheme.palette.mode === "light" ? Logo : darkLogo}>아직 작성한 신고가 없습니다.</NoneOfList> :
                             (dates.map((date) => (
@@ -54,23 +57,23 @@ const ReportList = () => {
                                     {reportList.map((report) => (
                                         report.regDate.toString().slice(0, 10) === date ?
                                             <ReportContent
-                                                header={`출발지: ${report.startAddress}\n도착지: ${report.endAddress}`}
+                                                header={`출발지: ${isMobile ? cutAddress(report.startAddress) : report.startAddress}\n도착지: ${isMobile ? cutAddress(report.endAddress) : report.endAddress}`}
                                                 title={report.rTitle}
                                                 content={report.rContent}
                                                 answer={"아직 답변이 등록되지 않았습니다."}
                                                 preview={report.fileNames}
-                                            ></ReportContent> : <></>
-                                    ))
-                                    }
+                                                isMobile={isMobile}
+                                            ></ReportContent> : <></>))}
                                 </Box>
                             )))
                         }
-                        <ButtonContainer marginTop={10} marginBottom={5}>
+                    </Grid>
+                    <Grid size={12}>
+                        <ButtonContainer marginBottom={5}>
                             <One100ButtonAtCenter height={50} clickEvent={() => moveBack()}>뒤로가기</One100ButtonAtCenter>
                         </ButtonContainer>
-
                     </Grid>
-                    <Grid size={3} />
+                    {/* <Grid size={3} /> */}
                 </Grid>
             </Box>
         </>

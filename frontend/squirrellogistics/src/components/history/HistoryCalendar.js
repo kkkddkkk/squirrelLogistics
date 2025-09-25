@@ -11,7 +11,7 @@ import CommonList from "../common/CommonList";
 import { theme, applyThemeToCssVars } from "../common/CommonTheme";
 
 
-const HistoryCalendar = () => {
+const HistoryCalendar = ({width}) => {
     const thisTheme = useTheme();
 
     useEffect(() => {
@@ -90,8 +90,11 @@ const HistoryCalendar = () => {
     }, [clickedFullDate]);
 
     return (
-        <div style={{ width: "100%", maxWidth: "400px", margin: "0 auto" }}>
-            <CommonList>
+        <div style={{ width: width}}>
+            <CommonList sx={{
+                flexGrow:1,
+                 minWidth:0
+            }}>
                 <DatePicker
                     selected={selectedDate}
                     onChange={handleChangeDate}
@@ -99,6 +102,7 @@ const HistoryCalendar = () => {
                     highlightDates={[
                         { "react-datepicker__day--highlighted-custom": markedDates }
                     ]}
+                    wrapperClassName="w-full"
                     renderCustomHeader={({
                         date,
                         changeYear,

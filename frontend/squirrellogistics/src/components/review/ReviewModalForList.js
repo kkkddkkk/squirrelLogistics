@@ -6,7 +6,7 @@ import axios from "axios";
 import StarRateMemo from "./StarRate";
 
 
-const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setChanged }) => {
+const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setChanged, isMobile }) => {
     const accesstoken = localStorage.getItem('accessToken');
 
     const modiReview = () => {//수정
@@ -72,11 +72,12 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                 bgcolor: "background.paper",
                 display: "flex",
                 justifyContent: "center",
-                flexWrap: "wrap"
+                flexWrap: "wrap",
+                paddingTop: isMobile ? "10%" : ""
             }}>
                 <Box
                     sx={{
-                        width: "20%",
+                        width: isMobile ? "100%" : "20%",
                         margin: "5% 5% 0 5%",
                         display: "flex",
                         justifyContent: "center",
@@ -92,7 +93,7 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                         <Box
                             component="img"
                             sx={{
-                                width: "100%",
+                                width: isMobile ? "40%" : "100%",
                                 aspectRatio: "1/1",
                                 borderRadius: "100%",
                                 marginBottom: "5%"
@@ -100,15 +101,18 @@ const ReviewModalForList = ({ modal, setModal, review, setReview, changed, setCh
                             alt="profile"
                             src={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
                         />
-                        <Typography sx={{ marginBottom: "10%" }}>{review.driverName}</Typography>
+                        <Typography sx={{
+                            marginBottom: "10%", width: "100%",
+                            display: "flex", justifyContent: "center"
+                        }}>{review.driverName}</Typography>
                         <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                             <StarRate modifying={true} scope={scope} setScope={setScope} />
                         </Box>
                     </Box>
 
                 </Box>
-                <TextField name="reason" rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0" }} value={review.reason} onChange={writingReview}></TextField>
-                <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
+                <TextField name="reason" rows={isMobile ? 10 : 15} multiline sx={{ width: isMobile ? "100%" : "60%", margin: isMobile ? "5%" : "5% 5% 0 0" }} value={review.reason ?? ""} onChange={writingReview}></TextField>
+                <Box width={isMobile ? "100%" : "60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
                     <TwoBtns children1={"리뷰 삭제"} func1={delReview} children2={"리뷰 수정"} func2={modiReview}></TwoBtns>
                 </Box>
 

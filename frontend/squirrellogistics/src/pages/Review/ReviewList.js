@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Layout, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
-import { Box, Grid, useTheme } from "@mui/material";
+import { cutAddress, Layout, NoneOfList, SubTitle } from "../../components/common/CommonForCompany";
+import { Box, Grid, useMediaQuery, useTheme } from "@mui/material";
 import ReviewContent from "../../components/review/ReviewContent";
 import axios from "axios";
 import ReviewModalForList from "../../components/review/ReviewModalForList";
@@ -25,6 +25,7 @@ const ReviewList = () => {
     const [dataLengths, setDataLengths] = useState(0);
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
 
     useEffect(() => {
         setLoading(true);
@@ -62,10 +63,10 @@ const ReviewList = () => {
     return (
         <>
             <CommonTitle>내 리뷰목록</CommonTitle>
-            <Grid container width={"100%"} marginBottom={5} minHeight={"100vh"}>
+            <Grid container width={"100%"} marginBottom={5} minHeight={isMobile ? "90vh" : "100vh"}
+                paddingLeft={isMobile ? "10%" : "25%"} paddingRight={isMobile ? "10%" : "25%"}>
                 <LoadingComponent open={loading} text="내 리뷰목록을 불러오는 중..." />
-                <Grid size={3} />
-                <Grid size={6}>
+                <Grid size={12} maxHeight={isMobile ? "65vh" : ""} overflow={"auto"}>
                     {dataLengths == 0 ?
                         <NoneOfList logoSrc={thisTheme.palette.mode === "light" ? Logo : darkLogo}>아직 작성한 리뷰가 없습니다.</NoneOfList> :
                         (dates.map((date) => (
@@ -75,7 +76,7 @@ const ReviewList = () => {
                                     review.regDate.toString().slice(0, 10) == date ?
                                         <ReviewContent
                                             key={idx}
-                                            header={`출발지: ${review.startAddress}\n도착지: ${review.endAddress}`}
+                                            header={`출발지: ${isMobile ? cutAddress(review.startAddress) : review.startAddress}\n도착지: ${isMobile ? cutAddress(review.endAddress) : review.endAddress}`}
                                             driverImg={`http://localhost:8080/api/public/driverImage/${review.profileImg}`}
                                             driverName={review.driverName}
                                             content={review.reason}
@@ -88,6 +89,7 @@ const ReviewList = () => {
                                             reviewId={review.reviewId}
                                             delReviewFunc={() => handleDelReview(review)}
                                             modiReviewFunc={() => handleModiReview(review)}
+                                            isMobile={isMobile}
                                         ></ReviewContent>
                                         : <></>
                                 ))
@@ -103,14 +105,14 @@ const ReviewList = () => {
                         setReview={setThisReview}
                         changed={changed}
                         setChanged={setChanged}
-
+                        isMobile={isMobile}
                     ></ReviewModalForList>
-
-                    <ButtonContainer marginTop={10} marginBottom={5}>
+                </Grid>
+                <Grid size={12}>
+                    <ButtonContainer marginBottom={5}>
                         <One100ButtonAtCenter height={50} clickEvent={() => moveBack()}>뒤로가기</One100ButtonAtCenter>
                     </ButtonContainer>
                 </Grid>
-                <Grid size={3} />
             </Grid>
         </>
     )

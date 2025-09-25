@@ -1,4 +1,4 @@
-import { Box, Grid, Modal, Typography, useTheme } from "@mui/material";
+import { Box, Grid, Modal, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ActualMap from "../../components/actualCalc/ActualMap";
 import PayBox from "../../components/payment/payBox";
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -14,12 +14,13 @@ import LoadingComponent from '../../components/common/LoadingComponent';
 import { CommonTitle } from "../../components/common/CommonText";
 import CommonList from "../../components/common/CommonList";
 import { theme } from "../../components/common/CommonTheme";
-import { ButtonContainer, Three100Buttons } from "../../components/common/CommonButton";
+import { ButtonContainer, Three100Buttons, TwoButtonsAtRight } from "../../components/common/CommonButton";
 
 const ActualCalc = () => {
     const { moveToSecondPayment } = usePaymentMove();
     const { moveToReport } = useHistoryMove();
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
 
     const [params] = useSearchParams();
     const assignedId = params.get("assignedId");
@@ -113,23 +114,25 @@ const ActualCalc = () => {
                 <LoadingComponent open={loading} text="운송 기록을 불러오는 중..." />
             )}
             <Grid container spacing={3} marginBottom={10}>
-                <Grid size={2} />
-                <Grid size={5} height={"65vh"}>
+                <Grid size={isMobile ? 1 : 2} />
+                <Grid size={isMobile ? 10 : 5} height={"65vh"}>
                     <CommonList>
                         <ActualMap polyline={actualCalc?.actualPolyline}></ActualMap>
                     </CommonList>
                 </Grid>
-                <Grid size={3} height={"65vh"} overflow={"auto"}>
+                {isMobile ? <Grid size={1} /> : <></>}
+                {isMobile ? <Grid size={1} /> : <></>}
+                <Grid size={isMobile ? 10 : 3} height={isMobile?"":"65vh"} overflow={"auto"}>
                     <PayBox
                         mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
                         weight={actualCalc ? actualCalc.weight : 0}
                         baseRate={actualCalc ? baseRate : 0}
-                        stopOver1={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder1:0) : false}
-                        stopOver2={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder2:0): false}
-                        stopOver3={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder3:0) : false}
+                        stopOver1={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder1 : 0) : false}
+                        stopOver2={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder2 : 0) : false}
+                        stopOver3={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder3 : 0) : false}
                         caution={actualCalc ? actualCalc.caution : false}
                         mountainous={actualCalc ? actualCalc.mountainous : false}
-                        additionalRate={actualCalc ? (actualCalc.weight!=0?additionalRate:0) : 0}
+                        additionalRate={actualCalc ? (actualCalc.weight != 0 ? additionalRate : 0) : 0}
                     />
                     <Box
                         sx={{
@@ -204,23 +207,37 @@ const ActualCalc = () => {
                         </Typography>
                     </Box>
                     <ButtonContainer marginTop={2}>
-                        <Three100Buttons
-                            leftTitle={`신고${reported ? "완료" : ""}`}
-                            leftClickEvent={() => moveToReport(assignedId)}
-                            leftDisabled={reported}
-                            leftColor={theme.palette.error.main}
+                        {isMobile ?
+                            <TwoButtonsAtRight
+                                leftTitle={`신고${reported ? "완료" : ""}`}
+                                leftClickEvent={() => moveToReport(assignedId)}
+                                leftDisabled={reported}
+                                leftColor={theme.palette.error.main}
 
-                            middleTitle={"명세서"}
-                            middleClickEvent={showTransactionStatement}
+                                rightTitle={"정산"}
+                                rightClickEvent={handlePayment}
 
-                            rightTitle={"정산"}
-                            rightClickEvent={handlePayment}
+                                gap={2}
+                            /> :
+                            <Three100Buttons
+                                leftTitle={`신고${reported ? "완료" : ""}`}
+                                leftClickEvent={() => moveToReport(assignedId)}
+                                leftDisabled={reported}
+                                leftColor={theme.palette.error.main}
 
-                            gap={2}
-                        />
+                                middleTitle={"명세서"}
+                                middleClickEvent={showTransactionStatement}
+
+                                rightTitle={"정산"}
+                                rightClickEvent={handlePayment}
+
+                                gap={2}
+                            />
+                        }
+
                     </ButtonContainer>
                 </Grid>
-                <Grid size={2} />
+                <Grid size={isMobile ? 1 : 2} />
             </Grid>
         </>
     )

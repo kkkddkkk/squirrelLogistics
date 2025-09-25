@@ -4,14 +4,13 @@ import { lighten, useTheme } from "@mui/material/styles";
 import { useState } from "react";
 
 
-export const ButtonContainer = ({ children, width, marginTop, marginBottom }) => {
+export const ButtonContainer = ({ children, width='100%', marginTop, marginBottom }) => {
     return (
         <Box
-            width={width}
             marginTop={marginTop}
             marginBottom={marginBottom}
             sx={{
-                flex: '0 0 auto',
+                width: width,
             }}
         >
             {children}

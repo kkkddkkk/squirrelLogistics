@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { ListBoxContainer, OneBigBtn, OneBtnAtRight, paymentFormat, TwoBtns } from "../common/CommonForCompany";
 import StarRate from "../review/StarRate";
@@ -24,8 +24,9 @@ export const Buttons = ({ children, func, disabled }) => {
     );
 }
 
-const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) => {
+const HistoryList = ({ assignedId, start, end, assignStatus, isMobile, width }) => {
     const accesstoken = localStorage.getItem('accessToken');
+
 
     const { moveToActualCalc } = usePaymentMove();
     const { moveToDetailHistory } = useHistoryMove();
@@ -107,7 +108,8 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
 
     return (
         <ListBoxContainer id={assignedId} header={`출발지: ${start}\n도착지: ${end}`} useButton={true}
-            assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand} loading={loading}>
+            assignStatus={assignStatus} isExpand={isExpand} setIsExpand={setIsExpand} loading={loading}
+            width={width}>
             <LoadingComponent open={loading} text="이용기록을 불러오는 중..." />
             {!isExpand ? <></> :
                 <Grid sx={{ margin: "2%" }} size={12}>
@@ -120,17 +122,20 @@ const HistoryList = ({ assignedId, start, end, assignStatus, paymentStatus }) =>
                             {todayContent.mountainous ? <Grid size={12}>{!todayContent.caution ? <br /> : <></>}산간지역 포함</Grid> : <></>}
                             <Grid size={12} sx={{
                                 borderTop: "1px solid #909095", borderBottom: "1px solid #909095"
-                                , padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
+                                , padding: "8px", display: "flex", justifyContent: isMobile ? "end" : "space-between", alignItems: "center",
                                 margin: "8px 0"
                             }}>
-                                <TwoButtonsAtLeft
-                                    leftTitle={"명세서"}
-                                    leftClickEvent={showTransactionStatement}
-                                    rightTitle={"영수증"}
-                                    rightClickEvent={showReciept}
-                                    gap={1}
-                                />
-                                <Typography sx={{ fontSize: "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee ? paymentFormat(todayContent.actualFee) : paymentFormat(todayContent.estimatedFee)} 원</Typography>
+                                {isMobile ? <></> :
+                                    <TwoButtonsAtLeft
+                                        leftTitle={"명세서"}
+                                        leftClickEvent={showTransactionStatement}
+                                        rightTitle={"영수증"}
+                                        rightClickEvent={showReciept}
+                                        gap={1}
+                                    />
+                                }
+
+                                <Typography sx={{ fontSize: isMobile ? "16px" : "22px", fontWeight: "bold" }}> 총 {todayContent.actualFee ? paymentFormat(todayContent.actualFee) : paymentFormat(todayContent.estimatedFee)} 원</Typography>
                             </Grid>
                             <Grid size={12} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <Box sx={{ display: "flex", alignItems: "center" }}>

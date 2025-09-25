@@ -1,4 +1,4 @@
-import { Box, Button, Checkbox, Grid, Modal, Typography, useTheme } from "@mui/material";
+import { Box, Button, Checkbox, Grid, Modal, Typography, useMediaQuery, useTheme } from "@mui/material";
 import PayBox from "../../components/payment/payBox";
 import { RefundDate } from "../../components/payment/RefundDate";
 import { PayMethod } from "../../components/payment/PayMethod";
@@ -95,6 +95,7 @@ export const Payment = () => {
     const { moveToSuccess, moveToHistory } = usePaymentMove();
     const { moveBack } = useCompanyMove();
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
 
     //데이터 생성용 useState
     const [refundDate, setRefundDate] = useState('3');
@@ -419,17 +420,17 @@ export const Payment = () => {
         <Box bgcolor={thisTheme.palette.background.default}>
             <CommonTitle>결제</CommonTitle>
             <LoadingComponent open={loading} text="결제 정보를 불러오는 중..." />
-            <Grid container>
-                <Grid size={3} />
-                <Grid size={6}>
+            <Grid container width={"100%"} marginBottom={5} minHeight={isMobile ? "90vh" : "100vh"}
+                paddingLeft={isMobile ? "10%" : "25%"} paddingRight={isMobile ? "10%" : "25%"}>
+                <Grid size={12}>
                     {actualCalc &&
                         <PayBox
                             mileage={actualCalc ? Math.ceil(actualCalc.distance / 1000) : 0}
                             weight={actualCalc ? actualCalc.weight : 0}
                             baseRate={actualCalc ? baseRate : 0}
-                            stopOver1={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder1:0): false}
-                            stopOver2={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder2:0) : false}
-                            stopOver3={actualCalc ? (actualCalc.weight!=0?actualCalc.dropOrder3:0): false}
+                            stopOver1={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder1 : 0) : false}
+                            stopOver2={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder2 : 0) : false}
+                            stopOver3={actualCalc ? (actualCalc.weight != 0 ? actualCalc.dropOrder3 : 0) : false}
                             caution={actualCalc ? actualCalc.caution : false}
                             mountainous={actualCalc ? actualCalc.mountainous : false}
                             additionalRate={actualCalc ? additionalRate : 0}
@@ -561,7 +562,6 @@ export const Payment = () => {
                     </Box>
 
                 </Grid>
-                <Grid size={3} />
             </Grid>
         </Box>
     );

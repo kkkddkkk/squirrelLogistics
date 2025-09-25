@@ -65,7 +65,7 @@ export const Layout = ({ title, children }) => {
     )
 }
 
-export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton, loading }) => {
+export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand, setIsExpand, useButton, loading, width }) => {
 
     const thisTheme = useTheme();
     const handleExpand = () => {
@@ -78,13 +78,13 @@ export const ListBoxContainer = ({ children, header, id, assignStatus, isExpand,
     if (assignStatus === "배송중") color = thisTheme.palette.warning.main;
     if (assignStatus === "배송완료" || assignStatus === "환불완료") color = thisTheme.palette.success.main;
     if (assignStatus === "취소" || assignStatus === "미정산") color = thisTheme.palette.error.main;
-    if (assignStatus === "요청됨") color =  lighten(thisTheme.palette.primary.main,0.5);
+    if (assignStatus === "요청됨") color = lighten(thisTheme.palette.primary.main, 0.5);
     if (assignStatus === "") color = 0;
 
 
 
     return (
-        <CommonList padding={2}>
+        <CommonList padding={2} sx={{ width: width }}>
             {/* 숨겨진 ID */}
             <input type="hidden" value={id} />
             <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"}>
@@ -197,7 +197,7 @@ export const AddedImg = ({ preview, idx, func }) => {//추가된 사진
             justifyContent: "end",
             alignItems: "baseline",
         }}>
-            <Box sx={{ backgroundColor: theme.palette.background.default, opacity: "0.5", aspectRatio: 1/1}}>
+            <Box sx={{ backgroundColor: theme.palette.background.default, opacity: "0.5", aspectRatio: 1 / 1 }}>
                 <CloseIcon onClick={(e) => func(e, idx)} sx={{ color: theme.palette.text.primary }} />
             </Box>
         </ImgBox >
@@ -296,5 +296,19 @@ export const OneBtnAtRight = ({ children, disabled, func, margin }) => {
 }
 
 //#endregion
+
+export const cutAddress = (addr) => {
+    const tokens = addr.split(" "); // 띄어쓰기 단위로 나누기
+    let result = [];
+
+    for (let t of tokens) {
+        result.push(t);
+        if (t.endsWith("시")) break;
+        if (t.endsWith("구")) break; // 토큰이 "구"로 끝날 때만 멈춤
+    }
+
+    return result.join(" ");
+}
+
 
 

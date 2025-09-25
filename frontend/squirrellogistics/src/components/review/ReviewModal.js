@@ -1,4 +1,4 @@
-import { Box, Modal, TextField, Typography } from "@mui/material";
+import { Box, Modal, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import StarRate from "./StarRate";
 import { OneBigBtn, SubTitle, TwoBtns } from "../common/CommonForCompany";
 import { useEffect, useState } from "react";
@@ -9,7 +9,9 @@ import { ButtonContainer, One100ButtonAtCenter, Two100Buttons, TwoButtonsAtCente
 
 const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, setChanged, driverImg }) => {
 
+    const thisTheme = useTheme();
     const accesstoken = localStorage.getItem('accessToken');
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
 
     const [localReview, setLocalReview] = useState({
         reason: "",
@@ -20,25 +22,8 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
         assignedId: assignedId ?? 0
     });
 
-    // useEffect(() => {
-    //     if(!assignedId) return;
-    //     setLocalReview(prev => ({ ...prev, assignedId }));
-    // }, [assignedId]);
     const [scope, setScope] = useState(localReview.rating);
 
-    // useEffect(() => {
-    //     if (review) {
-    //         setLocalReview({
-    //             reviewId: review.reviewId ?? 0,
-    //             reason: review.reason ?? "",
-    //             rating: review.rating ?? 0,
-    //             driverName: review.driverName ?? "",
-    //             carName: review.carName ?? "",
-    //             assignedId: assignedId
-    //         });
-    //         setScope(review.rating ?? 0);
-    //     }
-    // }, [review]);
 
     useEffect(() => {
         if (!modal || !assignedId) return;
@@ -143,12 +128,13 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                 bgcolor: "background.paper",
                 display: "flex",
                 justifyContent: "center",
-                flexWrap: "wrap"
+                flexWrap: "wrap",
+                paddingTop: isMobile? "10%": ""
             }}>
                 <input type="hidden" value={assignedId}></input>
                 <Box
                     sx={{
-                        width: "20%",
+                        width: isMobile?"100%":"20%",
                         margin: "5% 5% 0 5%",
                         display: "flex",
                         justifyContent: "center",
@@ -164,7 +150,7 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                         <Box
                             component="img"
                             sx={{
-                                width: "100%",
+                                width: isMobile?"40%":"100%",
                                 aspectRatio: "1/1",
                                 borderRadius: "100%",
                                 marginBottom: "5%"
@@ -172,17 +158,17 @@ const ReviewModal = ({ modal, setModal, assignedId, review, setReview, changed, 
                             alt="profile"
                             src={`http://localhost:8080/api/public/driverImage/${driverImg}`}
                         />
-                        <Typography sx={{ marginBottom: "10%" }}>{localReview.driverName}({localReview.carName})</Typography>
+                        <Typography sx={{ marginBottom: "10%", width: "100%", 
+                            display: "flex", justifyContent: "center"
+                        }}>{localReview.driverName}({localReview.carName})</Typography>
                         <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                             <StarRate modifying={true} scope={scope} setScope={setScope} />
                         </Box>
-
-
                     </Box>
 
                 </Box>
-                <TextField name="reason" rows={15} multiline sx={{ width: "60%", margin: "5% 5% 0 0" }} value={localReview.reason ?? ""} onChange={writingReview}></TextField>
-                <Box width={"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
+                <TextField name="reason" rows={isMobile?10:15} multiline sx={{ width: isMobile?"100%":"60%", margin: isMobile?"5%":"5% 5% 0 0" }} value={localReview.reason ?? ""} onChange={writingReview}></TextField>
+                <Box width={isMobile?"100%":"60%"} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"5%"}>
                     <ButtonContainer width={"100%"}>
                         {localReview.reviewId == 0 ?
                             <One100ButtonAtCenter clickEvent={regiReview}>리뷰등록</One100ButtonAtCenter> :
