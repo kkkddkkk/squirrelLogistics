@@ -27,6 +27,7 @@ import api from "../../api/user/api";
 import { GoogleLogin } from "@react-oauth/google";
 import logo from "../../components/common/squirrelLogisticsLogo.png";
 import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png";
+import API_SERVER_HOST from "../../api/apiServerHost";
 
 export default function LoginModal({ open, onClose, onLoggedIn }) {
   const navigate = useNavigate();
@@ -56,7 +57,8 @@ export default function LoginModal({ open, onClose, onLoggedIn }) {
       import.meta.env &&
       import.meta.env.VITE_KAKAO_REDIRECT_URI) ||
     process.env.REACT_APP_KAKAO_REDIRECT_URI ||
-    "http://localhost:8080/oauth/kakao/callback";
+    API_SERVER_HOST
+  // "http://localhost:8080/oauth/kakao/callback";
 
   const handleKakaoLogin = () => {
     if (!role) {
