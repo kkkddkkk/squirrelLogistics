@@ -186,7 +186,7 @@
 - 이동 경로 기록 및 이탈 여부 확인을 위한 더미 운전자 모델
 
 <p align="center">
-  <img src="./assets/screenshot/4_1.gif" alt="Ongoing_1" width="70%"/><br/>
+  <img src="./assets/screenshot/4_1.png" alt="Ongoing_1" width="70%"/><br/>
   <sub>운송 의뢰 기업측 진행중인 나의 운송 현황 실시간 확인 가능</sub>
 </p>
 
@@ -258,7 +258,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/screenshot/7_2.png" alt="Admin_2" width="70%"/><br/>
+  <img src="./assets/screenshot/7_3.png" alt="Admin_2" width="70%"/><br/>
   <sub>신고 대시보드를 통한 현황 확인 및 신고 대응 및 답글을 통한 유저 서비스 지원</sub>
 </p>
 
