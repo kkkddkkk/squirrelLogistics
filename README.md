@@ -297,7 +297,7 @@
       <td nowrap><nobr>이준원</nobr></td>
       <td>메인, 로그인, 공통 Header/Footer, 관리자단 회원/차량/정책 관리</td>
       <td>통합 네비게이션/레이아웃 설계, 인증 플로우 구현, 관리자 정책 관리 UI/CRUD</td>
-      <td nowrap><a href="">[바로가기]</a></td>
+      <td nowrap><a href="https://github.com/yppal29/yppal29">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>임수현</nobr></td>
