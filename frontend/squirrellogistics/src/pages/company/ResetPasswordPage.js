@@ -7,6 +7,7 @@ import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from '../../component
 import CommonList from '../../components/common/CommonList';
 import { ButtonContainer, TwoButtonsAtRight } from '../../components/common/CommonButton';
 import { theme, applyThemeToCssVars } from '../../components/common/CommonTheme';
+import API_SERVER_HOST from '../../api/apiServerHost';
 
 const ResetPasswordPage = () => {
   applyThemeToCssVars(theme);
@@ -53,7 +54,7 @@ const ResetPasswordPage = () => {
     try {
       setLoading(true);
 
-      const response = await fetch('http://localhost:8080/api/company/password/reset/complete', {
+      const response = await fetch(`http://${API_SERVER_HOST}/company/password/reset/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

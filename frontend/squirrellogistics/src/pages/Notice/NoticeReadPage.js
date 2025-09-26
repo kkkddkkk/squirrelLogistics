@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Chip, CircularProgress, Grid } from "@mui/material";
+import { Box, Chip, CircularProgress, Grid, useMediaQuery } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommonTitle } from "../../components/common/CommonText";
 import NoticeDetail from "../../components/notice/NoticeDetail";
@@ -9,11 +9,13 @@ import LoadingComponent from "../../components/common/LoadingComponent";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Footer from "../Layout/Footer";
 import Header from "../Layout/Header";
+import { theme } from "../../components/common/CommonTheme";
 
 export default function NoticeReadPage() {
   const { id } = useParams();
   const isAdmin = localStorage.getItem("userRole") === "ADMIN";
   const navigate = useNavigate();
+  const isSmaller900 = useMediaQuery(theme.breakpoints.down('md'));
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,10 +77,12 @@ export default function NoticeReadPage() {
       {!isAdmin && (
         <Header />
       )}
-      <CommonTitle>공지사항</CommonTitle>
-      <Grid container justifyContent="center" marginBottom={5} minHeight="50vh">
-        <Grid size={2} />
-        <Grid size={8}>
+      {!isSmaller900 && (
+        <CommonTitle>공지사항</CommonTitle>
+      )}
+      <Grid container justifyContent="center" mt={isSmaller900 ? 2 : 0} marginBottom={5} minHeight="50vh">
+        <Grid size={isSmaller900 ? 1 : 2} />
+        <Grid size={isSmaller900 ? 10 : 8}>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight={240}>
               <LoadingComponent
@@ -106,11 +110,12 @@ export default function NoticeReadPage() {
               <NoticeDetail
                 data={data}
                 onEdit={handleEdit}
+                isMobile={isSmaller900}
               />
             </>
           ) : null}
         </Grid>
-        <Grid size={2} />
+        <Grid size={isSmaller900 ? 1 : 2} />
       </Grid>
 
       <OneButtonPopupComponent

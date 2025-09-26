@@ -5,7 +5,7 @@ import { Card, CardContent, Typography, Button, Box, Grid, Stack, useTheme, colo
 import { useNavigate } from "react-router-dom";
 import { deleteNotice, toggleNoticePinned } from "../../api/notice/noticeAPI";
 
-export default function NoticeCard({ notice, isAdmin, refresh }) {
+export default function NoticeCard({ notice, isAdmin, isMobile, refresh }) {
   const t = useTheme();
   const navigate = useNavigate();
 
@@ -46,7 +46,14 @@ export default function NoticeCard({ notice, isAdmin, refresh }) {
         onClick={handleClickCard}
         sx={{ px: 1.5, py: 1.5, '&:last-child': { pb: 1.5 } }}
       >
-        <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap" columnSpacing={1}>
+        <Grid
+          container
+          alignItems={isMobile ? "flex-start" : "center"}
+          justifyContent={isMobile ? "flex-start" : "space-between"}
+          wrap="nowrap"
+          columnSpacing={1}
+          direction={isMobile ? "column" : "row"}
+        >
           <Grid item xs zeroMinWidth>
             <Stack direction="row" alignItems="center" spacing={2}>
               <PushPinIcon
@@ -69,8 +76,10 @@ export default function NoticeCard({ notice, isAdmin, refresh }) {
           </Grid>
 
           {isAdmin && (
-            <Grid item onClick={(e) => e.stopPropagation()}>
-              <Stack direction="row" spacing={1} alignItems="center">
+            <Grid item
+              alignSelf={isMobile ? "center" : "inherit"}
+              onClick={(e) => e.stopPropagation()}>
+              <Stack direction={"row"} spacing={1} alignItems="center">
                 <Button variant="outlined" size="small" onClick={handleToggle}>
                   {notice.pinned ? "해제" : "고정"}
                 </Button>

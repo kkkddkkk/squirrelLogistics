@@ -25,6 +25,8 @@ import TwoButtonPopupComponent from './TwoButtonPopupComponent';
 import OneButtonPopupComponent from './OneButtonPopupComponent';
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
+import logo from "../../components/common/squirrelLogisticsLogo.png";
+import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png";
 
 const SORT_MAP = {
   recent: "RECENT",
@@ -39,7 +41,8 @@ const ListComponent = () => {
   const { driverId } = useParams();
 
   const thisTheme = useTheme();
-  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md')); const [pageData, setPageData] = useState(null);
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
+  const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
@@ -190,6 +193,7 @@ const ListComponent = () => {
               container
               spacing={isSmaller900 ? 2 : 10}
               justifySelf={"center"}
+              sx={{ mx: "auto" }}
               justifyContent="center"
               width={"80%"}
               mt={2}
@@ -238,6 +242,8 @@ const ListComponent = () => {
           width={"80%"}
           spacing={isSmaller900 ? 2 : 10}
           justifySelf={"center"}
+          sx={{ mx: "auto" }}
+          justifyContent={"center"}
           alignContent={"center"}
         >
           {/* 좌측 필터 영역 */}
@@ -349,10 +355,10 @@ const ListComponent = () => {
           </Grid>
 
           {/* 리스트 영역 */}
-          <Grid item sx={{ flex: 1, minWidth: isSmaller900 ? 0 : 300 }}
+          <Grid item sx={{ flex: 1, minWidth: isSmaller900 ? 100 : 300 }}
             mt={isSmaller900 ? 0 : 2}
             mb={isSmaller900 ? 2 : 0}
-            >
+          >
             {/* 운전자 지명 제안 도착 */}
             {openToast ? (
               <Paper
@@ -398,31 +404,62 @@ const ListComponent = () => {
               container
               width="100%"
               spacing={2}
-              justifyContent="space-between"
+              justifyContent={dtoList.length === 0 ? "center" : "space-between"}
+              minHeight={isSmaller900 ? 200 : 300}
             >
-              <Grid item width="100%">
-                {dtoList.map((item, idx) => (
-                  <DeliveryCard key={item.requestId} item={item} />
-                ))}
-
-                <Box display="flex" justifyContent="center" mt={4}>
-                  <Pagination
-                    page={current}
-                    count={totalPage}
-                    onChange={(_, value) => {
-                      if (value !== pageReq.page) {
-                        setPageReq((prev) => ({ ...prev, page: value }));
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                    shape="rounded"
-                    showFirstButton
-                    showLastButton
-                    siblingCount={1}
-                    boundaryCount={1}
+              {dtoList.length === 0 ? (
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  mt={isSmaller900 ? 4 : 0}
+                >
+                  <img
+                    src={thisTheme.palette.mode === "light" ? logo : darkLogo}
+                    alt="logo"
+                    style={{ maxWidth: isSmaller900 ? "120px" : "200px", marginBottom: "20px" }}
                   />
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: thisTheme.palette.text.secondary,
+                      fontSize: "clamp(14px, 1.5vw, 16px)",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      lineHeight: 1.6,
+                      mb: 3,
+                    }}
+                  >
+                    아직 등록된 운송 요청이 없습니다.
+                  </Typography>
                 </Box>
-              </Grid>
+              ) : (
+
+                <Grid item width="100%">
+                  {dtoList.map((item, idx) => (
+                    <DeliveryCard key={item.requestId} item={item} />
+                  ))}
+
+                  <Box display="flex" justifyContent="center" mt={4}>
+                    <Pagination
+                      page={current}
+                      count={totalPage}
+                      onChange={(_, value) => {
+                        if (value !== pageReq.page) {
+                          setPageReq((prev) => ({ ...prev, page: value }));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                      shape="rounded"
+                      showFirstButton
+                      showLastButton
+                      siblingCount={1}
+                      boundaryCount={1}
+                    />
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           </Grid>
         </Grid>

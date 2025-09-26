@@ -45,7 +45,6 @@ public class DummyTracker {
 	private final DeliveryTrackingLogService trackingLogService;
 	private final DeliveryRequestRepository requestRepository;
 
-	// 스레드풀 2개
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
 	private final Map<String, DummyDriver> driverMap = new ConcurrentHashMap<>();
@@ -54,10 +53,9 @@ public class DummyTracker {
 	private final Map<String, Long> currentAssignedId = new ConcurrentHashMap<>();
 	private final Map<String, Phase> phaseMap = new ConcurrentHashMap<>();
 
-	// 샘플링 정책 (완화 + 시간 백업)
-	private static final double PERSIST_THRESHOLD_METERS = 20.0; // 100m → 20m
-	private static final long MIN_INTERVAL_MS = 2000; // 3s → 2s
-	private static final long FORCE_SAVE_EVERY_MS = 5000; // 5초마다 1점 보장
+	private static final double PERSIST_THRESHOLD_METERS = 50.0; 
+	private static final long MIN_INTERVAL_MS = 2000; //2s.
+	private static final long FORCE_SAVE_EVERY_MS = 5000; // 5초마다 1점.
 
 	private DummyDriver ensure(String driverId) {
 		return driverMap.computeIfAbsent(driverId, id -> {

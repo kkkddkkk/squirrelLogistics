@@ -5,7 +5,7 @@ import API_SERVER_HOST from "../apiServerHost";
 
 // axios 인스턴스 생성
 const companyApi = axios.create({
-  baseURL: `${API_SERVER_HOST}/api/company`,
+  baseURL: `${API_SERVER_HOST}/company`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -63,7 +63,7 @@ export default companyApi;
 // ✅ 0) 아이디/비밀번호로 본인인증
 export const verifyCredentials = async ({ loginId, password }) => {
   try {
-    const res = await axios.post(`${API_SERVER_HOST}/api/company/verify`, { loginId, password });
+    const res = await axios.post(`${API_SERVER_HOST}/company/verify`, { loginId, password });
     return !!res.data?.ok;
   } catch (err) {
     console.error("❌ 본인인증 실패:", err);
@@ -75,7 +75,7 @@ export const verifyCredentials = async ({ loginId, password }) => {
 export const requestPasswordReset = async (email) => {
   try {
     console.log("🔍 비밀번호 재설정 요청 시작 - email:", email);
-    const res = await axios.post(`${API_SERVER_HOST}/api/company/password/reset/request`, { email });
+    const res = await axios.post(`${API_SERVER_HOST}/company/password/reset/request`, { email });
     console.log("🔍 비밀번호 재설정 응답:", res.data);
     return res.data;  // 전체 응답 객체 반환
   } catch (err) {
@@ -91,7 +91,7 @@ export const requestPasswordReset = async (email) => {
 // ✅ 0-2) Google OAuth 재인증
 export const googleOAuthReauth = async (idToken) => {
   try {
-    const res = await axios.post(`${API_SERVER_HOST}/api/auth/oauth/google`, {
+    const res = await axios.post(`${API_SERVER_HOST}/auth/oauth/google`, {
       idToken: idToken,
       role: "COMPANY"
     });
@@ -114,7 +114,7 @@ export const updateCompanyProfile = async (payload) => {
     }
     
     // Authorization 헤더와 함께 요청 전송
-    const res = await axios.put(`${API_SERVER_HOST}/api/company/profile`, payload, {
+    const res = await axios.put(`${API_SERVER_HOST}/company/profile`, payload, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
@@ -137,7 +137,7 @@ export const checkSocialVerificationStatus = async () => {
       throw new Error("인증 토큰이 없습니다");
     }
     
-    const res = await axios.get(`${API_SERVER_HOST}/api/company/verify/status`, {
+    const res = await axios.get(`${API_SERVER_HOST}/company/verify/status`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
@@ -160,7 +160,7 @@ export const completeSocialVerification = async (provider, email) => {
       throw new Error("인증 토큰이 없습니다");
     }
     
-    const res = await axios.post(`${API_SERVER_HOST}/api/company/verify/social/complete`, {
+    const res = await axios.post(`${API_SERVER_HOST}/company/verify/social/complete`, {
       provider,
       email
     }, {
@@ -179,7 +179,7 @@ export const completeSocialVerification = async (provider, email) => {
 // ✅ 1. 회원정보 불러오기
 export const getUserInfo = async () => {
   try {
-    const res = await axios.get(`${API_SERVER_HOST}/api/company/info`);
+    const res = await axios.get(`${API_SERVER_HOST}/company/info`);
     return res.data;
   } catch (err) {
     console.error("❌ 회원정보 불러오기 실패:", err);
@@ -199,7 +199,7 @@ export const getDeliveryList = async () => {
     }
     
     // Authorization 헤더와 함께 요청 전송
-    const res = await axios.get(`${API_SERVER_HOST}/api/company/deliveries`, {
+    const res = await axios.get(`${API_SERVER_HOST}/company/deliveries`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
@@ -241,7 +241,7 @@ export const getMyPageInfo = async () => {
     }
     
     // Authorization 헤더와 함께 요청 전송
-    const res = await axios.get(`${API_SERVER_HOST}/api/company/mypage`, {
+    const res = await axios.get(`${API_SERVER_HOST}/company/mypage`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'

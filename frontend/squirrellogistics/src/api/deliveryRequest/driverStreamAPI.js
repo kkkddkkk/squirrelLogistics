@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const RENDER_SERVER_HOST = "http://localhost:8080"
+//const RENDER_SERVER_HOST = "https://localhost:8080"
+const RENDER_SERVER_HOST = "https://squirrellogistics.onrender.com"
 
 export function useDriverStream(getToken) {
   const [routeInfo, setRouteInfo] = useState(null);

@@ -192,13 +192,13 @@ const EstimateForm_new = () => {
       try {
         // 토큰 유효성 핑 (선택)
         try {
-          await http.get(`/api/company/test`);
+          await http.get(`/company/test`);
         } catch (e) {
           // console.warn("company/test 실패:", e);
         }
 
         // 실제 회사 정보 가져오기
-        const resp = await http.get(`/api/company/current-user`);
+        const resp = await http.get(`/company/current-user`);
         if (resp?.data?.companyId != null) {
           const cid = resp.data.companyId;
           setCompanyId(cid);
@@ -229,7 +229,7 @@ const EstimateForm_new = () => {
     const loadSavedAddresses = async () => {
       if (!companyId) return;
       try {
-        const res = await http.get(`/api/company/get-address/${companyId}`);
+        const res = await http.get(`/company/get-address/${companyId}`);
         if (res?.data?.mainLoca) {
           setSavedAddresses([{ id: 1, type: "START", value: res.data.mainLoca }]);
         } else {
@@ -402,14 +402,14 @@ const EstimateForm_new = () => {
       return;
     }
     try {
-      await http.post(`/api/company/save-address`, {
+      await http.post(`/company/save-address`, {
         companyId,
         address: hubAddress,
         type: "START",
       });
       alert("기본 주소 저장 성공");
       // 재로드
-      const res = await http.get(`/api/company/get-address/${companyId}`);
+      const res = await http.get(`/company/get-address/${companyId}`);
       if (res?.data?.mainLoca) setSavedAddresses([{ id: 1, type: "START", value: res.data.mainLoca }]);
     } catch {
       alert("저장 실패");
@@ -418,7 +418,7 @@ const EstimateForm_new = () => {
 
   const removeDefaultAddress = async () => {
     try {
-      await http.post(`/api/company/save-address`, {
+      await http.post(`/company/save-address`, {
         companyId,
         address: "",
         type: "CLEAR",

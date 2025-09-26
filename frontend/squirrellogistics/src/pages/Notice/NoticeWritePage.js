@@ -4,8 +4,9 @@ import NoticeEditor from "../../components/notice/NoticeEditor";
 import { createNotice, fetchNotice, updateNotice } from "../../api/notice/noticeAPI";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonPopupComponent";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import LoadingComponent from "../../components/common/LoadingComponent";
+import { theme } from "../../components/common/CommonTheme";
 
 export default function NoticeWritePage() {
     const { id } = useParams();
@@ -19,6 +20,7 @@ export default function NoticeWritePage() {
     const [errOpen, setErrOpen] = useState(false);
     const [errTitle, setErrTitle] = useState("");
     const [errContent, setErrContent] = useState("");
+    const isSmaller900 = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         let alive = true;
@@ -71,6 +73,7 @@ export default function NoticeWritePage() {
                     onSubmit={handleSubmit}
                     onBack={() => navigate("/admin/notice/list")}
                     submitting={submitting}
+                    isMobile={isSmaller900}
                 />
             )}
 

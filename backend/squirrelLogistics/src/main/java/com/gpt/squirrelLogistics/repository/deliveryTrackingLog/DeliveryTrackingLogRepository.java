@@ -3,6 +3,7 @@ package com.gpt.squirrelLogistics.repository.deliveryTrackingLog;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,5 +27,7 @@ public interface DeliveryTrackingLogRepository extends JpaRepository<DeliveryTra
 
 	// 작성자: 고은설.
 	// 기능: assignedId에 해당하는 모든 추적로그 삭제.
-	void deleteByDeliveryAssignment_AssignedId(Long assignedId);
+	@Modifying(clearAutomatically = true)
+	@Query("delete from DeliveryTrackingLog t where t.deliveryAssignment.assignedId = :assignedId")
+	void deleteByAssignedId(@Param("assignedId") Long assignedId);
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { alpha, Box, Button, Chip, Grid, Pagination, Paper, TextField } from "@mui/material";
+import { alpha, Box, Button, Chip, Grid, Pagination, Paper, TextField, useMediaQuery } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { CommonTitle } from "../../components/common/CommonText";
 import NoticeList from "../../components/notice/NoticeList";
@@ -9,6 +9,7 @@ import OneButtonPopupComponent from "../../components/deliveryRequest/OneButtonP
 import LoadingComponent from "../../components/common/LoadingComponent";
 import Header from "../Layout/Header";
 import Footer from "../Layout/Footer";
+import { theme } from "../../components/common/CommonTheme";
 
 
 const NoticeListPage = () => {
@@ -29,6 +30,7 @@ const NoticeListPage = () => {
     const pageSize = 10;
 
     const isAdmin = localStorage.getItem("userRole") === "ADMIN";
+    const isSmaller900 = useMediaQuery(theme.breakpoints.down('md'));
 
     const openErrorPopup = ({ title, content, kind, redirectPath }) => {
         setErrTitle(title);
@@ -136,8 +138,8 @@ const NoticeListPage = () => {
             )}
             <CommonTitle>{isAdmin ? '공지사항 관리' : '공지사항'}</CommonTitle>
             <Grid container marginBottom={5} justifyContent={"center"} minHeight={"100vh"}>
-                <Grid size={3} />
-                <Grid size={6}>
+                <Grid size={isSmaller900 ? 1 : 3} />
+                <Grid size={isSmaller900 ? 10 :6}>
                     {isAdmin && (
                         <Box display="flex" justifyContent="flex-start" mb={2} mt={0}>
                             <Chip
@@ -177,6 +179,7 @@ const NoticeListPage = () => {
                     <NoticeList
                         notices={notices}
                         isAdmin={isAdmin}
+                        isMobile={isSmaller900}
                         refresh={() => loadNotices()}
                         loading={loading}
                     />
@@ -190,7 +193,7 @@ const NoticeListPage = () => {
                         />
                     </Box>
                 </Grid>
-                <Grid item size={3} />
+                <Grid size={isSmaller900 ? 1 : 3} />
             </Grid>
             <OneButtonPopupComponent
                 open={errOpen}

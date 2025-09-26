@@ -52,13 +52,20 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
     <Box width={"100%"} sx={{ bgcolor: thisTheme.palette.background.default }}>
       {/* 페이지 최상단 제목 */}
       <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, py: isSmaller900 ? 2 :4, minHeight: isSmaller900 ? 100 : 190 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, py: isSmaller900 ? 2 : 4, minHeight: isSmaller900 ? 100 : 190 }}
       >
         <Box pt={isSmaller900 ? 2 : 4}>
           <CommonTitle>현재 운송 정보</CommonTitle>
         </Box>
 
-        <Grid container m={4} mt={isSmaller900 ? 3 : 4} mb={0} justifySelf="center" width={"80%"}>
+        <Grid container
+          m={4}
+          mt={isSmaller900 ? 3 : 4}
+          mb={0}
+          sx={{ mx: "auto" }}
+          display="grid"
+          justifySelf="center"
+          width={"80%"}>
           <Paper
             variant="outlined"
             sx={{
@@ -220,7 +227,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
             <Grid
               container
               direction={isSmaller900 ? "column" : "row"}
-              justifyContent={"space-between"}
+              justifyContent={isSmaller900 ? "center" : "space-between"}
               width={"100%"}
               mb={4}
             >
@@ -399,7 +406,7 @@ const DeliveryTrackingComponent = ({ data, onRefresh, onActionRun }) => {
                   ) : (
                     <>
                       {/* 하단 경유지 목록 영역 */}
-                      <Paper variant="outlined" sx={{ mt:isSmaller900 ? 2 : 0, p: 2 }}>
+                      <Paper variant="outlined" sx={{ mt: isSmaller900 ? 2 : 0, p: 2 }}>
                         <Typography
                           variant="subtitle1"
                           fontWeight="bold"

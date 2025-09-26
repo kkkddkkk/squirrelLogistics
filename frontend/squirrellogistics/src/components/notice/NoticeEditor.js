@@ -22,6 +22,7 @@ export default function NoticeEditor({
   mode = "create",                       // "create" | "edit"
   initial = { title: "", content: "", pinned: false },
   onSubmit, onBack,
+  isMobile,
   submitting = false
 }) {
   const theme = useTheme();
@@ -43,8 +44,8 @@ export default function NoticeEditor({
 
   return (
     <Grid container justifyContent="center" marginBottom={0} minHeight="100vh">
-      <Grid size={3} />
-      <Grid size={6}>
+      <Grid size={isMobile ? 1 : 3} />
+      <Grid size={isMobile ? 10 : 6}>
         <Box display="flex" justifyContent="flex-start" mb={2} mt={0}>
           <Chip
             icon={<ArrowBackIcon sx={{ fontSize: 18 }} />}
@@ -112,7 +113,7 @@ export default function NoticeEditor({
           </Button>
         </Box>
       </Grid>
-      <Grid size={3} />
+      <Grid size={isMobile ? 1 : 3} />
     </Grid>
   );
 }

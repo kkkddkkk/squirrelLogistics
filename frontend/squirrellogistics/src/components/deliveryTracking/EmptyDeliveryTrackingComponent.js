@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import logo from "../../components/common/squirrelLogisticsLogo.png";
 import darkLogo from "../../components/common/squirrelLogisticsLogo_dark.png";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,16 +10,17 @@ const EmptyDeliveryTrackingComponent = () => {
   const thisTheme = useTheme();
   const { driverId } = useParams();
   const navigate = useNavigate();
+  const isSmaller900 = useMediaQuery(thisTheme.breakpoints.down('md'));
 
   const onClickMove = () => {
     navigate(`/driver/list`);
   };
 
   return (
-    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: thisTheme.palette.background.default, minHeight: isSmaller900 ? "60vh" : "80vh" }}>
       {/* 제목 영역 */}
       <Box
-        sx={{ bgcolor: thisTheme.palette.background.default, py: 4, minHeight: 190 }}
+        sx={{ bgcolor: thisTheme.palette.background.default, py: 4, minHeight:  isSmaller900 ? 100 :190 }}
       >
         <CommonTitle>현재 운송 정보</CommonTitle>
       </Box>
@@ -30,12 +31,12 @@ const EmptyDeliveryTrackingComponent = () => {
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
-        sx={{ py: 8, px: 4 }}
+        sx={{ py: 4, px: 4 }}
       >
         <img
-          src={thisTheme.palette.mode==="light"?logo:darkLogo}
+          src={thisTheme.palette.mode === "light" ? logo : darkLogo}
           alt="logo"
-          style={{ maxWidth: "240px", marginBottom: "20px" }}
+          style={{ maxWidth: isSmaller900 ? "140px" : "240px", marginBottom: "20px" }}
         />
         <Typography
           variant="h6"

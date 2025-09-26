@@ -11,16 +11,15 @@ const KAKAO_JAVASCRIPT_KEY = "3fc6c3128e9cb8839fceb113aba2924a";
 const KAKAO_NAVIGATION_REST_KEY = "866375a2baec52acc22ae2904599355c";
 
 //---------- 공용 카카오 SDK 로드 함수 ----------.
-function loadKakaoSdk({ libraries } = {}) {
+function loadKakaoSdk() {
   return new Promise((resolve, reject) => {
     if (window.kakao && window.kakao.maps) {
       resolve(window.kakao);
       return;
     }
-    //카카오 SDK스크립트 후주입.
     const script = document.createElement("script");
-    const libs = libraries ? `&libraries=${libraries}` : "";
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false${libs}`;
+    script.src =
+      `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false&libraries=services`;
     script.async = true;
     script.onerror = reject;
     script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
@@ -530,7 +529,7 @@ export const useStaticRouteMapFromPolyline = ({
 
     (async () => {
       // services 라이브러리 필수
-      const kakao = await loadKakaoSdk({ libraries: ['services'] }).catch(() => null);
+      const kakao = await loadKakaoSdk().catch(() => null);
       if (!kakao || canceled) return;
       kakaoRef.current = kakao;
 

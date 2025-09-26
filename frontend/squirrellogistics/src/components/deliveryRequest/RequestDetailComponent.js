@@ -346,7 +346,13 @@ const RequestDetailComponent = () => {
           <CommonTitle>{scheduled ? "예약된 운송 정보" : "운송 요청 정보"}</CommonTitle>
         </Box>
 
-        <Grid container m={4} mt={isSmaller900 ? 3 : 4} mb={1} justifySelf="center" width={"80%"}>
+        <Grid container
+          m={4}
+          mt={isSmaller900 ? 3 : 4}
+          mb={1}
+          justifySelf="center"
+          width={"80%"}
+        >
           {proposed && (
             <Paper
               variant="outlined"
@@ -365,7 +371,7 @@ const RequestDetailComponent = () => {
                 container
                 spacing={2}
                 direction={isSmaller900 ? "column" : "row"}
-                justifyContent="space-between"
+                justifyContent={ "space-between"}
                 sx={{ width: "100%" }}
               >
                 <Grid item>
@@ -404,6 +410,7 @@ const RequestDetailComponent = () => {
               width: "100%",
               borderColor: "#bbc5d0",
               boxShadow: "0px 5px 5px rgba(0, 0, 0, 0.05)",
+              mb: isSmaller900 ? 1 : 2
             }}
           >
             <Grid
@@ -453,8 +460,8 @@ const RequestDetailComponent = () => {
           container
           spacing={1}
           direction={isSmaller900 ? "column" : "row"}
-          justifyContent={"space-between"}
-          sx={{ width: "80%" }}
+          justifyContent={isSmaller900 ? "center" : "space-between"}
+          sx={{ width: "80%", mx: "auto" }}
           mb={4}
         >
           <Grid

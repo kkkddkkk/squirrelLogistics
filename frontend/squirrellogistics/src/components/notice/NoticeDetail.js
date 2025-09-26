@@ -5,7 +5,7 @@ import DOMPurify from "dompurify";
 import "react-quill-new/dist/quill.snow.css";
 import API_SERVER_HOST from "../../api/apiServerHost";
 
-export default function NoticeDetail({ data, onEdit }) {
+export default function NoticeDetail({ data, onEdit, isMobile }) {
 
   const isAdmin = localStorage.getItem("userRole") === 'ADMIN' ? true : false;
 
@@ -42,7 +42,7 @@ export default function NoticeDetail({ data, onEdit }) {
       {/* 헤더 */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          <Typography variant={isMobile ? "h7" : "h5"} sx={{ fontWeight: 700 }}>
             {data?.title}
           </Typography>
           <PushPinIcon
@@ -58,7 +58,7 @@ export default function NoticeDetail({ data, onEdit }) {
         <Stack direction="row" spacing={1}>
           {isAdmin && (
             <Button variant="contained" size="small" onClick={onEdit}>
-              수정하기
+              {isMobile ? '수정' :'수정하기'}
             </Button>
           )}
         </Stack>

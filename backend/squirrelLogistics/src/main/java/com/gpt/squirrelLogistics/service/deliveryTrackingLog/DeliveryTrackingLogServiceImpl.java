@@ -57,7 +57,7 @@ public class DeliveryTrackingLogServiceImpl implements DeliveryTrackingLogServic
 
 		// 원본 로그 삭제로 용량 절감
 		if(isDeleteAll) {
-			trackRepo.deleteByDeliveryAssignment_AssignedId(assignedId);
+			trackRepo.deleteByAssignedId(assignedId);
 		}
 
 		return summary;
