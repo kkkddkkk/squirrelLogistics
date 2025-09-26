@@ -285,13 +285,13 @@
       <td nowrap><nobr>고은설</nobr></td>
       <td>실시간 위치 추적, 요청 목록, 캘린더(이용기록/기사 일정), 관리자단 공지/정산 관리</td>
       <td>WebSocket 실시간 트래킹, 요청 리스트/필터, 일정 캘린더, 관리자 공지·정산 대시보드</td>
-      <td nowrap><a href="">[바로가기]</a></td>
+      <td nowrap><a href="https://github.com/eunseolgo14/eunseolgo14">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>김도경</nobr></td>
       <td>결제/실계산, 이용기록, 리뷰, 신고/문의, 관리자단 신고/배너 관리</td>
       <td>PortOne 결제·영수증, 1차/2차 정산 로직, 기록/리뷰/신고 도메인 + 관리자 배너 운영</td>
-      <td nowrap><a href="">[바로가기]</a></td>
+      <td nowrap><a href="https://github.com/kkkddkkk/kkkddkkk">[바로가기]</a></td>
     </tr>
     <tr>
       <td nowrap><nobr>이준원</nobr></td>
@@ -325,7 +325,6 @@
 - 📷 Sourcetree & Jira 스크린샷: [바로가기][link-process]
 - 📑 프로젝트 설명 슬라이드(PDF): [열기][link-slides]
 
-
 [badge-notion]: https://img.shields.io/badge/Notion-Hub-222222?logo=notion&logoColor=white
 [badge-vercel]: https://img.shields.io/badge/Web-Vercel-000000?logo=vercel&logoColor=white
 [badge-render]: https://img.shields.io/badge/API-Render-8A05FF?logo=render&logoColor=white
@@ -333,12 +332,12 @@
 
 [link-web]: https://squirrellogistics.vercel.app/
 [link-api]: https://squirrellogistics.onrender.com/
-[link-notion]: https://psychedelic-deposit-53c.notion.site/Squirrel-Logistics-238ee5b3591b80e5ad2ace4a11b3d48a
+[link-notion]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b8110b194f99df7927bb8
 [link-youtube]: https://www.youtube.com/watch?v=G7L4YzGAvMA
 
 [link-meetings]: https://psychedelic-deposit-53c.notion.site/23aee5b3591b802aa139ca4f8e204fdd  
 [link-wireframes]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b812c8af1f8b341f84923
-[link-QA]: https://psychedelic-deposit-53c.notion.site/QA-238ee5b3591b80eb948efb20ac38d1f7
+[link-QA]: https://docs.google.com/document/d/1CdPrMlS6cWPc1OGrYjUdcxz2uonGgzWAz-G8-kWZNmI/edit?tab=t.0
 [link-review]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b80559ccaf7bc4d7484ac
 [link-process]: https://psychedelic-deposit-53c.notion.site/276ee5b3591b8042b733fe10e7507689       
 [link-slides]: ./assets/slides.pdf                         
