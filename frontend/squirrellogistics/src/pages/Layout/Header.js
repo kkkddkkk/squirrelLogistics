@@ -76,9 +76,9 @@ export default function Header() {
 
   const NAV = useMemo(() => ({
     GUEST: [
-      { label: "서비스", path: "/service" },
+      { label: "서비스", path: "/" },
       { label: "공지사항", path: "/notice" },
-      { label: "회사소개", path: "/about" },
+      { label: "회사소개", path: "/" },
     ],
     COMPANY: [
       { label: "홈", path: "/" },

@@ -52,10 +52,10 @@ export default function Footer() {
                             바로가기
                         </Typography>
                         <Stack spacing={1.2} sx={{ mt: 1.5 }}>
-                            <Link underline="none" href="/about" className={styles.footerLink}>회사소개</Link>
-                            <Link underline="none" href="/service" className={styles.footerLink}>서비스</Link>
+                            <Link underline="none" href="/" className={styles.footerLink}>회사소개</Link>
+                            <Link underline="none" href="/" className={styles.footerLink}>서비스</Link>
                             <Link underline="none" href="/support" className={styles.footerLink}>고객센터</Link>
-                            <Link underline="none" href="/policy" className={styles.footerLink}>이용약관</Link>
+                            <Link underline="none" href="/" className={styles.footerLink}>이용약관</Link>
                         </Stack>
                     </Grid>
 
