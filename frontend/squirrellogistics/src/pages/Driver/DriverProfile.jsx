@@ -476,7 +476,7 @@ const DriverProfile = () => {
                   textAlign={"center"}
                 >
                   <ProfileImage
-                    imageUrl={`${API_SERVER_HOST}/public/driverImage/${profileImageUrl}`}
+                    imageUrl={`${profileImageUrl}`}
                     alt="프로필 이미지"
                     size={isSmaller900 ? 80 : 150}
                     editable={false}
