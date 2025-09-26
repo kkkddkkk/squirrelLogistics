@@ -228,7 +228,8 @@ const EditProfile = () => {
     //작성자: 고은설, 기능: 폴백용 기본경로 추가.
     setPreview(
       form.profileImageUrl
-        ? `http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`
+        ? `${form.profileImageUrl}`
+        // ? `http://localhost:8080/api/public/driverImage/${form.profileImageUrl}`
         : `http://localhost:8080/api/public/driverImage/default_profile.png`
     );
     setImageChanged(false);

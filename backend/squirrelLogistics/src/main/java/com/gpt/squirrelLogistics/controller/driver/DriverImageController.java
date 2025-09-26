@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gpt.squirrelLogistics.entity.driver.Driver;
+import com.gpt.squirrelLogistics.gitImageUpload.GitHubUploader;
 import com.gpt.squirrelLogistics.repository.driver.DriverRepository;
 import com.gpt.squirrelLogistics.repository.user.UserRepository;
 import com.gpt.squirrelLogistics.service.user.FindUserByTokenService;
@@ -38,6 +39,7 @@ public class DriverImageController {
 	private final DriverRepository driverRepository;
 	private final UserRepository userRepository;
 	private final FindUserByTokenService findUserByTokenService;
+	private final GitHubUploader gitHubUploader;
 
 	// 작성자: 고은설.
 	// 기능: 지우면 안 되는 기본 프로필 사진 이름 명시.
@@ -48,14 +50,22 @@ public class DriverImageController {
 	public ResponseEntity<Resource> getFile(@PathVariable("fileName") String fileName) throws IOException {
 
 		Path path = Paths.get(uploadDir + fileName);
-		Resource resource = new UrlResource(path.toUri());
 
-		if (!resource.exists()) {
+		if (!Files.exists(path))
 			return ResponseEntity.notFound().build();
-		}
-
-		return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG) // png면 IMAGE_PNG
-				.body(resource);
+		// MIME 자동 추정
+		String mime = Files.probeContentType(path);
+		return ResponseEntity.ok().header("Content-Type", mime != null ? mime : "application/octet-stream")
+				.body(new UrlResource(path.toUri()));
+		// 기존 코드
+//		Resource resource = new UrlResource(path.toUri());
+//
+//		if (!resource.exists()) {
+//			return ResponseEntity.notFound().build();
+//		}
+//
+//		return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG) // png면 IMAGE_PNG
+//				.body(resource);
 	}
 
 	// 파일명 가져오기

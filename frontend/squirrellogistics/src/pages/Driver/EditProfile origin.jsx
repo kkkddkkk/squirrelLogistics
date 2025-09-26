@@ -901,7 +901,8 @@ const EditProfile = () => {
                 프로필 사진
               </Typography>
               <ProfileImage
-                imageUrl={`http://localhost:8080/api/public/driverImage/${profileImageUrl}`}
+                imageUrl={`${profileImageUrl}`}
+                // imageUrl={`http://localhost:8080/api/public/driverImage/${profileImageUrl}`}
                 alt="프로필 편집"
                 size={120}
                 editable={true}
