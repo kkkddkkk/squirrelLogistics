@@ -1,17 +1,21 @@
+// src/pages/admin/TermsPage.jsx
 import { useEffect, useState } from "react";
 import {
     Box, Button, TextField, Table, TableHead, TableRow, TableCell, TableBody,
     Dialog, DialogTitle, DialogContent, DialogActions, Grid, Switch,
-    FormControlLabel, Typography, CircularProgress, TablePagination
+    FormControlLabel, Typography, CircularProgress, TablePagination,
+    useTheme, useMediaQuery, Card, CardContent, CardActions, Stack, Chip
 } from "@mui/material";
 import { adminHttp } from "../../api/admin/http";
 
 export default function TermsPage() {
+    const theme = useTheme();
+    const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
+
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(10);
-
     const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false);
@@ -79,14 +83,28 @@ export default function TermsPage() {
     };
 
     return (
-        <Box>
-            <Typography variant="h6" mb={2}>약관 관리</Typography>
+        <Box sx={{ px: { xs: 1.5, sm: 3 }, py: 2, maxWidth: 1200, mx: "auto" }}>
+            <Typography variant="h6" fontWeight={700} mb={2}>
+                약관 관리
+            </Typography>
 
-            <Box mb={2} display="flex" gap={1}>
-                <Button variant="contained" onClick={() => { setForm(emptyForm); setOpen(true); }}>
+            {/* 액션 바: 모바일 1열 / 데스크톱 우측 정렬 */}
+            <Box
+                mb={2}
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" },
+                    gap: 1,
+                    alignItems: "center",
+                }}
+            >
+                <Button
+                    variant="contained"
+                    onClick={() => { setForm(emptyForm); setOpen(true); }}
+                    sx={{ justifySelf: { xs: "stretch", sm: "start" } }}
+                >
                     + 약관 추가
                 </Button>
-                <Box flex={1} />
             </Box>
 
             {loading ? (
@@ -95,70 +113,141 @@ export default function TermsPage() {
                 </Box>
             ) : (
                 <>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>약관명</TableCell>
-                                <TableCell>필수</TableCell>
-                                <TableCell>작성자</TableCell>
-                                <TableCell>생성일</TableCell>
-                                <TableCell>수정일</TableCell>
-                                <TableCell width={260}>작업</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {rows.length > 0 ? rows.map(t => (
-                                <TableRow key={t.termId}>
-                                    <TableCell>{t.termId}</TableCell>
-                                    <TableCell>{t.termName}</TableCell>
-                                    <TableCell>{t.required ? "예" : (t.isRequired ? "예" : "아니오")}</TableCell>
-                                    <TableCell>
-                                        {t.userDTO ? `${t.userDTO.name ?? "-"} (${t.userDTO.userId})` : "-"}
-                                    </TableCell>
-                                    <TableCell>{t.createDT ?? "-"}</TableCell>
-                                    <TableCell>{t.updateDT ?? "-"}</TableCell>
-                                    <TableCell>
-                                        <Button size="small" onClick={() => setPreview({ open: true, content: t.termContent || "" })}>
-                                            미리보기
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            onClick={() => {
-                                                setForm({
-                                                    termId: t.termId,
-                                                    termName: t.termName ?? "",
-                                                    termContent: t.termContent ?? "",
-                                                    isRequired: t.isRequired ?? t.required ?? false,
-                                                    userId: t.userDTO?.userId ?? ""
-                                                });
-                                                setOpen(true);
-                                            }}
-                                        >
-                                            수정
-                                        </Button>
-                                        <Button size="small" color="error" onClick={() => onDelete(t.termId)}>
-                                            삭제
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center">데이터가 없습니다.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                    {/* 모바일: 카드 리스트 뷰 */}
+                    {isSmDown ? (
+                        <Stack spacing={1.5}>
+                            {rows.length ? rows.map((t) => {
+                                const required = t.required ?? t.isRequired ?? false;
+                                return (
+                                    <Card key={t.termId} variant="outlined">
+                                        <CardContent>
+                                            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                                                <Typography variant="subtitle1" fontWeight={700}>
+                                                    {t.termName}
+                                                </Typography>
+                                                <Chip
+                                                    label={required ? "필수" : "선택"}
+                                                    color={required ? "error" : "default"}
+                                                    size="small"
+                                                    variant={required ? "filled" : "outlined"}
+                                                />
+                                            </Stack>
 
-                    <TablePagination
-                        component="div"
-                        count={total}
-                        page={page}
-                        onPageChange={(e, p) => setPage(p)}
-                        rowsPerPage={size}
-                        onRowsPerPageChange={(e) => { setSize(parseInt(e.target.value, 10)); setPage(0); }}
-                        rowsPerPageOptions={[10, 20, 50]}
-                    />
+                                            <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                                ID: {t.termId} &nbsp;·&nbsp; 작성자: {t.userDTO ? `${t.userDTO.name ?? "-"} (${t.userDTO.userId})` : "-"}
+                                            </Typography>
+
+                                            <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                                                생성일 {t.createDT ?? "-"} &nbsp; | &nbsp; 수정일 {t.updateDT ?? "-"}
+                                            </Typography>
+                                        </CardContent>
+                                        <CardActions sx={{ justifyContent: "flex-end", pt: 0 }}>
+                                            <Button size="small" onClick={() => setPreview({ open: true, content: t.termContent || "" })}>
+                                                미리보기
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                onClick={() => {
+                                                    setForm({
+                                                        termId: t.termId,
+                                                        termName: t.termName ?? "",
+                                                        termContent: t.termContent ?? "",
+                                                        isRequired: t.isRequired ?? t.required ?? false,
+                                                        userId: t.userDTO?.userId ?? ""
+                                                    });
+                                                    setOpen(true);
+                                                }}
+                                            >
+                                                수정
+                                            </Button>
+                                            <Button size="small" color="error" onClick={() => onDelete(t.termId)}>
+                                                삭제
+                                            </Button>
+                                        </CardActions>
+                                    </Card>
+                                );
+                            }) : (
+                                <Card variant="outlined">
+                                    <CardContent sx={{ textAlign: "center", color: "text.secondary" }}>
+                                        데이터가 없습니다.
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </Stack>
+                    ) : (
+                        // 데스크톱: 테이블 + 일부 컬럼 반응형 숨김
+                        <>
+                            <Box sx={{ width: "100%", overflowX: "auto" }}>
+                                <Table sx={{ minWidth: 960 }}>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>ID</TableCell>
+                                            <TableCell>약관명</TableCell>
+                                            <TableCell>필수</TableCell>
+                                            <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>작성자</TableCell>
+                                            <TableCell>생성일</TableCell>
+                                            <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>수정일</TableCell>
+                                            <TableCell width={260}>작업</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {rows.length ? rows.map((t) => {
+                                            const required = t.required ?? t.isRequired ?? false;
+                                            return (
+                                                <TableRow key={t.termId}>
+                                                    <TableCell>{t.termId}</TableCell>
+                                                    <TableCell>{t.termName}</TableCell>
+                                                    <TableCell>{required ? "예" : "아니오"}</TableCell>
+                                                    <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                                                        {t.userDTO ? `${t.userDTO.name ?? "-"} (${t.userDTO.userId})` : "-"}
+                                                    </TableCell>
+                                                    <TableCell>{t.createDT ?? "-"}</TableCell>
+                                                    <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>{t.updateDT ?? "-"}</TableCell>
+                                                    <TableCell>
+                                                        <Button size="small" onClick={() => setPreview({ open: true, content: t.termContent || "" })}>
+                                                            미리보기
+                                                        </Button>
+                                                        <Button
+                                                            size="small"
+                                                            onClick={() => {
+                                                                setForm({
+                                                                    termId: t.termId,
+                                                                    termName: t.termName ?? "",
+                                                                    termContent: t.termContent ?? "",
+                                                                    isRequired: t.isRequired ?? t.required ?? false,
+                                                                    userId: t.userDTO?.userId ?? ""
+                                                                });
+                                                                setOpen(true);
+                                                            }}
+                                                        >
+                                                            수정
+                                                        </Button>
+                                                        <Button size="small" color="error" onClick={() => onDelete(t.termId)}>
+                                                            삭제
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        }) : (
+                                            <TableRow>
+                                                <TableCell colSpan={7} align="center">데이터가 없습니다.</TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Box>
+
+                            <TablePagination
+                                component="div"
+                                count={total}
+                                page={page}
+                                onPageChange={(e, p) => setPage(p)}
+                                rowsPerPage={size}
+                                onRowsPerPageChange={(e) => { setSize(parseInt(e.target.value, 10)); setPage(0); }}
+                                rowsPerPageOptions={[10, 20, 50]}
+                            />
+                        </>
+                    )}
                 </>
             )}
 
@@ -208,7 +297,7 @@ export default function TermsPage() {
                         </Grid>
                     </Grid>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
                     <Button onClick={() => setOpen(false)}>취소</Button>
                     <Button variant="contained" onClick={onSave}>저장</Button>
                 </DialogActions>

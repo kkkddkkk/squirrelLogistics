@@ -1,33 +1,32 @@
+// src/pages/admin/UserList.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
     Box, Button, TextField, Table, TableHead, TableRow, TableCell, TableBody,
     TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Grid,
-    MenuItem, Typography, CircularProgress, Card, CardContent, Divider, Chip,
-    IconButton
+    MenuItem, Typography, CircularProgress, Card, CardContent, Divider,
+    IconButton, useTheme, useMediaQuery, CardActions, Stack, Chip
 } from "@mui/material";
-import { adminHttp } from "../../api/admin/http";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
     PieChart, Pie, Cell, Legend
 } from "recharts";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { adminHttp } from "../../api/admin/http";
 
 const roles = ["ADMIN", "COMPANY", "DRIVER", "ETC", "MANAGER"];
 const PIE_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#8dd1e1", "#a4de6c"];
 
-const formatYM = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    return `${y}-${m}`; // YYYY-MM
-};
+const formatYM = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 const addMonths = (ym, delta) => {
     const [y, m] = ym.split("-").map(Number);
-    const d = new Date(y, m - 1 + delta, 1);
-    return formatYM(d);
+    return formatYM(new Date(y, m - 1 + delta, 1));
 };
 
 export default function UserList() {
+    const theme = useTheme();
+    const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
+
     // ===== 목록 상태 =====
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
@@ -36,7 +35,7 @@ export default function UserList() {
     const [size, setSize] = useState(10);
     const [loading, setLoading] = useState(false);
 
-    // ===== 폼 상태 =====
+    // ===== 폼 =====
     const [open, setOpen] = useState(false);
     const emptyForm = {
         userId: null, loginId: "", name: "", email: "",
@@ -44,37 +43,32 @@ export default function UserList() {
     };
     const [form, setForm] = useState(emptyForm);
 
-    // ===== 통계 상태 =====
+    // ===== 통계 =====
     const [stats, setStats] = useState(null);
     const [statsLoading, setStatsLoading] = useState(false);
-    const [month, setMonth] = useState(() => formatYM(new Date())); // YYYY-MM
+    const [month, setMonth] = useState(() => formatYM(new Date()));
 
-    // ===== 목록 로딩 =====
-    const fetchList = async () => {
-        setLoading(true);
-        try {
-            const { data } = await adminHttp.get("/users", { params: { q, page, size } });
-            setRows(data.content || []);
-            setTotal(data.totalElements ?? 0);
-        } finally {
-            setLoading(false);
-        }
-    };
-    useEffect(() => { fetchList(); }, [q, page, size]);
+    useEffect(() => {
+        (async () => {
+            setLoading(true);
+            try {
+                const { data } = await adminHttp.get("/users", { params: { q, page, size } });
+                setRows(data.content || []);
+                setTotal(data.totalElements ?? 0);
+            } finally { setLoading(false); }
+        })();
+    }, [q, page, size]);
 
-    // ===== 통계 로딩 (월 선택 반영) =====
-    const fetchStats = async () => {
-        setStatsLoading(true);
-        try {
-            const { data } = await adminHttp.get("/users/stats", { params: { month } }); // yyyy-MM
-            setStats(data);
-        } finally {
-            setStatsLoading(false);
-        }
-    };
-    useEffect(() => { fetchStats(); }, [month]);
+    useEffect(() => {
+        (async () => {
+            setStatsLoading(true);
+            try {
+                const { data } = await adminHttp.get("/users/stats", { params: { month } });
+                setStats(data);
+            } finally { setStatsLoading(false); }
+        })();
+    }, [month]);
 
-    // ===== 저장/삭제 =====
     const onSave = async () => {
         const payload = {
             loginId: form.loginId?.trim(),
@@ -93,10 +87,14 @@ export default function UserList() {
         try {
             if (form.userId) await adminHttp.put(`/users/${form.userId}`, payload);
             else await adminHttp.post("/users", payload);
-            setOpen(false);
-            setForm(emptyForm);
-            fetchList();
-            fetchStats(); // 데이터 변화 → 통계 갱신
+            setOpen(false); setForm(emptyForm);
+            const [list, stat] = await Promise.all([
+                adminHttp.get("/users", { params: { q, page, size } }),
+                adminHttp.get("/users/stats", { params: { month } }),
+            ]);
+            setRows(list.data.content || []);
+            setTotal(list.data.totalElements ?? 0);
+            setStats(stat.data);
         } catch (err) {
             alert(err?.response?.data?.message || "저장 실패");
         }
@@ -105,96 +103,94 @@ export default function UserList() {
     const onDelete = async (id) => {
         if (!window.confirm("삭제하시겠습니까?")) return;
         await adminHttp.delete(`/users/${id}`);
-        fetchList();
-        fetchStats();
+        const [list, stat] = await Promise.all([
+            adminHttp.get("/users", { params: { q, page, size } }),
+            adminHttp.get("/users/stats", { params: { month } }),
+        ]);
+        setRows(list.data.content || []);
+        setTotal(list.data.totalElements ?? 0);
+        setStats(stat.data);
     };
 
-    // ===== 그래프 데이터 가공 =====
-    const dailyData = useMemo(() => (
-        (stats?.dailySignups || []).map(d => ({
-            // d.date가 "yyyy-MM-dd"라고 가정 → x축엔 'dd'만 표시하면 가독성 ↑
-            day: d.date?.slice(8) ?? d.date,
-            count: d.count
-        }))
-    ), [stats]);
+    // ===== 차트 데이터 =====
+    const dailyData = useMemo(
+        () => (stats?.dailySignups || []).map(d => ({ day: d.date?.slice(8) ?? d.date, count: d.count })),
+        [stats]
+    );
+    const roleData = useMemo(
+        () => stats?.countsByRole ? Object.entries(stats.countsByRole).map(([role, value]) => ({ role, value })) : [],
+        [stats]
+    );
 
-    const roleData = useMemo(() => (
-        stats?.countsByRole
-            ? Object.entries(stats.countsByRole).map(([role, value]) => ({ role, value }))
-            : []
-    ), [stats]);
-
-    // ===== KPI 카드 =====
-    const Kpi = ({ label, value, suffix }) => (
-        <Card variant="outlined" sx={{ mb: 2 }}>
+    const Kpi = ({ label, value }) => (
+        <Card variant="outlined" sx={{ minHeight: 96, height: "100%" }}>
             <CardContent>
                 <Typography variant="body2" color="text.secondary">{label}</Typography>
                 <Typography variant="h5" mt={0.5}>
-                    {value?.toLocaleString?.() ?? value}{suffix || ""}
+                    {value?.toLocaleString?.() ?? value}
                 </Typography>
             </CardContent>
         </Card>
     );
 
     return (
-        <Box>
-            <Typography variant="h6" mb={2}>회원 관리</Typography>
+        <Box sx={{ px: { xs: 1.5, sm: 3 }, py: 2, maxWidth: 1600, mx: "auto" }}>
+            {/* 상단 툴바 */}
+            <Grid container alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                <Grid item xs={12} md="auto">
+                    <Typography variant="h6" fontWeight={700}>회원 관리</Typography>
+                </Grid>
+                <Grid item xs />
+                <Grid item xs="auto" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <IconButton size="small" onClick={() => setMonth(m => addMonths(m, -1))} aria-label="이전">
+                        <ArrowBackIosNewIcon fontSize="inherit" />
+                    </IconButton>
+                    <TextField type="month" size="small" value={month} onChange={e => setMonth(e.target.value)} />
+                    <IconButton size="small" onClick={() => setMonth(m => addMonths(m, +1))} aria-label="다음">
+                        <ArrowForwardIosIcon fontSize="inherit" />
+                    </IconButton>
+                </Grid>
+            </Grid>
 
-            <Grid container spacing={2}>
-                {/* ===== 좌측: 대시보드/그래프 ===== */}
-                <Grid item xs={12} md={3}>
-                    <Card sx={{ mb: 2 }}>
-                        <CardContent sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
-                                대시보드
-                            </Typography>
+            <Divider sx={{ mb: 2 }} />
 
-                            {/* 이전/다음 월 */}
-                            <IconButton size="small" onClick={() => setMonth(m => addMonths(m, -1))}>
-                                <ArrowBackIosNewIcon fontSize="inherit" />
-                            </IconButton>
-
-                            <TextField
-                                type="month"
-                                size="small"
-                                value={month}
-                                onChange={(e) => setMonth(e.target.value)}
-                                InputLabelProps={{ shrink: true }}
-                            />
-
-                            <IconButton size="small" onClick={() => setMonth(m => addMonths(m, +1))}>
-                                <ArrowForwardIosIcon fontSize="inherit" />
-                            </IconButton>
-                        </CardContent>
-                        <Divider />
-                    </Card>
+            {/* 대시보드 */}
+            <Card variant="outlined" sx={{ mb: 2 }}>
+                <CardContent>
+                    <Typography variant="subtitle1" fontWeight={600} mb={2}>대시보드</Typography>
 
                     {statsLoading ? (
-                        <Box display="flex" justifyContent="center" alignItems="center" minHeight={220}>
-                            <CircularProgress />
-                        </Box>
+                        <Box display="flex" justifyContent="center" alignItems="center" minHeight={220}><CircularProgress /></Box>
                     ) : (
-                        <>
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gap: 2,
+                                alignItems: "stretch",
+                                gridTemplateColumns: {
+                                    xs: "repeat(2, minmax(150px, 1fr))",
+                                    sm: "repeat(auto-fit, minmax(220px, 1fr))",
+                                },
+                            }}
+                        >
                             <Kpi label="전체 회원" value={stats?.totalUsers ?? 0} />
                             <Kpi label="신규(선택 월)" value={stats?.newUsersThisMonth ?? 0} />
                             <Kpi label="오늘 접속" value={stats?.activeToday ?? 0} />
 
-                            {/* 역할별 분포 - 파이차트 */}
-                            <Card variant="outlined" sx={{ mb: 2 }}>
+                            {/* 파이차트 */}
+                            <Card variant="outlined" sx={{ minHeight: 220, height: "100%", ...(isSmDown && { gridColumn: "1 / -1" }) }}>
                                 <CardContent>
                                     <Typography variant="body2" color="text.secondary" mb={1}>역할별 분포</Typography>
                                     {roleData.length === 0 ? (
                                         <Typography color="text.secondary">데이터 없음</Typography>
                                     ) : (
-                                        <Box sx={{ height: 220 }}>
+                                        <Box sx={{ width: "100%", height: { xs: 220, sm: 240, md: 220 } }}>
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
                                                     <Tooltip />
                                                     <Legend verticalAlign="bottom" height={24} />
-                                                    <Pie data={roleData} dataKey="value" nameKey="role" outerRadius={70} label>
-                                                        {roleData.map((_, idx) => (
-                                                            <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                                                        ))}
+                                                    <Pie data={roleData} dataKey="value" nameKey="role" outerRadius={75} label>
+                                                        {roleData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                                                     </Pie>
                                                 </PieChart>
                                             </ResponsiveContainer>
@@ -203,16 +199,14 @@ export default function UserList() {
                                 </CardContent>
                             </Card>
 
-                            {/* 선택 월 가입 추이 - 막대 그래프 */}
-                            <Card variant="outlined">
+                            {/* 막대차트 */}
+                            <Card variant="outlined" sx={{ gridColumn: "1 / -1", minHeight: 260 }}>
                                 <CardContent>
-                                    <Typography variant="body2" color="text.secondary" mb={1}>
-                                        {month} 가입 추이
-                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" mb={1}>{month} 가입 추이</Typography>
                                     {dailyData.length === 0 ? (
                                         <Typography color="text.secondary">데이터 없음</Typography>
                                     ) : (
-                                        <Box sx={{ height: 220 }}>
+                                        <Box sx={{ width: "100%", height: { xs: 240, sm: 260 } }}>
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <BarChart data={dailyData}>
                                                     <CartesianGrid strokeDasharray="3 3" />
@@ -226,80 +220,126 @@ export default function UserList() {
                                     )}
                                 </CardContent>
                             </Card>
-                        </>
-                    )}
-                </Grid>
-
-                {/* ===== 우측: 목록/검색 ===== */}
-                <Grid item xs={12} md={9}>
-                    <Box mb={2} display="flex" gap={1}>
-                        <TextField
-                            size="small"
-                            placeholder="이름/이메일/로그인ID/전화 검색"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                        />
-                        <Button variant="contained" onClick={fetchList}>검색</Button>
-                        <Box flex={1} />
-                        <Button variant="contained" onClick={() => { setForm(emptyForm); setOpen(true); }}>
-                            + 회원 추가
-                        </Button>
-                    </Box>
-
-                    {loading ? (
-                        <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                            <CircularProgress />
                         </Box>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* 검색 + 버튼 영역 */}
+            <Box
+                mb={2}
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr auto auto" },
+                    gap: 1,
+                    alignItems: "center",
+                }}
+            >
+                <TextField
+                    size="small"
+                    placeholder="이름/이메일/로그인ID/전화 검색"
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                />
+                <Button variant="contained" onClick={() => setPage(0)}>검색</Button>
+                <Button variant="contained" onClick={() => { setForm(emptyForm); setOpen(true); }}>
+                    + 회원 추가
+                </Button>
+            </Box>
+
+            {/* 목록: 모바일=카드 / 데스크톱=테이블 */}
+            {loading ? (
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
+            ) : (
+                <>
+                    {isSmDown ? (
+                        <Stack spacing={1.5}>
+                            {rows.length ? rows.map((u) => (
+                                <Card key={u.userId} variant="outlined">
+                                    <CardContent>
+                                        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                                            <Typography variant="subtitle1" fontWeight={700}>
+                                                {u.name || "-"}
+                                            </Typography>
+                                            <Chip size="small" label={u.role || "-"} />
+                                        </Stack>
+
+                                        <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                            로그인ID: {u.loginId || "-"}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">이메일: {u.email || "-"}</Typography>
+                                        <Typography variant="body2" color="text.secondary">전화: {u.pnumber || "-"}</Typography>
+                                        <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                                            가입일: {u.regDate ?? "-"}
+                                        </Typography>
+                                    </CardContent>
+                                    <CardActions sx={{ justifyContent: "flex-end", pt: 0 }}>
+                                        <Button
+                                            size="small"
+                                            onClick={() => {
+                                                setForm({
+                                                    userId: u.userId, loginId: u.loginId || "", name: u.name || "", email: u.email || "",
+                                                    pnumber: u.pnumber || "", account: u.account || "", businessN: u.businessN || "",
+                                                    birthday: u.birthday || "", role: u.role || "COMPANY"
+                                                });
+                                                setOpen(true);
+                                            }}
+                                        >
+                                            수정
+                                        </Button>
+                                        <Button size="small" color="error" onClick={() => onDelete(u.userId)}>
+                                            삭제
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            )) : (
+                                <Card variant="outlined"><CardContent sx={{ textAlign: "center", color: "text.secondary" }}>데이터가 없습니다.</CardContent></Card>
+                            )}
+                        </Stack>
                     ) : (
                         <>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>ID</TableCell>
-                                        <TableCell>로그인ID</TableCell>
-                                        <TableCell>이름</TableCell>
-                                        <TableCell>이메일</TableCell>
-                                        <TableCell>전화</TableCell>
-                                        <TableCell>권한</TableCell>
-                                        <TableCell>가입일</TableCell>
-                                        <TableCell width={180}>작업</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {rows.length > 0 ? rows.map((u) => (
-                                        <TableRow key={u.userId}>
-                                            <TableCell>{u.userId}</TableCell>
-                                            <TableCell>{u.loginId}</TableCell>
-                                            <TableCell>{u.name}</TableCell>
-                                            <TableCell>{u.email}</TableCell>
-                                            <TableCell>{u.pnumber}</TableCell>
-                                            <TableCell>{u.role}</TableCell>
-                                            <TableCell>{u.regDate ?? "-"}</TableCell>
-                                            <TableCell>
-                                                <Button size="small" onClick={() => {
-                                                    setForm({
-                                                        userId: u.userId,
-                                                        loginId: u.loginId || "",
-                                                        name: u.name || "",
-                                                        email: u.email || "",
-                                                        pnumber: u.pnumber || "",
-                                                        account: u.account || "",
-                                                        businessN: u.businessN || "",
-                                                        birthday: u.birthday || "",
-                                                        role: u.role || "COMPANY"
-                                                    });
-                                                    setOpen(true);
-                                                }}>수정</Button>
-                                                <Button size="small" color="error" onClick={() => onDelete(u.userId)}>삭제</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    )) : (
+                            <Box sx={{ width: "100%", overflowX: "auto" }}>
+                                <Table sx={{ minWidth: 980 }}>
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell colSpan={8} align="center">데이터가 없습니다.</TableCell>
+                                            <TableCell>ID</TableCell>
+                                            <TableCell>로그인ID</TableCell>
+                                            <TableCell>이름</TableCell>
+                                            <TableCell>이메일</TableCell>
+                                            <TableCell>전화</TableCell>
+                                            <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>권한</TableCell>
+                                            <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>가입일</TableCell>
+                                            <TableCell width={180}>작업</TableCell>
                                         </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                                    </TableHead>
+                                    <TableBody>
+                                        {rows.length ? rows.map(u => (
+                                            <TableRow key={u.userId}>
+                                                <TableCell>{u.userId}</TableCell>
+                                                <TableCell>{u.loginId}</TableCell>
+                                                <TableCell>{u.name}</TableCell>
+                                                <TableCell>{u.email}</TableCell>
+                                                <TableCell>{u.pnumber}</TableCell>
+                                                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>{u.role}</TableCell>
+                                                <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>{u.regDate ?? "-"}</TableCell>
+                                                <TableCell>
+                                                    <Button size="small" onClick={() => {
+                                                        setForm({
+                                                            userId: u.userId, loginId: u.loginId || "", name: u.name || "", email: u.email || "",
+                                                            pnumber: u.pnumber || "", account: u.account || "", businessN: u.businessN || "",
+                                                            birthday: u.birthday || "", role: u.role || "COMPANY"
+                                                        });
+                                                        setOpen(true);
+                                                    }}>수정</Button>
+                                                    <Button size="small" color="error" onClick={() => onDelete(u.userId)}>삭제</Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        )) : (
+                                            <TableRow><TableCell colSpan={8} align="center">데이터가 없습니다.</TableCell></TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Box>
 
                             <TablePagination
                                 component="div"
@@ -312,42 +352,28 @@ export default function UserList() {
                             />
                         </>
                     )}
-                </Grid>
-            </Grid>
+                </>
+            )}
 
-            {/* ===== 추가/수정 다이얼로그 ===== */}
+            {/* 추가/수정 다이얼로그 */}
             <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle>{form.userId ? "회원 수정" : "회원 추가"}</DialogTitle>
                 <DialogContent>
                     <Grid container spacing={2} mt={0.5}>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="로그인ID" required fullWidth value={form.loginId}
-                                onChange={e => setForm({ ...form, loginId: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="이름" required fullWidth value={form.name}
-                                onChange={e => setForm({ ...form, name: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="이메일" required type="email" fullWidth value={form.email}
-                                onChange={e => setForm({ ...form, email: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="전화번호" fullWidth value={form.pnumber}
-                                onChange={e => setForm({ ...form, pnumber: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="계좌번호" fullWidth value={form.account}
-                                onChange={e => setForm({ ...form, account: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="사업자등록번호" fullWidth value={form.businessN}
-                                onChange={e => setForm({ ...form, businessN: e.target.value })} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="생년월일 (YYYY-MM-DD)" fullWidth value={form.birthday}
-                                onChange={e => setForm({ ...form, birthday: e.target.value })} />
-                        </Grid>
+                        <Grid item xs={12} sm={6}><TextField label="로그인ID" required fullWidth value={form.loginId}
+                            onChange={e => setForm({ ...form, loginId: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="이름" required fullWidth value={form.name}
+                            onChange={e => setForm({ ...form, name: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="이메일" required type="email" fullWidth value={form.email}
+                            onChange={e => setForm({ ...form, email: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="전화번호" fullWidth value={form.pnumber}
+                            onChange={e => setForm({ ...form, pnumber: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="계좌번호" fullWidth value={form.account}
+                            onChange={e => setForm({ ...form, account: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="사업자등록번호" fullWidth value={form.businessN}
+                            onChange={e => setForm({ ...form, businessN: e.target.value })} /></Grid>
+                        <Grid item xs={12} sm={6}><TextField label="생년월일 (YYYY-MM-DD)" fullWidth value={form.birthday}
+                            onChange={e => setForm({ ...form, birthday: e.target.value })} /></Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField label="권한" select fullWidth value={form.role}
                                 onChange={e => setForm({ ...form, role: e.target.value })}>
