@@ -135,7 +135,7 @@ export default function Body({ fullBleed = false }) {
                                 /> */}
 
                                 {/* 우상단 큰 원(워터마크용) — md 이상에서만 */}
-                                <Box
+                                {/* <Box
                                     sx={{
                                         display: { xs: "none", md: "block" },
                                         position: "absolute",
@@ -149,10 +149,10 @@ export default function Body({ fullBleed = false }) {
                                         mixBlendMode: "screen",
                                         pointerEvents: "none",
                                     }}
-                                />
+                                /> */}
 
                                 {/* 좌상단 워터마크 타이틀 — md 이상에서만 */}
-                                <Typography
+                                {/* <Typography
                                     sx={{
                                         display: { xs: "none", md: "block" },
                                         position: "absolute",
@@ -167,7 +167,7 @@ export default function Body({ fullBleed = false }) {
                                     }}
                                 >
                                     Squirrel Logistics
-                                </Typography>
+                                </Typography> */}
 
                                 {/* 실제 텍스트 컨텐츠 */}
                                 <Box
