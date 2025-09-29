@@ -1,4 +1,4 @@
-import { Box, Grid, useTheme } from "@mui/material";
+import { Box, Grid, useMediaQuery, useTheme } from "@mui/material";
 import { CommonSmallerTitle, CommonTitle } from "../../components/common/CommonText";
 import CommonList from "../../components/common/CommonList";
 import './chart.css';
@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 const ReportPage = () => {
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const { moveToMain } = useHistoryMove();
     const navigate = useNavigate();
     const [data, setData] = useState();
@@ -95,7 +96,8 @@ const ReportPage = () => {
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: "center",
-                                flexWrap: "wrap"
+                                flexWrap: "wrap",
+                                marginBottom: isMobile?"20%":""
                             }}>
                                 {leftChildren}
                             </Box>
@@ -114,13 +116,13 @@ const ReportPage = () => {
     return (
         <>
             <CommonTitle>신고확인</CommonTitle>
-            <Grid container spacing={3} marginBottom={10}>
-                <Grid size={2} />
-                <Grid size={8}>
+            <Grid container spacing={3} marginBottom={10} padding={isMobile?"5%":''}>
+                {!isMobile?<Grid size={2} />:<></>}
+                <Grid size={isMobile?12:8}>
                     <ReportDashList
                         title={"문의 처리 상태"}
-                        leftSize={5}
-                        rightSize={7}
+                        leftSize={isMobile?12:5}
+                        rightSize={isMobile?12:7}
                         leftChildren={<ReportPieChart
                             data={data?.statusCount}
                             colorState={(entry) => statusColor[entry.rstatus] || "#ccc"}
@@ -132,7 +134,7 @@ const ReportPage = () => {
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1px 8px" }}>
                                         <Box>{switchStatus(status.rstatus)}</Box>
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <Box color={thisTheme.palette.text.secondary} marginRight={1}>
+                                            <Box color={thisTheme.palette.text.secondary} marginRight={1} textAlign={"end"}>
                                                 총 {status.statusCount}건
                                                 ({percentage(data?.statusCount, status.statusCount, 'statusCount')})</Box>
                                             <Box sx={{ width: "20px", aspectRatio: 1 / 1, backgroundColor: statusColor[status.rstatus] || "#ccc"}} />
@@ -145,8 +147,8 @@ const ReportPage = () => {
                     />
                     <ReportDashList
                         title={"가장 많이 신고된 사용자 목록"}
-                        leftSize={5}
-                        rightSize={7}
+                        leftSize={isMobile?12:5}
+                        rightSize={isMobile?12:7}
                         leftChildren={
                             data?.mostReported.map((reported, idx) => (
                                 <CommonList padding={'3px'} sx={{ width: "100%" }}>
@@ -167,8 +169,8 @@ const ReportPage = () => {
                     />
                     <ReportDashList
                         title={"신고 유형 비율"}
-                        leftSize={5}
-                        rightSize={7}
+                        leftSize={isMobile?12:5}
+                        rightSize={isMobile?12:7}
                         leftChildren={<ReportPieChart data={data?.cateCount} colorState={pieChartColors} dataKey={"cateCount"} />}
                         rightChildren={
                             data?.cateCount.map((cate, idx) => (
@@ -194,7 +196,9 @@ const ReportPage = () => {
                             <Grid size={12}>
                                 <ReportLineChart data={data ? monthlyData : []} valueKey={"신고건수"} />
                             </Grid>
-                            <Grid size={12}><OneButtonAtRight>상세보기</OneButtonAtRight></Grid>
+                            <Grid size={12}><OneButtonAtRight clickEvent={
+                                () => navigate(`/admin/report/list/monthly`)
+                            }>상세보기</OneButtonAtRight></Grid>
                         </Grid>
                     </CommonList>
                     <Box sx={{ marginTop: 10 }}></Box>
@@ -202,7 +206,7 @@ const ReportPage = () => {
                     <ScrollTopButton />
 
                 </Grid>
-                <Grid size={2} />
+                {!isMobile?<Grid size={2} />:<></>}
             </Grid>
         </>
     )

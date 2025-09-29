@@ -1,17 +1,16 @@
-import { Box, Grid, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Grid, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import CommonList from "../../components/common/CommonList";
 import './chart.css';
 import { OneButtonAtRight, TwoButtonsAtRight } from "../../components/common/CommonButton";
-import ScrollTopButton from "../Layout/ScrollTopButton";
 import { useEffect, useState } from "react";
-import { createAnswer, getDetailReport, getReportDashBoard, updateAnswer } from "../../api/admin/reportApi";
+import { createAnswer, getDetailReport, updateAnswer } from "../../api/admin/reportApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
-import API_SERVER_HOST from "../../api/apiServerHost";
 const ReportPage = () => {
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const { moveToMain } = usePaymentMove();
     const navigate = useNavigate();
     const [data, setData] = useState();
@@ -76,13 +75,13 @@ const ReportPage = () => {
     return (
         <>
             <CommonTitle>상세 문의내용</CommonTitle>
-            <Grid container spacing={3} marginBottom={10}>
-                <Grid size={2} />
-                <Grid size={8}>
+            <Grid container spacing={3} marginBottom={10} padding={isMobile ? "5%" : ''}>
+                {isMobile ? <></> : <Grid size={2} />}
+                <Grid size={isMobile ? 12 : 8}>
                     <CommonSubTitle>{data?.regDate} 등록</CommonSubTitle>
-                    <Grid container spacing={3}>
-                        <Grid size={6}>
-                            <CommonList padding={5}>
+                    <Grid container spacing={isMobile ? 0 : 3}>
+                        <Grid size={isMobile ? 12 : 6}>
+                            <CommonList padding={isMobile ? 2 : 5}>
                                 <CommonSubTitle>* 신고자 정보</CommonSubTitle>
                                 <CommonSmallerTitle>
                                     회원명: {data?.reporterName} ({reporter} #{data?.reporterId})
@@ -92,8 +91,8 @@ const ReportPage = () => {
                                 </CommonSmallerTitle>
                             </CommonList>
                         </Grid>
-                        <Grid size={6}>
-                            <CommonList padding={5}>
+                        <Grid size={isMobile ? 12 : 6}>
+                            <CommonList padding={isMobile ? 2 : 5}>
                                 <CommonSubTitle>* 신고대상 정보</CommonSubTitle>
                                 <CommonSmallerTitle>
                                     회원명: {data?.reportedName} ({reported} #{data?.reportedId})
@@ -128,7 +127,7 @@ const ReportPage = () => {
                                 fullWidth
                                 multiline
                                 sx={{ margin: "20px 0" }}
-                                value={data?form.content:''}
+                                value={data ? form.content : ''}
                                 placeholder={data?.answerId === 0 ? data?.answerContent : ''}
                                 rows={10}
                                 name="content"
@@ -164,7 +163,7 @@ const ReportPage = () => {
 
                     </CommonList>
                 </Grid>
-                <Grid size={2} />
+                {isMobile ? <></> : <Grid size={2} />}
             </Grid>
         </>
     )

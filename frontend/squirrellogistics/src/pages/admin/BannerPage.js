@@ -1,9 +1,9 @@
-import { Grid, useTheme } from "@mui/material";
+import { Grid, useMediaQuery, useTheme } from "@mui/material";
 import { CommonTitle } from "../../components/common/CommonText";
 import BannerList from "../../components/admin/Banner/BannerList";
 import CommonList from "../../components/common/CommonList";
 import BannerThumbnail from "../../components/admin/Banner/BannerThumbnail";
-import { ButtonContainer, Two100Buttons } from "../../components/common/CommonButton";
+import PostAddIcon from '@mui/icons-material/PostAdd';
 import { useEffect, useState } from "react";
 import usePaymentMove from "../../hook/paymentHook/usePaymentMove";
 import { deleteBanner, getBannerList } from "../../api/admin/bannerApi";
@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 const BannerPage = () => {
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const navigate = useNavigate();
     const location = useLocation();
     const { moveToMain } = usePaymentMove();
@@ -67,13 +68,6 @@ const BannerPage = () => {
     }
     const showBanner = (record) => {
         navigate({ pathname: `/admin/banner/add`, search: `?id=${record.bannerId}` });
-
-    }
-    const returnBanner = () => {
-
-    }
-    const saveBanner = () => {
-
     }
     const showThumbnail = (record) => {
         setBannerForm(record);
@@ -82,19 +76,19 @@ const BannerPage = () => {
     return (
         <>
             <CommonTitle>배너 관리</CommonTitle>
-            <Grid container spacing={3} marginBottom={10}>
-                <Grid size={3} />
-                <Grid size={6}>
+            <Grid container spacing={3} marginBottom={10} padding={isMobile ? "5%" : ""}>
+                {isMobile ? <></> : <Grid size={3} />}
+                <Grid size={isMobile ? 12 : 6}>
                     <BannerThumbnail bannerLength={bannerList?.length}
-                        src={bannerForm.imageUrl}
+                        src={bannerForm.imageUrl} mobile={isMobile}
                         bannerForm={bannerForm} adding={false} />
                     {bannerList?.length > 0 ?
                         bannerList?.map((record, index) => (
                             <Grid container spacing={1} onClick={() => showThumbnail(record)}>
-                                <Grid size={1} >
+                                <Grid size={isMobile ? 2 : 1} >
                                     <NumberBox index={index + 1} />
                                 </Grid>
-                                <Grid size={11}>
+                                <Grid size={isMobile ? 10 : 11}>
                                     <BannerList
                                         key={record.id}
                                         title={record.title}
@@ -102,59 +96,30 @@ const BannerPage = () => {
                                         showFunc={() => showBanner(record)}
                                         isBanner={true}
                                         showThumbnail={showThumbnail}
+                                        mobile={isMobile}
                                     />
                                 </Grid>
                             </Grid>
-                        ))
-                        // <ReactDragList
-                        //     key={refreshKey}
-                        //     dataSource={bannerList}
-                        //     row={(record, index) => (
-                        //         <Grid container spacing={1} onClick={() => showThumbnail(record)}>
-                        //             <Grid size={1} >
-                        //                 <NumberBox index={index + 1} />
-                        //             </Grid>
-                        //             <Grid size={11}>
-                        //                 <BannerList
-                        //                     key={record.id}
-                        //                     title={record.title}
-                        //                     deleteFunc={()=>handleDeleteBanner(record.bannerId)}
-                        //                     showFunc={() => showBanner(record)}
-                        //                     isBanner={true}
-                        //                     showThumbnail={showThumbnail}
-                        //                 />
-                        //             </Grid>
-                        //         </Grid>
-                        //     )}
-                        //     handles={false}
-                        //     onUpdate={() => {
-                        //         setRefreshKey(prev => prev + 1);
-                        //     }}
-                        // />
-                        : <></>}
+                        )) : <></>}
 
                     {bannerList.length < 3 ?
-                        <BannerList
-                            isBanner={false}
-                            addFunc={addBanner}
-                        />
+                        <Grid container spacing={1}>
+                            <Grid size={isMobile ? 2 : 1} >
+                                <NumberBox index={<PostAddIcon sx={{ color: thisTheme.palette.text.secondary }} />} />
+                            </Grid>
+                            <Grid size={isMobile ? 10 : 11}>
+                                <BannerList
+                                    addFunc={addBanner}
+                                    isBanner={false}
+                                    mobile={isMobile}
+                                />
+                            </Grid>
+                        </Grid>
                         : <></>
                     }
 
-                    {bannerList?.length > 1 ?
-                        <ButtonContainer marginTop={5} marginBottom={5}>
-                            <Two100Buttons
-                                leftTitle={"되 돌 리 기"}
-                                leftClickEvent={returnBanner}
-                                rightTitle={"순 서 저 장"}
-                                rightClickEvent={saveBanner}
-                                gap={5}
-                            />
-                        </ButtonContainer> : <></>
-                    }
-
                 </Grid>
-                <Grid size={3} />
+                {isMobile ? <></> : <Grid size={3} />}
             </Grid>
         </>
     )

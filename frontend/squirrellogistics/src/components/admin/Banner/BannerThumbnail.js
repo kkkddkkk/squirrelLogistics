@@ -1,21 +1,24 @@
 
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { ButtonContainer, OneButtonAtLeft, OneButtonAtRight, TwoButtonsAtEnd } from "../../common/CommonButton";
 import styles from "../../../css/Body.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import logo from "../../common/squirrelLogisticsLogo.png";
 import API_SERVER_HOST from "../../../api/apiServerHost";
 
-const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setBannerForm, selectedNotice, id }) => {
+const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setBannerForm, selectedNotice, id, mobile }) => {
     const thisTheme = useTheme();
     const fileRef = useRef(null);
     const [preview, setPreview] = useState(null);
     const accessToken = localStorage.getItem('accessToken');
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        setIsMobile(mobile);
+    }, [])
 
     const previewUrl = useMemo(() => {
-
         if (preview) return `url(${URL.createObjectURL(preview)})`;
-
         if (adding) {
             if (id) {
                 if (!src) return;
@@ -81,28 +84,28 @@ const BannerThumbnail = ({ children, bannerLength, adding, src, bannerForm, setB
                     display: "flex",
                     alignItems: "end",
                     justifyContent: "space-between",
-                    paddingLeft: 5,
-                    paddingRight: 5,
-                    paddingBottom: 3,
+                    paddingLeft: isMobile ? 2 : 5,
+                    paddingRight: isMobile ? 2 : 5,
+                    paddingBottom: isMobile ? 0 : 3,
                     backgroundSize: 'cover',        // 박스를 완전히 채우면서 비율 유지
                     backgroundPosition: 'center',   // 중앙 기준으로 잘라서 보여줌
                     backgroundRepeat: 'no-repeat',  // 반복 없이 한 장만
                 }}>
                     <Box width={"100%"}>
-                        <Typography variant={"h6"} fontWeight={800} lineHeight={1.15} width={"100%"}>
+                        <Typography variant={isMobile ? "body1" : "h6"} fontWeight={isMobile ? 600 : 800} lineHeight={1.15} width={"100%"}>
                             {bannerForm.title === '' ? '제목을 입력해주세요.' : bannerForm.title}
                         </Typography>
-                        <Typography variant="body1" className={styles.desc} width={"100%"}>
+                        <Typography variant={isMobile ? "subtitle1" : "body1"} className={styles.desc} width={"100%"}>
                             {bannerForm.subTitle === '' ? '부제목을 입력해주세요.' : bannerForm.subTitle}
                         </Typography>
-                        <ButtonContainer width={"100%"} marginTop={2}>
-                            <TwoButtonsAtEnd
-                                leftTitle={"바로가기"}
-                                leftClickEvent={handleClickNavigate}
-                                rightTitle={"사진추가"}
-                                rightClickEvent={handleClickAddImg}
-                            />
-                        </ButtonContainer>
+                        <Box width={"100%"} display={"flex"} justifyContent={"space-between"}>
+                            <Button onClick={handleClickNavigate} variant="contained">
+                                바로가기
+                            </Button>
+                            <Button onClick={handleClickAddImg} variant="contained"> 
+                                사진추가
+                            </Button>
+                        </Box>
 
                     </Box>
                 </Box >

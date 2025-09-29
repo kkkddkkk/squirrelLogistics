@@ -1,13 +1,20 @@
-import { Box, Grid, useTheme } from "@mui/material";
+import { Box, Grid, useMediaQuery, useTheme } from "@mui/material";
 import CommonList from "../../common/CommonList";
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import { OneButtonAtRight, TwoButtonsAtRight } from "../../common/CommonButton";
+import { useEffect, useState } from "react";
 
 
-const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner, idx, showThumbnail }) => {
+const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner,
+    idx, showThumbnail, mobile }) => {
     const thisTheme = useTheme();
+    const [isMobile, setIsMobile] = useState(false);
 
-    const BannerContainer = ({ key, title, deleteFunc, showFunc, showThumbnail }) => {
+    useEffect(() => {
+        setIsMobile(mobile);
+    }, [])
+
+    const BannerContainer = ({ key, title, deleteFunc, showFunc }) => {
         return (
             <CommonList key={key} padding={2}>
                 <Box
@@ -15,7 +22,7 @@ const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner, idx, 
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        cursor: "pointer" 
+                        cursor: "pointer"
                     }}
                 >
                     <Box>
@@ -38,42 +45,23 @@ const BannerList = ({ key, title, deleteFunc, showFunc, addFunc, isBanner, idx, 
     }
     const EmptyList = ({ addFunc }) => {
         return (
-            <Grid container spacing={1} onClick={showThumbnail}>
-                <Grid size={1} >
-                    <CommonList padding={2} sx={{
+            <CommonList padding={2}>
+                <Box
+                    sx={{
                         display: "flex",
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexDirection: "column",
-                        boxSizing: "border-box",
-                        height: "calc(100% - 16px)",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                     }}>
-                        <PostAddIcon sx={{ color: thisTheme.palette.text.secondary }} />
-
-                    </CommonList>
-                </Grid>
-                <Grid size={11}>
-                    <CommonList padding={2}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                            }}>
-                            <Box color={thisTheme.palette.text.secondary}>
-                                배너가 아직 등록되지 않았습니다.
-                            </Box>
-                            <OneButtonAtRight
-                                children={"배너 추가"}
-                                clickEvent={addFunc}
-                                color={thisTheme.palette.primary.main}
-                            />
-                        </Box>
-                    </CommonList>
-                </Grid>
-            </Grid>
-
-
+                    <Box color={thisTheme.palette.text.secondary}>
+                        배너가 아직 {isMobile ? <br></br> : <></>}등록되지 않았습니다.
+                    </Box>
+                    <OneButtonAtRight
+                        children={(isMobile ? "" : "배너") + " 추가"}
+                        clickEvent={addFunc}
+                        color={thisTheme.palette.primary.main}
+                    />
+                </Box>
+            </CommonList>
         )
     }
 

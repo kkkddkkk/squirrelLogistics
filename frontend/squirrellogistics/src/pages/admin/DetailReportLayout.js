@@ -1,4 +1,4 @@
-import { Box, Divider, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Divider, Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -7,10 +7,12 @@ const DetailReportLayout = () => {
     const pathArray = location.pathname.split("/").filter(Boolean);
     const lastPath = pathArray[pathArray.length - 1];
 
+    const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
+
     console.log(lastPath);
 
     const ReportListMenu = ({ children, divider, route }) => {
-        const thisTheme = useTheme();
         const navigate = useNavigate();
         const [hovered, setHovered] = useState(false);
         const [active, setActive] = useState(false);
@@ -20,7 +22,7 @@ const DetailReportLayout = () => {
             if (lastPath === route) setActive(true);
             else setActive(false);
         }, [])
-        const fontSize = isActive ? 28 : 20; // px 단위, 원하는 크기
+        const fontSize = isActive ? (isMobile?14:28) : (isMobile?10:20); // px 단위, 원하는 크기
 
         const clickMenu = () => {
             setActive(!active);
@@ -62,18 +64,20 @@ const DetailReportLayout = () => {
     };
     return (
 
-        <Grid container spacing={3} marginBottom={10}>
-            <Grid size={12} display={"flex"} justifyContent={"center"} alignItems={"center"} margin={"3% 0"} gap={2}>
+        <Grid container spacing={isMobile?0:3} marginBottom={10}>
+            <Grid size={12} display={"flex"} justifyContent={"center"} alignItems={"center"} 
+            margin={"3% 0"} gap={2}>
                 <ReportListMenu divider={true} route={"status"}>문의 처리 상태</ReportListMenu>
                 <ReportListMenu divider={true} route={"rank"}>신고된 랭킹</ReportListMenu>
                 <ReportListMenu divider={true} route={"cate"}>신고 유형 비율</ReportListMenu>
                 <ReportListMenu divider={false} route={"monthly"}>월별 신고 건수</ReportListMenu>
             </Grid>
-            <Grid size={2} />
-            <Grid size={8}>
+            {isMobile?"":<Grid size={2} />}
+            
+            <Grid size={isMobile?12:8}  padding={isMobile?"5%":""}>
                 <Outlet />
             </Grid>
-            <Grid size={2} />
+            {isMobile?"":<Grid size={2} />}
         </Grid >
     );
 }

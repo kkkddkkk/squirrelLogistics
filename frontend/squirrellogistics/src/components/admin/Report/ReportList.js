@@ -1,4 +1,4 @@
-import { Box, Grid, Pagination, Table, TableBody, TableCell, TableHead, TableRow, TextField, useTheme } from "@mui/material";
+import { Box, Grid, Pagination, Table, TableBody, TableCell, TableHead, TableRow, TextField, useMediaQuery, useTheme } from "@mui/material";
 import CommonList from "../../common/CommonList";
 import { One100ButtonAtCenter, OneButtonAtRight } from "../../common/CommonButton";
 import usePaymentMove from "../../../hook/paymentHook/usePaymentMove";
@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 const ReportList = ({ status, cate }) => {
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const { moveToMain } = usePaymentMove();
     const navigate = useNavigate();
     const [data, setData] = useState();
@@ -62,15 +63,15 @@ const ReportList = ({ status, cate }) => {
 
     return (
         <CommonList padding={3}>
-            <Grid container spacing={3} marginBottom={3}>
-                <Grid size={10}>
+            <Grid container spacing={isMobile?1:3} marginBottom={3}>
+                <Grid size={isMobile?9:10}>
                     <TextField
                         placeholder="신고자, 제목으로 검색하기"
                         fullWidth
                         onChange={(event) => setInputKeyword(event.target.value)}
                     />
                 </Grid>
-                <Grid size={2}>
+                <Grid size={isMobile?3:2}>
                     <One100ButtonAtCenter height={"100%"} clickEvent={searchReport}>
                         검&nbsp;&nbsp;&nbsp;색
                     </One100ButtonAtCenter>
@@ -79,19 +80,22 @@ const ReportList = ({ status, cate }) => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ width: "8%", textAlign: "center" }}>상태</TableCell>
-                        <TableCell sx={{ width: "15%", textAlign: "center" }}>카테고리</TableCell>
-                        <TableCell sx={{ width: "15%", textAlign: "center" }}>신고자</TableCell>
-                        <TableCell sx={{ width: "15%", textAlign: "center" }}>신고일</TableCell>
+                        <TableCell sx={{ width: isMobile?"15%":"8%", textAlign: "center" }}>상태</TableCell>
+                        {isMobile ? <></> : <>
+                            <TableCell sx={{ width: "15%", textAlign: "center" }}>카테고리</TableCell>
+                            <TableCell sx={{ width: "15%", textAlign: "center" }}>신고자</TableCell>
+                            <TableCell sx={{ width: "15%", textAlign: "center" }}>신고일</TableCell>
+                        </>}
+
                         <TableCell sx={{ width: "32%", textAlign: "center" }}>제목</TableCell>
 
-                        <TableCell sx={{ width: "15%", }}></TableCell>
+                        <TableCell sx={{ width: isMobile?"10%":"15%", }}></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {data?.map((report) => (
                         <TableRow key={report.reportId}>
-                            <TableCell sx={{ width: "8%", textAlign: "center", whiteSpace: 'pre-line', padding: 0 }}>
+                            <TableCell sx={{ width: isMobile?"15%":"8%", textAlign: "center", whiteSpace: 'pre-line', padding: 0 }}>
                                 <Box sx={{
                                     padding: "4px 0",
                                     width: "100%",
@@ -102,18 +106,20 @@ const ReportList = ({ status, cate }) => {
                                     {switchStatusForList(report.status)}
                                 </Box>
                             </TableCell>
-                            <TableCell sx={{ width: "15%", textAlign: "center", whiteSpace: 'pre-line' }}>
-                                {switchCate(report.cate)}
-                            </TableCell>
-                            <TableCell sx={{ width: "15%", textAlign: "center" }}>
-                                {report.reporterName}<br />
-                                {report.role != '시스템' ? `${report.role}` : '자동처리'}
-                                {report.role != '시스템' ? ` #${report.reporterId}` : ''}
-                            </TableCell>
-                            <TableCell sx={{ width: "15%", textAlign: "center" }}>{report.regDate}</TableCell>
+                            {isMobile?<></>:<>
+                                <TableCell sx={{ width: "15%", textAlign: "center", whiteSpace: 'pre-line' }}>
+                                    {switchCate(report.cate)}
+                                </TableCell>
+                                <TableCell sx={{ width: "15%", textAlign: "center" }}>
+                                    {report.reporterName}<br />
+                                    {report.role != '시스템' ? `${report.role}` : '자동처리'}
+                                    {report.role != '시스템' ? ` #${report.reporterId}` : ''}
+                                </TableCell>
+                                <TableCell sx={{ width: "15%", textAlign: "center" }}>{report.regDate}</TableCell>
+                            </>}
                             <TableCell sx={{ width: "32%" }}>{report.title}</TableCell>
-                            <TableCell sx={{ width: "15%" }}>
-                                <OneButtonAtRight clickEvent={() => viewDetailReport(report.reportId)}>상세보기</OneButtonAtRight>
+                            <TableCell sx={{ width: "15%" }} padding={isMobile?"0":""}>
+                                <OneButtonAtRight clickEvent={() => viewDetailReport(report.reportId)}>상세{isMobile?"":"보기"}</OneButtonAtRight>
                             </TableCell>
                         </TableRow>
                     ))}

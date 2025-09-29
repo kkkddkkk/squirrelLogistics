@@ -1,4 +1,4 @@
-import { Grid, Typography, useTheme } from "@mui/material";
+import { Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import {
     PendingActions,
     Search,
@@ -12,23 +12,25 @@ import { useState } from "react";
 
 const ReportPage = () => {
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const [keyword2, setKeyword2] = useState();
 
     const IconButton = ({ Icon, iconColor, clickEvent, status }) => {
         return (
-            <Grid size={3}>
+            <Grid size={isMobile?6:3}>
                 <CommonList
-                    padding={2}
+                    padding={isMobile?1:2}
                     sx={{
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
                         flexWrap: "wrap",
-                        cursor: "pointer"
+                        cursor: "pointer",
+                        marginBottom: isMobile?'0 !important':''
                     }}
                     clickEvent={clickEvent}
                 >
-                    <Icon sx={{ color: iconColor, fontSize: 40, marginBottom: 1 }} />
+                    <Icon sx={{ color: iconColor, fontSize: isMobile?20:40, marginBottom: 1 }} />
                     <Typography sx={{ width: "100%", textAlign: "center" }}>{status}</Typography>
                 </CommonList>
             </Grid>
@@ -38,7 +40,7 @@ const ReportPage = () => {
 
     return (
         <>
-            <Grid container spacing={3}>
+            <Grid container spacing={isMobile?1:3} marginBottom={isMobile?"10%":""}>
                 <IconButton
                     Icon={ListAlt}
                     iconColor={thisTheme.palette.primary.main}

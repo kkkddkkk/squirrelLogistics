@@ -1,5 +1,5 @@
 import { useTheme } from "@emotion/react";
-import { Box, Checkbox, Grid, Pagination, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
+import { Box, Checkbox, Grid, Pagination, Table, TableBody, TableCell, TableHead, TableRow, TextField, useMediaQuery } from "@mui/material";
 import BannerThumbnail from "../../components/admin/Banner/BannerThumbnail";
 import { CommonSmallerTitle, CommonSubTitle, CommonTitle } from "../../components/common/CommonText";
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -15,6 +15,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 const AddBannerPage = () => {
 
     const thisTheme = useTheme();
+    const isMobile = useMediaQuery(thisTheme.breakpoints.down('sm'));
     const [params] = useSearchParams();
     const id = params.get("id");
     const navigate = useNavigate();
@@ -153,9 +154,9 @@ const AddBannerPage = () => {
     return (
         <>
             <CommonTitle>배너 {id ? "수정" : "추가"}</CommonTitle>
-            <Grid container spacing={3} marginBottom={10}>
-                <Grid size={2} />
-                <Grid size={8}>
+            <Grid container spacing={3} marginBottom={10} padding={isMobile ? "5%" : ""}>
+                {isMobile ? <></> : <Grid size={2} />}
+                <Grid size={isMobile ? 12 : 8}>
                     <CommonSmallerTitle>* 배너 미리보기</CommonSmallerTitle>
                     {id ?
                         <BannerThumbnail
@@ -190,8 +191,8 @@ const AddBannerPage = () => {
                         value={bannerForm.subTitle}
                         onChange={onChange("subTitle")}
                     />
-                    <Grid container spacing={3} marginBottom={3}>
-                        <Grid size={10}>
+                    <Grid container spacing={isMobile?1:3} marginBottom={3}>
+                        <Grid size={isMobile ? 9 : 10}>
                             <TextField
                                 fullWidth
                                 value={selectedNotice?.title || ""}
@@ -199,7 +200,7 @@ const AddBannerPage = () => {
                                 disabled
                             />
                         </Grid>
-                        <Grid size={2}>
+                        <Grid size={isMobile ? 3 : 2}>
                             <One100ButtonAtCenter height={"100%"} clickEvent={saveNotice}>
                                 저&nbsp;&nbsp;&nbsp;장
                             </One100ButtonAtCenter>
@@ -207,15 +208,15 @@ const AddBannerPage = () => {
                     </Grid>
 
                     <CommonList padding={2} sx={{ minHeight: '30vh' }}>
-                        <Grid container spacing={3}>
-                            <Grid size={10}>
+                        <Grid container spacing={isMobile?1:3}>
+                            <Grid size={isMobile ? 9 : 10}>
                                 <TextField
                                     placeholder="공지 제목으로 검색하기"
                                     fullWidth
                                     onChange={(event) => setInputKeyword(event.target.value)}
                                 />
                             </Grid>
-                            <Grid size={2}>
+                            <Grid size={isMobile ? 3 : 2}>
                                 <One100ButtonAtCenter height={"100%"} clickEvent={searchNotice}>
                                     검&nbsp;&nbsp;&nbsp;색
                                 </One100ButtonAtCenter>
@@ -224,25 +225,22 @@ const AddBannerPage = () => {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ width: "10%", textAlign: "center" }}>고정</TableCell>
-                                            <TableCell sx={{ width: "50%", textAlign: "center" }}>제목</TableCell>
+                                            {isMobile ? <></> : <TableCell sx={{ width: "10%", textAlign: "center" }}>고정</TableCell>}
+                                            <TableCell sx={{ width: "60%", textAlign: "center" }}>제목</TableCell>
                                             <TableCell sx={{ width: "20%", textAlign: "center" }}>등록일</TableCell>
-                                            <TableCell sx={{ width: "20%", textAlign: "center" }}></TableCell>
                                             <TableCell sx={{ width: "10%", textAlign: "center" }}>연결</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {notices?.map((notice) => {
                                             return (<TableRow key={notice.noticeId}>
-                                                <TableCell sx={{ width: "10%", textAlign: "center", whiteSpace: 'pre-line', padding: 0 }}>
-                                                    {notice.pinned ?
-                                                        <PushPinIcon sx={{ color: thisTheme.palette.primary.main }} /> : ''}
-                                                </TableCell>
-                                                <TableCell sx={{ width: "50%", textAlign: "center", whiteSpace: 'pre-line' }}>
+                                                {isMobile ? <></> :
+                                                    <TableCell sx={{ width: "10%", textAlign: "center", whiteSpace: 'pre-line', padding: 0 }}>
+                                                        {notice.pinned ?
+                                                            <PushPinIcon sx={{ color: thisTheme.palette.primary.main }} /> : ''}
+                                                    </TableCell>}
+                                                <TableCell sx={{ width: "60%", textAlign: "center", whiteSpace: 'pre-line' }}>
                                                     {notice.title}
-                                                </TableCell>
-                                                <TableCell sx={{ width: "20%", textAlign: "center" }}>
-                                                    {notice.createdAt}
                                                 </TableCell>
                                                 <TableCell sx={{ width: "20%", textAlign: "center" }}>
                                                     {notice.createdAt}
@@ -271,7 +269,7 @@ const AddBannerPage = () => {
                         </Grid>
                     </CommonList>
                 </Grid>
-                <Grid size={2} />
+                {isMobile ? <></> : <Grid size={2} />}
             </Grid>
         </>
     )
