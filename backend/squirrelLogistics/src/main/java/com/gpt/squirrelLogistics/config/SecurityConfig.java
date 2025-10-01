@@ -33,7 +33,9 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsSource() {
 		CorsConfiguration cors = new CorsConfiguration();
-		cors.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", // 로컬 개발용
+		cors.setAllowedOriginPatterns(Arrays.asList(
+				"http://localhost:3000", 
+				"http://10.0.2.2:3000", 
 				"https://squirrellogistics.vercel.app", 
 				"https://squirrellogistics.onrender.com",// 고정 프로덕션 프론트
 				"https://*.vercel.app" // Vercel preview (커밋별 배포)

@@ -363,6 +363,8 @@ export default function DriverMonthlyComponent() {
             borderRadius: 5,
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             width: "90%",
+            marginLeft: 'auto',
+            marginRight: 'auto',
           },
           ".rbc-toolbar": { display: "none !important" },
           ".rbc-month-view": {
@@ -475,9 +477,10 @@ export default function DriverMonthlyComponent() {
           direction="row"
           alignItems="center"
           justifyContent={"space-between"}
+          sx={{ mx: "auto" }}
           width={"90%"}
           pt={isSmaller900 ? 3 : 2}
-          pb={isSmaller900 ? 2 : 0}
+          pb={isSmaller900 ? 2 : 2}
         >
           <Grid
             container

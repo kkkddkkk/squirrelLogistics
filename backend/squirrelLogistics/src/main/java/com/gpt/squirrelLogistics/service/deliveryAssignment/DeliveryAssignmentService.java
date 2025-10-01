@@ -686,10 +686,10 @@ public class DeliveryAssignmentService {
 			int lastIdx = points.size() - 1;
 			require((status == DeliveryStatusEnum.ARRIVED_AT_WAYPOINT
 					|| status == DeliveryStatusEnum.DROPPED_AT_WAYPOINT) && lastVisited == lastIdx, "완료 가능한 상태/위치가 아님");
-			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
 
 			completeAssignment(assignment, now);
 
+			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
 			// 운송 종료: 더미 상태/캐시 정리 (이후 로그 저장 방지)
 			dummyTracker.finishAssignment(assignment.getDriver().getDriverId().toString());
 		}

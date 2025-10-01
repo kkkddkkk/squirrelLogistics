@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import {
     Box, Stack, Paper, Typography, Tooltip, CircularProgress,
     Badge, useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import {
     CheckCircle,
@@ -17,17 +18,21 @@ import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { currency, fillTrendGaps } from "./settlementUtilities";
 import { settlementApi } from "../../api/settlement/settlementAPI";
+import OneButtonPopupComponent from "../deliveryRequest/OneButtonPopupComponent";
 
 const chartHeight = 320;
+const chartMBHeight = 220;
 
-const ChartWrapper = styled("div")({
-    height: chartHeight,
+
+const ChartWrapper = styled("div")(({ isSmaller900 }) => ({
+    height: isSmaller900 ? chartMBHeight : chartHeight,
     "& .recharts-tooltip-cursor": { fill: "#696969ff", opacity: 0.1 },
-});
+}));
 
 export default function SettlementDashboardComponent({ onGoUnsettled }) {
     const theme = useTheme();
     const navigate = useNavigate();
+    const isSmaller900 = useMediaQuery(theme.breakpoints.down('md'));
 
     /* ─────────────────────────── 0) 상단 KPI: 항상 이번달 + 전역 미정산 ─────────────────────────── */
     const month = useMemo(() => ({
@@ -89,6 +94,10 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
 
     const [loadingLine, setLoadingLine] = useState(true);
     const [trendRaw, setTrendRaw] = useState([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogMess, setDialogMess] = useState("");
+
+
     const trendData = useMemo(() => fillTrendGaps(trendRaw, trend), [trendRaw, trend]);
 
     const fetchLine = useCallback(async () => {
@@ -116,6 +125,17 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
         gross: BAR.gross, fee: BAR.fee, net: BAR.net, // 동일 톤
     };
 
+
+    const onClickUnsettled = (isSmaller900) => {
+
+        console.log(isSmaller900);
+        if (isSmaller900) {
+            setDialogOpen(true);
+            setDialogMess("해당 페이지는 PC 환경에서만 이용하실 수 있습니다. 모바일 기기에서는 안정적인 서비스 제공이 어려워 접근이 제한됩니다.");
+            return;
+        }
+        navigate("/admin/settlement/list")
+    };
     return (
         <Stack spacing={3}>
             {/* ───────── KPI Cards (이번달 고정 + 전역 미정산) ───────── */}
@@ -150,7 +170,7 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                             label="미정산 대기"
                             value={loadingCards ? "…" : `${currency(unsettledAll.amount)} 원`}
                             sub="완료 결제 전체 기준"
-                            onClick={() => navigate("/admin/settlement/list")}
+                            onClick={() => onClickUnsettled(isSmaller900)}
                         />
                     </Badge>
                 </Box>
@@ -164,26 +184,28 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                         <QuickRangeChips value={range} onChange={setRange} />
                     </Stack>
                 }
+                isMobile={isSmaller900}
             >
-                <Box sx={{ height: chartHeight }}>
+                <Box sx={{ height: isSmaller900 ? chartMBHeight : chartHeight, overflowX: "hidden" }}>
                     {loadingBar ? (
-                        <Stack alignItems="center" justifyContent="center" sx={{ height: chartHeight }}>
+                        <Stack alignItems="center" justifyContent="center" sx={{ height: isSmaller900 ? chartMBHeight : chartHeight }}>
                             <CircularProgress />
                         </Stack>
                     ) : (
-                        <ChartWrapper>
+                        <ChartWrapper isSmaller900={isSmaller900}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={byMethod} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis
                                         dataKey="method"
                                         stroke={theme.palette.mode === "dark" ? "#707070" : "#bbbbbb"}
-                                        tickFormatter={(v) => ({ 
-                                            kakaopay: "카카오페이", 
-                                            tosspay: "토스페이", 
-                                            danal: "신용카드", 
-                                            phone: "휴대폰 결제", 
-                                            unknown: "기타" }[v] || v)}
+                                        tickFormatter={(v) => ({
+                                            kakaopay: "카카오페이",
+                                            tosspay: "토스페이",
+                                            danal: "신용카드",
+                                            phone: "휴대폰 결제",
+                                            unknown: "기타"
+                                        }[v] || v)}
                                         tick={{ fontSize: 12 }}
                                     />
                                     <YAxis
@@ -199,10 +221,10 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                                             padding: "12px 16px",
                                         }}
                                         itemStyle={{ fontSize: 12, margin: "4px 0", color: theme.palette.text.primary }}
-                                        labelFormatter={(raw) => ({ 
-                                            kakaopay: "카카오페이", 
-                                            tosspay: "토스페이", 
-                                            danal: "신용카드", 
+                                        labelFormatter={(raw) => ({
+                                            kakaopay: "카카오페이",
+                                            tosspay: "토스페이",
+                                            danal: "신용카드",
                                             phone: "휴대폰 결제",
                                             unknown: "기타"
                                         }[raw] || raw)}
@@ -227,14 +249,15 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                         <QuickTrendChips value={trendPreset} onChange={setTrendPreset} />
                     </Stack>
                 }
+                isMobile={isSmaller900}
             >
-                <Box sx={{ height: chartHeight }}>
+                <Box sx={{ height: isSmaller900 ? chartMBHeight : chartHeight, overflowX: "hidden" }}>
                     {loadingLine ? (
-                        <Stack alignItems="center" justifyContent="center" sx={{ height: chartHeight }}>
+                        <Stack alignItems="center" justifyContent="center" sx={{ height: isSmaller900 ? chartMBHeight : chartHeight }}>
                             <CircularProgress />
                         </Stack>
                     ) : (
-                        <ChartWrapper>
+                        <ChartWrapper isSmaller900={isSmaller900}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={trendData} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
@@ -293,7 +316,7 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                         }}
                     >
                         <Paper
-                            onClick={() => navigate("/admin/settlement/list")}
+                            onClick={() => onClickUnsettled(isSmaller900)}
                             sx={{
                                 p: 1.2,
                                 borderRadius: 999,
@@ -314,6 +337,18 @@ export default function SettlementDashboardComponent({ onGoUnsettled }) {
                     </Badge>
                 </Tooltip>
             </Box>
+
+            {dialogOpen && (
+                <OneButtonPopupComponent
+                    open={dialogOpen}
+                    onClick={() => {
+                        setDialogOpen(false);
+                        setDialogMess("");
+                    }}
+                    title={"제한된 접근"}
+                    content={dialogMess}
+                />
+            )}
         </Stack>
     );
 }

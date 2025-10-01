@@ -78,7 +78,7 @@ export const CardStat = ({ icon, label, value, sub, onClick, variant = "plain", 
 };
 
 
-export const Section = ({ title, actions, children }) => {
+export const Section = ({ title, actions, children, isMobile }) => {
 
     const t = useTheme();
     return (
@@ -88,8 +88,14 @@ export const Section = ({ title, actions, children }) => {
             border: 1,
             borderColor: t.palette.mode === 'dark' ? 'grey.900' : 'grey.300',
         }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" fontWeight={800}>{title}</Typography>
+            <Stack
+                direction={isMobile ? "column" : "row"}
+                justifyContent={isMobile ? "center" : "space-between"}
+                alignItems="center"
+                mb={isMobile ? 0 : 2}
+                spacing={isMobile ? 1 : 0}
+            >
+                <Typography variant={isMobile ? "h8" : "h6"} fontWeight={800}>{title}</Typography>
                 <Stack direction="row" spacing={1} alignItems="center">{actions}</Stack>
             </Stack>
             {children}

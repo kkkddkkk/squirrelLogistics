@@ -106,12 +106,12 @@ export default function ReviewListComponent() {
             {/* 정렬/페이지크기 선택 */}
             <Stack
               direction="row"
-              justifyContent="flex-end"
+              justifyContent={isSmaller900 ? "space-between" : "flex-end"}
               alignItems="center"
-              spacing={2}
+              spacing={isSmaller900 ? 0 : 2}
               sx={{ px: 4, }}
             >
-              <FormControl size="small" sx={{ minWidth: 140 }}>
+              <FormControl size="small" sx={{ minWidth: isSmaller900 ? "40%" : 120 }}>
                 <InputLabel
                   id="size-label"
                   sx={{
@@ -146,7 +146,7 @@ export default function ReviewListComponent() {
                 </Select>
               </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 160 }}>
+              <FormControl size="small" sx={{ minWidth: isSmaller900 ? "55%" : 160 }}>
                 <InputLabel
                   id="sort-label"
                   sx={{

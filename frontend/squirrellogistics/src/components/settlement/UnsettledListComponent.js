@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { currency, isCompleted, autoCalcFee, paymentsService } from "./settlementUtilities";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Drawer, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme } from "@mui/material";
+import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Drawer, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { PaymentMethodChip, PaymentStatusChip, QuickRangeChips } from "./SettlementCommonUI";
 import { Calculate, CheckBox, Done, DoneAll, DoneOutlined, FilterList, LibraryAddCheckOutlined, Refresh, Summarize } from "@mui/icons-material";
 import CalculateIcon from '@mui/icons-material/Calculate';
@@ -44,6 +44,7 @@ export default function UnsettledListComponent() {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [blocking, setBlocking] = useState(false);
     const t = useTheme();
+    const isSmaller900 = useMediaQuery(t.breakpoints.down('md'));
 
 
     // 페이지네이션 상태
@@ -145,7 +146,11 @@ export default function UnsettledListComponent() {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Stack spacing={3}>
-                <Grid container direction={"row"} justifyContent={"space-between"} alignItems={"center"}>
+                <Grid container
+                    direction={isSmaller900 ? "column" : "row"}
+                    justifyContent={isSmaller900 ? "center" : "space-between"}
+                    alignItems={isSmaller900 ? "flex-start" :"center"}
+                >
                     <QuickRangeChips
                         value={range}
                         onChange={(next) => {
@@ -154,7 +159,13 @@ export default function UnsettledListComponent() {
                             setPage(1);
                         }}
                     />
-                    <Stack direction="row" spacing={1}>
+                    <Stack
+                        direction={isSmaller900 ? "column" : "row"}
+                        spacing={1}
+                        width={isSmaller900 ? "100%" : "60%"}
+                        justifyContent={isSmaller900 ? "center" : "flex-end"}
+                        mt={isSmaller900 ? 2 : 0}
+                    >
                         <DatePicker
                             label="시작일"
                             value={custom.from}

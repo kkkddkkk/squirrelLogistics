@@ -340,6 +340,7 @@ const RequestDetailComponent = () => {
         sx={{
           bgcolor: thisTheme.palette.background.default,
           minHeight: isSmaller900 ? 100 : 190,
+
         }}
       >
         <Box pt={isSmaller900 ? 2 : 4}>
@@ -347,7 +348,7 @@ const RequestDetailComponent = () => {
         </Box>
 
         <Grid container
-          m={4}
+          mx="auto"
           mt={isSmaller900 ? 3 : 4}
           mb={1}
           justifySelf="center"
@@ -371,7 +372,7 @@ const RequestDetailComponent = () => {
                 container
                 spacing={2}
                 direction={isSmaller900 ? "column" : "row"}
-                justifyContent={ "space-between"}
+                justifyContent={"space-between"}
                 sx={{ width: "100%" }}
               >
                 <Grid item>

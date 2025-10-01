@@ -12,18 +12,14 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import LiveMapComponent from "../../components/deliveryMap/LiveMapComponent";
-import { useStartDummyRoute } from "../../hook/DeliveryMap/useKakaoRouteMap";
-import React, { useState } from "react";
 import {
   formCurrnetStatusString,
-  pickNextNavigation,
   pickActiveLeg,
   computeWaypointStatuses,
   STATUS_STYLES,
 } from "./trackingFormatUtil";
 import { ActionButtons } from "./ActionButtons";
 import { useDriverStream } from "../../api/deliveryRequest/driverStreamAPI";
-import { useParams } from "react-router-dom";
 import { renderSingleTag } from "../deliveryRequest/deliveryFormatUtil";
 import { CommonTitle } from "../common/CommonText";
 import { theme } from "../common/CommonTheme";
