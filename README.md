@@ -26,11 +26,31 @@
 
 <br>
 
-**핵심 차별점**
-- 진행 중 운송의 실시간 위치/상태 추적
-- 예상가 ↔ 실제 운행 데이터를 분리한 2단계 정산(명세서/영수증 제공)
-- 최대 3개 경유지 기반 경로 최적화(거리·무게·차종 반영)
-- 다크 모드 지원(장시간 사용 피로 최소화)
+## 🐿️ 핵심 차별점
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>진행 중 운송의 실시간 위치/상태 추적</b><br/><br/>
+      <img src="./assets/remarks_1.png" alt="Live Tracking" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>예상가 ↔ 실제 운행 데이터를 분리한 2단계 정산(명세서/영수증 제공)</b><br/><br/>
+      <img src="./assets/remarks_2.png" alt="Settlement" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>최대 3개 경유지 기반 경로 최적화(거리·무게·차종 반영)</b><br/><br/>
+      <img src="./assets/remarks_3.png" alt="Route Optimization" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>다크 모드 지원(장시간 사용 피로 최소화)</b><br/><br/>
+      <img src="./assets/remarks_4.png" alt="Dark Mode" width="100%"/>
+    </td>
+  </tr>
+</table>
 
 ---
 ## 🐿️아키텍처 및 기술 스택
@@ -309,7 +329,7 @@
       <td nowrap><nobr>정윤진</nobr></td>
       <td>예상 금액 산정, 기사 요청/배송 조회, 회사 정보</td>
       <td>거리·무게 기반 요금 산정, 기사 검색/지명, 회사 정보 화면 및 상태관리</td>
-      <td nowrap><a href="">[바로가기]</a></td>
+      <td nowrap><a href="https://github.com/jyoonjin03/jyoonjin03">[바로가기]</a></td>
     </tr>
   </table>
 </p>
