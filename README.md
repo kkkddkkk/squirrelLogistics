@@ -333,7 +333,7 @@
 [link-web]: https://squirrellogistics.vercel.app/
 [link-api]: https://squirrellogistics.onrender.com/
 [link-notion]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b8110b194f99df7927bb8
-[link-youtube]: https://www.youtube.com/watch?v=G7L4YzGAvMA
+[link-youtube]: https://www.youtube.com/watch?v=yI-qoSle2lY
 
 [link-meetings]: https://psychedelic-deposit-53c.notion.site/23aee5b3591b802aa139ca4f8e204fdd  
 [link-wireframes]: https://psychedelic-deposit-53c.notion.site/238ee5b3591b812c8af1f8b341f84923
