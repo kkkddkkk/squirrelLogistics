@@ -32,7 +32,8 @@ public class KakaoAuthController {
 	private final JwtTokenProvider jwt;
 	private final KakaoUserService userService; // findOrCreate, updateLastLogin 등
 
-	private static final String FRONT = "http://localhost:3000";
+//	private static final String FRONT = "http://localhost:3000";
+	private static final String FRONT = "https://squirrellogistics.vercel.app";
 
 	// 카카오가 code를 전달하는 콜백
 	@GetMapping("/callback")
