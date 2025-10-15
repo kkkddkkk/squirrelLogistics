@@ -1,13 +1,13 @@
 package com.gpt.squirrelLogistics.service.deliveryTrackingLog;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.gpt.squirrelLogistics.repository.deliveryTrackingLog.DeliveryTrackingLogRepository;
 import com.gpt.squirrelLogistics.service.deliveryAssignment.AssignmentCompletedEvent;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
