@@ -27,7 +27,7 @@ public interface DeliveryTrackingLogRepository extends JpaRepository<DeliveryTra
 
 	// 작성자: 고은설.
 	// 기능: assignedId에 해당하는 모든 추적로그 삭제.
-	@Modifying(clearAutomatically = true)
-	@Query("delete from DeliveryTrackingLog t where t.deliveryAssignment.assignedId = :assignedId")
-	void deleteByAssignedId(@Param("assignedId") Long assignedId);
+	@Modifying(flushAutomatically = true, clearAutomatically = false)
+    @Query("delete from DeliveryTrackingLog t where t.deliveryAssignment.assignedId = :assignedId")
+    int deleteByAssignedId(@Param("assignedId") Long assignedId);
 }

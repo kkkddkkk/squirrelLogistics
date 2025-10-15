@@ -15,6 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.Objects;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +90,7 @@ public class DeliveryAssignmentService {
 	private final DummyTracker dummyTracker;
 
 	private final DeliveryTrackingLogService trackingLogService;
-
+    private final ApplicationEventPublisher eventPublisher;
 	// 작성자: 김도경
 	// 기능: 전 목록 완수일자 뽑기
 	public List<LocalDate> getHistoryDate(Long companyId) {// completedAt 뽑기
@@ -690,7 +691,7 @@ public class DeliveryAssignmentService {
 			completeAssignment(assignment, now);
 
 			insertLog(assignment, DeliveryStatusEnum.COMPLETED, lastVisited, now);
-			// 운송 종료: 더미 상태/캐시 정리 (이후 로그 저장 방지)
+
 			dummyTracker.finishAssignment(assignment.getDriver().getDriverId().toString());
 		}
 		case PAUSE -> {
@@ -764,7 +765,7 @@ public class DeliveryAssignmentService {
 		}
 
 		// 실제 경로 요약
-		var summary = trackingLogService.extractActualRoute(a.getAssignedId(), true);
+		var summary = trackingLogService.extractActualRoute(a.getAssignedId(), false);
 
 		Long weight = (long) a.getDeliveryRequest().getTotalCargoWeight();
 		Long distance = summary.getDistance();
@@ -772,14 +773,19 @@ public class DeliveryAssignmentService {
 		// 핸들링 플래그 계산
 		Long requestId = a.getDeliveryRequest().getRequestId();
 		var flags = getHandlingFlagsByRequestId(requestId);
-		boolean isCautious = flags.cautious();
-		boolean isMountainous = flags.mountainous();
+        Long postFee = calcPostFee(requestId, distance, weight, flags.cautious(), flags.mountainous());
 
-		Long postFee = calcPostFee(requestId, distance, weight, isCautious, isMountainous);
+
 
 		// ActualDelivery 저장
-		var ad = ActualDelivery.builder().distance(distance).actualPolyline(summary.getEncodedPolyline()).weight(weight)
-				.actualFee(postFee).mountainous(isMountainous).caution(isCautious).build();
+		var ad = ActualDelivery.builder().
+				distance(distance).
+				actualPolyline(summary.getEncodedPolyline()).
+				weight(weight).
+				actualFee(postFee).
+				mountainous(flags.mountainous()).
+				caution(flags.cautious()).
+				build();
 		ad = actualDeliveryRepository.save(ad);
 		a.setActualDelivery(ad);
 
@@ -788,7 +794,10 @@ public class DeliveryAssignmentService {
 				? a.getDeliveryRequest().getPayment().getPaymentId()
 				: null;
 
-		var p = Payment.builder().payStatus(PayStatusEnum.PENDING).settlement(false).prepaidId(prepaidId)
+		var p = Payment.builder().
+				payStatus(PayStatusEnum.PENDING).
+				settlement(false).
+				prepaidId(prepaidId)
 				// .payAmount(postFee)
 				.build();
 		p = paymentRepository.save(p);
@@ -797,6 +806,9 @@ public class DeliveryAssignmentService {
 		// 완료 처리
 		a.setStatus(com.gpt.squirrelLogistics.enums.deliveryAssignment.StatusEnum.COMPLETED);
 		a.setCompletedAt(now);
+		
+        eventPublisher.publishEvent(new AssignmentCompletedEvent(a.getAssignedId()));
+
 	}
 
 	private Long calcPostFee(Long requestId, Long distance, Long weight, boolean isC, boolean isM) {
